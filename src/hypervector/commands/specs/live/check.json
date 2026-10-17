@@ -1,13 +1,13 @@
 {
   "schema": 2,
-  "help": "Live readiness as booleans: credentials present, authority flags, start gate",
+  "help": "Cohort start readiness as booleans: credentials, authority, profile, STOP and drain",
   "section": "run",
   "kind": "inprocess",
-  "handler": "hypervector.commands.status:cmd_live_check",
+  "handler": "hypervector.commands.live:cmd_live_check",
   "authority": "simulate",
   "environment": [],
   "data_root": "refused",
-  "data_root_reason": "live readiness reads the process environment, not the data root",
+  "data_root_reason": "cohort readiness reads the profile's own paths and the process environment",
   "include": [],
   "fragment_overrides": {},
   "legacy": [
@@ -15,6 +15,17 @@
   ],
   "exclusive_groups": [],
   "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "type": "Path",
+        "default": null,
+        "help": "cohort profile TOML to check (loaded in observe mode only)"
+      }
+    },
     {
       "flags": [
         "--enabled"

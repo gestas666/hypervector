@@ -1,8 +1,8 @@
 {
   "schema": 2,
-  "help": "Write the best stored sweep trial of a track as a strict strategy bundle",
+  "help": "Write the best stored sweep trial matching the filters as a strict strategy bundle",
   "kind": "inprocess",
-  "handler": "hypervector.commands.export:cmd_export",
+  "handler": "hypervector.commands.export:cmd_create",
   "authority": "none",
   "environment": [],
   "data_root": "honored",
@@ -24,9 +24,28 @@
           "downtrend"
         ],
         "default": null,
-        "help": "strategy track whose best trial is exported"
-      },
-      "required": true
+        "help": "only trials from this track (give --track, --run-id or both)"
+      }
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null,
+        "help": "only trials from this sweep run id (give --track, --run-id or both)"
+      }
+    },
+    {
+      "flags": [
+        "--strategy"
+      ],
+      "options": {
+        "dest": "strategy",
+        "default": null,
+        "help": "only trials of this registered strategy name"
+      }
     },
     {
       "flags": [
@@ -34,8 +53,8 @@
       ],
       "options": {
         "dest": "symbol",
-        "default": "BTC",
-        "help": "symbol recorded when the trial lacks one"
+        "default": null,
+        "help": "only trials measured on this Hyperliquid coin, e.g. BTC"
       }
     },
     {
@@ -44,8 +63,8 @@
       ],
       "options": {
         "dest": "timeframe",
-        "default": "1m",
-        "help": "bar size recorded when the trial lacks one"
+        "default": null,
+        "help": "only trials measured on this bar size, e.g. 5m"
       }
     }
   ]

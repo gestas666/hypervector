@@ -22,7 +22,7 @@
       "options": {
         "dest": "export",
         "default": null,
-        "help": "strategy bundle directory"
+        "help": "strategy bundle: a directory, a candidate id under exports/, or latest"
       },
       "required": true,
       "legacy_flags": [
@@ -150,6 +150,16 @@
         "type": "float",
         "default": 0.5,
         "help": "minimum metalabel probability (0..1) to allow an entry when filtering"
+      }
+    },
+    {
+      "flags": [
+        "--metalabel-bundle"
+      ],
+      "options": {
+        "dest": "metalabel_bundle",
+        "default": null,
+        "help": "metalabel model bundle: a directory, a name under models/metalabel/, or latest (this process only)"
       }
     },
     {

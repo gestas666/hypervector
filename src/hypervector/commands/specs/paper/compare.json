@@ -2,7 +2,7 @@
   "schema": 2,
   "help": "Compare backend shadow runs with a same-window real-strategy log",
   "kind": "inprocess",
-  "handler": "hypervector.commands.replay:cmd_hypervelocity_shadow_compare",
+  "handler": "hypervector.commands.shadow:cmd_shadow_compare",
   "authority": "none",
   "environment": [],
   "data_root": "honored",

@@ -1,0 +1,45 @@
+{
+  "schema": 2,
+  "help": "List strategy bundles under exports/, newest first, flagging invalid ones",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.exports:cmd_list",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--strategy"
+      ],
+      "options": {
+        "dest": "strategy",
+        "default": null,
+        "help": "only bundles of this registered strategy name"
+      }
+    },
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": null,
+        "help": "only bundles for this Hyperliquid coin, e.g. BTC"
+      }
+    },
+    {
+      "flags": [
+        "--timeframe"
+      ],
+      "options": {
+        "dest": "timeframe",
+        "default": null,
+        "help": "only bundles on this bar size, e.g. 5m"
+      }
+    }
+  ]
+}

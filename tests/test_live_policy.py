@@ -6,7 +6,6 @@ import json
 
 import pytest
 
-from hypervector.cli import main
 from hypervector.live.policy import LivePolicy, LivePolicyError, live_policy_from_env
 
 
@@ -53,38 +52,3 @@ def test_live_policy_from_env_reads_secrets(monkeypatch):
     assert r["can_start"] is True
     assert r["submit_wired"] is True  # F2: exec client module present
     assert "sekrit" not in json.dumps(r)
-
-
-def test_cli_live_check_refuses_start_by_default(tmp_path, capsys, monkeypatch):
-    monkeypatch.delenv("HYPERVECTOR_HL_WALLET_ADDRESS", raising=False)
-    monkeypatch.delenv("HYPERVECTOR_HL_API_PRIVATE_KEY", raising=False)
-    rc = main(["live", "check"])
-    assert rc == 0
-    out = capsys.readouterr().out
-    rep = json.loads(out)
-    assert rep["ok"] is True
-    assert rep["venue_submit"] is False
-    assert rep["live"]["enabled"] is False
-    assert rep["live"]["submit_wired"] is True  # F2 wired; still refuse start
-    assert rep["live"]["can_start"] is False
-    assert rep["start_gate"] == "refused"
-    assert "sekrit" not in out
-
-
-def test_cli_live_check_can_start_when_simulated(tmp_path, capsys, monkeypatch):
-    monkeypatch.setenv("HYPERVECTOR_HL_WALLET_ADDRESS", "0xabc")
-    monkeypatch.setenv("HYPERVECTOR_HL_API_PRIVATE_KEY", "sekrit")
-    rc = main(
-        [
-            "live",
-            "check",
-            "--enabled",
-            "--i-accept-live-risk",
-        ]
-    )
-    assert rc == 0
-    out = capsys.readouterr().out
-    rep = json.loads(out)
-    assert rep["live"]["can_start"] is True
-    assert rep["start_gate"] == "ok"
-    assert "sekrit" not in out

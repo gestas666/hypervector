@@ -2,7 +2,7 @@
   "schema": 2,
   "help": "Report Hypervelocity regime alignment with recorded entries",
   "kind": "inprocess",
-  "handler": "hypervector.commands.regime:cmd_hypervelocity_regime_eval",
+  "handler": "hypervector.commands.regime:cmd_regime_align",
   "authority": "none",
   "environment": [],
   "data_root": "honored",

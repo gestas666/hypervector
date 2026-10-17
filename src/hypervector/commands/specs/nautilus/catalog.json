@@ -1,0 +1,72 @@
+{
+  "schema": 2,
+  "help": "Write recorded public Hyperliquid events into a Nautilus Parquet data catalog",
+  "description": "Converts the recorded public L2 snapshots and trades under cache/events/hyperliquid/<symbol> into a NautilusTrader ParquetDataCatalog with explicit gap provenance. Opt-in; the pipeline never runs it.",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.nautilus:cmd_catalog",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": null,
+        "help": "Hyperliquid coin whose recorded events are converted, e.g. BTC"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--price-precision"
+      ],
+      "options": {
+        "dest": "price_precision",
+        "type": "int",
+        "default": null,
+        "help": "decimal digits of the instrument price"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--size-precision"
+      ],
+      "options": {
+        "dest": "size_precision",
+        "type": "int",
+        "default": null,
+        "help": "decimal digits of the instrument size"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--instrument-id"
+      ],
+      "options": {
+        "dest": "instrument_id",
+        "default": null,
+        "help": "Nautilus instrument id (default: <SYMBOL>-PERP.HYPERLIQUID)"
+      }
+    },
+    {
+      "flags": [
+        "--out-dir"
+      ],
+      "options": {
+        "dest": "out_dir",
+        "type": "Path",
+        "default": null,
+        "help": "catalog directory (default: nautilus/catalog/<symbol> under the data root)"
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "help": "Print the ranked trial board from the runs database",
+  "help": "Rank stored sweep trials and tune boards (read-only)",
   "kind": "inprocess",
   "handler": "hypervector.commands.sweep:cmd_report",
   "authority": "none",
@@ -16,6 +16,21 @@
   "arguments": [
     {
       "flags": [
+        "--source"
+      ],
+      "options": {
+        "dest": "source",
+        "choices": [
+          "sweep",
+          "tune",
+          "all"
+        ],
+        "default": "all",
+        "help": "trial source: sweep (runs database), tune (autotune boards) or all"
+      }
+    },
+    {
+      "flags": [
         "--track"
       ],
       "options": {
@@ -26,6 +41,71 @@
         ],
         "default": null,
         "help": "only trials from this track (uptrend or downtrend)"
+      }
+    },
+    {
+      "flags": [
+        "--strategy"
+      ],
+      "options": {
+        "dest": "strategy",
+        "default": null,
+        "help": "only trials of this registered strategy name"
+      }
+    },
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": null,
+        "help": "only trials measured on this Hyperliquid coin, e.g. BTC"
+      }
+    },
+    {
+      "flags": [
+        "--timeframe"
+      ],
+      "options": {
+        "dest": "timeframe",
+        "default": null,
+        "help": "only trials measured on this bar size, e.g. 5m"
+      }
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null,
+        "help": "only trials from this sweep run id or tune board name"
+      }
+    },
+    {
+      "flags": [
+        "--limit"
+      ],
+      "options": {
+        "dest": "limit",
+        "type": "int",
+        "default": 50,
+        "help": "maximum number of ranked rows to print"
+      }
+    },
+    {
+      "flags": [
+        "--format"
+      ],
+      "options": {
+        "dest": "format",
+        "choices": [
+          "json",
+          "table"
+        ],
+        "default": "json",
+        "help": "output format: json (one document) or table (human-readable)"
       }
     }
   ]

@@ -97,12 +97,15 @@ def test_cli_regime_classify(tmp_path: Path, capsys, inject_history):
             str(data),
             "regime",
             "classify",
+            "--detector",
+            "ema",
             "--lookback-days",
             "30",
         ]
     )
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
+    assert payload["detector"] == "ema"
     assert "metrics" in payload
     assert "data_provenance" in payload
     assert not (data / "exports").exists() or not any((data / "exports").iterdir())
@@ -324,7 +327,9 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
         main(["--data-root", str(data), "export", "create", "--track", "downtrend"])
         == 0
     )
-    reexport_path = Path(capsys.readouterr().out.strip())
+    created = json.loads(capsys.readouterr().out)
+    reexport_path = Path(created["export_dir"])
+    assert created["artifacts"]["export"] == str(reexport_path)
     assert reexport_path.is_dir()
     assert (
         main(

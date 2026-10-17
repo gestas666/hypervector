@@ -3,41 +3,91 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Iterator
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 import json
+import os
 import sys
 from pathlib import Path
+from typing import Any
+
+from hypervector.commands.common import _secrets_present
+from hypervector.commands.exports import resolve_export, resolve_metalabel_bundle
+from hypervector.infra import ensure_data_layout
 from hypervector.nautilus.load_export import load_strategy_loadout
 from hypervector.paper.conviction import resolve_metalabel_mode
-from hypervector.paper.fill_models import DEFAULT_MAX_BOOK_AGE_MS
+from hypervector.paper.fill_models import DEFAULT_MAX_BOOK_AGE_MS, FILL_MODEL_L2_WALK_V1
 from hypervector.paper.order_intent import NETWORK_MAINNET
 from hypervector.paper.report import report_from_data_root
 from hypervector.paper.runner import PaperDaemonResult, start_paper_daemon
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
-from hypervector.commands.common import _ensure_root, _secrets_present
-from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1
 
 DEFAULT_PREFERRED_FILL_MODEL = FILL_MODEL_L2_WALK_V1
 DEFAULT_EXECUTION_MODE = "shadow"
 ALLOWED_CLI_EXECUTION_MODES = frozenset({"shadow", "paper"})
+METALABEL_ROOT_ENV = "HYPERVECTOR_METALABEL_ROOT"
+
+
+class PaperArgumentsError(ValueError):
+    """Conflicting or unsupported explicit paper command options."""
 
 
 def cmd_paper_run(args: argparse.Namespace) -> int:
-    """Run one explicitly configured no-submit paper/shadow session."""
-    path = Path(args.export)
-    if not path.is_dir():
-        print(f"export path not found: {path}", file=sys.stderr)
-        return 1
+    """Run one explicitly configured no-submit paper/shadow session.
+
+    A Hypervelocity bundle in shadow mode takes the Hypervelocity runtime lock,
+    so it can neither run beside nor resume into another Hypervelocity shadow.
+    """
+    from hypervector.runtime_lock import RuntimeLockError
+
+    path = resolve_export(args.export, args.data_root)
+    bundle = (
+        resolve_metalabel_bundle(args.metalabel_bundle, args.data_root)
+        if getattr(args, "metalabel_bundle", None)
+        else None
+    )
     try:
-        options = _paper_options(args, path)
-        _ensure_root(args)
-        result = start_paper_daemon(**options)
+        strategy_name = load_strategy_loadout(path, strict=True).strategy_name
+        options = _paper_options(args, path, strategy_name)
     except PaperArgumentsError as exc:
         print(f"paper run refused: {exc}", file=sys.stderr)
         return 2
-    except (OSError, RuntimeError, ValueError) as exc:
-        print(f"paper run failed: {exc}", file=sys.stderr)
+    hypervelocity_shadow = (
+        is_hypervelocity_strategy(strategy_name)
+        and options["execution_mode"] == "shadow"
+    )
+    try:
+        ensure_data_layout(Path(args.data_root))
+        with _runtime_guard(args, hypervelocity_shadow), _metalabel_root(bundle):
+            result = start_paper_daemon(**options)
+    except RuntimeLockError as exc:
+        print(f"paper run refused: {exc}", file=sys.stderr)
+        return 2
+    except Exception as exc:  # noqa: BLE001 - session failures are technical (exit 1)
+        if os.environ.get("HYPERVECTOR_DEBUG") == "1":
+            raise
+        print(
+            json.dumps(
+                {
+                    "ok": False,
+                    "command": args.command,
+                    "error_type": type(exc).__name__,
+                    "error": f"paper run failed: {exc}",
+                    "export_dir": str(path),
+                }
+            ),
+            file=sys.stderr,
+        )
         return 1
-    print(json.dumps(_paper_result(args, result, options), indent=2, default=str))
+    report = _paper_result(args, result, options)
+    report["hypervelocity_runtime_lock"] = hypervelocity_shadow
+    report["metalabel_bundle"] = str(bundle) if bundle is not None else None
+    report["artifacts"] = {
+        "export": str(path),
+        "model": str(bundle) if bundle is not None else None,
+        "paper": str(result.decisions_path),
+    }
+    print(json.dumps(report, indent=2, default=str))
     return 0
 
 
@@ -59,17 +109,46 @@ def cmd_paper_report(args: argparse.Namespace) -> int:
     return 0
 
 
-class PaperArgumentsError(ValueError):
-    """Conflicting or unsupported explicit paper command options."""
+@contextmanager
+def _metalabel_root(bundle: Path | None) -> Iterator[None]:
+    """Point the session's model loader (env root first) at ``bundle``, then restore.
+
+    The override lasts for this session only and never outlives it, so an
+    in-process caller keeps its own environment.
+    """
+    if bundle is None:
+        yield
+        return
+    previous = os.environ.get(METALABEL_ROOT_ENV)
+    os.environ[METALABEL_ROOT_ENV] = str(bundle)
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop(METALABEL_ROOT_ENV, None)
+        else:
+            os.environ[METALABEL_ROOT_ENV] = previous
 
 
-def _paper_options(args: argparse.Namespace, path: Path) -> dict[str, object]:
+def _runtime_guard(
+    args: argparse.Namespace, hypervelocity_shadow: bool
+) -> AbstractContextManager[Any]:
+    if not hypervelocity_shadow:
+        return nullcontext()
+    from hypervector.runtime_lock import hypervelocity_runtime_lock
+
+    return hypervelocity_runtime_lock(Path(args.data_root))
+
+
+def _paper_options(
+    args: argparse.Namespace, path: Path, strategy_name: str
+) -> dict[str, object]:
     """Prepare the daemon's typed runtime options from CLI arguments."""
     stop_file = Path(args.stop_file) if getattr(args, "stop_file", None) else None
     preferred = str(getattr(args, "preferred_fill_model", DEFAULT_PREFERRED_FILL_MODEL))
     max_book_age_ms = float(getattr(args, "max_book_age_ms", DEFAULT_MAX_BOOK_AGE_MS))
     metalabel_mode, metalabel_enabled, metalabel_filter, metalabel_min_p = (
-        _paper_model_options(args, path)
+        _paper_model_options(args, strategy_name)
     )
     execution_mode = str(getattr(args, "mode", DEFAULT_EXECUTION_MODE)).lower().strip()
     if execution_mode not in ALLOWED_CLI_EXECUTION_MODES:
@@ -101,7 +180,7 @@ def _paper_options(args: argparse.Namespace, path: Path) -> dict[str, object]:
 
 
 def _paper_model_options(
-    args: argparse.Namespace, path: Path
+    args: argparse.Namespace, strategy_name: str
 ) -> tuple[str, bool, bool, float]:
     """Preserve explicit model policy and Hypervelocity annotation-only authority."""
     legacy_metalabel = getattr(args, "metalabel", None)
@@ -119,7 +198,6 @@ def _paper_model_options(
         filter_entries=metalabel_filter,
         requested=requested_metalabel_mode,
     )
-    strategy_name = load_strategy_loadout(path, strict=True).strategy_name
     if is_hypervelocity_strategy(strategy_name) and metalabel_mode in (
         "scale",
         "filter",

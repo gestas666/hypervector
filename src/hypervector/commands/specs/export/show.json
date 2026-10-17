@@ -1,0 +1,29 @@
+{
+  "schema": 2,
+  "help": "Show one strategy bundle: meta, params, metrics and strict validation",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.exports:cmd_show",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--export"
+      ],
+      "options": {
+        "dest": "export",
+        "default": null,
+        "help": "strategy bundle: a directory, a candidate id under exports/, or latest"
+      },
+      "required": true,
+      "legacy_flags": [
+        "--path"
+      ]
+    }
+  ]
+}

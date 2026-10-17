@@ -4,51 +4,115 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import shutil
 import sys
 from pathlib import Path
-from hypervector.commands.common import _ensure_root
+from typing import Any
+
+from hypervector.commands.exports import resolve_export
+from hypervector.infra import ensure_data_layout
+
+INSTALLED_FILES: tuple[str, ...] = (
+    "metalabel_lgbm.txt",
+    "metalabel_calibrator.joblib",
+    "metalabel_metadata.json",
+    "walk_forward_report.json",
+)
 
 
-def cmd_metalabel_train(args: argparse.Namespace) -> int:
-    """Walk-forward LightGBM retrain; labels match export strategy exits."""
+def train_metalabel_bundle(
+    *,
+    export_dir: Path | str,
+    data_root: Path | str,
+    out_dir: Path | str | None = None,
+    lookback_days: int | None = None,
+    train_days: int = 45,
+    test_days: int = 15,
+    step_days: int | None = None,
+    embargo_minutes: int = 60,
+    max_hold_bars: int = 120,
+) -> dict[str, Any]:
+    """Walk-forward LightGBM metalabel training on one strategy bundle's entries.
+
+    Writes the model bundle (default ``<root>/models/metalabel/wf_<strategy>_<ts>``)
+    and returns its report with ``bundle_dir``. Never installs.
+    """
     from hypervector.ml.walk_forward import run_walk_forward_metalabel
 
-    paths = _ensure_root(args)
-    export_path = Path(args.export)
-    if not export_path.is_dir():
-        print(json.dumps({"ok": False, "error": f"export not found: {export_path}"}))
-        return 1
+    result = run_walk_forward_metalabel(
+        export_dir=Path(export_dir),
+        data_root=Path(data_root),
+        out_dir=Path(out_dir) if out_dir is not None else None,
+        lookback_days=int(lookback_days) if lookback_days is not None else None,
+        train_days=int(train_days),
+        test_days=int(test_days),
+        step_days=int(step_days) if step_days is not None else None,
+        embargo_minutes=int(embargo_minutes),
+        max_hold_bars=int(max_hold_bars),
+    )
+    return {**result.report, "bundle_dir": str(Path(result.bundle_dir).resolve())}
+
+
+def cmd_model_train(args: argparse.Namespace) -> int:
+    """Walk-forward LightGBM retrain; labels match the bundle's strategy exits.
+
+    Failures inside training (including library errors such as LightGBM's)
+    print ``{"ok": false, ...}`` JSON and exit 1.
+    """
+    export_path = resolve_export(args.export, args.data_root)
+    root = ensure_data_layout(Path(args.data_root)).root
     try:
-        result = run_walk_forward_metalabel(
+        report = train_metalabel_bundle(
             export_dir=export_path,
-            data_root=paths.root,
-            out_dir=Path(args.out_dir) if args.out_dir else None,
-            lookback_days=int(args.lookback) if args.lookback is not None else None,
-            train_days=int(args.train_days),
-            test_days=int(args.test_days),
-            step_days=int(args.step_days) if args.step_days is not None else None,
-            embargo_minutes=int(args.embargo_minutes),
-            max_hold_bars=int(args.max_hold_bars),
+            data_root=root,
+            out_dir=args.out_dir,
+            lookback_days=args.lookback,
+            train_days=args.train_days,
+            test_days=args.test_days,
+            step_days=args.step_days,
+            embargo_minutes=args.embargo_minutes,
+            max_hold_bars=args.max_hold_bars,
         )
-    except (ImportError, OSError, RuntimeError, ValueError) as exc:
+    except Exception as exc:  # noqa: BLE001 - training failures are technical (exit 1)
+        if os.environ.get("HYPERVECTOR_DEBUG") == "1":
+            raise
         print(
             json.dumps(
-                {"ok": False, "error": f"{type(exc).__name__}: {exc}"},
+                {
+                    "ok": False,
+                    "command": args.command,
+                    "error_type": type(exc).__name__,
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "export_dir": str(export_path),
+                },
                 indent=2,
             ),
             file=sys.stderr,
         )
         return 1
 
-    install_path = (
-        _install_model(result.bundle_dir, paths.root) if args.install else None
+    bundle_dir = Path(report["bundle_dir"])
+    install_path = _install_model(bundle_dir, root) if args.install else None
+    # A candidate id only resolves under <root>/exports of the same data root.
+    export_ref = (
+        export_path.name
+        if export_path.parent == (root / "exports").resolve()
+        else str(export_path)
+    )
+    root_flag = (
+        "" if Path(args.data_root) == Path("data") else f"--data-root {args.data_root} "
     )
     out = {
-        **result.report,
+        **report,
+        "export_dir": str(export_path),
         "installed_to": install_path,
-        "env_hint": (
-            f"export HYPERVECTOR_METALABEL_ROOT={install_path or result.bundle_dir}"
+        "env_hint": f"export HYPERVECTOR_METALABEL_ROOT={install_path or bundle_dir}",
+        "paper_hint": (
+            f"hypervector {root_flag}paper run --export {export_ref} "
+            f"--metalabel-bundle {bundle_dir} --metalabel-mode observe"
         ),
+        "artifacts": {"export": str(export_path), "model": str(bundle_dir)},
     }
     print(json.dumps(out, indent=2, default=str))
     return 0
@@ -56,19 +120,10 @@ def cmd_metalabel_train(args: argparse.Namespace) -> int:
 
 def _install_model(bundle: Path, root: Path) -> str:
     """Install the declared trained bundle files into the selected data root."""
-    import shutil
-
     dest = root / "models" / "metalabel"
     dest.mkdir(parents=True, exist_ok=True)
-    for name in (
-        "metalabel_lgbm.txt",
-        "metalabel_calibrator.joblib",
-        "metalabel_metadata.json",
-    ):
+    for name in INSTALLED_FILES:
         src = bundle / name
         if src.is_file():
             shutil.copy2(src, dest / name)
-    report_src = bundle / "walk_forward_report.json"
-    if report_src.is_file():
-        shutil.copy2(report_src, dest / "walk_forward_report.json")
     return str(dest.resolve())

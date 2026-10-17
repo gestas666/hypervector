@@ -1,15 +1,32 @@
-"""Phase-2 export bundles."""
+"""Strategy export bundles.
 
-from hypervector.export.phase2 import export_candidate
-from hypervector.export.schema import (
-    EXPORT_SCHEMA_VERSION,
-    ExportSchemaError,
-    validate_export_dir,
-)
+Exports resolve lazily (PEP 562) so importing ``hypervector.export.schema`` for
+read-only inspection never loads pandas through the bundle writer.
+"""
 
-__all__ = [
-    "EXPORT_SCHEMA_VERSION",
-    "ExportSchemaError",
-    "export_candidate",
-    "validate_export_dir",
-]
+from __future__ import annotations
+
+from importlib import import_module
+from typing import Any
+
+_EXPORTS = {
+    "EXPORT_SCHEMA_VERSION": "hypervector.export.schema",
+    "ExportSchemaError": "hypervector.export.schema",
+    "validate_export_dir": "hypervector.export.schema",
+    "export_candidate": "hypervector.export.phase2",
+}
+
+__all__ = sorted(_EXPORTS)
+
+
+def __getattr__(name: str) -> Any:
+    module = _EXPORTS.get(name)
+    if module is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    value = getattr(import_module(module), name)
+    globals()[name] = value
+    return value
+
+
+def __dir__() -> list[str]:
+    return sorted({*globals(), *_EXPORTS})

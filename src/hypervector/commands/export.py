@@ -3,130 +3,152 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Mapping
 from contextlib import closing
 import json
 import sys
 from pathlib import Path
-from hypervector.export.phase2 import export_candidate
+from typing import Any
+
+from hypervector.commands.common import CommandRefused
+from hypervector.commands.exports import (
+    TRIAL_METRICS,
+    costs_applied,
+    explain_no_export_trial,
+    resolve_export,
+    select_export_trial,
+)
 from hypervector.export.schema import ExportSchemaError, validate_export_dir
+from hypervector.infra import ensure_data_layout, paths_for
 from hypervector.runs.db import RunsDB
-from hypervector.commands.common import _ensure_root
 
 
-def cmd_export(args: argparse.Namespace) -> int:
-    """Re-export best trial for a track as a Phase 2-ready bundle.
+def cmd_create(args: argparse.Namespace) -> int:
+    """Publish the best stored sweep trial matching the filters as a strict bundle.
 
-    Requires trials written by a modern sweep that stored ``research_meta``
-    (costs/risk/exits/cash). Older DB rows without research_meta are refused.
+    Requires trials written by a sweep that stored ``research_meta`` (costs,
+    risk, exits, cash). Selecting reads only; directories are created right
+    before the bundle is written.
     """
-    root = _ensure_root(args).root
-    with closing(RunsDB(root / "runs" / "hypervector.db")) as db:
-        rows = db.list_trials(track=args.track) if args.track else []
-    best = _select_export_trial(rows)
+    filters = {
+        "run_id": args.run_id,
+        "track": args.track,
+        "strategy": args.strategy,
+        "symbol": args.symbol,
+        "timeframe": args.timeframe,
+    }
+    if args.track is None and args.run_id is None:
+        raise CommandRefused("export create needs --track or --run-id (or both)")
+    rows = stored_trials(args.data_root, track=args.track, run_id=args.run_id)
+    best = select_export_trial(rows, **filters)
     if best is None:
-        # Distinguish empty track vs legacy-only rows
-        any_ok = any(r.get("status") == "ok" for r in rows)
-        if any_ok:
-            print(
-                "ok trials exist but none have research_meta "
-                "(costs/risk/exits/cash); re-run 'backtest sweep' "
-                "so Phase 2-ready config is stored",
-                file=sys.stderr,
-            )
-        else:
-            print("no ok trials to export", file=sys.stderr)
+        print(
+            json.dumps(
+                {
+                    "ok": False,
+                    "command": args.command,
+                    "error_type": "NoExportableTrial",
+                    "error": explain_no_export_trial(rows, filters),
+                    "filters": {k: v for k, v in filters.items() if v is not None},
+                }
+            ),
+            file=sys.stderr,
+        )
         return 1
-    path = _publish_selected_export(root, best, args)
-    print(str(path))
+    path = publish_trial_export(
+        Path(args.data_root),
+        best,
+        candidate_id=f"export_{best['track']}_{best['id']}",
+    )
+    research = best["research_meta"]
+    out = {
+        "ok": True,
+        "candidate_id": path.name,
+        "export_dir": str(path),
+        "run_id": best["run_id"],
+        "trial_id": best["id"],
+        "track": best["track"],
+        "strategy": best["strategy"],
+        "symbol": research.get("symbol"),
+        "timeframe": research.get("timeframe"),
+        "metrics": {key: best.get(key) for key in TRIAL_METRICS},
+        "costs_applied": costs_applied(best),
+        "artifacts": {"export": str(path)},
+    }
+    print(json.dumps(out, indent=2, default=str))
     return 0
 
 
-def cmd_export_validate(args: argparse.Namespace) -> int:
-    """Validate a strategy bundle; strict unless --loose is given."""
-    path = Path(args.export)
+def cmd_validate(args: argparse.Namespace) -> int:
+    """Validate a strategy bundle; strict unless --loose is given (exit 1 if invalid)."""
+    path = resolve_export(args.export, args.data_root)
+    strict = not args.loose
     try:
-        report = validate_export_dir(path, strict=not args.loose)
+        report = validate_export_dir(path, strict=strict)
     except ExportSchemaError as exc:
         print(
             json.dumps(
-                {"ok": False, "path": str(path), "errors": exc.errors},
+                {
+                    "ok": False,
+                    "command": args.command,
+                    "error_type": "ExportSchemaError",
+                    "error": str(exc),
+                    "export_dir": str(path),
+                    "path": str(path),
+                    "strict": strict,
+                    "errors": exc.errors,
+                },
                 indent=2,
             ),
             file=sys.stderr,
         )
         return 1
-    # Drop heavy nested blobs from CLI stdout unless --verbose
-    out = {k: v for k, v in report.items() if k not in ("meta", "params", "metrics")}
+    # Heavy nested blobs only with --verbose.
+    out: dict[str, Any] = {
+        k: v for k, v in report.items() if k not in ("meta", "params", "metrics")
+    }
+    out["candidate_id"] = path.name
+    out["export_dir"] = str(path)
     if args.verbose:
         out["meta"] = report["meta"]
         out["params"] = report["params"]
         out["metrics"] = report["metrics"]
+    out["artifacts"] = {
+        "export": str(path),
+        "validation": {"strict": strict, "valid": True},
+    }
     print(json.dumps(out, indent=2, default=str))
     return 0
 
 
-def _select_export_trial(rows: list[dict[str, object]]) -> dict[str, object] | None:
-    """Prefer costed, schema-ready trials while retaining weak measured results."""
-    # Prefer Phase 2-ready trials (research_meta from modern sweeps).
-    # list_trials already ranks by net_pnl DESC. Prefer cost-aware rows
-    # (non-zero taker_fee) so --no-costs diagnostics never become the export.
-    ready = [
-        r
-        for r in rows
-        if r.get("status") == "ok"
-        and isinstance(r.get("research_meta"), dict)
-        and r["research_meta"]
-    ]
-
-    costed = [r for r in ready if _costs_applied(r)]
-    return costed[0] if costed else (ready[0] if ready else None)
+def stored_trials(
+    data_root: Path | str, *, track: str | None = None, run_id: str | None = None
+) -> list[dict[str, Any]]:
+    """Read stored sweep trials; a missing runs database means no trials (no mkdir)."""
+    database = paths_for(data_root).runs_db
+    if not database.is_file():
+        return []
+    with closing(RunsDB(database)) as db:
+        return db.list_trials(track=track, run_id=run_id)
 
 
-def _costs_applied(r: dict) -> bool:
-    meta = r.get("research_meta") or {}
-    if "apply_costs" in meta:
-        return bool(meta["apply_costs"])
-    # Legacy rows: treat fee_model zero / explicit zero fees as diagnostic-only
-    if meta.get("fee_model") == "zero":
-        return False
-    costs = meta.get("costs") or {}
-    try:
-        return float(costs.get("taker_fee", 0) or 0) > 0
-    except (TypeError, ValueError):
-        return False
-
-
-def _publish_selected_export(
-    root: Path, best: dict[str, object], args: argparse.Namespace
+def publish_trial_export(
+    data_root: Path, best: Mapping[str, Any], *, candidate_id: str
 ) -> Path:
-    """Publish one strict bundle from the selected stored trial metadata."""
-    research = best["research_meta"]
-    meta = {
-        "track": best["track"],
-        "exported_from": "cli",
-        **research,
-    }
-    # CLI symbol/timeframe only fill gaps; research_meta wins when present
-    meta.setdefault("symbol", getattr(args, "symbol", "BTC"))
-    meta.setdefault("timeframe", getattr(args, "timeframe", "1m"))
-    return export_candidate(
+    """Write one strict bundle from a stored trial and its research metadata."""
+    from hypervector.export.phase2 import export_candidate
+
+    root = ensure_data_layout(data_root).root
+    research = dict(best["research_meta"])
+    meta = {"track": best["track"], "exported_from": "cli", **research}
+    params = {"strategy": best["strategy"], "role": best["track"], **best["params"]}
+    path = export_candidate(
         root / "exports",
-        run_id=best["run_id"],
+        run_id=str(best["run_id"]),
         meta=meta,
-        params={"strategy": best["strategy"], **best["params"]},
-        metrics={
-            k: best[k]
-            for k in (
-                "net_pnl",
-                "total_return_pct",
-                "sharpe",
-                "trade_count",
-                "wins",
-                "losses",
-                "win_pct",
-                "max_drawdown",
-            )
-        },
-        candidate_id=f"export_{best['track']}_{best['id']}",
+        params=params,
+        metrics={key: best[key] for key in TRIAL_METRICS},
+        candidate_id=candidate_id,
         strict=True,
     )
+    return path.resolve()

@@ -43,6 +43,131 @@ def preflight_audit(args: argparse.Namespace) -> None:
         )
 
 
+def cmd_live_check(args: argparse.Namespace) -> int:
+    """Cohort start readiness as booleans; exit 0 when ready, 1 when not.
+
+    Credentials are reported as presence only (process environment first, then
+    ``.env``); no value is read into this process's environment and nothing is
+    printed but booleans. With ``--config`` the profile loads in observe mode
+    only, so the check never arms anything. The authority flags only change the
+    report (``would_arm``).
+    """
+    blockers: list[str] = []
+    credentials = _credential_readiness(blockers)
+    enabled = bool(getattr(args, "enabled", False))
+    accepts = bool(getattr(args, "i_accept_live_risk", False))
+    if not enabled:
+        blockers.append("--enabled not given (live start requires it)")
+    if not accepts:
+        blockers.append("--i-accept-live-risk not given (live start requires it)")
+    config = getattr(args, "config", None)
+    if config is None:
+        profile = None
+        blockers.append("no --config given; the cohort profile was not checked")
+    else:
+        profile = _profile_readiness(Path(config), blockers)
+    ready = not blockers
+    report = {
+        "ok": ready,
+        "command": "live check",
+        "ready": ready,
+        "blockers": blockers,
+        "credentials": credentials,
+        "authority": {
+            "enabled": enabled,
+            "i_accept_live_risk": accepts,
+            "would_arm": enabled and accepts,
+        },
+        "profile": profile,
+        "start_command": (
+            f"hypervector live start --config {config} --enabled --i-accept-live-risk"
+            if config is not None
+            else "hypervector live start --config PROFILE --enabled --i-accept-live-risk"
+        ),
+        "venue_submit": False,
+        "network": NETWORK_MAINNET,
+    }
+    print(json.dumps(report, indent=2, default=str))
+    return 0 if ready else 1
+
+
+def _credential_readiness(blockers: list[str]) -> dict[str, object]:
+    """Presence and source of each live credential name; never a value."""
+    from hypervector.runtime_env import dotenv_key_presence
+
+    keys = (SECRET_ENV_WALLET, SECRET_ENV_API_KEY)
+    presence = dotenv_key_presence(keys)
+    sources: dict[str, dict[str, object]] = {}
+    for key in keys:
+        configured = bool(presence[key])
+        in_process = bool((os.environ.get(key) or "").strip())
+        source = (
+            "process_env" if in_process else ("dotenv" if configured else "missing")
+        )
+        sources[key] = {"configured": configured, "source": source}
+        if not configured:
+            blockers.append(f"{key} is not configured (process environment or .env)")
+    return {
+        "wallet_configured": bool(presence[SECRET_ENV_WALLET]),
+        "signing_key_configured": bool(presence[SECRET_ENV_API_KEY]),
+        "keys": sources,
+    }
+
+
+def _profile_readiness(path: Path, blockers: list[str]) -> dict[str, object]:
+    """Observe-mode profile load, dependency check, STOP and drain markers."""
+    report: dict[str, object] = {
+        "config": str(path),
+        "mode": "observe",
+        "loaded": False,
+        "profile_id": None,
+        "profile_fingerprint": None,
+        "provider_dependencies_ok": None,
+        "stop_file": None,
+        "transition_drain": None,
+    }
+    try:
+        from hypervector.live.multi_asset_live_config import (
+            load_multi_asset_live_config,
+        )
+
+        config = load_multi_asset_live_config(path, mode="observe")
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        report["error"] = f"{type(exc).__name__}: {exc}"
+        blockers.append(f"profile does not load in observe mode: {exc}")
+        return report
+    report.update(
+        loaded=True,
+        profile_id=config.profile_id,
+        profile_fingerprint=config.profile_fingerprint,
+    )
+    try:
+        from hypervector.live.cohort_process_commands import (
+            require_live_provider_dependencies,
+        )
+
+        require_live_provider_dependencies(config)
+        report["provider_dependencies_ok"] = True
+    except Exception as exc:  # noqa: BLE001 - every dependency failure is a blocker
+        report["provider_dependencies_ok"] = False
+        report["provider_dependencies_error"] = f"{type(exc).__name__}: {exc}"
+        blockers.append(f"provider dependencies not ready: {exc}")
+    stop_file = Path(config.stop_file)
+    report["stop_file"] = {"path": str(stop_file), "present": stop_file.exists()}
+    if stop_file.exists():
+        blockers.append(
+            f"STOP file present: {stop_file} (the backend would stop at once)"
+        )
+    drain = Path(config.cohort_ledger).parent / "transition_drain.json"
+    report["transition_drain"] = {"path": str(drain), "present": drain.exists()}
+    if drain.exists():
+        blockers.append(
+            f"transition drain evidence remains: {drain}; archive it with "
+            "'live drain-archive' or start with --resume-transition-drain"
+        )
+    return report
+
+
 def cmd_live_run(args: argparse.Namespace) -> int:
     """Live daemon: mainnet place when enabled+armed+secrets (fail-closed)."""
     from hypervector.live.policy import LivePolicyError

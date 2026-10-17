@@ -2,7 +2,7 @@
   "schema": 2,
   "help": "Walk-forward LightGBM metalabel training on a strategy bundle's entries",
   "kind": "inprocess",
-  "handler": "hypervector.commands.model:cmd_metalabel_train",
+  "handler": "hypervector.commands.model:cmd_model_train",
   "authority": "none",
   "environment": [
     "models"
@@ -22,7 +22,7 @@
       "options": {
         "dest": "export",
         "default": null,
-        "help": "strategy bundle directory"
+        "help": "strategy bundle: a directory, a candidate id under exports/, or latest"
       },
       "required": true,
       "legacy_flags": [
