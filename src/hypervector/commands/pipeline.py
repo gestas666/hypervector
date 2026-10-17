@@ -248,25 +248,19 @@ def _bundle_identity(path: Path) -> dict[str, Any]:
 
 
 def _nautilus_unsupported(export_dir: Path | None, symbol: str) -> str | None:
-    """Why ``nautilus run`` would refuse this bundle (its own predicate), else None."""
-    from hypervector.commands.nautilus import (
-        NAUTILUS_SYMBOLS,
-        _require_supported_symbol,
-    )
+    """Why ``nautilus run`` would refuse this bundle (the engine's resolver), else None."""
+    from hypervector.commands.nautilus import _unsupported_symbol
+    from hypervector.nautilus.errors import UnsupportedNautilusSymbol
+    from hypervector.nautilus.venue_spec import resolve_venue_spec
 
     if export_dir is not None:
-        try:
-            _require_supported_symbol(export_dir)
-        except CommandRefused as exc:
-            return str(exc)
-        return None
-    if symbol.strip().upper() in NAUTILUS_SYMBOLS:
-        return None
-    return (
-        "Nautilus validation currently supports "
-        f"{', '.join(sorted(NAUTILUS_SYMBOLS))} exports only (CLI-15); "
-        f"the search bundle will be {symbol}"
-    )
+        refusal = _unsupported_symbol(export_dir)
+        return None if refusal is None else str(refusal)
+    try:
+        resolve_venue_spec(symbol)
+    except UnsupportedNautilusSymbol as exc:
+        return f"{exc}; the search bundle will be {symbol}"
+    return None
 
 
 def make_pipeline_id(created: datetime, strategy: str, symbol: str, tf: str) -> str:

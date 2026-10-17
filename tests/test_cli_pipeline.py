@@ -476,9 +476,10 @@ def test_manifest_is_replaced_atomically_after_every_stage(
 
     def recording_replace(source: str | Path, target: str | Path) -> None:
         source, target = Path(source), Path(target)
-        assert target.name == pipeline.MANIFEST
-        assert source.parent == target.parent and source.name != target.name
-        snapshots.append(json.loads(source.read_text(encoding="utf-8")))
+        # os is shared: bundle exports also stage-and-replace their own files.
+        if target.name == pipeline.MANIFEST:
+            assert source.parent == target.parent and source.name != target.name
+            snapshots.append(json.loads(source.read_text(encoding="utf-8")))
         real_replace(source, target)
 
     monkeypatch.setattr(pipeline.os, "replace", recording_replace)
@@ -651,16 +652,16 @@ def test_unsupported_symbol_skips_nautilus_and_continues(
 ) -> None:
     data = tmp_path / "data"
     if from_export:
-        strict_bundle(data / "exports", "eth-cand", symbol="ETH")
-        extra = ["--export", "eth-cand"]
+        strict_bundle(data / "exports", "doge-cand", symbol="DOGE")
+        extra = ["--export", "doge-cand"]
     else:
-        extra = ["--symbol", "ETH", "--lookback-days", "30"]
+        extra = ["--symbol", "DOGE", "--lookback-days", "30"]
     assert main(_run(data, "--strategy", "crown_stack_long", *extra)) == 0
     manifest = json.loads(capsys.readouterr().out)
     nautilus_stage = _stages(manifest)["nautilus"]
     assert nautilus_stage["status"] == "skipped"
     assert nautilus_stage["reason"] == "unsupported_symbol"
-    assert "CLI-15" in nautilus_stage["detail"]
+    assert "no venue metadata" in nautilus_stage["detail"]
     assert fakes.calls["nautilus"] == [] and fakes.calls["check"] == []
     assert manifest["parity"] is None
     assert _stages(manifest)["paper"]["status"] == "ok"
@@ -676,10 +677,7 @@ def test_nautilus_skip_follows_the_engine_symbol_predicate(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """When the engine supports a symbol, the pipeline runs Nautilus for it."""
-    monkeypatch.setattr(
-        "hypervector.commands.nautilus.NAUTILUS_SYMBOLS", frozenset({"BTC", "ETH"})
-    )
+    """A symbol the engine resolves (built-in ETH venue geometry) runs Nautilus."""
     data = tmp_path / "data"
     strict_bundle(data / "exports", "eth-cand", symbol="ETH")
     argv = _run(data, "--strategy", "crown_stack_long", "--export", "eth-cand")
