@@ -408,6 +408,8 @@ def test_full_run_pins_the_window_and_reports_parity(
     assert load["force_refresh"] is False and load["allow_network"] is True
     [tune] = fakes.calls["tune"]
     assert tune["export_best"] is True and tune["force_refresh"] is False
+    # Only the data stage may refresh: the search serves the pinned window.
+    assert tune["pin_cache"] is True
     # The engine probe imports Nautilus's execution-client module: never run it.
     [check] = fakes.calls["check"]
     assert check["probe_nautilus"] is False and check["strict"] is True

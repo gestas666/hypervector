@@ -12,6 +12,10 @@ can never claim a window it does not hold:
   (the flags are still reported).
 * A window this pipeline fetched less than ``max_cache_age`` ago is served even
   when partial: the venues had nothing more (HL retention, a new listing).
+* A full window this pipeline wrote that is stale only by age is topped up:
+  HL as usual, Binance/Bybit only for the days since its last bar, merged over
+  the kept cached bars (HL still wins) and trimmed to the lookback. Anything
+  else, or a top-up that cannot reach the cached last bar, is refetched whole.
 * Strict HL-only loads use their own ``<key>_hlonly`` entry and never write the
   default (backfilled) entry; default loads never read ``_hlonly``.
 * A refresh never discards a file the pipeline did not write (a legacy or an
@@ -24,6 +28,7 @@ can never claim a window it does not hold:
 from __future__ import annotations
 
 import logging
+import math
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -55,6 +60,8 @@ MIN_COVERAGE = 0.95
 CACHE_ORIGIN = "research_history"
 _HL_SOURCES = ("hl", "hl_gap_fill")
 _STRICT_SUFFIX = "_hlonly"
+# A top-up's CEX gap fetch starts this far before the cached last bar.
+_TOP_UP_MARGIN = pd.Timedelta(hours=1)
 
 
 def cache_key(
@@ -168,8 +175,8 @@ def load_research_history(
     key = cache_key(symbol, timeframe, lookback_days, strict_hl_only=strict_hl_only)
 
     refresh_reason: str | None = "force_refresh" if force_refresh else None
+    stale_hit: _CacheHit | None = None
     if not force_refresh:
-        stale_hit: _CacheHit | None = None
         for candidate in _candidate_keys(request):
             hit = _read_cache(cache, candidate, request)
             if hit is None:
@@ -201,7 +208,16 @@ def load_research_history(
             f"offline history cache missing or incompatible: {cache.path_for(key)}"
         )
 
-    merged, backfill = _fetch(cache, request)
+    topped = (
+        _top_up(cache, request, stale_hit)
+        if stale_hit is not None and _can_top_up(stale_hit, request, key)
+        else None
+    )
+    if topped is not None:
+        merged, backfill = topped
+        refresh_reason = f"{refresh_reason} (top-up)"
+    else:
+        merged, backfill = _fetch(cache, request)
     preserved = _preserve_unmanaged(cache, key)
     metadata = _metadata(request, strict_hl_only=strict_hl_only, backfill=backfill)
     path = cache.save(key, merged, metadata=metadata)
@@ -328,13 +344,7 @@ def _fetch(
         request.timeframe,
         request.lookback_days,
     )
-    hl_df = live_hl_fetcher(symbol, timeframe, lookback)
-    if hl_df is not None and len(hl_df):
-        hl_df = normalize_ohlcv(
-            hl_df, source="hl" if "source" not in hl_df.columns else None
-        )
-    else:
-        hl_df = None
+    hl_df = _fetch_hl(request)
 
     backfills: list[tuple[str, pd.DataFrame]] = []
     if request.strict_hl_only:
@@ -357,6 +367,125 @@ def _fetch(
     if len(merged) == 0:
         raise RuntimeError(f"no history for {symbol} {timeframe} lookback={lookback}d")
     return merged, status
+
+
+def _fetch_hl(request: _Request) -> pd.DataFrame | None:
+    """HL's retained candles in the lookback (one request: HL keeps 5000)."""
+    hl_df = live_hl_fetcher(request.symbol, request.timeframe, request.lookback_days)
+    if hl_df is None or not len(hl_df):
+        return None
+    return normalize_ohlcv(
+        hl_df, source="hl" if "source" not in hl_df.columns else None
+    )
+
+
+def _can_top_up(hit: _CacheHit, request: _Request, key: str) -> bool:
+    """A full, managed, CEX-backfilled window that is stale only by age.
+
+    Strict HL-only and HIP-3 loads cost one HL request either way, so they keep
+    the full refetch, as do unmanaged (legacy or installed), partial windows and
+    windows that ended before the requested lookback starts.
+    """
+    window = hit.window
+    metadata = hit.metadata or {}
+    return (
+        hit.key == key
+        and metadata.get("origin") == CACHE_ORIGIN
+        and not metadata.get("strict_hl_only")
+        and not request.strict_hl_only
+        and ":" not in request.symbol.strip()
+        and window.stale
+        and not window.partial
+        and window.end is not None
+        and timeframe_delta(request.timeframe) is not None
+        and window.end >= request.now - pd.Timedelta(days=request.lookback_days)
+    )
+
+
+def _top_up(
+    cache: ParquetCache, request: _Request, hit: _CacheHit
+) -> tuple[pd.DataFrame, dict[str, str]] | None:
+    """Refetch only a stale window's tail; ``None`` means refetch it whole.
+
+    HL is fetched as in a full refresh; Binance (then Bybit, only while the
+    window is still incomplete) only for the days since the cached last bar.
+    That bar is refetched (it may have been open when cached); every earlier
+    cached bar inside the lookback is kept with its source label and outranks
+    the CEX gap bars, HL still wins on overlap, and the result is trimmed to the
+    lookback. The top-up is used only when the new bars start at or before the
+    cached last bar and the window keeps at least 95% coverage.
+    """
+    seam = hit.window.end
+    assert seam is not None
+    lower = request.now - pd.Timedelta(days=request.lookback_days)
+    gap_days = min(
+        request.lookback_days,
+        math.ceil((request.now - seam + _TOP_UP_MARGIN) / pd.Timedelta(days=1)),
+    )
+    stamps = hit.frame["timestamp"]
+    kept = hit.frame.loc[(stamps >= lower) & (stamps < seam)]
+    logger.info(
+        "topping up history cache %s from %s (CEX gap %sd, %d cached bars kept)",
+        hit.key,
+        f"{seam:%Y-%m-%dT%H:%MZ}",
+        gap_days,
+        len(kept),
+    )
+    hl_df = _fetch_hl(request)
+    status: dict[str, str] = {}
+
+    def gap_fill(name: str, fetcher: Any) -> list[tuple[str, pd.DataFrame]]:
+        try:
+            frame = _optional_backfill(
+                name, fetcher, request, status, lookback_days=gap_days
+            )
+        except Exception as exc:
+            _keep_hl_only(cache, request, hl_df, exc)
+            raise
+        if frame is None or not len(frame):
+            return []
+        return [
+            (name, normalize_ohlcv(frame, source=None if "source" in frame else name))
+        ]
+
+    fresh = gap_fill("binance", live_binance_fetcher)
+    merged, complete, coverage = _assemble(hl_df, fresh, kept, seam, lower, request)
+    if complete:
+        status["bybit"] = f"skipped: top-up coverage {coverage:.1%}"
+    else:
+        fresh += gap_fill("bybit", live_bybit_fetcher)
+        merged, complete, coverage = _assemble(hl_df, fresh, kept, seam, lower, request)
+    if not complete:
+        logger.info(
+            "top-up of %s is incomplete (coverage %.1f%%); refetching the whole window",
+            hit.key,
+            100 * coverage,
+        )
+        return None
+    status["top_up"] = (
+        f"refetched from {seam:%Y-%m-%dT%H:%MZ} (CEX gap {gap_days}d); "
+        f"kept {len(kept)} cached bars"
+    )
+    return merged, status
+
+
+def _assemble(
+    hl_df: pd.DataFrame | None,
+    fresh: list[tuple[str, pd.DataFrame]],
+    kept: pd.DataFrame,
+    seam: pd.Timestamp,
+    lower: pd.Timestamp,
+    request: _Request,
+) -> tuple[pd.DataFrame, bool, float]:
+    """HL, then the kept cache, then the CEX gap; complete once they meet."""
+    frames = ([] if hl_df is None else [hl_df]) + [frame for _, frame in fresh]
+    starts = [frame["timestamp"].min() for frame in frames if len(frame)]
+    reaches = bool(starts) and min(starts) <= seam
+    merged = merge_history(hl_df, [("cache", kept), *fresh])
+    merged = merged.loc[merged["timestamp"] >= lower].reset_index(drop=True)
+    expected = _expected_bars(request.timeframe, request.lookback_days)
+    coverage = len(merged) / expected if expected else 1.0
+    return merged, reaches and coverage >= MIN_COVERAGE, coverage
 
 
 def _cex_backfill(
@@ -393,10 +522,13 @@ def _optional_backfill(
     fetcher: Any,
     request: _Request,
     status: dict[str, str],
+    *,
+    lookback_days: int | None = None,
 ) -> pd.DataFrame | None:
     """Run one CEX fetcher; only "venue does not list it" is tolerated."""
+    days = request.lookback_days if lookback_days is None else lookback_days
     try:
-        frame = fetcher(request.symbol, request.timeframe, request.lookback_days)
+        frame = fetcher(request.symbol, request.timeframe, days)
     except BackfillUnavailable as exc:
         status[name] = f"unavailable: {exc}"
         logger.warning(

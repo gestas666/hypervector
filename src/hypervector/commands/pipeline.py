@@ -432,7 +432,7 @@ def _stage_argv(plan: Plan, stage: str, export_ref: str) -> list[str]:
     else:
         tune = ("tune", "strategy", "--strategy", plan.strategy, *market, *fees)
         search = (*tune, "--n-trials", args.n_trials, "--sampler", args.sampler)
-        search += hl_only
+        search += (*hl_only, "--pin-cache")
     words: dict[str, tuple[object, ...]] = {
         "data": ("data", "history", *market, *hl_only, *refresh),
         "search": search,
@@ -701,6 +701,8 @@ class PipelineRun:
             sampler=args.sampler,
             strict_hl_only=bool(args.strict_hl_only),
             force_refresh=False,
+            # The data stage pinned the window; serve it as is (never refetch).
+            pin_cache=True,
             export_best=True,
         )
         if result.export_dir is None:
