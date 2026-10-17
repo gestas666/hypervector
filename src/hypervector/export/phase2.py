@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -10,7 +13,11 @@ from typing import Any
 import pandas as pd
 
 from hypervector import __version__
-from hypervector.export.schema import EXPORT_SCHEMA_VERSION, validate_export_dir
+from hypervector.export.schema import (
+    EXPORT_SCHEMA_VERSION,
+    ExportSchemaError,
+    validate_export_dir,
+)
 
 
 def export_candidate(
@@ -29,13 +36,16 @@ def export_candidate(
     """Write minimum bundle: meta.json, params.json, metrics.json (+ optional series).
 
     Always stamps ``schema_version`` and ``package_version``. Strategy is mirrored
-    onto meta when present in params (Phase 2 loadout convenience). When
-    ``validate`` is True (default), the written directory is schema-checked.
+    onto meta when present in params (Phase 2 loadout convenience). The bundle is
+    written to a staging directory beside the target and schema-checked there
+    when ``validate`` is True (default); only a valid bundle is moved into
+    ``export_root/<candidate_id>``. A failed validation leaves no partial bundle
+    and keeps any previous bundle of that candidate untouched.
     """
     root = Path(export_root)
     cid = candidate_id or run_id
     out_dir = root / cid
-    out_dir.mkdir(parents=True, exist_ok=True)
+    root.mkdir(parents=True, exist_ok=True)
 
     # Caller meta wins on overlap except schema/package/run_id stamps.
     full_meta: dict[str, Any] = {
@@ -53,8 +63,36 @@ def export_candidate(
     if strategy and "strategy" not in full_meta:
         full_meta["strategy"] = strategy
 
+    staging = Path(tempfile.mkdtemp(prefix=".staging-", dir=root))
+    try:
+        _write_bundle(staging, run_id, full_meta, params, metrics, signals, regime_labels)
+        if validate:
+            # Loose by default so regime/minimal exports still write; sweep uses
+            # full meta. Strict is available for Phase 2 readiness paths.
+            try:
+                validate_export_dir(staging, strict=strict)
+            except ExportSchemaError as exc:
+                raise ExportSchemaError(out_dir, exc.errors) from None
+        out_dir.mkdir(parents=True, exist_ok=True)
+        for item in sorted(staging.iterdir()):
+            os.replace(item, out_dir / item.name)
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+
+    return out_dir
+
+
+def _write_bundle(
+    out_dir: Path,
+    run_id: str,
+    meta: dict[str, Any],
+    params: dict[str, Any],
+    metrics: dict[str, Any],
+    signals: pd.DataFrame | None,
+    regime_labels: pd.Series | None,
+) -> None:
     (out_dir / "meta.json").write_text(
-        json.dumps(full_meta, indent=2, sort_keys=True, default=str) + "\n",
+        json.dumps(meta, indent=2, sort_keys=True, default=str) + "\n",
         encoding="utf-8",
     )
     (out_dir / "params.json").write_text(
@@ -78,10 +116,3 @@ def export_candidate(
         else:
             frame = pd.DataFrame(rl)
         frame.to_parquet(out_dir / "regime_labels.parquet", index=True)
-
-    if validate:
-        # Loose by default so regime/minimal exports still write; sweep uses full meta.
-        # Strict is available for Phase 2 readiness paths.
-        validate_export_dir(out_dir, strict=strict)
-
-    return out_dir

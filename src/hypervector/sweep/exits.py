@@ -1,7 +1,10 @@
 """Three TP/SL modes for research (fixed R:R, ATR, trail).
 
 All distances are expressed as **fractions of entry price** for VectorBT
-sl_stop / tp_stop. Trail uses a dynamic stop series applied as strategy exits.
+sl_stop / tp_stop. Trail is VectorBT's trailing ``sl_stop``: the distance is
+fixed at entry (trail_atr_mult x ATR / close) and ratchets with the bar highs
+(longs) or lows (shorts) of the open position, evaluated intrabar. There is
+exactly one trailing stop per position and it resets with every new entry.
 """
 
 from __future__ import annotations
@@ -76,66 +79,15 @@ def apply_exit_mode(
 ) -> tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
     """Return (entries, exits, sl_stop_frac, tp_stop_frac) for VectorBT.
 
-    Strategy exits are OR'd with trail stop hits when mode=trail.
-    For fixed_rr / atr, VectorBT sl_stop/tp_stop handle barrier exits;
-    strategy exits still apply (signal exit).
+    Strategy entries and exits pass through unchanged. Barrier exits are left
+    to VectorBT: fixed_rr / atr use hard sl_stop + tp_stop, trail uses the
+    trailing sl_stop (one stop per position, reset on every entry). The
+    ``direction`` argument is accepted for API compatibility; distances are
+    symmetric fractions of price.
     """
+    del direction  # distances are direction-independent fractions
     entries = entries.reindex(df.index).fillna(False).astype(bool)
     exits = exits.reindex(df.index).fillna(False).astype(bool)
     stop_f = stop_distance_frac(df, cfg)
     tp_f = tp_distance_frac(stop_f, cfg)
-
-    if cfg.mode == "trail":
-        high, low, close = _require_ohlc(df)
-        a = atr_indicator(high, low, close, cfg.atr_length)
-        trail = cfg.trail_atr_mult * a
-        # Long: exit if close < rolling max since entry proxy — use bar trail of high-atr
-        # Simpler stateful trail from last entry
-        trail_exit = _trail_exits(close, high, low, entries, direction, trail)
-        exits = exits | trail_exit
-
     return entries, exits, stop_f, tp_f
-
-
-def _trail_exits(
-    close: pd.Series,
-    high: pd.Series,
-    low: pd.Series,
-    entries: pd.Series,
-    direction: str,
-    trail_dist: pd.Series,
-) -> pd.Series:
-    """ATR trail: after entry, stop ratchets with favorable extreme."""
-    n = len(close)
-    c = close.to_numpy(dtype=float)
-    h = high.to_numpy(dtype=float)
-    lows = low.to_numpy(dtype=float)
-    e = entries.to_numpy(dtype=bool)
-    tr = trail_dist.to_numpy(dtype=float)
-    out = np.zeros(n, dtype=bool)
-    in_pos = False
-    extreme = np.nan
-    stop = np.nan
-    for i in range(n):
-        if e[i] and not in_pos:
-            in_pos = True
-            extreme = h[i] if direction == "long" else lows[i]
-            stop = extreme - tr[i] if direction == "long" else extreme + tr[i]
-            continue
-        if not in_pos:
-            continue
-        if direction == "long":
-            extreme = max(extreme, h[i])
-            stop = max(stop, extreme - tr[i]) if not np.isnan(tr[i]) else stop
-            if c[i] < stop:
-                out[i] = True
-                in_pos = False
-                extreme = stop = np.nan
-        else:
-            extreme = min(extreme, lows[i])
-            stop = min(stop, extreme + tr[i]) if not np.isnan(tr[i]) else stop
-            if c[i] > stop:
-                out[i] = True
-                in_pos = False
-                extreme = stop = np.nan
-    return pd.Series(out, index=close.index)
