@@ -240,9 +240,12 @@ def test_selection_is_train_only_and_exported_metrics_are_holdout(
 
     board = json.loads(result.board_path.read_text())
     # Five search trials on the 150-bar training slice, one holdout pass that
-    # builds signals on all 200 bars (causal warmup) and scores bars 150..199.
+    # builds signals on all 200 bars (causal warmup) and scores bars 150..199,
+    # then one report-only full-window re-measure (engine parity) of the winner.
     assert seen_lengths[:5] == [150] * 5
-    assert seen_lengths[5:] == [200]
+    assert seen_lengths[5:] == [200, 200]
+    assert board["best_full_window_metrics"]["bars"] == 200
+    assert board["best_full_window_metrics"]["first_index"] == 0
     assert all(
         trial["metrics"]["bars"] == 150 and trial["metrics"]["first_index"] == 0
         for trial in board["all_trials"]

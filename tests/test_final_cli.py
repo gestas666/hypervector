@@ -361,13 +361,16 @@ def test_live_run_without_authority_is_a_json_refusal_exit_two(
     assert not data.exists()
 
 
-def test_live_run_missing_export_is_a_json_failure(
+def test_live_run_missing_export_is_a_refusal(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    """An unresolvable bundle is refused (exit 2) before credentials or clients."""
     argv = ["--data-root", str(tmp_path / "data"), "live", "run"]
-    assert main([*argv, "--export", str(tmp_path / "absent")]) == 1
+    authority = ["--enabled", "--i-accept-live-risk"]
+    assert main([*argv, "--export", str(tmp_path / "absent"), *authority]) == 2
     error = _error(capsys.readouterr().err)
-    assert error["error_type"] == "FileNotFoundError"
+    assert error["error_type"] == "CommandRefused"
+    assert "export path not found" in error["error"]
 
 
 def test_tune_strategy_zero_trials_is_refused_before_any_load(

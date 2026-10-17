@@ -315,6 +315,7 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
         )
         stats = SearchStats()
     measure_holdout = None
+    measure_full = None
     if cut < len(bars):
         full = evaluator_for(bars)
 
@@ -323,6 +324,13 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
         ) -> dict[str, object]:
             # Signals see every bar (causal warmup); only bars[cut:] are scored.
             metrics, _ = full.measure(params, exits, evaluation_start=cut)
+            return metrics
+
+        def measure_full(
+            params: dict[str, object], exits: dict[str, object]
+        ) -> dict[str, object]:
+            # Every bar scored: the window a Nautilus replay of the export covers.
+            metrics, _ = full.measure(params, exits)
             return metrics
 
     context = BoardContext(
@@ -349,6 +357,7 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
         exporter=_export_autotune_candidate,
         holdout=measure_holdout,
         context=context,
+        full_window=measure_full,
     )
 
 
