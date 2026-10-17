@@ -14,6 +14,8 @@ Model (reported on every result so rows can be told apart):
 * **Isolated liquidation.** Each position carries a liquidation barrier at the
   adverse move where its margin (``notional / leverage``) falls to the venue
   maintenance margin; it merges with the strategy stop (whichever is nearer).
+  A gap through the barrier still loses at most the margin: the excess is
+  credited back (``loss_beyond_margin_absorbed``), as the venue backstop would.
   This is venue mechanics, not a strategy gate.
 * **Intrabar stops.** SL/TP/trail/liquidation are evaluated against the bar's
   open/high/low and filled as stop-market orders, so configured slippage
@@ -193,13 +195,15 @@ def compute_trial_metrics(
         )
 
     _require_unbound_cash(pf, virtual_cash)
+    records = pf.trades.records_arr
     real_equity = init_cash + (pf.value().to_numpy(dtype=float) - virtual_cash)
+    margin_credit = _loss_beyond_margin(records, position_leverage, len(real_equity))
+    real_equity = real_equity + margin_credit
     net_pnl = float(real_equity[-1] - init_cash) if len(real_equity) else 0.0
     sharpe = _sharpe(real_equity, init_cash, freq)
     max_dd = _max_drawdown(real_equity, init_cash)
     min_equity = float(min(init_cash, real_equity.min())) if len(real_equity) else init_cash
 
-    records = pf.trades.records_arr
     trade_count = int(len(records))
     pnls = records["pnl"].astype(float)
     wins = int((pnls > 0).sum())
@@ -270,6 +274,9 @@ def compute_trial_metrics(
         "venue_leverage_cap": venue_cap,
         "maintenance_margin_rate": mmr,
         "liquidations": liquidations,
+        "loss_beyond_margin_absorbed": (
+            float(margin_credit[-1]) if len(margin_credit) else 0.0
+        ),
         "min_equity": min_equity,
         "equity_depleted": bool(min_equity <= 0.0),
         "leverage_model": "virtual_cash_isolated_liquidation",
@@ -332,6 +339,33 @@ def _liquidation_distance(
         dist = (margin - mmr) / (1.0 + mmr)
     out[live] = dist
     return out
+
+
+def _loss_beyond_margin(
+    records: np.ndarray, position_leverage: np.ndarray, n_bars: int
+) -> np.ndarray:
+    """Cumulative per-bar credit for closed losses beyond the position's margin.
+
+    A position cannot lose more than its margin (notional / leverage at entry):
+    the venue's backstop liquidation absorbs the rest. VectorBT fills a gap
+    through the liquidation barrier at the bar open, which can exceed the
+    margin, so the excess is credited back from that trade's exit bar.
+    """
+    credit = np.zeros(n_bars)
+    if not len(records) or not n_bars:
+        return credit
+    entry_idx = records["entry_idx"].astype(np.int64)
+    leverage = np.asarray(position_leverage, dtype=float)[entry_idx]
+    notional = np.abs(records["size"] * records["entry_price"]).astype(float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        margin = np.where(
+            np.isfinite(leverage) & (leverage > 0.0), notional / leverage, np.inf
+        )
+    excess = np.maximum(-records["pnl"].astype(float) - margin, 0.0)
+    excess = np.where(records["status"] == 1, excess, 0.0)
+    hit = excess > 0.0
+    np.add.at(credit, records["exit_idx"].astype(np.int64)[hit], excess[hit])
+    return np.cumsum(credit)
 
 
 def _require_unbound_cash(pf: Any, virtual_cash: float) -> None:

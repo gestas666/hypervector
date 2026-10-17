@@ -128,6 +128,34 @@ def test_isolated_loss_is_capped_near_margin_by_liquidation() -> None:
     assert m["net_pnl"] == pytest.approx(-210_000.0 * liq_move, rel=1e-9)
 
 
+@pytest.mark.parametrize("direction", ["long", "short"])
+def test_gap_through_the_liquidation_barrier_loses_at_most_the_margin(direction: str) -> None:
+    """A bar that opens 10% beyond a 30x barrier fills at the open in VectorBT;
+    the isolated position still cannot lose more than its 70% margin."""
+    gap = 90.0 if direction == "long" else 110.0
+    df = _frame([100.0] * 6 + [gap] * 3)
+    df.loc[6, ["open", "high", "low"]] = gap
+    entries, exits = _one_trade(len(df), 2, len(df) - 2)
+
+    m = compute_trial_metrics(
+        df["close"],
+        entries,
+        exits,
+        direction=direction,
+        df=df,
+        cost=ZERO_COST,
+        fixed_notional_fraction=21.0,
+        fixed_margin_fraction=0.70,
+        strategy_managed_exits=True,
+        symbol="BTC",
+    )
+
+    assert m["liquidations"] == 1
+    assert m["net_pnl"] == pytest.approx(-7_000.0, rel=1e-9)
+    assert m["loss_beyond_margin_absorbed"] == pytest.approx(21_000.0 - 7_000.0, rel=1e-9)
+    assert m["min_equity"] == pytest.approx(3_000.0, rel=1e-9)
+
+
 def test_short_liquidation_bounds_loss_at_high_leverage() -> None:
     closes = [100.0, 100.0, 100.0] + list(np.linspace(100.5, 110.0, 12)) + [110.0, 110.0]
     df = _frame(closes)
@@ -225,6 +253,28 @@ def test_venue_leverage_caps() -> None:
     for bad in (0.0, -1.0, math.inf, math.nan):
         with pytest.raises(ValueError, match="leverage"):
             validate_leverage(bad, symbol="BTC")
+
+
+def test_leverage_derived_from_notional_over_margin_is_accepted_at_the_cap() -> None:
+    """0.7 x 15 / 0.7 == 15.000000000000002: float noise must not refuse a 15x alt."""
+    df = _frame([100.0] * 10)
+    notional = 0.70 * 15.0
+    assert notional / 0.70 > 15.0  # the float artefact this guards against
+
+    m = compute_trial_metrics(
+        df["close"],
+        *_one_trade(len(df), 2, 5),
+        df=df,
+        cost=ZERO_COST,
+        fixed_notional_fraction=notional,
+        fixed_margin_fraction=0.70,
+        strategy_managed_exits=True,
+        symbol="SOMEALT",
+        venue_max_leverage=15.0,
+    )
+    assert m["venue_leverage_cap"] == 15.0
+    with pytest.raises(ValueError, match="leverage"):
+        validate_leverage(15.001, symbol="SOMEALT", venue_max_leverage=15.0)
 
 
 def test_risk_config_rejects_non_positive_leverage() -> None:

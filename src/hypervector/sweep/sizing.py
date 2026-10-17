@@ -30,6 +30,7 @@ VENUE_LEVERAGE_CAPS: dict[str, float] = {
 DEFAULT_ALT_LEVERAGE_CAP = 10.0
 # Highest cap in the charter table; bounds any request whose symbol is unknown.
 MAX_VENUE_LEVERAGE = max(VENUE_LEVERAGE_CAPS.values())
+_LEVERAGE_CAP_RTOL = 1e-9
 
 
 def _symbol_key(symbol: str) -> str:
@@ -80,7 +81,9 @@ def validate_leverage(
     if not math.isfinite(value) or value <= 0.0:
         raise ValueError(f"leverage must be finite and positive, got {leverage!r}")
     cap = venue_leverage_cap(symbol, venue_max_leverage)
-    if value > cap:
+    # Relative tolerance: leverage derived as notional / margin (0.7 x 15 / 0.7
+    # = 15.000000000000002) must not be refused at exactly the cap.
+    if value > cap * (1.0 + _LEVERAGE_CAP_RTOL):
         where = _symbol_key(symbol) if symbol else "any symbol"
         raise ValueError(
             f"leverage {value:g}x exceeds the Hyperliquid venue cap of {cap:g}x for {where}"
