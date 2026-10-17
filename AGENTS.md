@@ -26,9 +26,9 @@ Paths (project-scoped):
 - Never print wallet/API secret values.
 - Mainnet only. No neural-trader.
 - The TUI is retired; use the unified CLI and headless acceptance guide.
-- Develop execution changes in an isolated checkout with its own venv. Do not
-  synchronize dependencies or merge/restart an armed deployment outside an
-  explicitly approved transition boundary.
+- In an armed live checkout, use its existing `.venv/bin/python`; do not run
+  `uv run` or `uv sync`. Develop execution changes in an isolated checkout with
+  its own venv. Merge/restart only at an explicitly approved transition boundary.
 
 ## Project Charter
 

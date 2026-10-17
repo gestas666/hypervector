@@ -152,6 +152,13 @@ plist edit followed only by `kickstart -k`.
 
 ## Rollback
 
+For a profile-only rollback, copy the installed plists and edit only the intended
+`--config` arguments. Preserve `PYTHONPATH`, restart opt-in, endpoint URLs and
+other installed settings. Do not regenerate installed definitions with
+`print-launchd`: the generator is not an export of the installed configuration.
+Validate copies with `plutil -lint` and inspect their differences locally without
+printing endpoint secrets. Record hashes in the deployment manifest.
+
 Boot out each affected service by exact label. Restore source files and plists
 from the verified deployment backup, verify their recorded hashes, and bootstrap
 only the previously approved services. Retain new research data and restart

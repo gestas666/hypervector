@@ -88,6 +88,8 @@ def launchd_plist(
     label = f"{LAUNCHD_LABEL_PREFIX}{kind}"
     log = str(REPOSITORY_ROOT / RUNTIME_ROOT / f"supervisor_{kind}.launchd.log")
     environment = {"PYTHONUNBUFFERED": "1"}
+    if kind == "supervise":
+        environment["PYTHONPATH"] = str(REPOSITORY_ROOT / "src")
     if resume_after_host_restart:
         environment[RESUME_AFTER_HOST_RESTART_ENV] = "1"
     return plistlib.dumps(

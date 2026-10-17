@@ -1,20 +1,36 @@
-# Development handoff — unified CLI review branch, 2026-10-17
+# Current project — unified CLI, 2026-10-17
 
-This isolated checkout is `codex/unified-cli-cleanup`, with its own venv.
-The terminal UI is retired; use `README.md` and
-`docs/reviews/2026-10-17-unified-cli-cleanup.md` for current software behavior,
-validation, outstanding evidence requirements and rollback. TA-Lib remains
-required alongside VectorBT/Rust, Nautilus and Karpathy tuning.
+The maintained application is the Python unified CLI: `hypervector --help`.
+VectorBT/Rust and TA-Lib, Nautilus, Karpathy autotuning, paper/shadow,
+Hyperliquid and 0xArchive are retained. The terminal UI is retired.
+Current verification and merge records are in
+`docs/reviews/2026-10-17-unified-current-validation.md`.
 
-No deployment was armed, restarted or merged during this work. The original
-checkout's uncommitted operational handoff remains authoritative for that
-checkout; preserve and reconcile it at any approved merge boundary. The
-historical deployment notes below describe their dated state, not the current
-state of this development checkout.
+Trading remains stopped. A source merge does not authorize a restart or make
+older source-bound live approvals valid for the updated implementation.
+
+# Current operation — STOPPED AND VENUE FLAT, 2026-10-06 17:47 UTC
+
+Operator requested recovery of the open position followed by a complete trading stop.
+V95 recovered under an already-active durable transition drain; execution source and
+profile matched the prior deployment. The existing maximum-hold rule closed all
+1.343 xyz:TSLA at $379.99 (venue OID 566963991096), and its stop was cancelled.
+The drain completed at 17:45:52Z; the backend exited 0 at 17:46:11Z.
+Fresh unsigned core and xyz reads after shutdown verified no positions and no orders.
+
+The cohort supervisor, checkpoint, watch, and HIP-3 roster observer launch agents are
+disabled and unloaded. Their processes are absent. The STOP file and completed
+transition_drain.json remain in place to block restart. The original supervisor plist
+was restored; do not enable or restart trading without a new operator instruction.
+
+Evidence: data/backups/bidirectional_cohort/operator_shutdown_20261006T173755Z/
+(shutdown_verified.json, final_checkpoint.json, service/journal backups).
+Verified pre-start bundle: prestart_20261006T173814.404290Z_dd779cce7456.
+The following sections are historical and do not describe current service state.
 
 ---
 
-## Historical operation — V95 LIVE ARMED (review fixes), 2026-09-27 22:59 UTC
+# Current operation — V95 LIVE ARMED (review fixes), 2026-09-27 22:59 UTC
 
 **Status.**
 - V95 is live and armed.
@@ -28,6 +44,11 @@ state of this development checkout.
 - **Auto-resume after a host restart is ON.** The supervise plist sets
   `HYPERVECTOR_SUPERVISOR_RESUME_AFTER_HOST_RESTART=1`. A durable operator stop is now the STOP
   file, or `launchctl disable` before any bootout.
+  A bare supervisor bootout or SIGTERM followed by a reboot within about three
+  minutes can auto-resume. During an active transition drain, a backend exit
+  instead requires same-profile recovery with `--resume-transition-drain`;
+  retain the drain marker. See the supervised interruption procedure in
+  `docs/guides/cohort-live-transition-and-rollback.md`.
 - **macOS auto-install is off.** The operator set `AutomaticallyInstallMacOSUpdates=0` and
   `CriticalUpdateInstall=0` on 2026-09-27.
 
@@ -48,8 +69,12 @@ state of this development checkout.
 **Rollback (V95→V94 profile only; the V95 source stays).**
 - Use `configs/v95-to-v94-rollback-20260927-v1.toml` with approval
   `docs/live-approvals/v95-to-v94-rollback-20260927-v1.json`. The approval is recorded (operator words, 2026-09-27).
-- Procedure: drain V95, archive, preflight `--config <RB> --active-config <V95>`, generate plists as for V95,
-  archive the journal, then bootstrap.
+- Procedure: drain V95, archive, preflight `--config <RB> --active-config <V95>`,
+  copy the installed plists and edit only the intended `--config` arguments.
+  Preserve PYTHONPATH, restart opt-in and configured alert URLs; validate with
+  `plutil -lint` and a locally inspected diff that does not disclose secrets.
+  Archive the restart journal after verifying its owners have stopped, then
+  bootstrap under the recorded rollback authorization.
 - **Frozen by sha256 until the rollback is retired:**
   - the V95 TOML;
   - the V94 TOML;
@@ -75,10 +100,17 @@ state of this development checkout.
   - ladder re-registration (due before the 30th Donchian close, about Oct 9-20);
   - `hl-api` agent expiry on 2026-10-22 (operator renewal under a NEW name, see below);
   - dead capacity in the BTC sweep and ETH routes.
-- **Deploy rule.** Anything under src/hypervector or the entrypoint means a V96 profile, an approval and a drain. Scripts-only fixes need no backend restart.
+- **Deploy rule.** Anything under src/hypervector or the entrypoint means a V96 profile, an approval and a drain. Watch-only changes can take effect on watch reload. Supervisor runtime changes take effect on supervisor restart, which can stop its owned backend; schedule those at the transition boundary.
 - **D1 shadow runner removed (operator, 2026-09-28).** The launchd agent `local.hypervector.research.d1_shadow` was unloaded, and its plist was moved to `data/backups/d1_shadow_removed_20260928/`. The ledger and census stay in `data/research/d1_shadow/`, and the code stays in scripts/ (inert).
 
 **V95 issue sweep: RESULTS (2026-09-28 12:22Z; 41 agents, every finding adversarially verified).**
+- **Follow-up assessment, 2026-09-29:**
+  `docs/reviews/2026-09-29-v95-sweep-assessment.md` replays BL-6, VR-1 and VR-2,
+  tightens V96 integrity/protection acceptance and prioritizes lifecycle recovery.
+  The plist generator PYTHONPATH fix and runbook corrections are prepared locally;
+  155 targeted supervisor tests passed. No service was reloaded or backend source
+  changed. The timing and live-book claims below are the September 28 assessment,
+  not current venue clearance; use measured freshness and fresh venue evidence.
 - **Plan and evidence.** The full plan is `data/logs/research/v95_issue_sweep_20260928/v95sweep_plan.md`; the repros are under `.../evidence/verify/`.
 - **Verdict.** The live V95 book needs no action and no restart, and the V95 profile and config have no errors. There are 24 confirmed issues, all medium or low. They split into:
   - docs and watch-agent fixes that can land now;

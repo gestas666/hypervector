@@ -120,7 +120,7 @@ candidate profile. Recover only the exact active profile with fresh explicit
 live authority:
 
 ```bash
-uv run python -m hypervector cohort-tui \
+.venv/bin/python -m hypervector cohort-tui \
   --mode live --enabled --i-accept-live-risk \
   --resume-transition-drain \
   --config <exact-active-profile>
@@ -137,6 +137,27 @@ After recovery, require the checkpoint to show `status == "active"`, the new
 run ID, the unchanged origin run and request ID, and the incremented resume
 count. Then continue with the flat/no-owned-orders proof below. Recovery is a
 continuation of the drain contract, not permission to activate the candidate.
+
+### Supervised drain interruption
+
+A crash or reboot during an active drain can leave the supervisor held with
+`live_start_refused_fail_closed` and refusal text indicating that transition
+drain evidence remains. Host-restart opt-in does not supply the missing
+`--resume-transition-drain` flag.
+
+Keep the watch loaded and retain the active drain marker. Check fresh unsigned
+venue state and verify process ownership; a stale checkpoint is insufficient.
+With explicit authority to resume the existing drain, disable and unload the
+supervisor, verify its backend is stopped, then back up and archive its restart
+journal. Do not use the ordinary host-restart resume helper for this hold.
+
+Recover the exact active profile using the command above, or a backed-up copy
+of the installed supervisor plist whose child arguments add
+`--resume-transition-drain`. The direct command has no supervisor crash recovery.
+For supervised recovery, preserve installed environment settings and restore
+service enablement only as part of the authorized resume. Verify the unchanged
+request and origin run, new run ID and incremented resume count. Archive the
+drain marker only after its completed, flat and order-free boundary is proven.
 
 ## 2. Prove the flat boundary and stop the backend
 
