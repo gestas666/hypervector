@@ -136,6 +136,29 @@ shasum -a 256 scripts/multi_asset_bidirectional_live.py scripts/cohort_backend_s
 `tests/test_v95_restartability.py` pins the profile fingerprints, the script
 hashes and the plist argument lists. `--help` must stay under 0.07 s.
 
+## Last verified state
+
+Branch `agent/unified-cli-cleanup-20261017` (checked out here; `main` is still
+at `f95f36a`, and the pre-purge tree is tag `pre-history-purge-20261017`):
+
+- Default suite: 7,891 passed, 0 failed (`-n 6`, about 110 s).
+- `-m "integration and not network" --ignore=tests/test_install.py`: 7 passed.
+  `tests/test_install.py`'s integration cases need the `integrations` extra,
+  which is not installed here.
+- `-m network` (public Hyperliquid/Binance/Bybit reads): 4 passed.
+- A wheel built from a clean export installed into a throwaway venv ran
+  `status`, `backtest run`, `tune strategy`, `export list/validate`,
+  `nautilus run --no-network`, an offline `pipeline run` through the paper
+  hand-off and `regime classify`; `live run` and `live start` refused (exit 2)
+  without both authority flags.
+- V95 rehearsal: `live check` showed the V95 fingerprint with exactly the
+  expected blockers (authority flags, STOP file, drain marker); `live validate
+  --mode live --equity 4796` exited 0 with no problems.
+- Startup: `--help` and every group help 0.06 s with no engine imports.
+  Against the pre-purge tree: 96-trial sweep 15.5 s → 3.4 s, 2,161-bar
+  Nautilus run 14.8 s → 1.4 s, 200k-row paper report 2.3 s / 260 MB → 1.3 s /
+  28 MB, 100-trial tune 6.6 s → 5.2 s.
+
 ## Open items
 
 - **The engine API wallet `hl-api` expires 2026-10-22T12:59:22Z.** Before any
