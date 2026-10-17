@@ -12,8 +12,11 @@ closes because the research portfolio is built from closes only:
 
 :func:`trail_step` reproduces both, anchored at the real entry (research's
 ``_trail_exits`` can keep a stale anchor across stop-outs; the sim resets the
-trail on every actual entry). A hit closes the position with a market order
-at that bar's close, which is where VectorBT fills these exits.
+trail on every actual entry). An entry during the ATR warm-up (ATR not yet
+finite on the entry bar) keeps the ATR stop disabled for that position, as in
+``_trail_exits`` where ``max(nan, x)`` stays ``nan``; the percent trail still
+protects it. A hit closes the position with a market order at that bar's
+close, which is where VectorBT fills these exits.
 """
 
 from __future__ import annotations
@@ -30,7 +33,9 @@ class TrailState:
     sl_frac: float  # stop distance (fraction of price) fixed at entry
     peak_close: float  # best close since entry (VectorBT sl_trail anchor)
     extreme: float  # best high (long) / low (short) since entry
-    atr_stop: float  # ratcheting ATR stop level (nan until ATR is finite)
+    # Ratcheting ATR stop level; nan when ATR was not finite on the entry bar
+    # (ATR warm-up), in which case it stays disabled for this position.
+    atr_stop: float
 
     @property
     def sl_level(self) -> float:
@@ -89,22 +94,16 @@ def trail_step(
         sl_hit = close <= state.sl_level
         extreme = max(state.extreme, float(high))
         atr_stop = state.atr_stop
-        if finite:
-            candidate = extreme - trail_dist
-            atr_stop = (
-                candidate if not math.isfinite(atr_stop) else max(atr_stop, candidate)
-            )
+        if finite and math.isfinite(atr_stop):
+            atr_stop = max(atr_stop, extreme - trail_dist)
         atr_hit = math.isfinite(atr_stop) and close < atr_stop
         peak_close = max(state.peak_close, close)
     else:
         sl_hit = close >= state.sl_level
         extreme = min(state.extreme, float(low))
         atr_stop = state.atr_stop
-        if finite:
-            candidate = extreme + trail_dist
-            atr_stop = (
-                candidate if not math.isfinite(atr_stop) else min(atr_stop, candidate)
-            )
+        if finite and math.isfinite(atr_stop):
+            atr_stop = min(atr_stop, extreme + trail_dist)
         atr_hit = math.isfinite(atr_stop) and close > atr_stop
         peak_close = min(state.peak_close, close)
     new_state = replace(
