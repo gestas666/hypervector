@@ -24,10 +24,10 @@ from hypervector.research.v79_execution_quality_guard import (
 _ADDRESS = "0x1111111111111111111111111111111111111111"
 _ENTRY_CLOID = "0x00000000000000000000000000000001"
 _CLOSE_CLOID = "0x00000000000000000000000000000002"
-_V79 = Path("configs/multi_asset_growth_first_5000_seven_asset_all_active_v79.toml")
+_V79 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_seven_asset_all_active_v79.toml")
 _V79_FINGERPRINT = "6c12d96e3fe09dd5dcefd24761bc7462ec6d6aa0b0d0f023a21e4b8597b646f7"
 _V80 = Path(
-    "configs/multi_asset_growth_first_5000_seven_asset_entry_ioc_hardened_v80.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_seven_asset_entry_ioc_hardened_v80.toml"
 )
 _LIVE_SCRIPT = Path("src/hypervector/operations/multi_asset_bidirectional_live.py")
 

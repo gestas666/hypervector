@@ -18,7 +18,7 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 def test_v89_canonical_scope_includes_every_configured_hourly_route() -> None:
     """Explicit hourly mechanisms opt into telemetry without changing legacy scope."""
     config = load_multi_asset_live_config(
-        Path("configs/multi_asset_growth_first_5000_noncrypto_research_v89.toml"),
+        Path("tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_research_v89.toml"),
         mode="observe",
     )
     assert configured_canonical_regime_symbols(config) == config.symbols

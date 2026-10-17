@@ -26,6 +26,7 @@ from hypervector.paper.book import BookSnapshot
 from test_mu_hip3_breakout_shadow_runner import _bars, _book
 
 _OBSERVED = int(pd.Timestamp("2026-08-09T22:00:01Z").timestamp() * 1000)
+_FIXTURE_PROFILES = Path("tests/fixtures/profiles")
 
 
 class _LaggingAuxiliarySource:
@@ -103,7 +104,7 @@ def test_only_v87_candidate_removes_unused_spcx_auxiliary_dependency() -> None:
     commands = [
         pressure_dependency_commands(
             load_multi_asset_live_config(
-                Path("configs") / f"{name}.toml", mode="observe"
+                _FIXTURE_PROFILES / f"{name}.toml", mode="observe"
             )
         )["xyz:SPCX"]
         for name in names
@@ -129,9 +130,8 @@ def test_signal_only_cli_declares_disabled_auxiliary_capture(tmp_path: Path) -> 
 def test_configured_profit_lock_keeps_its_auxiliary_dependency() -> None:
     """A future exit policy cannot silently lose the minute source it consumes."""
     config = load_multi_asset_live_config(
-        Path(
-            "configs/multi_asset_growth_first_5000_seven_asset_sndk_durable_onset_candidate_v87.toml"
-        ),
+        _FIXTURE_PROFILES
+        / "multi_asset_growth_first_5000_seven_asset_sndk_durable_onset_candidate_v87.toml",
         mode="observe",
     )
     providers = tuple(
@@ -170,7 +170,7 @@ def test_dependency_reuse_rejects_wrong_capture_mode(
         else "multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86"
     )
     config = load_multi_asset_live_config(
-        Path("configs") / f"{name}.toml", mode="observe"
+        _FIXTURE_PROFILES / f"{name}.toml", mode="observe"
     )
     monkeypatch.chdir(tmp_path)
     path = DEFAULT_OBSERVER_STATES["xyz:SPCX"][0]

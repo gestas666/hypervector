@@ -15,7 +15,7 @@ from hypervector.live.multi_asset_strategy_evidence import (
     strategy_evidence_payloads,
 )
 
-_PROFILE = Path("configs/observers/all_asset_hype_breakout_transfer_v1.toml")
+_PROFILE = Path("tests/fixtures/profiles/all_asset_hype_breakout_transfer_v1.toml")
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 
 

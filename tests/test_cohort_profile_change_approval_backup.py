@@ -18,10 +18,9 @@ from hypervector.live.cohort_profile_change_approval import (
 from hypervector.live.cohort_transition_drain import CohortTransitionDrainError
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
-_V61 = Path(
-    "configs/"
-    "multi_asset_growth_first_5000_eight_asset_sndk_exit_preserved_candidate_v61.toml"
-)
+_V95 = Path("configs/multi_asset_growth_first_5000_review_fixes_v95.toml")
+_V94 = Path("configs/multi_asset_growth_first_5000_review_actions_v94.toml")
+_V95_TO_V94_ROLLBACK = Path("configs/v95-to-v94-rollback-20260927-v1.toml")
 
 
 def test_previous_transition_identity_uses_hash_verified_manifest(
@@ -76,7 +75,7 @@ def test_unchanged_backup_skips_change_approval(tmp_path: Path) -> None:
     backup = replace(
         _result(tmp_path / "missing.json", "0" * 64), strategy_changed=False
     )
-    config = load_multi_asset_live_config(_V61, mode="observe")
+    config = load_multi_asset_live_config(_V95, mode="observe")
 
     assert require_approved_profile_change(config, backup) is None
 
@@ -85,7 +84,7 @@ def test_changed_backup_requires_previous_source(tmp_path: Path) -> None:
     """A changed profile cannot proceed without its prior config source."""
     manifest = {"previous_identity": {"profile_fingerprint": "abc", "run_id": "r1"}}
     backup = _backup(tmp_path, json.dumps(manifest).encode())
-    config = load_multi_asset_live_config(_V61, mode="observe")
+    config = load_multi_asset_live_config(_V95, mode="observe")
 
     with pytest.raises(ProfileChangeApprovalError, match="previous config source"):
         require_approved_profile_change(config, backup)
@@ -95,15 +94,58 @@ def test_changed_backup_rejects_prior_profile_drift(tmp_path: Path) -> None:
     """The prior source must reproduce the identity captured at runtime."""
     manifest = {
         "previous_identity": {
-            "config_source_path": str(_V61),
+            "config_source_path": str(_V94),
             "profile_fingerprint": "0" * 64,
             "run_id": "r1",
         }
     }
     backup = _backup(tmp_path, json.dumps(manifest).encode())
-    config = load_multi_asset_live_config(_V61, mode="observe")
+    config = load_multi_asset_live_config(_V95, mode="observe")
 
     with pytest.raises(ProfileChangeApprovalError, match="verified backup identity"):
+        require_approved_profile_change(config, backup)
+
+
+def test_changed_backup_admits_real_v94_to_v95_approval(tmp_path: Path) -> None:
+    """A verified V94 prior identity reaches the kept V94 -> V95 approval."""
+    previous = load_multi_asset_live_config(_V94, mode="observe")
+    manifest = {
+        "previous_identity": {
+            "config_source_path": str(_V94),
+            "profile_fingerprint": previous.profile_fingerprint,
+            "run_id": "r1",
+        }
+    }
+    backup = _backup(tmp_path, json.dumps(manifest).encode())
+    config = load_multi_asset_live_config(_V95, mode="observe")
+
+    result = require_approved_profile_change(config, backup)
+
+    assert result is not None
+    assert result["state"] == "approved_profile_change"
+    assert result["approval_document"] == str(config.transition_approval)
+    assert result["execution_authority"] == "none"
+
+
+def test_changed_backup_rejects_approval_for_another_prior_profile(
+    tmp_path: Path,
+) -> None:
+    """A run started from the rollback twin cannot reuse the V94 -> V95 approval."""
+    previous = load_multi_asset_live_config(_V95_TO_V94_ROLLBACK, mode="observe")
+    manifest = {
+        "previous_identity": {
+            "config_source_path": str(_V95_TO_V94_ROLLBACK),
+            "profile_fingerprint": previous.profile_fingerprint,
+            "run_id": "r1",
+        }
+    }
+    backup = _backup(tmp_path, json.dumps(manifest).encode())
+    config = load_multi_asset_live_config(_V95, mode="observe")
+
+    with pytest.raises(
+        ProfileChangeApprovalError,
+        match="previous profile fingerprint differs from approval",
+    ):
         require_approved_profile_change(config, backup)
 
 

@@ -24,7 +24,7 @@ from hypervector.live.sol_range_onset_config import (
 )
 
 
-PROFILE = Path("configs/sol_range_onset_canary.toml")
+PROFILE = Path("tests/fixtures/profiles/sol_range_onset_canary.toml")
 ADDRESS = "0x1111111111111111111111111111111111111111"
 AGENT_ADDRESS = "0x2222222222222222222222222222222222222222"
 

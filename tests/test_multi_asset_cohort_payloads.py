@@ -6,7 +6,7 @@ from hypervector.live.multi_asset_cohort_payloads import provider_config_payload
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
 
-_V48 = Path("configs/multi_asset_growth_first_5000_repaired_candidate_v48.toml")
+_V48 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_repaired_candidate_v48.toml")
 
 
 def test_provider_payload_preserves_directional_authority() -> None:

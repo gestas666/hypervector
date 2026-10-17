@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from strategy_economic_reset import funding_months, validate_performance
+from hypervector.operations.strategy_economic_reset import funding_months, validate_performance
 
 
 def test_accounting_reconciles_across_strategy_identities() -> None:

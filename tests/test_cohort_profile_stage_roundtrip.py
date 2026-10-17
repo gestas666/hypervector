@@ -18,7 +18,7 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 
-V89 = Path('configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml')
+V89 = Path('tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml')
 CANARY = Path('configs/multi_asset_bidirectional_canary.toml')
 
 
@@ -106,7 +106,7 @@ def test_valid_but_changed_serialization_is_rejected(tmp_path: Path, monkeypatch
 
 def test_flat_entry_position_policy_survives(tmp_path: Path) -> None:
     """A supported flat-entry-only provider must not gain position-close authority."""
-    original = load_multi_asset_live_config('configs/multi_asset_bidirectional_hype_relaxed_candidate.toml', mode='observe')
+    original = load_multi_asset_live_config('tests/fixtures/profiles/multi_asset_bidirectional_hype_relaxed_candidate.toml', mode='observe')
     assert any(p.position_policy == 'flat_entry_only' for p in original.providers)
     output = tmp_path / 'flat-entry.toml'
     cohort_profile_stage.stage_cohort_profile(config=original, settings=unchanged_settings(original), output_path=output)

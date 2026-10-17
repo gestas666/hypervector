@@ -58,7 +58,7 @@ class EngineReplayFixture:
     ) -> None:
         """Build inert ports and redirect every native ledger to the pytest directory."""
         self.config = load_multi_asset_live_config(
-            "configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
+            "tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
             mode="live",
             enabled=True,
             accepts_live_risk=True,

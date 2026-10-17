@@ -14,7 +14,7 @@ from hypervector.live.multi_asset_live_config import (
 )
 from hypervector.live.multi_asset_strategy_evidence import strategy_evidence_payloads
 
-_PROFILE = Path("configs/observers/index_fresh15_pressure_v2.toml")
+_PROFILE = Path("tests/fixtures/profiles/index_fresh15_pressure_v2.toml")
 _STRATEGY = "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v2"
 
 

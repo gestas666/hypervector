@@ -21,7 +21,7 @@ from hypervector.live.multi_asset_live_protocols import (
 )
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
 
-PROFILE = Path("configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml")
+PROFILE = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml")
 DAY_MS = 86_400_000
 COMMITTED_END_MS = 1_789_141_030_000
 

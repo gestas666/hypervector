@@ -8,7 +8,7 @@ from hypervector.live.hulk_smash_live_config import (
 )
 
 
-CONFIG = Path("configs/hulk_smash_short_robust_v3_canary.toml")
+CONFIG = Path("tests/fixtures/profiles/hulk_smash_short_robust_v3_canary.toml")
 
 
 def test_hulk_canary_config_freezes_the_validated_profile() -> None:

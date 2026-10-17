@@ -40,7 +40,7 @@ from hypervector.research.cohort_configuration_exit_policy import (
     provider_exit_policy_evidence,
 )
 
-V93 = "configs/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml"
+V93 = "tests/fixtures/profiles/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml"
 NOW = 1_800_000_000_000
 
 

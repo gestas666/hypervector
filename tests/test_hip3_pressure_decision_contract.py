@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
@@ -16,10 +13,6 @@ from hypervector.live.hip3_cohort_providers import (
 from hypervector.live.hip3_ledger_pressure import Hip3PressureObservation
 from hypervector.research.hip3_breakout_pressure_signals import (
     Hip3BreakoutPressureConfig,
-)
-
-_PARITY_JOURNAL = Path(
-    "docs/research-journal/hip3-live-pressure-freshness-parity-v2.json"
 )
 
 
@@ -196,18 +189,3 @@ def test_breakout_pressure_uses_versioned_freshness_boundary(
     metrics = batch.evaluations[0].readiness.metrics
     assert metrics["pressure_status"] == expected_status
     assert metrics["maximum_pressure_age_seconds"] == maximum_age_seconds
-
-
-def test_parity_journal_reconciles_affected_closed_trade_attribution() -> None:
-    """The immutable diagnosis must reconcile the exact four affected losses."""
-    report = json.loads(_PARITY_JOURNAL.read_text())
-    trades = report["closed_entry_actions_older_than_15_seconds"]
-    attribution = report["closed_pnl_attribution"]
-
-    assert len(trades) == 4
-    assert all(row["pressure_age_seconds"] > 15.0 for row in trades)
-    assert sum(row["net_pnl_usd"] for row in trades) == pytest.approx(-2.097088)
-    assert attribution["current_run_net_pnl_usd"] == pytest.approx(-3.117881)
-    assert attribution["affected_share_of_absolute_run_loss_pct"] == pytest.approx(
-        67.26003975135677
-    )

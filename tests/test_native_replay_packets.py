@@ -19,7 +19,7 @@ __all__ = ["deny_external_ports"]
 def scenario_file(tmp_path: Path) -> Path:
     """Describe synthetic account quotes around original authenticated candle packets."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

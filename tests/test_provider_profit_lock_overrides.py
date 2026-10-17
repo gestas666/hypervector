@@ -15,7 +15,7 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 
-_PROFILE = Path("configs/multi_asset_growth_first_5000_repaired_candidate_v49.toml")
+_PROFILE = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_repaired_candidate_v49.toml")
 _HYPE = "hype_breakout_compression_pullback_bidirectional_v1"
 _OVERRIDES = (
     "profit_lock_overrides = { HYPE = { long = { policy = "

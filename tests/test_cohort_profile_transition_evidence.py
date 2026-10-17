@@ -75,11 +75,11 @@ def test_legacy_archive_validates_retired_previous_symbols(
 ) -> None:
     """A removed asset belongs in the prior-run boundary, not the successor."""
     previous = load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_nine_asset_bankroll_builder_candidate_v63.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_nine_asset_bankroll_builder_candidate_v63.toml",
         mode="observe",
     )
     candidate = load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_eight_asset_gold_removed_candidate_v64.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_eight_asset_gold_removed_candidate_v64.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

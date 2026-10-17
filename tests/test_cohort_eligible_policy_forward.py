@@ -300,7 +300,7 @@ def test_pending_candidate_reports_only_funding_observed_through_latest_bar() ->
 
 def test_eth_spec_is_derived_from_the_exact_runtime_profile() -> None:
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_evidence_routed_hype75_eth_observer_v11.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_evidence_routed_hype75_eth_observer_v11.toml",
         mode="observe",
     )
     identity = _identity()

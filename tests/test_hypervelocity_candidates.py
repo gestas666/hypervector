@@ -57,7 +57,7 @@ def test_saved_ema_candidate_is_research_only_and_exact() -> None:
         for item in hypervelocity_candidate_matrix()
         if item.candidate_id == "single_ema"
     )
-    path = Path("configs/research/hypervelocity_ema21_55_candidate.toml")
+    path = Path("tests/fixtures/profiles/hypervelocity_ema21_55_candidate.toml")
 
     with path.open("rb") as handle:
         saved = tomllib.load(handle)

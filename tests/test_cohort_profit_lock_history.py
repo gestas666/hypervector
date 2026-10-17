@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from pathlib import Path
 
 import pandas as pd
 
@@ -13,11 +14,22 @@ from hypervector.live.cohort_profit_lock_history import (
 )
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
+_FIXTURE_PROFILES = Path("tests/fixtures/profiles")
+_V39 = (
+    _FIXTURE_PROFILES
+    / "multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml"
+)
+_V60 = (
+    _FIXTURE_PROFILES
+    / "multi_asset_growth_first_5000_eight_asset_btc_hulk_smart_exit_candidate_v60.toml"
+)
+_V95 = Path("configs/multi_asset_growth_first_5000_review_fixes_v95.toml")
+
 
 def test_disabled_profile_requests_no_private_exit_history() -> None:
     """Existing profiles retain chart-only data cost when every lock is disabled."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml",
+        _V39,
         mode="observe",
     )
 
@@ -27,7 +39,7 @@ def test_disabled_profile_requests_no_private_exit_history() -> None:
 def test_enabled_provider_requests_terminal_hold_plus_boundary_bars() -> None:
     """The lock history covers the whole possible lifecycle and boundary bars."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml",
+        _V39,
         mode="observe",
     )
     provider = config.providers[0]
@@ -71,7 +83,7 @@ def test_enabled_provider_requests_terminal_hold_plus_boundary_bars() -> None:
 def test_directional_override_requests_history_when_base_lock_is_disabled() -> None:
     """A side-only lock must receive the same complete lifecycle history."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml",
+        _V39,
         mode="observe",
     )
     provider = config.providers[0]
@@ -105,12 +117,29 @@ def test_directional_override_requests_history_when_base_lock_is_disabled() -> N
 
 def test_btc_hulk_component_floor_retains_restart_stable_warmup() -> None:
     """The specialized policy retains 24h seed plus its full 24h lifecycle."""
-    config = load_multi_asset_live_config(
-        "configs/"
-        "multi_asset_growth_first_5000_eight_asset_btc_hulk_smart_exit_candidate_v60.toml",
-        mode="observe",
-    )
+    config = load_multi_asset_live_config(_V60, mode="observe")
 
     limits = profit_lock_history_limits(config.providers)
 
     assert limits["BTC"] == 2_882
+
+
+def test_v95_exit_policy_v2_requests_full_lifecycle_history_per_route() -> None:
+    """Live V95 adaptive exits need terminal hold, boundary bars and warmup."""
+    config = load_multi_asset_live_config(_V95, mode="observe")
+
+    assert all(
+        provider.execution.profit_lock_policy == "none"
+        and provider.execution.adaptive_exit_policy
+        == "regime_flip_floor_retention_v2"
+        for provider in config.providers
+    )
+    # 24h holds: 1440 bars + 2 boundary + 21 regime warmup; ETH holds 48h.
+    assert profit_lock_history_limits(config.providers) == {
+        "BTC": 1_463,
+        "ETH": 2_903,
+        "SOL": 1_463,
+        "xyz:SNDK": 1_463,
+        "xyz:BRENTOIL": 1_463,
+        "xyz:TSLA": 1_463,
+    }

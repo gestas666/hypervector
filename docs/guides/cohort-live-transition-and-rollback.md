@@ -376,6 +376,13 @@ run the backup verifier; do not bypass the gate. If it fails after fresh
 configuration identity, use the venue-backed checkpoint to distinguish a
 technical startup fault from a position/order mismatch.
 
+For a profile-only rollback, copy the installed plists and edit only the intended
+`--config` arguments. Preserve `PYTHONPATH`, restart opt-in, endpoint URLs and
+other installed settings. Do not regenerate installed definitions with
+`print-launchd`: the generator is not an export of the installed configuration.
+Validate copies with `plutil -lint` and inspect their differences locally without
+printing endpoint secrets. Record hashes in the deployment manifest.
+
 Automatic restoration into live paths is intentionally unavailable because it
 could overwrite newer venue-reconciled truth. The backup verifier proves exact
 recoverability; any actual restore must target a new empty inspection directory

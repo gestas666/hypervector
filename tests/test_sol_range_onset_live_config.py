@@ -12,7 +12,7 @@ from hypervector.live.sol_range_onset_config import (
 )
 
 
-PROFILE = Path("configs/sol_range_onset_canary.toml")
+PROFILE = Path("tests/fixtures/profiles/sol_range_onset_canary.toml")
 
 
 def test_shadow_and_live_are_explicit_modes_with_one_frozen_profile() -> None:

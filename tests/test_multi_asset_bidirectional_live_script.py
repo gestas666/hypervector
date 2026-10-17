@@ -26,7 +26,7 @@ from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunne
 SCRIPT = Path(__file__).parents[1] / "src" / "hypervector" / "operations" / "multi_asset_bidirectional_live.py"
 V25 = Path("configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml")
 V90_CONFIG = Path(
-    "configs/multi_asset_growth_first_5000_bankroll_builder_candidate_v90.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_bankroll_builder_candidate_v90.toml"
 )
 
 
@@ -76,7 +76,7 @@ def test_router_preserves_canonical_asset_order_across_providers() -> None:
     live_script = _load_module()
     config = live_script.load_multi_asset_live_config(
         Path(
-            "configs/multi_asset_bidirectional_eth_sol_full_observation_canary_v24.toml"
+            "tests/fixtures/profiles/multi_asset_bidirectional_eth_sol_full_observation_canary_v24.toml"
         ),
         mode="observe",
     )

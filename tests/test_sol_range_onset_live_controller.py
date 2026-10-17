@@ -93,7 +93,7 @@ def _decision(
 
 def _controller(engine: FakeEngine) -> SolRangeOnsetLiveController:
     config = load_sol_range_onset_config(
-        Path("configs/sol_range_onset_canary.toml"),
+        Path("tests/fixtures/profiles/sol_range_onset_canary.toml"),
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -160,7 +160,7 @@ def test_opposite_signal_closes_but_never_reverses_on_same_bar() -> None:
 def test_maximum_hold_exits_even_without_signal() -> None:
     """The frozen 48-hour maximum hold is enforced from persisted open time."""
     config = load_sol_range_onset_config(
-        Path("configs/sol_range_onset_canary.toml"),
+        Path("tests/fixtures/profiles/sol_range_onset_canary.toml"),
         mode="live",
         enabled=True,
         accepts_live_risk=True,

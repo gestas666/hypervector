@@ -574,7 +574,7 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
 def test_range_retired_profile_keeps_canonical_regime_outside_route_roster() -> None:
     """v39 routes remain exact while independent regime evidence weights intents."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml",
         mode="observe",
     )
     collectors = {
@@ -664,7 +664,7 @@ def test_default_collectors_require_the_real_backtest_lab_root() -> None:
 def test_default_collectors_support_the_staged_sol_aligned_provider() -> None:
     """The next-flat profile must have a concrete causal runtime collector."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_range_retired_hype75_candidate.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_range_retired_hype75_candidate.toml",
         mode="observe",
     )
 

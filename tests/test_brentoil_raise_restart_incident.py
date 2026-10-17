@@ -52,7 +52,7 @@ from hypervector.live.sol_range_onset_state import SolLiveState, SolLiveStateMac
 FIXTURE = (
     Path(__file__).parent / "fixtures" / "brentoil_v93_raise_restart_records.jsonl"
 )
-PROFILE = Path("configs/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml")
+PROFILE = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml")
 FINGERPRINT = "d263b1355a219024dfe0ede088a482b8bf8a293661ab53ae42049029bf96a1e7"
 ENTRY_OID = 555018656094
 STOP_OID = 555018726035

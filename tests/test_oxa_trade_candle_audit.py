@@ -4,17 +4,19 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime, timedelta
-from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
-import sys
-from types import ModuleType
 
 import pandas as pd
 import pytest
 
 from hypervector.data.oxa_archive_audit import OxaArchiveAuditConfig
 from hypervector.data.oxa_history import OxaBookRequest, output_directory
-from hypervector.data.oxa_storage import file_evidence, gzip_text_writer, write_json
+from hypervector.data.oxa_storage import (
+    file_evidence,
+    gzip_text_writer,
+    write_immutable_json,
+    write_json,
+)
 from hypervector.data.oxa_trade_candle_audit import (
     audit_trade_candle_parity,
     reconstruct_trade_candle_continuity,
@@ -29,29 +31,6 @@ from hypervector.research.hypertrader_source_adapter import (
     load_hyperliquid_candles,
     resample_hyperliquid_5m,
 )
-
-SCRIPT = Path(__file__).parents[1] / "scripts" / "oxa_trade_candle_audit.py"
-RECONSTRUCT_SCRIPT = (
-    Path(__file__).parents[1] / "scripts" / "oxa_trade_candle_reconstruct.py"
-)
-
-
-def _load_script() -> ModuleType:
-    spec = spec_from_file_location("oxa_trade_candle_audit", SCRIPT)
-    assert spec is not None and spec.loader is not None
-    module = module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-def _load_reconstruct_script() -> ModuleType:
-    spec = spec_from_file_location("oxa_trade_candle_reconstruct", RECONSTRUCT_SCRIPT)
-    assert spec is not None and spec.loader is not None
-    module = module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
 def test_trade_candle_audit_marks_only_incomplete_execution_minutes(
@@ -287,8 +266,8 @@ def test_reconstruction_bundle_is_immutable_and_source_bound(tmp_path: Path) -> 
         store_reconstructed_trade_candles(config, candles, output)
 
 
-def test_trade_candle_audit_script_writes_once(tmp_path: Path) -> None:
-    """Parity evidence must be written immutably from explicit bounds."""
+def test_trade_candle_audit_report_publishes_immutably(tmp_path: Path) -> None:
+    """Parity evidence must be published once from explicit bounds."""
     start = datetime(2025, 3, 1, tzinfo=UTC)
     end = start + timedelta(hours=1)
     config = OxaArchiveAuditConfig("SOL", start, end, tmp_path)
@@ -296,57 +275,17 @@ def test_trade_candle_audit_script_writes_once(tmp_path: Path) -> None:
     candles = tmp_path / "candles.parquet"
     pd.DataFrame([_candle(start, 100.0, 1.0, 1)]).to_parquet(candles, index=False)
     output = tmp_path / "parity.json"
-    arguments = [
-        "--symbol",
-        "SOL",
-        "--start",
-        start.isoformat(),
-        "--end",
-        end.isoformat(),
-        "--data-root",
-        str(tmp_path),
-        "--candles",
-        str(candles),
-        "--out",
-        str(output),
-    ]
-    module = _load_script()
 
-    assert module.main(arguments) == 0
-    assert json.loads(output.read_text(encoding="utf-8"))["candle_path"] == str(
-        candles.resolve()
-    )
-    assert module.main(arguments) == 1
+    write_immutable_json(output, audit_trade_candle_parity(config, candles).to_dict())
+    published = output.read_bytes()
 
-
-def test_trade_candle_reconstruction_script_writes_once(tmp_path: Path) -> None:
-    """The CLI must publish one immutable reconstruction bundle."""
-    start = datetime(2025, 3, 1, tzinfo=UTC)
-    end = start + timedelta(hours=1)
-    config = OxaArchiveAuditConfig("SOL", start, end, tmp_path)
-    _write_archive(config)
-    candles = tmp_path / "candles.parquet"
-    pd.DataFrame([_candle(start, 100.0, 1.0, 1)]).to_parquet(candles, index=False)
-    output = tmp_path / "reconstructed"
-    arguments = [
-        "--symbol",
-        "SOL",
-        "--start",
-        start.isoformat(),
-        "--end",
-        end.isoformat(),
-        "--data-root",
-        str(tmp_path),
-        "--candles",
-        str(candles),
-        "--out",
-        str(output),
-    ]
-    module = _load_reconstruct_script()
-
-    assert module.main(arguments) == 0
-    assert (output / "candles.parquet").is_file()
-    assert module.main(arguments) == 1
+    assert json.loads(published)["candle_path"] == str(candles.resolve())
+    with pytest.raises(FileExistsError, match="immutable JSON output exists"):
+        write_immutable_json(
+            output,
+            audit_trade_candle_parity(config, candles).to_dict(),
+        )
+    assert output.read_bytes() == published
 
 
 def _write_archive(

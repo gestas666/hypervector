@@ -8,16 +8,16 @@ from pathlib import Path
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
 _BASE = Path(
-    "configs/multi_asset_bidirectional_range_retired_hype_fixed8_candidate.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_range_retired_hype_fixed8_candidate.toml"
 )
 _CANDIDATE = Path(
-    "configs/multi_asset_bidirectional_source_observe_hype_fixed8_candidate.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_source_observe_hype_fixed8_candidate.toml"
 )
 _SCALED = Path(
-    "configs/multi_asset_bidirectional_hype_core75_source_observe_fixed8_candidate.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_hype_core75_source_observe_fixed8_candidate.toml"
 )
 _ROUTED = Path(
-    "configs/multi_asset_bidirectional_evidence_routed_hype75_fixed8_candidate.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_evidence_routed_hype75_fixed8_candidate.toml"
 )
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _HYPE = "hype_breakout_onset_bidirectional_v1"

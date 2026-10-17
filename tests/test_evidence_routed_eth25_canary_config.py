@@ -15,10 +15,10 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 from hypervector.live.multi_asset_strategy_evidence import strategy_evidence_payloads
 
 _V11 = Path(
-    "configs/multi_asset_bidirectional_evidence_routed_hype75_eth_observer_v11.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_evidence_routed_hype75_eth_observer_v11.toml"
 )
 _V12 = Path(
-    "configs/multi_asset_bidirectional_evidence_routed_hype75_eth25_canary_v12.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_evidence_routed_hype75_eth25_canary_v12.toml"
 )
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _HYPE = "hype_breakout_onset_bidirectional_v1"

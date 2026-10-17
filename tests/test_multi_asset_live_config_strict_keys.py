@@ -8,8 +8,8 @@ import pytest
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
 
-V91 = Path("configs/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml")
-V93 = Path("configs/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml")
+V91 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml")
+V93 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml")
 DONCHIAN = "hourly_donchian_20_10_atr20_bidirectional_v1"
 
 
@@ -105,13 +105,37 @@ def test_unknown_key_refusal_names_its_table_and_key(
     assert table in str(refused.value) and key in str(refused.value)
 
 
-def test_every_checked_in_cohort_profile_still_loads() -> None:
-    loaded = 0
-    for path in sorted(Path("configs").glob("*.toml")):
+# The retained cohort profiles: the live V95 chain (V95, its V94 predecessor and
+# the V95->V94 rollback) plus the two canaries other tests mutate as templates.
+RETAINED_COHORT_PROFILES = frozenset(
+    {
+        "multi_asset_growth_first_5000_review_fixes_v95.toml",
+        "multi_asset_growth_first_5000_review_actions_v94.toml",
+        "v95-to-v94-rollback-20260927-v1.toml",
+        "multi_asset_bidirectional_canary.toml",
+        "multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+    }
+)
+FIXTURE_PROFILES = Path("tests/fixtures/profiles")
+
+
+def _load_every_cohort_profile(directory: Path) -> set[str]:
+    loaded: set[str] = set()
+    for path in sorted(directory.glob("*.toml")):
         with path.open("rb") as handle:
             raw = tomllib.load(handle)
         if not {"assets", "providers", "runtime"} <= set(raw):
             continue
         load_multi_asset_live_config(path, mode="observe")
-        loaded += 1
-    assert loaded >= 80
+        loaded.add(path.name)
+    return loaded
+
+
+def test_every_checked_in_cohort_profile_still_loads() -> None:
+    """Strict-key refusal accepts every retained profile, including V95's chain."""
+    assert RETAINED_COHORT_PROFILES <= _load_every_cohort_profile(Path("configs"))
+
+
+def test_every_fixture_cohort_profile_still_loads() -> None:
+    """Historical profiles kept as test fixtures stay valid under strict keys."""
+    assert {V91.name, V93.name} <= _load_every_cohort_profile(FIXTURE_PROFILES)

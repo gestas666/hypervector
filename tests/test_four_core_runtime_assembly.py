@@ -11,7 +11,7 @@ from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from test_multi_asset_bidirectional_live_script import _load_module
 
 _CONFIG = Path(
-    "configs/multi_asset_growth_first_5000_four_core_evidence_candidate_v88.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_four_core_evidence_candidate_v88.toml"
 )
 
 

@@ -23,26 +23,26 @@ from hypervector.live.multi_asset_live_config import (
 )
 
 _PRIOR_PATH = Path(
-    "configs/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml"
 )
-_NEXT_PATH = Path("configs/multi_asset_growth_first_5000_repaired_candidate_v49.toml")
+_NEXT_PATH = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_repaired_candidate_v49.toml")
 _SIX_ASSET_PATH = Path(
-    "configs/multi_asset_growth_first_5000_six_asset_candidate_v50.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_six_asset_candidate_v50.toml"
 )
 _PROFIT_PROTECTED_PATH = Path(
-    "configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml"
 )
 _EVIDENCE_BOUND_PATH = Path(
-    "configs/multi_asset_growth_first_5000_evidence_bound_successor_v52.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_evidence_bound_successor_v52.toml"
 )
 _V58_PATH = Path(
-    "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml"
 )
 _V59_PATH = Path(
-    "configs/multi_asset_growth_first_5000_eight_asset_sp500_short_containment_candidate_v59.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_eight_asset_sp500_short_containment_candidate_v59.toml"
 )
 _V79_PATH = Path(
-    "configs/multi_asset_growth_first_5000_seven_asset_all_active_v79.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_seven_asset_all_active_v79.toml"
 )
 _NOW = datetime(2026, 8, 12, 23, 0, tzinfo=UTC)
 _V58_EPOCH_START_MS = 1_787_164_729_837

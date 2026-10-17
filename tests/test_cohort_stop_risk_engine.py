@@ -70,7 +70,7 @@ def test_native_size_is_lot_rounded_below_budget_and_journaled(
 
 def test_v91_fingerprint_unchanged_and_risk_budget_changes_identity() -> None:
     config = load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml",
         mode="observe",
     )
     assert (
@@ -92,7 +92,7 @@ def test_budget_survives_profile_staging_and_checkpoint_projection(
     tmp_path: Path,
 ) -> None:
     config = load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml",
         mode="observe",
     )
     first = config.providers[0]
@@ -116,11 +116,11 @@ def test_budget_survives_profile_staging_and_checkpoint_projection(
 
 def test_proposal_keeps_existing_strategies_and_has_no_live_approval() -> None:
     original = load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml",
         mode="observe",
     )
     candidate = load_multi_asset_live_config(
-        "configs/multi_asset_v92_risk_control_proposal.toml", mode="observe"
+        "tests/fixtures/profiles/multi_asset_v92_risk_control_proposal.toml", mode="observe"
     )
     assert not candidate.enabled and not candidate.accepts_live_risk
     assert candidate.transition_approval is None

@@ -16,7 +16,7 @@ from hypervector.live import cohort_pressure_dependencies as dependencies
 from hypervector.live import cohort_dependency_supervision as supervision
 
 _CONFIG = Path(
-    "configs/multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86.toml"
 )
 _OLD = "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v3"
 

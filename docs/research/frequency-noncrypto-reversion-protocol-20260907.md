@@ -1,7 +1,0 @@
-# Second mechanism: hourly band re-entry
-
-The completed first screen showed more activity without repeatable after-cost gains: adverse-cost hourly 20/10 channel net was negative on BTC, ETH, HYPE, SPCX and SP500; positive SOL and SNDK remained top-three-winner dependent. The 8/4 sensitivity did not solve this.
-
-New hypothesis, recorded before reversion outcomes: the new 48-day native panel may reward recovery from an hourly price excursion rather than fresh continuation. Test one fixed Bollinger-band re-entry mechanism: 20 completed hourly closes, population standard deviation, two standard-deviation bands. Long when the preceding close was below its lower band and the current close returns inside its lower band but remains below the current mean; short symmetrically. Exit a long on a completed close at/above the rolling mean, a short at/below it. ATR20 times two stop anchor, existing 20–250 bps clamp, 24h fallback and the same capped $500 research size and costs.
-
-Both directions, seven exact symbols, source files and three time windows stay identical to the first protocol. This is a different mechanism selected after examining aggregate breakout results; all results are exploratory and subject to selection bias. Do not label the chronological extension untouched. Preserve negative results. Do not add a regime, session, side or parameter filter after viewing outcomes. If no robust economic improvement appears, report that limitation instead of promoting a failed strategy or claiming the user's profitability requirement was fixed.

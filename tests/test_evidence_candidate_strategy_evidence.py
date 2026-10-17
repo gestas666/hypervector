@@ -12,7 +12,7 @@ from hypervector.live.multi_asset_strategy_evidence import (
     strategy_research_evidence,
 )
 
-_PROFILE = Path("configs/multi_asset_bidirectional_evidence_candidate_v4.toml")
+_PROFILE = Path("tests/fixtures/profiles/multi_asset_bidirectional_evidence_candidate_v4.toml")
 
 
 def test_candidate_mappings_have_exact_non_gating_evidence() -> None:

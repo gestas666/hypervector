@@ -21,7 +21,7 @@ INPUTS = Path(__file__).parent / "fixtures/native_runner_cold_warm_20260911"
 def test_real_cold_warm_polls_run_through_shared_sdk(tmp_path: Path) -> None:
     """Original no-entry packets retain provider output and account/telemetry identities."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -61,7 +61,7 @@ def test_real_cold_warm_polls_run_through_shared_sdk(tmp_path: Path) -> None:
 def test_real_engine_entry_uses_its_durable_decision_origin(tmp_path: Path) -> None:
     """The account receives the original plan decision, independent of SDK dispatch time."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -108,7 +108,7 @@ def test_real_engine_entry_uses_its_durable_decision_origin(tmp_path: Path) -> N
 def test_native_replay_refuses_existing_output_root(tmp_path: Path) -> None:
     """Research cannot append native-shaped rows into an existing live or prior replay tree."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

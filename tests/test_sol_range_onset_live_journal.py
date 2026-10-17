@@ -2,27 +2,13 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
-from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
-import sys
-from types import ModuleType
 
 import pytest
 
+from hypervector.data.oxa_storage import write_immutable_json
 from hypervector.live.sol_range_onset_live_journal import build_live_journal
-
-SCRIPT = Path(__file__).parents[1] / "scripts" / "sol_range_onset_live_journal.py"
-
-
-def _load_script() -> ModuleType:
-    spec = spec_from_file_location("sol_range_onset_live_journal", SCRIPT)
-    assert spec is not None and spec.loader is not None
-    module = module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
 def _record(
@@ -314,23 +300,29 @@ def test_live_journal_rejects_noncontiguous_sequence() -> None:
         build_live_journal(records)
 
 
-def test_live_journal_script_writes_immutable_snapshot(tmp_path: Path) -> None:
+def test_live_journal_snapshot_from_ledger_publishes_immutably(
+    tmp_path: Path,
+) -> None:
+    """A ledger snapshot is attributed read-only and published exactly once."""
     ledger = tmp_path / "decisions.jsonl"
     ledger.write_text(
         "".join(json.dumps(record) + "\n" for record in _completed_trade_records()),
         encoding="utf-8",
     )
     output = tmp_path / "journal.json"
-    module = _load_script()
-    arguments = ["--ledger", str(ledger), "--out", str(output)]
+    records = [
+        json.loads(line) for line in ledger.read_text(encoding="utf-8").splitlines()
+    ]
 
-    assert module.main(arguments) == 0
-    report = json.loads(output.read_text(encoding="utf-8"))
+    write_immutable_json(output, build_live_journal(records))
+    published = output.read_bytes()
+    report = json.loads(published)
+
+    assert report["execution_authority"] == "none"
+    assert report["runtime_strategy_changed"] is False
     assert report["summary"]["closed_trades"] == 1
-    assert report["source_evidence"] == {
-        "path": str(ledger),
-        "sha256": hashlib.sha256(ledger.read_bytes()).hexdigest(),
-        "size_bytes": ledger.stat().st_size,
-        "record_count": 16,
-    }
-    assert module.main(arguments) == 1
+    assert report["integrity"]["record_count"] == 16
+    assert report["integrity"]["run_ids"] == ["run-1"]
+    with pytest.raises(FileExistsError, match="immutable JSON output exists"):
+        write_immutable_json(output, build_live_journal(records))
+    assert output.read_bytes() == published

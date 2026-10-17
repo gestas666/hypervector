@@ -142,7 +142,7 @@ def test_observer_rebinding_changes_only_storage_identity(tmp_path: Path) -> Non
     """A different fingerprint must not conceal a different strategy contract."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_btc_specialists_growth_sizing_candidate_v45.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_btc_specialists_growth_sizing_candidate_v45.toml",
         mode="observe",
     )
 
@@ -188,7 +188,7 @@ def test_observer_builds_hip3_only_poller_without_fake_core_route() -> None:
     """A HIP-3 study must not need an unrelated core strategy provider."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "configs/observers/index_fresh15_pressure_v2.toml",
+        "tests/fixtures/profiles/index_fresh15_pressure_v2.toml",
         mode="observe",
     )
 
@@ -205,7 +205,7 @@ def test_observer_cache_bypasses_completed_bar_profit_lock_symbols() -> None:
     """Observer transport must retain raw polling for lock-sensitive symbols."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
         mode="observe",
     )
     calls: list[str] = []

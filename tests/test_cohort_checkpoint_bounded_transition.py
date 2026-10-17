@@ -20,7 +20,7 @@ CHECKPOINT_SCRIPT = (
     / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_live_checkpoint.py'
 )
 V66_CONFIG = Path(
-    "configs/multi_asset_growth_first_5000_four_asset_brentoil_retired_candidate_v66.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_four_asset_brentoil_retired_candidate_v66.toml"
 )
 
 

@@ -22,7 +22,7 @@ from hypervector.research.cohort_configuration_exit_policy import (
     provider_exit_policy_evidence,
 )
 
-V93 = "configs/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml"
+V93 = "tests/fixtures/profiles/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml"
 
 
 def _plan(budget: StopRiskBudget | None = None) -> BoundExecutionPlan:

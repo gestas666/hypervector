@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
+import tomllib
 
 import pytest
 
@@ -17,11 +19,29 @@ from hypervector.live.multi_asset_live_config import (
 
 _PROFILE = Path("configs/multi_asset_bidirectional_canary.toml")
 _BREAKOUT_OBSERVER_PROFILE = Path(
-    "configs/multi_asset_bidirectional_breakout_observer_v3.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_breakout_observer_v3.toml"
 )
 _COMPLETE_PROFILE = Path(
     "configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml"
 )
+_SOURCE_FOLLOW_ID = "hypervelocity_source_follow_bidirectional_5m_v1"
+_SOURCE_PROFILE_NAME = (
+    "hypervelocity_source_follow_bidirectional_minrange12_alloc10_lev5_shadow.toml"
+)
+_SOURCE_PROFILE_LINE = re.compile(
+    r'^source_profile = "[^"\n]*/' + re.escape(_SOURCE_PROFILE_NAME) + r'"\n',
+    re.MULTILINE,
+)
+
+
+def _configured_source_profile(profile: Path) -> str:
+    """Return the literal source_profile text the TOML pins for the 5m arm."""
+    raw = tomllib.loads(profile.read_text(encoding="utf-8"))
+    return next(
+        provider["source_profile"]
+        for provider in raw["providers"]
+        if provider["strategy_id"] == _SOURCE_FOLLOW_ID
+    )
 
 
 def test_profile_enables_four_coins_with_both_directions() -> None:
@@ -100,12 +120,13 @@ def _assert_provider_contracts(
         "SOL",
         "HYPE",
     )
-    measured = providers["hypervelocity_source_follow_bidirectional_5m_v1"]
+    measured = providers[_SOURCE_FOLLOW_ID]
     assert measured.symbols == ("BTC",)
     assert measured.execution_symbols == ("BTC",)
-    assert measured.source_profile == Path(
-        "configs/hypervelocity_source_follow_bidirectional_minrange12_alloc10_lev5_shadow.toml"
-    )
+    # The loader keeps the pinned source profile verbatim; the pin itself is
+    # the exact measured minrange12/alloc10/lev5 shadow profile.
+    assert measured.source_profile == Path(_configured_source_profile(_PROFILE))
+    assert measured.source_profile.name == _SOURCE_PROFILE_NAME
     hype = providers["hype_breakout_onset_bidirectional_v1"]
     assert hype.symbols == ("HYPE",)
     assert hype.timeframe == "1m"
@@ -194,11 +215,10 @@ def test_hypervelocity_source_provider_requires_its_exact_profile(
     tmp_path: Path,
 ) -> None:
     """The measured 5m arm cannot run without its pinned source profile."""
-    text = _PROFILE.read_text(encoding="utf-8").replace(
-        'source_profile = "configs/hypervelocity_source_follow_bidirectional_minrange12_alloc10_lev5_shadow.toml"\n',
-        "",
-        1,
+    text, removed = _SOURCE_PROFILE_LINE.subn(
+        "", _PROFILE.read_text(encoding="utf-8"), count=1
     )
+    assert removed == 1
     profile = tmp_path / "source-profile-missing.toml"
     profile.write_text(text, encoding="utf-8")
 

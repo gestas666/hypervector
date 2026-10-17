@@ -46,7 +46,7 @@ def test_continuous_fetch_drives_actual_runner_and_events_inside_acquisition(
 ) -> None:
     """Eight native polls retain every acquisition cutoff while processing an intervening mark."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
+        "tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

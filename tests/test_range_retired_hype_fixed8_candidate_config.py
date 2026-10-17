@@ -7,9 +7,9 @@ from pathlib import Path
 
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
-_BASE = Path("configs/multi_asset_bidirectional_range_retired_candidate.toml")
+_BASE = Path("tests/fixtures/profiles/multi_asset_bidirectional_range_retired_candidate.toml")
 _CANDIDATE = Path(
-    "configs/multi_asset_bidirectional_range_retired_hype_fixed8_candidate.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_range_retired_hype_fixed8_candidate.toml"
 )
 _HYPE = "hype_breakout_onset_bidirectional_v1"
 _RANGE = "range_onset_bidirectional_v1"

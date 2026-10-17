@@ -1,7 +1,0 @@
-# Brent alternative to SP500
-
-SP500 was negative after adverse costs under each of the three frozen mechanisms. Native hourly volatility can be too small relative to the tested taker costs; no low-cost fill assumption has been validated to reverse that result. SPCX band recovery was positive in both descriptive partitions but still top-three-winner dependent; SNDK's channel mechanism was positive in development and negative in the later partition. Correction: the initial draft reversed those two partitions; the frozen report shows 20/10 adverse-cost net of +$147.08 in development and -$24.93 in the extension.
-
-Before opening Brent strategy outcomes, transfer exactly the same 20/10 channel, 8/4 channel and band-recovery hypotheses, source dates, warmup, costs, stops, holding contract and $500 notional. Exact market is `xyz:BRENTOIL`, not WTI. The earlier Brent oil-shock, pressure and Swing rejections remain in force for those recipes; this is a materially different mechanism and later native source window. Brent is an alternative for one of the three non-crypto slots, not a fourth addition.
-
-The Sept7 official public metadata reports 20x maximum leverage and growth mode enabled. Use 10x in the fixed research contract, the same 0.9/9-bps fee sensitivities and 2.5/5.5-bps adverse slippage. All results are exploratory after testing other assets, with explicit asset-selection bias. No broad search, parameter retuning or automatic promotion.

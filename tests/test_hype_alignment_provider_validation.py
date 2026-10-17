@@ -18,7 +18,7 @@ from hypervector.live.multi_asset_live_config import (
 )
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
 
-_V57 = Path("configs/multi_asset_growth_first_5000_spcx_short_containment_v57.toml")
+_V57 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_spcx_short_containment_v57.toml")
 
 
 def _alignment(config: MultiAssetLiveConfig) -> StrategyProviderConfig:

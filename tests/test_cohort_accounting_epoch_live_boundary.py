@@ -14,9 +14,9 @@ from hypervector.research.cohort_live_portfolio_archive import CohortAccountingE
 
 SCRIPT = Path(__file__).parents[1] / "src/hypervector/operations/multi_asset_bidirectional_live.py"
 V39 = Path(
-    "configs/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml"
 )
-V49 = Path("configs/multi_asset_growth_first_5000_repaired_candidate_v49.toml")
+V49 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_repaired_candidate_v49.toml")
 
 
 def _load() -> ModuleType:

@@ -12,7 +12,7 @@ from hypervector.live.multi_asset_intent_poller import (
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
 _PROFILE = Path(
-    "configs/multi_asset_bidirectional_eth_pullback_sol_range_candidate_v15.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_eth_pullback_sol_range_candidate_v15.toml"
 )
 _ETH = "eth_breakout_precompression_pullback_bidirectional_v1"
 _SOL = "range_onset_bidirectional_v1"

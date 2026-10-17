@@ -21,7 +21,7 @@ from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEval
 from hypervector.live.provider_readiness import SignalReadiness
 
 _CONFIG = Path(
-    "configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml"
 )
 _OBSERVED = datetime(2026, 8, 15, 12, tzinfo=UTC)
 _OBSERVED_MS = int(_OBSERVED.timestamp() * 1_000)

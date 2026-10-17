@@ -17,7 +17,7 @@ from hypervector.strategies.runtime_profile import load_hypervelocity_runtime_pr
 
 
 PROFILE = Path("configs/hypervelocity_faithful.toml")
-SOURCE_PROFILE = Path("configs/hypervelocity_source_follow_shadow.toml")
+SOURCE_PROFILE = Path("tests/fixtures/profiles/hypervelocity_source_follow_shadow.toml")
 OBSERVED_AT = "2026-07-26T12:00:00+00:00"
 
 

@@ -7,9 +7,9 @@ from pathlib import Path
 
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
-_BASE = Path("configs/multi_asset_bidirectional_range_retired_hype75_candidate.toml")
+_BASE = Path("tests/fixtures/profiles/multi_asset_bidirectional_range_retired_hype75_candidate.toml")
 _CANDIDATE = Path(
-    "configs/multi_asset_bidirectional_evidence_routed_hype75_extension_candidate.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_evidence_routed_hype75_extension_candidate.toml"
 )
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _HYPE = "hype_breakout_onset_bidirectional_v1"

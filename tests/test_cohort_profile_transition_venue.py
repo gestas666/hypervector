@@ -18,10 +18,10 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 
 _SCRIPT = Path(__file__).parents[1] / "src/hypervector/operations/multi_asset_bidirectional_live.py"
 _V63 = Path(
-    "configs/multi_asset_growth_first_5000_nine_asset_bankroll_builder_candidate_v63.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_nine_asset_bankroll_builder_candidate_v63.toml"
 )
 _V64 = Path(
-    "configs/multi_asset_growth_first_5000_eight_asset_gold_removed_candidate_v64.toml"
+    "tests/fixtures/profiles/multi_asset_growth_first_5000_eight_asset_gold_removed_candidate_v64.toml"
 )
 
 

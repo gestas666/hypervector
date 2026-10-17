@@ -16,7 +16,7 @@ from hypervector.live.multi_asset_live_config import (
 )
 from test_cohort_profile_stage_roundtrip import unchanged_settings
 
-V89_PROFILE = Path("configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml")
+V89_PROFILE = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml")
 
 
 @pytest.mark.parametrize("index", range(7))

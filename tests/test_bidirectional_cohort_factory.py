@@ -23,8 +23,8 @@ from hypervector.live.hyperliquid_sol_factory import SolSdkBuilderProtocol
 from hypervector.live.policy import SECRET_ENV_API_KEY, SECRET_ENV_WALLET
 from hypervector.live.sol_range_onset_config import load_sol_range_onset_config
 
-_HULK = Path("configs/hulk_smash_short_robust_v3_canary.toml")
-_SOL = Path("configs/sol_range_onset_canary.toml")
+_HULK = Path("tests/fixtures/profiles/hulk_smash_short_robust_v3_canary.toml")
+_SOL = Path("tests/fixtures/profiles/sol_range_onset_canary.toml")
 _ADDRESS = "0x1111111111111111111111111111111111111111"
 
 
