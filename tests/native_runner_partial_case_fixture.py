@@ -1,4 +1,9 @@
-"""Partial protective executions reach the real seven-engine runner and cohort telemetry."""
+"""Shared partial-protection runner cases for the split native runner test modules.
+
+The configured seven-engine runner cases are expensive (one full recorded poll each), so
+their test modules are split to let ``--dist loadfile`` spread them across workers. This
+non-test module holds the schedule and inspection helpers those modules share.
+"""
 
 from dataclasses import dataclass, replace
 from datetime import datetime
@@ -9,9 +14,8 @@ from pathlib import Path
 import pytest
 from native_replay_partial_protective_fixture import PartialProtectiveFixture
 from native_replay_runner_fixture import configured_recorded_runner
-from test_native_partial_protective_execution import CASES, assert_partial_economics
+from test_native_partial_protective_execution import assert_partial_economics
 from test_native_partial_protective_recovery import assert_closed_economics
-from test_native_replay_adapter import deny_external_ports
 from test_native_runner_recorded_control import INPUTS
 
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
@@ -19,7 +23,6 @@ from hypervector.live.sol_range_onset_ledger import SolLiveLedger
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot
 from hypervector.research.native_runner_recorded_fetch import RecordedRunnerFetch
 
-__all__ = ["deny_external_ports"]
 PARTIAL_OBSERVATION_MS = 750
 FOLLOWUP_CLOSE_OBSERVATION_MS = 450
 SIBLING_CANCEL_OBSERVATION_MS = 550
@@ -88,8 +91,7 @@ def final_cohort(case: RunnerPartialCase) -> dict[str, object]:
     return result
 
 
-@pytest.mark.parametrize("symbol,kind,last_side", CASES)
-def test_partial_protection_precedes_recorded_acquisition_and_truthful_final_state(
+def assert_partial_protection_final_state(
     tmp_path: Path, symbol: str, kind: str, last_side: bool
 ) -> None:
     """The configured runner publishes the reduced protected target or completed stop exit."""
@@ -114,22 +116,4 @@ def test_partial_protection_precedes_recorded_acquisition_and_truthful_final_sta
         assert asset["protective_exit_pending"] is False
         assert case.replay.mutations.count("close") == 1
         assert_closed_economics(case.replay, symbol)
-    assert_partial_economics(case.replay)
-
-
-def test_runner_exposes_unprotected_stop_remainder_and_its_pending_exit(
-    tmp_path: Path,
-) -> None:
-    """A partial follow-up IOC cannot appear flat or protected while its exit remains owed."""
-    case = partial_case(tmp_path, "BTC", "stop", False, partial_close=True)
-    assert case.runner.poll_once() == 0
-    cohort = final_cohort(case)
-    asset = next(row for row in cohort["assets"] if row["symbol"] == "BTC")
-    assert cohort["open_position_count"] == 1
-    assert asset["state"] == "EXIT_PENDING"
-    assert asset["protective_exit_pending"] is True
-    assert asset["stop_protection"] == "missing"
-    assert asset["opened_at_ms"] == case.original.opened_at_ms
-    assert asset["position_size_signed"] == case.replay.engines["BTC"].snapshot.position_size_signed
-    assert case.replay.mutations.count("close") == 1
     assert_partial_economics(case.replay)

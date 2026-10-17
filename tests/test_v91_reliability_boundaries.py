@@ -10,9 +10,9 @@ from hyperliquid.utils.error import ServerError
 import cohort_supervisor_alerts as alerts
 import cohort_supervisor_runtime as runtime
 from cohort_supervisor_state import RestartJournal
+from native_runner_partial_case_fixture import partial_case
 from test_cohort_backend_supervisor import FAST, _Recorder, _events, _run
 from test_native_replay_adapter import deny_external_ports
-from test_native_runner_partial_protection import partial_case
 
 from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
 from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError

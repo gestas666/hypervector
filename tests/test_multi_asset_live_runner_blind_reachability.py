@@ -11,6 +11,7 @@ answers a new session while the runner's own account reads keep failing.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -206,10 +207,13 @@ def test_core_only_profiles_read_the_core_dex(
 
 
 def test_the_live_runner_is_built_with_the_profile_reachability_probe(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     script = _load_module()
-    config = script.load_multi_asset_live_config(_V94, mode="observe")
+    loaded = script.load_multi_asset_live_config(_V94, mode="observe")
+    # Keep the operator inbox and STOP file out of the checkout's real data/live.
+    ledger = tmp_path / "live/bidirectional_cohort/cohort.jsonl"
+    config = replace(loaded, cohort_ledger=ledger, stop_file=ledger.parent / "STOP")
     monkeypatch.setattr(
         script,
         "install_process_signal_stop",

@@ -219,6 +219,7 @@ def test_event_authority_defaults_to_websocket_context_not_rest_refresh(
         event_stream_pump=_EventPump(),
         enforce_live_boundary=False,
         now_fn=lambda: pd.Timestamp("2026-07-26T20:00:00Z"),
+        sleep_fn=lambda _seconds: None,
     )
 
     assert result.live_bars == 1

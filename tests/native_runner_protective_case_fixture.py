@@ -1,4 +1,8 @@
-"""Synthetic owned protective receipts composed with real recorded provider acquisition."""
+"""Shared owned-protective-exit runner case for the split native runner test modules.
+
+Each case builds the configured seven-engine runner and performs one full recorded poll, so
+the cases are split across modules by entry side to let ``--dist loadfile`` spread them.
+"""
 
 from datetime import datetime
 import json
@@ -8,12 +12,10 @@ import pytest
 from native_replay_protective_fixture import ProtectiveEngineFixture
 from native_replay_runner_fixture import configured_recorded_runner
 from test_native_protective_observation import assert_current_flat_ledger, assert_exact_cash
-from test_native_replay_adapter import deny_external_ports
 from test_native_runner_recorded_control import INPUTS
 
 from hypervector.research.native_runner_recorded_fetch import RecordedRunnerFetch
 
-__all__ = ["deny_external_ports"]
 CASES = [
     (symbol, "stop")
     for symbol in ("BTC", "ETH", "SOL", "HYPE", "xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL")
@@ -25,9 +27,7 @@ SIBLING_CANCEL_OBSERVATION_MS = 550
 PROTECTIVE_EXECUTION_ADVANCE_MS = 1000
 
 
-@pytest.mark.parametrize("symbol,kind", CASES)
-@pytest.mark.parametrize("last_side", [False, True])
-def test_protective_exit_precedes_recorded_acquisition_and_final_cohort_snapshot(
+def assert_protective_exit_final_cohort(
     tmp_path: Path, symbol: str, kind: str, last_side: bool
 ) -> None:
     """The actual runner must publish its cleaned final account after an owned exit."""
