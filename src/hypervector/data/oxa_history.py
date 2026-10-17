@@ -19,13 +19,29 @@ from hypervector.data.oxa_api import (
     validate_market_symbol,
     validate_window,
 )
+from hypervector.data.oxa_acquisition import (
+    bundle_report,
+    incomplete_fetch_error,
+    partial_directory,
+    reject_existing_partial,
+    reusable_bundle_manifest,
+)
+from hypervector.data.oxa_pagination import paginate, write_raw_pages
 from hypervector.data.oxa_storage import (
     file_evidence,
     gzip_text_writer,
     publish_immutable_directory,
-    write_gzip_json,
     write_json,
 )
+
+DEFAULT_BOOK_MAX_PAGES = 40
+"""Shared resumable-backfill book page bound per window.
+
+Duplicated-snapshot vendor periods fill exactly 20 pages in ordinary hours, so
+the bound keeps headroom. Pagination stops at the vendor's final cursor, so a
+larger bound costs nothing for complete windows, and it is not part of any
+bundle path or identity.
+"""
 
 
 @dataclass(frozen=True)
@@ -187,17 +203,14 @@ def fetch_orderbook_history(
     client: OxaHistoryClient, request: OxaBookRequest
 ) -> OxaBookFetch:
     """Fetch and validate no more than the explicitly bounded page count."""
-    pages: list[OxaBookPage] = []
-    cursor: str | None = None
-    for _ in range(request.max_pages):
-        page = client.fetch_page(request, cursor=cursor)
-        pages.append(page)
-        cursor = page.next_cursor
-        if cursor is None:
-            break
-    snapshots, coalesced = _merge_page_snapshots(pages)
+    pages, cursor = paginate(
+        lambda next_cursor: client.fetch_page(request, cursor=next_cursor),
+        request.max_pages,
+        label="book",
+    )
+    snapshots, coalesced = _merge_page_snapshots(list(pages))
     return OxaBookFetch(
-        pages=tuple(pages),
+        pages=pages,
         snapshots=snapshots,
         complete=cursor is None,
         continuation_cursor=cursor,
@@ -229,12 +242,18 @@ def store_orderbook_history(
     result: OxaBookFetch,
 ) -> OxaStoredHistory:
     """Atomically publish raw pages, checksums, manifest, and replay JSONL."""
-    final = output_directory(data_root, request)
+    return _publish_orderbooks(output_directory(data_root, request), request, result)
 
+
+def _publish_orderbooks(
+    final: Path,
+    request: OxaBookRequest,
+    result: OxaBookFetch,
+) -> OxaStoredHistory:
     def write_bundle(staging: Path) -> None:
         raw_dir = staging / "raw"
         raw_dir.mkdir()
-        files = _write_raw_pages(raw_dir, result.pages)
+        files = write_raw_pages(raw_dir, result.pages)
         books_path = staging / "books.jsonl.gz"
         _write_books(books_path, result, source=request.source)
         files["books.jsonl.gz"] = file_evidence(books_path)
@@ -253,31 +272,78 @@ def acquire_and_store_orderbooks(
     data_root: Path | str,
     api_key: str,
     request: OxaBookRequest,
+    session: HttpSession | None = None,
+    allow_partial: bool = False,
 ) -> dict[str, object]:
-    """Acquire a bounded native L2 window and return a secret-free report."""
-    result = fetch_orderbook_history(OxaHistoryClient(api_key=api_key), request)
-    stored = store_orderbook_history(data_root, request, result)
-    observed_start = result.snapshots[0].timestamp if result.snapshots else None
-    observed_end = result.snapshots[-1].timestamp if result.snapshots else None
-    return {
-        "ok": True,
+    """Acquire one complete native L2 window and return a secret-free report.
+
+    An existing complete bundle is verified and reused with no vendor call; an
+    unfinished cursor chain is never published at the canonical path.
+    """
+    directory = output_directory(data_root, request)
+    if reusable_bundle_manifest(
+        directory, kind="book", expected=_reuse_identity(request)
+    ):
+        return _report(request, directory, reused=True)
+    if allow_partial:
+        reject_existing_partial(directory, kind="book")
+    client = OxaHistoryClient(api_key=api_key, session=session)
+    result = fetch_orderbook_history(client, request)
+    partial = not result.complete
+    if partial and not allow_partial:
+        raise incomplete_fetch_error(
+            "book",
+            page_count=len(result.pages),
+            continuation_cursor=result.continuation_cursor,
+        )
+    if partial:
+        directory = partial_directory(directory)
+    stored = _publish_orderbooks(directory, request, result)
+    return _report(request, stored.directory, reused=False, partial=partial)
+
+
+def _reuse_identity(request: OxaBookRequest) -> dict[str, object]:
+    identity: dict[str, object] = {
         "source": request.source,
-        "venue": "hyperliquid",
-        "market_family": request.market_family,
         "symbol": request.symbol,
-        "directory": str(stored.directory.resolve()),
-        "books_path": str(stored.books_path.resolve()),
-        "manifest_path": str(stored.manifest_path.resolve()),
-        "request_ids": list(result.request_ids),
-        "page_count": len(result.pages),
-        "row_count": len(result.snapshots),
-        "coalesced_same_ms": result.coalesced_same_ms,
-        "censored_zero_size_snapshots": result.censored_zero_size_snapshots,
-        "observed_start": observed_start,
-        "observed_end": observed_end,
-        "complete": result.complete,
-        "continuation_cursor": result.continuation_cursor,
+        "requested_start": request.start.isoformat(),
+        "requested_end": request.end.isoformat(),
+        "requested_depth": request.depth,
     }
+    if request.market_family == "hip3":
+        identity["market_family"] = "hip3"
+    return identity
+
+
+def _report(
+    request: OxaBookRequest,
+    directory: Path,
+    *,
+    reused: bool,
+    partial: bool = False,
+) -> dict[str, object]:
+    return bundle_report(
+        directory,
+        identity={
+            "source": request.source,
+            "venue": "hyperliquid",
+            "market_family": request.market_family,
+            "symbol": request.symbol,
+        },
+        path_key="books_path",
+        normalized_names=("books.jsonl.gz", "books.jsonl"),
+        counts=(
+            "request_ids",
+            "page_count",
+            "row_count",
+            "coalesced_same_ms",
+            "censored_zero_size_snapshots",
+            "observed_start",
+            "observed_end",
+        ),
+        reused=reused,
+        partial=partial,
+    )
 
 
 def _merge_page_snapshots(
@@ -296,17 +362,6 @@ def _merge_page_snapshots(
 
 def _window_stamp(value: datetime) -> str:
     return value.strftime("%Y%m%dT%H%M%S%fZ")
-
-
-def _write_raw_pages(
-    raw_dir: Path, pages: tuple[OxaBookPage, ...]
-) -> dict[str, dict[str, object]]:
-    evidence: dict[str, dict[str, object]] = {}
-    for index, page in enumerate(pages, start=1):
-        path = raw_dir / f"page-{index:04d}.json.gz"
-        write_gzip_json(path, page.raw_payload)
-        evidence[f"raw/{path.name}"] = file_evidence(path)
-    return evidence
 
 
 def _write_books(path: Path, result: OxaBookFetch, *, source: str) -> None:

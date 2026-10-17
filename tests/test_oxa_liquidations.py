@@ -197,6 +197,38 @@ def test_observed_august_short_direction_variants_are_normalized(
     assert row["vendor_direction"] == vendor_direction
 
 
+@pytest.mark.parametrize(
+    "vendor_direction",
+    ["Liquidated Cross Long", "Liquidated Isolated Long"],
+)
+def test_long_direction_variants_symmetric_with_observed_shorts_are_normalized(
+    vendor_direction: str,
+) -> None:
+    """Forced-long variants (sold on side A) must parse, not abort the fetch."""
+    from hypervector.data.oxa_liquidations import (
+        OxaLiquidationRequest,
+        parse_liquidation_page,
+    )
+
+    payload = copy.deepcopy(VALID_PAGE)
+    payload["data"][0]["direction"] = vendor_direction  # type: ignore[index]
+    payload["data"][0]["side"] = "A"  # type: ignore[index]
+    request = OxaLiquidationRequest(
+        "BTC",
+        datetime(2026, 8, 21, 12, 0, tzinfo=UTC),
+        datetime(2026, 8, 21, 12, 1, tzinfo=UTC),
+    )
+
+    row = parse_liquidation_page(payload, request).events[0].to_row()
+    assert row["liquidated_direction"] == "long"
+    assert row["vendor_direction"] == vendor_direction
+    assert row["exchange_side"] == "A"
+
+    payload["data"][0]["side"] = "B"  # type: ignore[index]
+    with pytest.raises(ValueError, match="direction and side disagree"):
+        parse_liquidation_page(payload, request)
+
+
 def test_liquidation_history_follows_bounded_cursor_pages() -> None:
     """Pagination must stop at max-pages and expose an unfinished cursor."""
     from hypervector.data.oxa_liquidations import (

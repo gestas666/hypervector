@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import math
-from dataclasses import asdict, dataclass
-from datetime import datetime
+from dataclasses import asdict, dataclass, replace
+from datetime import datetime, timedelta
 import json
 from pathlib import Path
 
@@ -16,20 +16,35 @@ from hypervector.data.oxa_api import (
     parse_utc_timestamp_ms,
     validate_window,
 )
+from hypervector.data.oxa_acquisition import (
+    bundle_report,
+    incomplete_fetch_error,
+    reusable_bundle_manifest,
+)
 from hypervector.data.oxa_candle_request import (
     CandleInterval as CandleInterval,
     OxaCandleRequest as OxaCandleRequest,
 )
+from hypervector.data.oxa_pagination import paginate, write_raw_pages
 from hypervector.data.provenance import normalize_ohlcv
 from hypervector.data.oxa_storage import (
     file_evidence,
     open_text_reader,
     publish_immutable_directory,
     verify_file_evidence,
-    write_gzip_json,
     write_json,
 )
 
+_INTERVAL_DURATIONS = {
+    "1m": timedelta(minutes=1),
+    "5m": timedelta(minutes=5),
+    "15m": timedelta(minutes=15),
+    "30m": timedelta(minutes=30),
+    "1h": timedelta(hours=1),
+    "4h": timedelta(hours=4),
+    "1d": timedelta(days=1),
+    "1w": timedelta(days=7),
+}
 _PANDAS_FREQUENCIES = {
     "1m": "1min",
     "5m": "5min",
@@ -120,16 +135,46 @@ def fetch_candle_history(
     client: OxaCandleClient, request: OxaCandleRequest
 ) -> OxaCandleFetch:
     """Fetch bounded pages and reject conflicting cursor-boundary candles."""
-    pages: list[OxaCandlePage] = []
-    cursor: str | None = None
-    for _ in range(request.max_pages):
-        page = client.fetch_page(request, cursor=cursor)
-        pages.append(page)
-        cursor = page.next_cursor
-        if cursor is None:
-            break
-    candles = _merge_candles(pages, end_ms=int(request.end.timestamp() * 1000))
-    return OxaCandleFetch(tuple(pages), candles, cursor is None, cursor)
+    pages, cursor = paginate(
+        lambda next_cursor: client.fetch_page(request, cursor=next_cursor),
+        request.max_pages,
+        label="candle",
+    )
+    candles = _merge_candles(list(pages), end_ms=int(request.end.timestamp() * 1000))
+    return OxaCandleFetch(pages, candles, cursor is None, cursor)
+
+
+def minimum_candle_rows(request: OxaCandleRequest) -> int:
+    """Return the fewest vendor rows a gap-free window can contain."""
+    return (request.end - request.start) // _INTERVAL_DURATIONS[request.interval]
+
+
+def estimated_candle_pages(request: OxaCandleRequest) -> int:
+    """Return a page budget for a gap-free window, inclusive vendor end included.
+
+    One extra page covers a vendor that reports a cursor after an exactly full
+    final page.
+    """
+    rows = minimum_candle_rows(request) + 1
+    return math.ceil(rows / request.limit) + 1
+
+
+def validate_candle_page_budget(request: OxaCandleRequest) -> None:
+    """Fail before any vendor call when a gap-free window cannot fit the budget.
+
+    Sparse markets with missing candles may complete with fewer pages; raising
+    ``--max-pages`` costs nothing because pagination stops at the final cursor.
+    """
+    rows = minimum_candle_rows(request)
+    if rows <= request.limit * request.max_pages:
+        return
+    needed = math.ceil(rows / request.limit)
+    raise ValueError(
+        f"candle window needs at least {needed} page(s) of {request.limit} "
+        f"({rows} {request.interval} candles) but max_pages is "
+        f"{request.max_pages}; rerun with --max-pages "
+        f"{estimated_candle_pages(request)} (no vendor call was made)"
+    )
 
 
 def candle_output_directory(data_root: Path | str, request: OxaCandleRequest) -> Path:
@@ -153,7 +198,7 @@ def store_candle_history(
     def write_bundle(staging: Path) -> None:
         raw_dir = staging / "raw"
         raw_dir.mkdir()
-        files = _write_raw_pages(raw_dir, result.pages)
+        files = write_raw_pages(raw_dir, result.pages)
         candles_path = staging / "candles.parquet"
         pd.DataFrame(candle.to_bar() for candle in result.candles).to_parquet(
             candles_path, index=False
@@ -166,28 +211,84 @@ def store_candle_history(
 
 
 def acquire_and_store_candles(
-    *, data_root: Path | str, api_key: str, request: OxaCandleRequest
+    *,
+    data_root: Path | str,
+    api_key: str,
+    request: OxaCandleRequest,
+    session: HttpSession | None = None,
 ) -> dict[str, object]:
-    """Acquire a complete candle window and return a secret-free report."""
-    result = fetch_candle_history(OxaCandleClient(api_key=api_key), request)
+    """Acquire a complete candle window and return a secret-free report.
+
+    An existing complete bundle is verified (checksums and raw reproduction)
+    and reused with no vendor call, and a window that cannot fit the page
+    budget fails before any vendor call.
+    """
+    directory = candle_output_directory(data_root, request)
+    if _reusable_candle_bundle(directory, request):
+        return _report(request, directory, reused=True)
+    validate_candle_page_budget(request)
+    result = fetch_candle_history(
+        OxaCandleClient(api_key=api_key, session=session), request
+    )
     if not result.complete:
-        raise ValueError("candle max-pages exhausted before completing the window")
+        raise incomplete_fetch_error(
+            "candle",
+            page_count=len(result.pages),
+            continuation_cursor=result.continuation_cursor,
+            hint=(
+                f"the window needs about {estimated_candle_pages(request)} page(s) "
+                f"at limit {request.limit}; rerun with a larger --max-pages"
+            ),
+        )
     stored = store_candle_history(data_root, request, result)
-    return {
-        "ok": True,
-        "venue": "hyperliquid",
+    return _report(request, stored.directory, reused=False)
+
+
+def _reusable_candle_bundle(directory: Path, request: OxaCandleRequest) -> bool:
+    expected: dict[str, object] = {
         "source": request.source,
-        "market_family": request.market_family,
+        "source_api": request.source_api,
         "symbol": request.symbol,
         "interval": request.interval,
-        "row_count": len(result.candles),
-        "page_count": len(result.pages),
-        "request_ids": list(result.request_ids),
-        "complete": result.complete,
-        "directory": str(stored.directory.resolve()),
-        "candles_path": str(stored.candles_path.resolve()),
-        "manifest_path": str(stored.manifest_path.resolve()),
+        "requested_start": request.start.isoformat(),
+        "requested_end": request.end.isoformat(),
     }
+    if request.market_family == "hip3":
+        expected["market_family"] = "hip3"
+    manifest = reusable_bundle_manifest(
+        directory, kind="candle", expected=expected, verify_files=False
+    )
+    if manifest is None:
+        return False
+    limit, max_pages = manifest.get("page_limit"), manifest.get("max_pages")
+    if not isinstance(limit, int) or not isinstance(max_pages, int):
+        raise ValueError(
+            f"existing candle manifest has invalid page bounds: {directory}"
+        )
+    stored_request = replace(request, limit=limit, max_pages=max_pages)
+    read_complete_candle_evidence(directory, stored_request)
+    return True
+
+
+def _report(
+    request: OxaCandleRequest, directory: Path, *, reused: bool
+) -> dict[str, object]:
+    report = bundle_report(
+        directory,
+        identity={
+            "venue": "hyperliquid",
+            "source": request.source,
+            "market_family": request.market_family,
+            "symbol": request.symbol,
+            "interval": request.interval,
+        },
+        path_key="candles_path",
+        normalized_names=("candles.parquet",),
+        counts=("row_count", "page_count", "request_ids"),
+        reused=reused,
+    )
+    report.pop("continuation_cursor", None)
+    return report
 
 
 def read_complete_candle_evidence(
@@ -416,17 +517,6 @@ def _merge_candles(pages: list[OxaCandlePage], *, end_ms: int) -> tuple[OxaCandl
                 raise ValueError("conflicting duplicate candle timestamp")
             merged[candle.ts_ms] = candle
     return tuple(merged[key] for key in sorted(merged))
-
-
-def _write_raw_pages(
-    raw_dir: Path, pages: tuple[OxaCandlePage, ...]
-) -> dict[str, dict[str, object]]:
-    evidence: dict[str, dict[str, object]] = {}
-    for index, page in enumerate(pages, start=1):
-        path = raw_dir / f"page-{index:04d}.json.gz"
-        write_gzip_json(path, page.raw_payload)
-        evidence[f"raw/{path.name}"] = file_evidence(path)
-    return evidence
 
 
 def _manifest(

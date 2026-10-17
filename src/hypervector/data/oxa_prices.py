@@ -18,14 +18,21 @@ from hypervector.data.oxa_api import (
     validate_market_symbol,
     validate_window,
 )
+from hypervector.data.oxa_acquisition import (
+    bundle_report,
+    incomplete_fetch_error,
+    reusable_bundle_manifest,
+)
+from hypervector.data.oxa_pagination import paginate, write_raw_pages
 from hypervector.data.oxa_storage import (
     file_evidence,
     publish_immutable_directory,
-    write_gzip_json,
     write_json,
 )
 
 _SOURCE = "0xarchive_hyperliquid_prices"
+DEFAULT_PRICE_MAX_PAGES = 20
+"""Shared resumable-backfill price page bound per window (not part of identity)."""
 
 
 @dataclass(frozen=True)
@@ -131,20 +138,13 @@ def fetch_price_history(
     client: OxaPriceClient, request: OxaPriceRequest
 ) -> OxaPriceFetch:
     """Fetch bounded pages and reject conflicting cursor-boundary rows."""
-    pages: list[OxaPricePage] = []
-    cursor: str | None = None
-    for _ in range(request.max_pages):
-        page = client.fetch_page(request, cursor=cursor)
-        pages.append(page)
-        next_cursor = page.next_cursor
-        if next_cursor is None:
-            cursor = None
-            break
-        if next_cursor == cursor:
-            raise ValueError("0xArchive price cursor did not advance")
-        cursor = next_cursor
-    snapshots = _merge_snapshots(pages, int(request.end.timestamp() * 1000))
-    return OxaPriceFetch(tuple(pages), snapshots, cursor is None, cursor)
+    pages, cursor = paginate(
+        lambda next_cursor: client.fetch_page(request, cursor=next_cursor),
+        request.max_pages,
+        label="price",
+    )
+    snapshots = _merge_snapshots(list(pages), int(request.end.timestamp() * 1000))
+    return OxaPriceFetch(pages, snapshots, cursor is None, cursor)
 
 
 def price_output_directory(data_root: Path | str, request: OxaPriceRequest) -> Path:
@@ -173,7 +173,7 @@ def store_price_history(
     def write_bundle(staging: Path) -> None:
         raw_dir = staging / "raw"
         raw_dir.mkdir()
-        files = _write_raw_pages(raw_dir, result.pages)
+        files = write_raw_pages(raw_dir, result.pages)
         prices_path = staging / "prices.parquet"
         pd.DataFrame(row.to_row() for row in result.snapshots).to_parquet(
             prices_path, index=False
@@ -186,26 +186,56 @@ def store_price_history(
 
 
 def acquire_and_store_prices(
-    *, data_root: Path | str, api_key: str, request: OxaPriceRequest
+    *,
+    data_root: Path | str,
+    api_key: str,
+    request: OxaPriceRequest,
+    session: HttpSession | None = None,
 ) -> dict[str, object]:
-    """Acquire a complete price window and return a secret-free report."""
-    result = fetch_price_history(OxaPriceClient(api_key=api_key), request)
-    if not result.complete:
-        raise ValueError("price max-pages exhausted before completing the window")
-    stored = store_price_history(data_root, request, result)
-    return {
-        "ok": True,
-        "venue": "hyperliquid",
+    """Acquire a complete price window and return a secret-free report.
+
+    An existing complete bundle is verified and reused with no vendor call.
+    """
+    directory = price_output_directory(data_root, request)
+    expected: dict[str, object] = {
         "source": _SOURCE,
         "symbol": request.symbol,
-        "row_count": len(result.snapshots),
-        "page_count": len(result.pages),
-        "request_ids": list(result.request_ids),
-        "complete": result.complete,
-        "directory": str(stored.directory.resolve()),
-        "prices_path": str(stored.prices_path.resolve()),
-        "manifest_path": str(stored.manifest_path.resolve()),
+        "requested_start": request.start.isoformat(),
+        "requested_end": request.end.isoformat(),
     }
+    if request.market_family == "hip3":
+        expected["market_family"] = "hip3"
+    if reusable_bundle_manifest(directory, kind="price", expected=expected):
+        return _report(request, directory, reused=True)
+    result = fetch_price_history(
+        OxaPriceClient(api_key=api_key, session=session), request
+    )
+    if not result.complete:
+        raise incomplete_fetch_error(
+            "price",
+            page_count=len(result.pages),
+            continuation_cursor=result.continuation_cursor,
+        )
+    stored = store_price_history(data_root, request, result)
+    return _report(request, stored.directory, reused=False)
+
+
+def _report(
+    request: OxaPriceRequest, directory: Path, *, reused: bool
+) -> dict[str, object]:
+    return bundle_report(
+        directory,
+        identity={
+            "venue": "hyperliquid",
+            "source": _SOURCE,
+            "market_family": request.market_family,
+            "symbol": request.symbol,
+        },
+        path_key="prices_path",
+        normalized_names=("prices.parquet",),
+        counts=("row_count", "page_count", "request_ids"),
+        reused=reused,
+    )
 
 
 def _parse_page(payload: object, request: OxaPriceRequest) -> OxaPricePage:
@@ -264,17 +294,6 @@ def _merge_snapshots(
                 raise ValueError("conflicting duplicate price timestamp")
             merged[snapshot.ts_ms] = snapshot
     return tuple(merged[key] for key in sorted(merged))
-
-
-def _write_raw_pages(
-    raw_dir: Path, pages: tuple[OxaPricePage, ...]
-) -> dict[str, dict[str, object]]:
-    evidence: dict[str, dict[str, object]] = {}
-    for index, page in enumerate(pages, start=1):
-        path = raw_dir / f"page-{index:04d}.json.gz"
-        write_gzip_json(path, page.raw_payload)
-        evidence[f"raw/{path.name}"] = file_evidence(path)
-    return evidence
 
 
 def _manifest(

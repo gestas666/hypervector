@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import math
+import random
 import re
+import time
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Literal, Protocol
@@ -10,6 +14,15 @@ from typing import Literal, Protocol
 import requests
 
 API_ROOT = "https://api.0xarchive.io/v1/hyperliquid"
+DEFAULT_MAX_ATTEMPTS = 5
+_BACKOFF_BASE_SECONDS = 0.5
+_BACKOFF_CAP_SECONDS = 8.0
+_RETRY_AFTER_CAP_SECONDS = 60.0
+_RETRYABLE_TRANSPORT_ERRORS = (
+    requests.ConnectionError,
+    requests.Timeout,
+    requests.exceptions.ChunkedEncodingError,
+)
 MarketFamily = Literal["core", "hip3"]
 _SYMBOL_PATTERN = re.compile(r"^[A-Z0-9][A-Z0-9._-]{0,63}$")
 _HIP3_SYMBOL_PATTERN = re.compile(
@@ -47,15 +60,40 @@ class HttpSession(Protocol):
     ) -> HttpResponse: ...
 
 
-class OxaRestClient:
-    """Authenticated GET client that never renders credential material."""
+class JitterSource(Protocol):
+    """Random source used for full-jitter retry backoff."""
 
-    def __init__(self, *, api_key: str, session: HttpSession | None = None) -> None:
+    def uniform(self, a: float, b: float) -> float: ...
+
+
+class OxaRestClient:
+    """Authenticated GET client that never renders credential material.
+
+    Transient failures (HTTP 429, HTTP 5xx, connection errors, timeouts and
+    truncated bodies) are retried in place with bounded full-jitter backoff
+    that honours a numeric ``Retry-After``, so one blip does not discard every
+    page already fetched. Other statuses and request errors fail immediately.
+    """
+
+    def __init__(
+        self,
+        *,
+        api_key: str,
+        session: HttpSession | None = None,
+        max_attempts: int = DEFAULT_MAX_ATTEMPTS,
+        sleep: Callable[[float], None] | None = None,
+        rng: JitterSource | None = None,
+    ) -> None:
         key = api_key.strip()
         if not key:
             raise ValueError("OXA_API_KEY is required")
+        if max_attempts < 1:
+            raise ValueError("max_attempts must be at least 1")
         self._api_key = key
         self._session = session or requests.Session()
+        self._max_attempts = max_attempts
+        self._sleep = sleep
+        self._rng: JitterSource = rng or random.Random()
 
     def get(
         self,
@@ -67,27 +105,74 @@ class OxaRestClient:
         """Fetch one JSON response or raise a secret-safe boundary error."""
         if not path.startswith("/") or ".." in path:
             raise ValueError("0xArchive API path must be absolute and traversal-free")
-        try:
-            response = self._session.get(
-                f"{API_ROOT}{path}",
-                headers={"X-API-Key": self._api_key},
-                params=params,
-                timeout=timeout,
-            )
-        except requests.RequestException as exc:
-            name = type(exc).__name__
-            raise OxaHistoryError(
-                f"0xArchive network request failed ({name})"
-            ) from None
-        if response.status_code != 200:
-            raise OxaHistoryError(
-                f"0xArchive request failed with HTTP {response.status_code}",
-                status_code=response.status_code,
-            )
-        try:
-            return response.json()
-        except ValueError:
-            raise OxaHistoryError("0xArchive response contained invalid JSON") from None
+        for attempt in range(1, self._max_attempts + 1):
+            retry_after: float | None = None
+            try:
+                response = self._session.get(
+                    f"{API_ROOT}{path}",
+                    headers={"X-API-Key": self._api_key},
+                    params=params,
+                    timeout=timeout,
+                )
+            except _RETRYABLE_TRANSPORT_ERRORS as exc:
+                failure = _network_failure(exc)
+            except requests.RequestException as exc:
+                raise _network_failure(exc) from None
+            else:
+                status = response.status_code
+                if status == 200:
+                    try:
+                        return response.json()
+                    except ValueError:
+                        raise OxaHistoryError(
+                            "0xArchive response contained invalid JSON"
+                        ) from None
+                failure = OxaHistoryError(
+                    f"0xArchive request failed with HTTP {status}",
+                    status_code=status,
+                )
+                if not _retryable_status(status):
+                    raise failure
+                retry_after = _retry_after_seconds(response)
+            if attempt == self._max_attempts:
+                raise failure
+            self._pause(attempt, retry_after)
+        raise RuntimeError("unreachable 0xArchive retry state")
+
+    def _pause(self, attempt: int, retry_after: float | None) -> None:
+        ceiling = min(
+            _BACKOFF_CAP_SECONDS, _BACKOFF_BASE_SECONDS * 2 ** (attempt - 1)
+        )
+        delay = self._rng.uniform(0.0, ceiling)
+        if retry_after is not None:
+            delay = max(min(retry_after, _RETRY_AFTER_CAP_SECONDS), delay)
+        sleep = self._sleep if self._sleep is not None else time.sleep
+        sleep(delay)
+
+
+def _network_failure(exc: BaseException) -> OxaHistoryError:
+    return OxaHistoryError(f"0xArchive network request failed ({type(exc).__name__})")
+
+
+def _retryable_status(status: int) -> bool:
+    return status == 429 or status >= 500
+
+
+def _retry_after_seconds(response: object) -> float | None:
+    """Return a finite, non-negative numeric Retry-After, ignoring dates."""
+    headers = getattr(response, "headers", None) or {}
+    if not isinstance(headers, Mapping):
+        return None
+    value = headers.get("Retry-After", headers.get("retry-after"))
+    if value is None:
+        return None
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(seconds) or seconds < 0:
+        return None
+    return seconds
 
 
 def validate_symbol(symbol: str) -> None:

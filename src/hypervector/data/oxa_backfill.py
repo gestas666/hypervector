@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 import time
 from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -11,6 +12,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Literal
 
+import requests
+
+from hypervector.data.oxa_acquisition import incomplete_fetch_error
 from hypervector.data.oxa_api import (
     MarketFamily,
     OxaHistoryError,
@@ -18,6 +22,7 @@ from hypervector.data.oxa_api import (
     validate_window,
 )
 from hypervector.data.oxa_history import (
+    DEFAULT_BOOK_MAX_PAGES,
     OxaBookRequest,
     OxaHistoryClient,
     fetch_orderbook_history,
@@ -25,6 +30,7 @@ from hypervector.data.oxa_history import (
     store_orderbook_history,
 )
 from hypervector.data.oxa_prices import (
+    DEFAULT_PRICE_MAX_PAGES,
     OxaPriceClient,
     OxaPriceRequest,
     fetch_price_history,
@@ -32,6 +38,7 @@ from hypervector.data.oxa_prices import (
     store_price_history,
 )
 from hypervector.data.oxa_trades import (
+    DEFAULT_TRADE_MAX_PAGES,
     OxaTradeClient,
     OxaTradeRequest,
     TRADE_NORMALIZATION_VERSION,
@@ -43,6 +50,12 @@ from hypervector.data.oxa_storage import verify_file_evidence
 
 DataKind = Literal["book", "trade", "price"]
 DEFAULT_RETRIES = 10
+"""Task-level attempts for residual failures after per-page client retries.
+
+Kept at 10 so a sustained sub-minute vendor incident does not abort a long job;
+each page already retries transient statuses in place before a task restarts.
+"""
+_WORKER_STATE = threading.local()
 
 
 @dataclass(frozen=True)
@@ -58,9 +71,9 @@ class OxaBackfillConfig:
     workers: int = 4
     retries: int = DEFAULT_RETRIES
     timeout_seconds: float = 30.0
-    book_max_pages: int = 20
-    trade_max_pages: int = 500
-    price_max_pages: int = 20
+    book_max_pages: int = DEFAULT_BOOK_MAX_PAGES
+    trade_max_pages: int = DEFAULT_TRADE_MAX_PAGES
+    price_max_pages: int = DEFAULT_PRICE_MAX_PAGES
     include_prices: bool = False
     price_only: bool = False
     market_family: MarketFamily = "core"
@@ -154,7 +167,18 @@ def run_oxa_tasks(
     """Run only explicit, validated tasks using the resumable worker boundary."""
     _validate_explicit_tasks(config, tasks)
     results: list[OxaBackfillResult] = []
-    executor = ThreadPoolExecutor(max_workers=config.workers)
+    sessions: list[requests.Session] = []
+    sessions_lock = threading.Lock()
+
+    def open_worker_session() -> None:
+        session = requests.Session()
+        with sessions_lock:
+            sessions.append(session)
+        _WORKER_STATE.session = session
+
+    executor = ThreadPoolExecutor(
+        max_workers=config.workers, initializer=open_worker_session
+    )
     try:
         futures = {
             executor.submit(_execute_with_retry, config, task, api_key): task
@@ -166,6 +190,8 @@ def run_oxa_tasks(
             progress(result)
     finally:
         executor.shutdown(wait=True, cancel_futures=True)
+        for session in sessions:
+            session.close()
     return tuple(sorted(results, key=lambda item: (item.task.start, item.task.kind)))
 
 
@@ -220,7 +246,12 @@ def _existing_result(
         raise ValueError(f"existing backfill directory has no manifest: {directory}")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest.get("complete") is not True:
-        raise ValueError(f"existing backfill window is incomplete: {directory}")
+        raise ValueError(
+            "existing backfill window is incomplete "
+            f"(max_pages={manifest.get('max_pages')!r}, "
+            f"continuation_cursor={manifest.get('continuation_cursor')!r}): "
+            f"{directory}; move it aside to let the backfill refetch it"
+        )
     expected_source = {
         "book": _book_source(config.market_family),
         "trade": "0xarchive_hyperliquid_public_trades",
@@ -255,9 +286,11 @@ def _acquire_task(
 ) -> OxaBackfillResult:
     if task.kind == "book":
         request = _book_request(config, task)
-        fetched = fetch_orderbook_history(OxaHistoryClient(api_key=api_key), request)
+        fetched = fetch_orderbook_history(
+            OxaHistoryClient(api_key=api_key, session=_worker_session()), request
+        )
         if not fetched.complete:
-            raise ValueError(f"book max-pages exhausted for {task.start.isoformat()}")
+            raise _exhausted(config, task, fetched.pages, fetched.continuation_cursor)
         stored = store_orderbook_history(config.data_root, request, fetched)
         return OxaBackfillResult(
             task, stored.directory, False, len(fetched.snapshots), len(fetched.pages)
@@ -265,12 +298,38 @@ def _acquire_task(
     if task.kind == "trade":
         return _acquire_trade_task(config, task, api_key)
     request = _price_request(config, task)
-    fetched = fetch_price_history(OxaPriceClient(api_key=api_key), request)
+    fetched = fetch_price_history(
+        OxaPriceClient(api_key=api_key, session=_worker_session()), request
+    )
     if not fetched.complete:
-        raise ValueError(f"price max-pages exhausted for {task.start.isoformat()}")
+        raise _exhausted(config, task, fetched.pages, fetched.continuation_cursor)
     stored = store_price_history(config.data_root, request, fetched)
     return OxaBackfillResult(
         task, stored.directory, False, len(fetched.snapshots), len(fetched.pages)
+    )
+
+
+def _worker_session() -> requests.Session | None:
+    """Return the pool worker's keep-alive session, or None outside a pool."""
+    return getattr(_WORKER_STATE, "session", None)
+
+
+def _exhausted(
+    config: OxaBackfillConfig,
+    task: OxaBackfillTask,
+    pages: tuple[object, ...],
+    cursor: str | None,
+) -> ValueError:
+    """Name the window, pages used and the bound to raise for a busy window."""
+    bound = f"{task.kind}_max_pages"
+    return incomplete_fetch_error(
+        task.kind,
+        window=(
+            f"{config.symbol} {task.start.isoformat()} to {task.end.isoformat()}"
+        ),
+        page_count=len(pages),
+        continuation_cursor=cursor,
+        hint=f"rerun with {bound} above {getattr(config, bound)}",
     )
 
 
@@ -280,9 +339,11 @@ def _acquire_trade_task(
     api_key: str,
 ) -> OxaBackfillResult:
     request = _trade_request(config, task)
-    fetched = fetch_trade_history(OxaTradeClient(api_key=api_key), request)
+    fetched = fetch_trade_history(
+        OxaTradeClient(api_key=api_key, session=_worker_session()), request
+    )
     if not fetched.complete:
-        raise ValueError(f"trade max-pages exhausted for {task.start.isoformat()}")
+        raise _exhausted(config, task, fetched.pages, fetched.continuation_cursor)
     if fetched.unresolved_fill_groups:
         raise ValueError(
             f"trade participant groups unresolved for {task.start.isoformat()}"
