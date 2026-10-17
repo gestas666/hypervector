@@ -8,8 +8,25 @@ from typing import Any, Callable, Literal
 import pandas as pd
 
 Role = Literal["uptrend", "downtrend", "regime", "other"]
+TradeDirection = Literal["long", "short"]
 
 SignalBuilder = Callable[..., tuple[pd.Series, pd.Series, str]]
+
+
+def normalize_direction(tag: str) -> TradeDirection:
+    """Map a builder's direction tag ('long', 'impulse_1m_short', ...) to long|short.
+
+    Strict: anything that is not exactly long/short or ``*_long``/``*_short``
+    is a ValueError (no substring guessing).
+    """
+    text = str(tag).strip().lower() if isinstance(tag, str) else ""
+    if text in ("long", "short"):
+        return text  # type: ignore[return-value]
+    if text.endswith("_long"):
+        return "long"
+    if text.endswith("_short"):
+        return "short"
+    raise ValueError(f"direction must be long|short, got {tag!r}")
 
 
 @dataclass

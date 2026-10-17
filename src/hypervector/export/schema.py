@@ -34,6 +34,19 @@ META_PHASE15_REQUIRED: tuple[str, ...] = (
 
 PARAMS_REQUIRED: tuple[str, ...] = ("strategy",)
 
+# Mirror of hypervector.sweep.metrics.REQUIRED_METRIC_KEYS (kept literal so the
+# loader path never imports the sweep/VectorBT stack; a test pins equality).
+REQUIRED_METRIC_KEYS: tuple[str, ...] = (
+    "net_pnl",
+    "total_return_pct",
+    "sharpe",
+    "trade_count",
+    "wins",
+    "losses",
+    "win_pct",
+    "max_drawdown",
+)
+
 OPTIONAL_FILES: tuple[str, ...] = (
     "metrics.csv",
     "signals.parquet",
@@ -127,6 +140,8 @@ def validate_export_dir(
     path: Path | str,
     *,
     strict: bool = False,
+    require_costed: bool = False,
+    require_metrics: bool = False,
 ) -> dict[str, Any]:
     """Validate an export bundle directory.
 
@@ -140,6 +155,14 @@ def validate_export_dir(
     strict:
         When True, also require Phase 1.5 fields (init_cash, costs, risk, tp_sl_mode)
         so the bundle is Phase 2 loadout-ready.
+    require_costed:
+        Opt-in: reject bundles measured with ``meta.apply_costs`` false.
+    require_metrics:
+        Opt-in: reject bundles whose metrics lack any REQUIRED_METRIC_KEYS.
+
+    Zero-cost diagnostics and missing metric keys are always reported as
+    non-fatal ``warnings`` (plus ``apply_costs`` / ``missing_metric_keys``)
+    so loaders keep working while operators can see what was certified.
     """
     root = Path(path)
     errors: list[str] = []
@@ -222,15 +245,24 @@ def validate_export_dir(
             errors.append("meta.init_cash must be numeric")
 
     if strict:
+        # costs / risk / exits shapes were already checked above when present
         for key in META_PHASE15_REQUIRED:
             if key not in meta or meta[key] in (None, ""):
                 errors.append(f"strict: meta.{key} missing")
-        if "costs" in meta and meta["costs"] is not None:
-            _check_costs(meta["costs"], errors)
-        if "risk" in meta and meta["risk"] is not None:
-            _check_risk(meta["risk"], errors)
-        if "exits" in meta and meta["exits"] is not None:
-            _check_exits(meta["exits"], errors)
+
+    apply_costs = meta.get("apply_costs")
+    missing_metrics = [key for key in REQUIRED_METRIC_KEYS if key not in metrics]
+    warnings: list[str] = []
+    if apply_costs is False:
+        warnings.append(
+            "metrics measured with apply_costs=false (zero-cost diagnostic)"
+        )
+    if missing_metrics:
+        warnings.append(f"metrics missing {', '.join(missing_metrics)}")
+    if require_costed and apply_costs is False:
+        errors.append("meta.apply_costs is false (zero-cost diagnostic)")
+    if require_metrics:
+        errors.extend(f"metrics.{key} missing" for key in missing_metrics)
 
     present_optional = [name for name in OPTIONAL_FILES if (root / name).is_file()]
 
@@ -253,6 +285,9 @@ def validate_export_dir(
         "has_risk": isinstance(meta.get("risk"), dict),
         "has_exits": isinstance(meta.get("exits"), dict),
         "optional_files": present_optional,
+        "apply_costs": apply_costs,
+        "missing_metric_keys": missing_metrics,
+        "warnings": warnings,
         "metric_keys": sorted(metrics.keys()),
         "param_keys": sorted(params.keys()),
         "meta": meta,

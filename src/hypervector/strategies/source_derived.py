@@ -171,7 +171,23 @@ def regime_trend_router_signals(
     direction: Direction,
     context_timeframe: str = "4h",
 ) -> SignalResult:
-    """Route trend setups only when local and completed HTF regimes align."""
+    """Route trend setups only when local and completed HTF regimes align.
+
+    Research bars with a RangeIndex are classified on their ``timestamp``
+    column; signals keep the caller's index.
+    """
+    if not isinstance(df.index, pd.DatetimeIndex):
+        if "timestamp" not in df.columns:
+            raise ValueError(
+                "regime router bars require a DatetimeIndex or timestamp column"
+            )
+        times = pd.DatetimeIndex(pd.to_datetime(df["timestamp"], utc=True))
+        timed = df.set_axis(times.rename(None), axis=0)
+        entries, exits, tag = regime_trend_router_signals(
+            timed, direction=direction, context_timeframe=context_timeframe
+        )
+        return entries.set_axis(df.index), exits.set_axis(df.index), tag
+
     from hypervector.regime.classifier import classify_timeframe
 
     local = classify_timeframe(df)

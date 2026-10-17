@@ -1,9 +1,181 @@
-"""Indicator building blocks for research strategies (pure pandas)."""
+"""Indicator building blocks for research strategies (pure pandas/numpy).
+
+Expensive indicators are pure functions of their input values, index and
+parameters. Inside an :func:`indicator_cache` scope (opened by the grid search
+for one bar frame) repeated calls with identical inputs reuse the first result,
+so parameter-invariant indicators are computed once per search instead of once
+per trial. Outside a scope nothing is cached.
+"""
 
 from __future__ import annotations
 
+import contextvars
+import functools
+import hashlib
+import inspect
+import math
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
+from typing import Any, TypeVar
+
 import numpy as np
 import pandas as pd
+
+# Rows per block for sliding-window temporaries (bounds peak memory to
+# O(rows x window) instead of O(bars x window)).
+_WINDOW_CHUNK_ROWS = 32_768
+
+_F = TypeVar("_F", bound=Callable[..., Any])
+
+
+@dataclass
+class IndicatorCacheStats:
+    """Hit/miss counters for one :func:`indicator_cache` scope."""
+
+    hits: int = 0
+    misses: int = 0
+    evictions: int = 0
+
+
+# Default memory budget for one scope; least recently used results are evicted
+# beyond it, so a wide grid on a long lookback cannot grow memory unboundedly.
+DEFAULT_INDICATOR_CACHE_BYTES = 256 * 1024 * 1024
+
+
+class _IndicatorCache:
+    """Byte-bounded LRU of indicator results keyed by input content."""
+
+    def __init__(self, max_bytes: int) -> None:
+        self.max_bytes = int(max_bytes)
+        self.entries: dict[tuple[Any, ...], tuple[Any, int]] = {}
+        self.total_bytes = 0
+        self.stats = IndicatorCacheStats()
+
+    def get(self, key: tuple[Any, ...]) -> tuple[bool, Any]:
+        entry = self.entries.pop(key, None)
+        if entry is None:
+            self.stats.misses += 1
+            return False, None
+        self.entries[key] = entry  # most recently used goes last
+        self.stats.hits += 1
+        return True, entry[0]
+
+    def put(self, key: tuple[Any, ...], value: Any) -> None:
+        size = _result_bytes(value)
+        if size > self.max_bytes:
+            return
+        self.entries[key] = (value, size)
+        self.total_bytes += size
+        while self.total_bytes > self.max_bytes and self.entries:
+            oldest = next(iter(self.entries))
+            self.total_bytes -= self.entries.pop(oldest)[1]
+            self.stats.evictions += 1
+
+
+_ACTIVE_CACHE: contextvars.ContextVar[_IndicatorCache | None] = contextvars.ContextVar(
+    "hypervector_indicator_cache", default=None
+)
+
+
+@contextmanager
+def indicator_cache(
+    max_bytes: int = DEFAULT_INDICATOR_CACHE_BYTES,
+) -> Iterator[IndicatorCacheStats]:
+    """Memoize cached indicators by input content for the duration of the scope."""
+    cache = _IndicatorCache(max_bytes)
+    token = _ACTIVE_CACHE.set(cache)
+    try:
+        yield cache.stats
+    finally:
+        _ACTIVE_CACHE.reset(token)
+
+
+def _result_bytes(value: Any) -> int:
+    if isinstance(value, pd.Series):
+        return int(value.to_numpy().nbytes)
+    if isinstance(value, np.ndarray):
+        return int(value.nbytes)
+    if isinstance(value, tuple):
+        return sum(_result_bytes(item) for item in value)
+    return 64
+
+
+def _digest(values: np.ndarray) -> str:
+    data = np.ascontiguousarray(values)
+    return hashlib.blake2b(data.view(np.uint8), digest_size=16).hexdigest()
+
+
+def _index_key(index: pd.Index) -> tuple[Any, ...] | None:
+    if isinstance(index, pd.RangeIndex):
+        return ("range", index.start, index.stop, index.step, index.name)
+    values = index.to_numpy()
+    if values.dtype.kind not in "iufbMm":
+        return None
+    return ("index", str(index.dtype), len(values), _digest(values), index.name)
+
+
+def _argument_key(value: Any) -> tuple[Any, ...] | None:
+    if isinstance(value, pd.Series):
+        values = value.to_numpy()
+        if values.dtype.kind not in "iufb":
+            return None
+        index = _index_key(value.index)
+        if index is None:
+            return None
+        try:
+            hash(value.name)
+        except TypeError:
+            return None
+        return (
+            "series",
+            str(values.dtype),
+            len(values),
+            _digest(values),
+            index,
+            value.name,
+        )
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return (type(value).__name__, value)
+    return None
+
+
+def _detached(value: Any) -> Any:
+    """Return a result the caller may mutate without touching the cached copy."""
+    if isinstance(value, (pd.Series, pd.DataFrame)):
+        return value.copy(deep=False)  # copy-on-write: writes never reach the cache
+    if isinstance(value, np.ndarray):
+        return value.copy()
+    if isinstance(value, tuple):
+        return tuple(_detached(item) for item in value)
+    return value
+
+
+def _cached_indicator(fn: _F) -> _F:
+    """Memoize ``fn`` inside an active :func:`indicator_cache` scope."""
+    signature = inspect.signature(fn)
+
+    @functools.wraps(fn)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        cache = _ACTIVE_CACHE.get()
+        if cache is None:
+            return fn(*args, **kwargs)
+        bound = signature.bind(*args, **kwargs)
+        bound.apply_defaults()
+        parts: list[Any] = [fn.__qualname__]
+        for name, value in bound.arguments.items():
+            part = _argument_key(value)
+            if part is None:
+                return fn(*args, **kwargs)
+            parts.append((name, part))
+        key = tuple(parts)
+        found, result = cache.get(key)
+        if not found:
+            result = fn(*args, **kwargs)
+            cache.put(key, result)
+        return _detached(result)
+
+    return wrapper  # type: ignore[return-value]
 
 
 def ema(series: pd.Series, length: int) -> pd.Series:
@@ -48,6 +220,7 @@ def bollinger_width(
     return width
 
 
+@_cached_indicator
 def percentile_rank(series: pd.Series, lookback: int) -> pd.Series:
     """Rolling percentile rank of the last value in [0, 100]."""
     s = series.astype(float).to_numpy().copy()
@@ -68,22 +241,20 @@ def percentile_rank(series: pd.Series, lookback: int) -> pd.Series:
             out[i] = 100.0 * float(np.sum(valid <= x)) / float(valid.size)
 
     if n >= lookback:
-        # Fast path: fixed-size windows via stride tricks
-        # Replace NaNs with sentinel so comparisons stay defined, then mask
-        nan_mask = np.isnan(s)
-        filled = np.where(nan_mask, np.nan, s)
-        windows = np.lib.stride_tricks.sliding_window_view(filled, lookback)
-        # windows shape (n - lookback + 1, lookback); last col is current value
-        last = windows[:, -1]
-        # count of non-nan and how many <= last (treating nan as non-comparable)
-        valid = ~np.isnan(windows)
-        # broadcast last; nan last → leave nan
-        le = (windows <= last[:, None]) & valid
-        counts = valid.sum(axis=1).astype(float)
-        le_counts = le.sum(axis=1).astype(float)
-        ranks = np.where(counts > 0, 100.0 * le_counts / counts, np.nan)
-        ranks = np.where(np.isnan(last), np.nan, ranks)
-        out[lookback - 1 :] = ranks
+        # Fixed-size windows via stride tricks, processed in row blocks so the
+        # boolean temporaries stay O(block x lookback) rather than O(n x lookback).
+        windows = np.lib.stride_tricks.sliding_window_view(s, lookback)
+        for start in range(0, windows.shape[0], _WINDOW_CHUNK_ROWS):
+            block = windows[start : start + _WINDOW_CHUNK_ROWS]
+            last = block[:, -1]
+            # count of non-nan and how many <= last (nan is non-comparable)
+            valid = ~np.isnan(block)
+            counts = valid.sum(axis=1).astype(float)
+            le_counts = ((block <= last[:, None]) & valid).sum(axis=1).astype(float)
+            ranks = np.where(counts > 0, 100.0 * le_counts / counts, np.nan)
+            ranks = np.where(np.isnan(last), np.nan, ranks)
+            first = lookback - 1 + start
+            out[first : first + len(block)] = ranks
 
     return pd.Series(out, index=series.index)
 
@@ -159,6 +330,7 @@ def true_range(high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series:
     return tr
 
 
+@_cached_indicator
 def atr(
     high: pd.Series, low: pd.Series, close: pd.Series, length: int = 10
 ) -> pd.Series:
@@ -169,6 +341,7 @@ def atr(
     )
 
 
+@_cached_indicator
 def supertrend(
     high: pd.Series,
     low: pd.Series,
@@ -190,33 +363,35 @@ def supertrend(
         .to_numpy()
     )
     hl2 = (h + lows) / 2.0
-    upper = hl2 + multiplier * atr_arr
-    lower = hl2 - multiplier * atr_arr
-    st = np.full(n, np.nan)
-    direction = np.ones(n, dtype=int)
+    # Plain Python floats in the loop: identical IEEE arithmetic without numpy
+    # scalar boxing on every element access.
+    upper = (hl2 + multiplier * atr_arr).tolist()
+    lower = (hl2 - multiplier * atr_arr).tolist()
+    atr_list = atr_arr.tolist()
+    cl = c.tolist()
+    isnan = math.isnan
+    st = [math.nan] * n
+    direction = [1] * n
     for i in range(1, n):
-        if np.isnan(atr_arr[i]):
+        if isnan(atr_list[i]):
             direction[i] = direction[i - 1]
             st[i] = st[i - 1]
             continue
         # band ratchets
-        if c[i - 1] > lower[i - 1] if not np.isnan(lower[i - 1]) else False:
-            lower[i] = (
-                max(lower[i], lower[i - 1]) if not np.isnan(lower[i - 1]) else lower[i]
-            )
-        if c[i - 1] < upper[i - 1] if not np.isnan(upper[i - 1]) else False:
-            upper[i] = (
-                min(upper[i], upper[i - 1]) if not np.isnan(upper[i - 1]) else upper[i]
-            )
-        prev_dir = direction[i - 1]
-        if prev_dir == 1:
-            direction[i] = -1 if c[i] < lower[i] else 1
+        prev_lower = lower[i - 1]
+        if not isnan(prev_lower) and cl[i - 1] > prev_lower:
+            lower[i] = max(lower[i], prev_lower)
+        prev_upper = upper[i - 1]
+        if not isnan(prev_upper) and cl[i - 1] < prev_upper:
+            upper[i] = min(upper[i], prev_upper)
+        if direction[i - 1] == 1:
+            direction[i] = -1 if cl[i] < lower[i] else 1
         else:
-            direction[i] = 1 if c[i] > upper[i] else -1
+            direction[i] = 1 if cl[i] > upper[i] else -1
         st[i] = lower[i] if direction[i] == 1 else upper[i]
     return (
-        pd.Series(st, index=close.index),
-        pd.Series(direction, index=close.index, dtype=int),
+        pd.Series(np.asarray(st, dtype=float), index=close.index),
+        pd.Series(np.asarray(direction, dtype=int), index=close.index, dtype=int),
     )
 
 
@@ -227,6 +402,28 @@ def zero_lag_ema(close: pd.Series, length: int = 70) -> pd.Series:
     return ema(c + (c - c.shift(lag)), length)
 
 
+def _sticky_band_trend(
+    close: np.ndarray, upper: np.ndarray, lower: np.ndarray
+) -> np.ndarray:
+    """1 after a close above ``upper``, -1 after one below ``lower``; sticky otherwise."""
+    trend = [0] * len(close)
+    isnan = math.isnan
+    t = 0
+    for i, (cv, up, lo) in enumerate(
+        zip(close.tolist(), upper.tolist(), lower.tolist())
+    ):
+        if isnan(up) or isnan(lo):
+            trend[i] = t
+            continue
+        if cv > up:
+            t = 1
+        elif cv < lo:
+            t = -1
+        trend[i] = t
+    return np.asarray(trend, dtype=int)
+
+
+@_cached_indicator
 def zero_lag_trend(
     close: pd.Series,
     *,
@@ -246,24 +443,11 @@ def zero_lag_trend(
     vol = atr_s.rolling(length * 3, min_periods=ap).max() * mult
     upper = zlema + vol
     lower = zlema - vol
-    n = len(c)
-    trend = np.zeros(n, dtype=int)
-    cv = c.to_numpy()
-    up = upper.to_numpy()
-    lo = lower.to_numpy()
-    t = 0
-    for i in range(n):
-        if np.isnan(up[i]) or np.isnan(lo[i]):
-            trend[i] = t
-            continue
-        if cv[i] > up[i]:
-            t = 1
-        elif cv[i] < lo[i]:
-            t = -1
-        trend[i] = t
+    trend = _sticky_band_trend(c.to_numpy(), upper.to_numpy(), lower.to_numpy())
     return zlema, pd.Series(trend, index=close.index, dtype=int)
 
 
+@_cached_indicator
 def zero_lag_trend_ohlc(
     high: pd.Series,
     low: pd.Series,
@@ -278,22 +462,11 @@ def zero_lag_trend_ohlc(
     vol = a.rolling(length * 3, min_periods=length).max() * mult
     upper = zlema + vol
     lower = zlema - vol
-    n = len(c)
-    trend = np.zeros(n, dtype=int)
-    cv, up, lo = c.to_numpy(), upper.to_numpy(), lower.to_numpy()
-    t = 0
-    for i in range(n):
-        if np.isnan(up[i]) or np.isnan(lo[i]):
-            trend[i] = t
-            continue
-        if cv[i] > up[i]:
-            t = 1
-        elif cv[i] < lo[i]:
-            t = -1
-        trend[i] = t
+    trend = _sticky_band_trend(c.to_numpy(), upper.to_numpy(), lower.to_numpy())
     return zlema, pd.Series(trend, index=close.index, dtype=int)
 
 
+@_cached_indicator
 def choppiness_index(
     high: pd.Series,
     low: pd.Series,
@@ -323,6 +496,7 @@ def choppiness_index(
     return cib
 
 
+@_cached_indicator
 def squeeze_momentum(
     high: pd.Series,
     low: pd.Series,
@@ -354,29 +528,43 @@ def squeeze_momentum(
     ) / 2.0
     mid = (mid + sma(c, kc_length)) / 2.0
     delta = c - mid
-
-    # rolling linear regression slope*x approx: use rolling cov with index
-    # Pine linreg(src, length, 0) = fit value at end of window
-    def _linreg_last(window: np.ndarray) -> float:
-        y = window.astype(float)
-        if np.any(np.isnan(y)):
-            return np.nan
-        x = np.arange(len(y), dtype=float)
-        x = x - x.mean()
-        y = y - y.mean()
-        denom = (x * x).sum()
-        if denom == 0:
-            return 0.0
-        slope = (x * y).sum() / denom
-        # value at last bar of demeaned fit + mean
-        return float(slope * x[-1] + window.mean())
-
-    # faster: use simple momentum proxy = close - mid (LazyBear hist is linreg)
-    # full linreg for fidelity on shorter windows
-    mom = delta.rolling(kc_length, min_periods=kc_length).apply(_linreg_last, raw=True)
+    mom = _rolling_linreg_last(delta, kc_length)
     return mom, sqz_on.fillna(False), sqz_off.fillna(False)
 
 
+def _rolling_linreg_last(src: pd.Series, length: int) -> pd.Series:
+    """Pine ``linreg(src, length, 0)``: least-squares fit value at each window's end.
+
+    Vectorised over sliding windows with the same per-window arithmetic as the
+    former ``rolling(length).apply`` implementation (centred x, centred y,
+    ``slope * x[-1] + mean``), so results are bit-for-bit identical. Windows
+    containing NaN give NaN; ``length == 1`` gives 0.0 (zero x-variance).
+    """
+    if length < 1:
+        raise ValueError(f"linreg length must be >= 1, got {length}")
+    values = src.to_numpy(dtype=float)
+    out = np.full(len(values), np.nan)
+    if len(values) < length:
+        return pd.Series(out, index=src.index)
+    x = np.arange(length, dtype=float)
+    x = x - x.mean()
+    denom = (x * x).sum()
+    windows = np.lib.stride_tricks.sliding_window_view(values, length)
+    for start in range(0, windows.shape[0], _WINDOW_CHUNK_ROWS):
+        block = np.ascontiguousarray(windows[start : start + _WINDOW_CHUNK_ROWS])
+        mean = block.mean(axis=1)
+        if denom == 0:
+            fitted = np.zeros(len(block))
+        else:
+            slope = (x * (block - mean[:, None])).sum(axis=1) / denom
+            fitted = slope * x[-1] + mean
+        fitted[np.isnan(block).any(axis=1)] = np.nan
+        first = length - 1 + start
+        out[first : first + len(block)] = fitted
+    return pd.Series(out, index=src.index)
+
+
+@_cached_indicator
 def vortex(
     high: pd.Series,
     low: pd.Series,

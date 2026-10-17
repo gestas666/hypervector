@@ -1,19 +1,43 @@
-"""Trial metrics from VectorBT with costs, TP/SL modes, conviction sizing."""
+"""Trial metrics from VectorBT with costs, TP/SL modes, conviction sizing and leverage.
+
+Model (reported on every result so rows can be told apart):
+
+* **Time axis.** Research bars carry a RangeIndex plus a ``timestamp`` column.
+  Bar times come from a DatetimeIndex or that column (never from integer
+  positions); they set the Sharpe annualisation frequency (median bar step)
+  and the funding hold time of each trade.
+* **Leverage.** Position notional is ``size x init_cash`` (non-compounding).
+  VectorBT caps long buys at free cash, so its broker is funded with a large
+  virtual cash base and every reported figure (P&L, drawdown, Sharpe) is
+  measured on the real equity ``init_cash + (value - virtual_cash)``. Leverage
+  above the Hyperliquid venue cap is refused (ValueError), never clamped.
+* **Isolated liquidation.** Each position carries a liquidation barrier at the
+  adverse move where its margin (``notional / leverage``) falls to the venue
+  maintenance margin; it merges with the strategy stop (whichever is nearer).
+  This is venue mechanics, not a strategy gate.
+* **Intrabar stops.** SL/TP/trail/liquidation are evaluated against the bar's
+  open/high/low and filled as stop-market orders, so configured slippage
+  applies. Gaps fill at the open; SL wins a same-bar SL/TP tie.
+"""
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
-from hypervector.sweep.costs import CostModel, resolve_cost_model
+from hypervector.sweep.costs import DEFAULT_COST_MODEL, CostModel, resolve_cost_model
 from hypervector.sweep.exits import ExitConfig, apply_exit_mode
 from hypervector.sweep.sizing import (
     RiskConfig,
     conviction_series,
+    maintenance_margin_rate,
     risk_pct_from_conviction,
     size_frac_from_risk,
+    validate_leverage,
+    venue_leverage_cap,
 )
 
 REQUIRED_METRIC_KEYS = (
@@ -34,6 +58,11 @@ EXTENDED_METRIC_KEYS = REQUIRED_METRIC_KEYS + (
     "init_cash",
 )
 
+# VectorBT's broker cash = init_cash x max notional fraction x this headroom, so
+# free cash never limits an order (checked after every simulation).
+_VIRTUAL_CASH_HEADROOM = 1_000.0
+_YEAR = pd.Timedelta(days=365)
+
 
 def compute_trial_metrics(
     close: pd.Series,
@@ -42,7 +71,7 @@ def compute_trial_metrics(
     *,
     direction: str = "long",
     init_cash: float = 10_000.0,
-    freq: str = "1min",
+    freq: str | None = None,
     df: pd.DataFrame | None = None,
     cost: CostModel | None = None,
     exit_cfg: ExitConfig | None = None,
@@ -52,11 +81,25 @@ def compute_trial_metrics(
     fixed_notional_fraction: float | None = None,
     fixed_margin_fraction: float | None = None,
     strategy_managed_exits: bool = False,
+    symbol: str | None = None,
+    venue_max_leverage: float | None = None,
+    intrabar_stops: bool = True,
 ) -> dict[str, Any]:
-    """VectorBT portfolio with optional fees/slippage, TP/SL, risk sizing, funding drag."""
+    """VectorBT portfolio with costs, TP/SL, leverage, liquidation and funding drag.
+
+    ``freq`` overrides the bar frequency inferred from bar timestamps.
+    ``symbol`` / ``venue_max_leverage`` select the venue leverage cap and the
+    maintenance margin; without them the charter maximum (40x) bounds the
+    leverage and liquidation is placed at a full loss of margin.
+    ``intrabar_stops=False`` reproduces legacy close-only, zero-slippage stops.
+    """
     import vectorbt as vbt
 
-    cost = cost or resolve_cost_model("hl_taker_default")
+    if direction not in ("long", "short"):
+        raise ValueError(f"direction must be long|short, got {direction}")
+    if not (math.isfinite(float(init_cash)) and init_cash > 0.0):
+        raise ValueError(f"init_cash must be positive, got {init_cash!r}")
+    cost = cost or resolve_cost_model(DEFAULT_COST_MODEL)
     exit_cfg = exit_cfg or ExitConfig(mode="atr")
     risk_cfg = risk_cfg or RiskConfig()
 
@@ -71,6 +114,11 @@ def compute_trial_metrics(
     )
     work = work.reindex(close.index)
 
+    bar_ns = _bar_times_ns(close.index, work)
+    if freq is None:
+        freq = _infer_freq(bar_ns) or "1min"
+    bar_minutes = pd.Timedelta(freq).total_seconds() / 60.0
+
     if strategy_managed_exits:
         sl_frac = pd.Series(np.nan, index=close.index, dtype=float)
         tp_frac = pd.Series(np.nan, index=close.index, dtype=float)
@@ -83,33 +131,35 @@ def compute_trial_metrics(
     risk_pct = risk_pct_from_conviction(conv, risk_cfg)
     if fixed_notional_fraction is None:
         size = size_frac_from_risk(risk_pct, sl_frac, risk_cfg)
-        portfolio_cash = init_cash
+        leverage_cap = float(risk_cfg.max_size_frac)
+        position_leverage = size.to_numpy(dtype=float)
     else:
-        if fixed_notional_fraction <= 0.0:
+        if not fixed_notional_fraction > 0.0:
             raise ValueError("fixed_notional_fraction must be positive")
         size = pd.Series(fixed_notional_fraction, index=close.index, dtype=float)
-        portfolio_cash = init_cash * fixed_notional_fraction
+        leverage_cap = float(fixed_notional_fraction)
+        if fixed_margin_fraction is not None:
+            if not fixed_margin_fraction > 0.0:
+                raise ValueError("fixed_margin_fraction must be positive")
+            leverage_cap = float(fixed_notional_fraction) / float(fixed_margin_fraction)
+        position_leverage = np.full(len(close), leverage_cap)
 
-    # Infer bar frequency for accurate Sharpe ratio annualization (Bug B4)
-    if (
-        freq == "1min"
-        and df is not None
-        and len(df) > 1
-        and isinstance(df.index, pd.DatetimeIndex)
-    ):
-        step_s = int((df.index[1] - df.index[0]).total_seconds())
-        if step_s >= 3600:
-            freq = f"{step_s // 3600}h"
-        elif step_s >= 60:
-            freq = f"{step_s // 60}min"
+    venue_known = symbol is not None or venue_max_leverage is not None
+    venue_cap = venue_leverage_cap(symbol, venue_max_leverage)
+    validate_leverage(leverage_cap, symbol=symbol, venue_max_leverage=venue_max_leverage)
+    mmr = maintenance_margin_rate(venue_cap) if venue_known else 0.0
+    liq_frac = _liquidation_distance(position_leverage, mmr, direction)
+    sl_raw = sl_frac.to_numpy(dtype=float)
+    sl_effective = np.fmin(sl_raw, liq_frac)
 
     fees = cost.fees if apply_costs else 0.0
     slippage = cost.slippage if apply_costs else 0.0
 
-    # VectorBT: use size_type="value" with size in USD notional to support leverage > 1.0 (Bug B2)
     notional_size = (size * init_cash).to_numpy(dtype=float)
+    max_fraction = float(np.nanmax(notional_size)) / init_cash if len(close) else 0.0
+    virtual_cash = init_cash * max(1.0, max_fraction) * _VIRTUAL_CASH_HEADROOM
     common: dict[str, Any] = dict(
-        init_cash=portfolio_cash,
+        init_cash=virtual_cash,
         freq=freq,
         fees=fees,
         slippage=slippage,
@@ -118,23 +168,21 @@ def compute_trial_metrics(
         upon_opposite_entry="ignore",
     )
 
-    # Barrier exits: fixed_rr / atr use hard SL+TP; trail uses VectorBT sl_trail
-    if exit_cfg.mode == "trail":
-        common["sl_stop"] = sl_frac.to_numpy(dtype=float)
+    # One stop slot: strategy SL / ATR trail merged with the liquidation barrier.
+    common["sl_stop"] = sl_effective
+    if exit_cfg.mode == "trail" and not strategy_managed_exits:
         common["sl_trail"] = True
-    elif exit_cfg.mode in ("fixed_rr", "atr"):
-        common["sl_stop"] = sl_frac.to_numpy(dtype=float)
-        if tp_frac.notna().any():
-            common["tp_stop"] = tp_frac.fillna(0.0).to_numpy(dtype=float)
+    if exit_cfg.mode in ("fixed_rr", "atr") and tp_frac.notna().any():
+        common["tp_stop"] = tp_frac.fillna(0.0).to_numpy(dtype=float)
+    if intrabar_stops:
+        for column in ("open", "high", "low"):
+            if column in work.columns:
+                common[column] = work[column].astype(float).to_numpy()
+        common["stop_exit_price"] = "stopmarket"
 
     if direction == "long":
-        pf = vbt.Portfolio.from_signals(
-            close,
-            entries=entries,
-            exits=exits,
-            **common,
-        )
-    elif direction == "short":
+        pf = vbt.Portfolio.from_signals(close, entries=entries, exits=exits, **common)
+    else:
         pf = vbt.Portfolio.from_signals(
             close,
             entries=False,
@@ -143,74 +191,50 @@ def compute_trial_metrics(
             short_exits=exits,
             **common,
         )
-    else:
-        raise ValueError(f"direction must be long|short, got {direction}")
 
-    virtual_final_value = float(pf.final_value())
-    net_pnl = virtual_final_value - portfolio_cash
-    total_return = net_pnl / init_cash if init_cash else 0.0
+    _require_unbound_cash(pf, virtual_cash)
+    real_equity = init_cash + (pf.value().to_numpy(dtype=float) - virtual_cash)
+    net_pnl = float(real_equity[-1] - init_cash) if len(real_equity) else 0.0
+    sharpe = _sharpe(real_equity, init_cash, freq)
+    max_dd = _max_drawdown(real_equity, init_cash)
+    min_equity = float(min(init_cash, real_equity.min())) if len(real_equity) else init_cash
 
-    try:
-        sharpe = float(pf.sharpe_ratio())
-        if not np.isfinite(sharpe):
-            sharpe = 0.0
-    except Exception:
-        sharpe = 0.0
+    records = pf.trades.records_arr
+    trade_count = int(len(records))
+    pnls = records["pnl"].astype(float)
+    wins = int((pnls > 0).sum())
+    losses = int((pnls <= 0).sum())
+    win_pct = float(wins) / trade_count if trade_count else 0.0
+    entry_idx = records["entry_idx"].astype(np.int64)
+    exit_idx = records["exit_idx"].astype(np.int64)
+    notional = np.abs(records["size"] * records["entry_price"]).astype(float)
 
-    try:
-        max_dd = float(pf.max_drawdown())
-        if fixed_notional_fraction is not None:
-            max_dd *= fixed_notional_fraction
-        if not np.isfinite(max_dd):
-            max_dd = 0.0
-    except Exception:
-        max_dd = 0.0
-
-    trades = pf.trades
-    try:
-        trade_count = int(trades.count())
-    except Exception:
-        trade_count = 0
-
-    wins = losses = 0
-    win_pct = 0.0
     funding_cost = 0.0
-    if trade_count > 0:
-        try:
-            records = trades.records_readable
-            pnl_col = None
-            for cand in ("PnL", "pnl", "Return", "return"):
-                if cand in records.columns:
-                    pnl_col = cand
-                    break
-            if pnl_col is not None:
-                pnls = records[pnl_col].astype(float)
-                wins = int((pnls > 0).sum())
-                losses = int((pnls <= 0).sum())
-            else:
-                wins = int(trades.winning.count())
-                losses = int(trades.losing.count())
-            win_pct = float(wins) / trade_count if trade_count else 0.0
+    if trade_count and apply_costs and (cost.funding_rate_1h or cost.funding_rate_8h):
+        funding_cost = _funding(notional, entry_idx, exit_idx, bar_ns, bar_minutes, cost)
+        net_pnl -= funding_cost
+    total_return = net_pnl / init_cash
 
-            # Funding drag: duration * notional * rate (research estimate)
-            if apply_costs and (cost.funding_rate_1h or cost.funding_rate_8h):
-                funding_cost = _estimate_funding(records, cost, close)
-                net_pnl -= funding_cost
-                final_adj = init_cash + net_pnl
-                total_return = (
-                    (final_adj / init_cash) - 1.0 if init_cash else total_return
-                )
-        except Exception:
-            wins = losses = 0
-            win_pct = 0.0
+    liquidations = _count_liquidations(
+        records, close.to_numpy(dtype=float), liq_frac, sl_raw, direction
+    )
 
     avg_risk = (
         float(pd.Series(risk_pct).mean())
         if trade_count
         else float(risk_pct_from_conviction(risk_cfg.default_conviction, risk_cfg))
     )
+    requested_risk = avg_risk
+    if trade_count and isinstance(risk_pct, pd.Series):
+        requested_risk = float(risk_pct.to_numpy(dtype=float)[entry_idx].mean())
     if fixed_margin_fraction is not None:
-        avg_risk = fixed_margin_fraction
+        avg_risk = requested_risk = fixed_margin_fraction
+    effective_risk = _effective_risk_pct(notional, sl_effective[entry_idx], init_cash)
+    cap_bound = None
+    if fixed_notional_fraction is None and trade_count:
+        requested_size = np.asarray(risk_pct, dtype=float) / sl_raw.clip(min=1e-6)
+        requested_size = np.broadcast_to(requested_size, sl_raw.shape)[entry_idx]
+        cap_bound = float(np.mean(requested_size > risk_cfg.max_size_frac))
 
     return {
         "net_pnl": float(net_pnl),
@@ -223,6 +247,9 @@ def compute_trial_metrics(
         "max_drawdown": max_dd,
         "funding_cost": float(funding_cost),
         "avg_risk_pct": avg_risk * 100.0,
+        "requested_risk_pct": requested_risk * 100.0,
+        "effective_risk_pct": effective_risk,
+        "size_cap_bound_fraction": cap_bound,
         "exit_mode": exit_cfg.mode,
         "init_cash": float(init_cash),
         "fees": fees,
@@ -234,31 +261,177 @@ def compute_trial_metrics(
             if fixed_notional_fraction is not None
             else "conviction_stop_risk"
         ),
+        "bar_freq": freq,
+        "funding_hold_basis": "bar_timestamps" if bar_ns is not None else "bar_count",
+        "leverage_cap": leverage_cap,
+        "max_position_leverage": (
+            float(notional.max() / init_cash) if trade_count else 0.0
+        ),
+        "venue_leverage_cap": venue_cap,
+        "maintenance_margin_rate": mmr,
+        "liquidations": liquidations,
+        "min_equity": min_equity,
+        "equity_depleted": bool(min_equity <= 0.0),
+        "leverage_model": "virtual_cash_isolated_liquidation",
+        "stop_fill_model": (
+            "intrabar_ohlc_stopmarket" if intrabar_stops else "close_only_stoplimit"
+        ),
     }
 
 
-def _estimate_funding(
-    records: pd.DataFrame, cost: CostModel, close: pd.Series
+def _bar_times_ns(index: pd.Index, work: pd.DataFrame) -> np.ndarray | None:
+    """UTC bar times as int64 nanoseconds, from the index or a timestamp column."""
+    if isinstance(index, pd.DatetimeIndex):
+        times = index
+    elif "timestamp" in work.columns:
+        column = work["timestamp"]
+        if column.isna().any() or pd.api.types.is_numeric_dtype(column):
+            return None  # never reinterpret integers as nanoseconds
+        times = pd.DatetimeIndex(pd.to_datetime(column, utc=True))
+    else:
+        return None
+    if times.tz is not None:
+        times = times.tz_convert("UTC").tz_localize(None)
+    return np.asarray(times.as_unit("ns").asi8, dtype=np.int64)
+
+
+def _infer_freq(bar_ns: np.ndarray | None) -> str | None:
+    """Median bar step as a pandas frequency string (robust to data gaps)."""
+    if bar_ns is None or len(bar_ns) < 2:
+        return None
+    steps = np.diff(bar_ns)
+    steps = steps[steps > 0]
+    if not len(steps):
+        return None
+    step_s = int(round(float(np.median(steps)) / 1e9))
+    if step_s <= 0:
+        return None
+    if step_s % 3600 == 0:
+        return f"{step_s // 3600}h"
+    if step_s % 60 == 0:
+        return f"{step_s // 60}min"
+    return f"{step_s}s"
+
+
+def _liquidation_distance(
+    leverage: np.ndarray, mmr: float, direction: str
+) -> np.ndarray:
+    """Adverse price move (fraction of entry) at which isolated margin hits maintenance.
+
+    Long: (1/L - mmr) / (1 - mmr); short: (1/L - mmr) / (1 + mmr). NaN where no
+    position can open (zero size) or the barrier lies at or beyond a zero price.
+    """
+    lev = np.asarray(leverage, dtype=float)
+    out = np.full(lev.shape, np.nan)
+    live = np.isfinite(lev) & (lev > 0.0)
+    margin = 1.0 / lev[live]
+    if direction == "long":
+        dist = (margin - mmr) / (1.0 - mmr)
+        dist = np.where(dist < 1.0, dist, np.nan)
+    else:
+        dist = (margin - mmr) / (1.0 + mmr)
+    out[live] = dist
+    return out
+
+
+def _require_unbound_cash(pf: Any, virtual_cash: float) -> None:
+    """Fail the trial (technical error) if the virtual broker ever ran out of cash."""
+    cash = np.asarray(pf.cash(), dtype=float)
+    if len(cash) and float(np.min(cash)) <= virtual_cash * 1e-9:
+        raise RuntimeError(
+            "virtual cash base exhausted; leverage accounting would be cash-capped"
+        )
+
+
+def _sharpe(real_equity: np.ndarray, init_cash: float, freq: str) -> float:
+    """Annualised Sharpe of real-equity bar returns (same definition as VectorBT).
+
+    Returns are undefined once equity is gone, so a depleted account is
+    measured up to the bar that wiped it out, with that bar's return at -100%.
+    """
+    if len(real_equity) < 2:
+        return 0.0
+    previous = np.concatenate([[init_cash], real_equity[:-1]])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        returns = real_equity / previous - 1.0
+    depleted = np.flatnonzero(real_equity <= 0.0)
+    if len(depleted):
+        returns = returns[: depleted[0] + 1].copy()
+        returns[-1] = -1.0
+        if len(returns) < 2:
+            return 0.0
+    try:
+        ann_factor = _YEAR / pd.Timedelta(freq)
+        mean = float(np.nanmean(returns))
+        std = float(np.nanstd(returns, ddof=1))
+        sharpe = mean / std * math.sqrt(ann_factor) if std > 0.0 else 0.0
+    except (ValueError, ZeroDivisionError, FloatingPointError):
+        return 0.0
+    return sharpe if math.isfinite(sharpe) else 0.0
+
+
+def _max_drawdown(real_equity: np.ndarray, init_cash: float) -> float:
+    """Largest peak-to-trough fall of real equity, as a negative fraction.
+
+    Floored at -1.0 (the whole account); ``min_equity`` reports how far the
+    non-compounding P&L went below zero.
+    """
+    if not len(real_equity):
+        return 0.0
+    peaks = np.maximum.accumulate(np.concatenate([[init_cash], real_equity]))[1:]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        drawdown = real_equity / peaks - 1.0
+    value = float(np.nanmin(drawdown)) if np.isfinite(drawdown).any() else 0.0
+    return max(value, -1.0) if math.isfinite(value) else 0.0
+
+
+def _funding(
+    notional: np.ndarray,
+    entry_idx: np.ndarray,
+    exit_idx: np.ndarray,
+    bar_ns: np.ndarray | None,
+    bar_minutes: float,
+    cost: CostModel,
 ) -> float:
-    """Sum |notional| * funding over hold time from trade records if available."""
-    total = 0.0
-    cols = {c.lower(): c for c in records.columns}
-    entry_col = cols.get("avg entry price") or cols.get("entry price")
-    size_col = cols.get("size")
-    t_in = cols.get("entry timestamp")
-    t_out = cols.get("exit timestamp")
-    for _, row in records.iterrows():
-        try:
-            px = float(row[entry_col]) if entry_col else float(close.median())
-            sz = abs(float(row[size_col])) if size_col else 0.0
-            notional = abs(px * sz)
-            if notional <= 0:
-                continue
-            hold_min = 60.0
-            if t_in and t_out and pd.notna(row[t_in]) and pd.notna(row[t_out]):
-                delta = pd.Timestamp(row[t_out]) - pd.Timestamp(row[t_in])
-                hold_min = max(delta.total_seconds() / 60.0, 1.0)
-            total += cost.funding_cost(notional, hold_min)
-        except Exception:
-            continue
-    return total
+    """Sum |notional| x |hourly rate| x hold hours over trades (hold >= 1 minute)."""
+    if bar_ns is not None:
+        hold_min = (bar_ns[exit_idx] - bar_ns[entry_idx]) / 6.0e10
+    else:
+        hold_min = (exit_idx - entry_idx) * bar_minutes
+    hold_min = np.maximum(hold_min.astype(float), 1.0)
+    live = notional > 0.0
+    periods = hold_min[live] / cost.minutes_per_funding
+    return float(np.sum(notional[live] * abs(cost.funding_rate_1h) * periods))
+
+
+def _count_liquidations(
+    records: np.ndarray,
+    close: np.ndarray,
+    liq_frac: np.ndarray,
+    sl_frac: np.ndarray,
+    direction: str,
+) -> int:
+    """Closed trades whose exit reached the liquidation barrier set at entry."""
+    if not len(records):
+        return 0
+    closed = records["status"] == 1
+    entry_idx = records["entry_idx"].astype(np.int64)
+    liq = liq_frac[entry_idx]
+    binds = np.isfinite(liq) & ~(sl_frac[entry_idx] < liq)
+    ref = close[entry_idx]
+    exit_price = records["exit_price"].astype(float)
+    if direction == "long":
+        hit = exit_price <= ref * (1.0 - liq) * (1.0 + 1e-12)
+    else:
+        hit = exit_price >= ref * (1.0 + liq) * (1.0 - 1e-12)
+    return int(np.sum(closed & binds & hit))
+
+
+def _effective_risk_pct(
+    notional: np.ndarray, stop_frac: np.ndarray, init_cash: float
+) -> float | None:
+    """Mean realised risk per trade: filled notional x stop distance / equity, in %."""
+    finite = np.isfinite(stop_frac)
+    if not finite.any():
+        return None
+    return float(np.mean(notional[finite] * stop_frac[finite]) / init_cash * 100.0)
