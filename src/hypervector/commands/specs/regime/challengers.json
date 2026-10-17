@@ -2,7 +2,7 @@
   "schema": 2,
   "help": "Evaluate annotation-only point-in-time regime challengers",
   "kind": "inprocess",
-  "handler": "hypervector.commands.regime:cmd_hypervelocity_regime_challengers",
+  "handler": "hypervector.commands.regime:cmd_regime_challengers",
   "authority": "none",
   "environment": [],
   "data_root": "honored",

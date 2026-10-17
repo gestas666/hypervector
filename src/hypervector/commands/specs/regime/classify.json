@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "help": "Classify regimes on cached or fetched history (EMA detector)",
+  "help": "Classify regimes on cached or fetched history (canonical engine by default)",
   "kind": "inprocess",
   "handler": "hypervector.commands.regime:cmd_regime",
   "authority": "none",
@@ -15,13 +15,27 @@
   "arguments": [
     {
       "flags": [
+        "--detector"
+      ],
+      "options": {
+        "dest": "detector",
+        "choices": [
+          "canonical",
+          "ema"
+        ],
+        "default": "canonical",
+        "help": "canonical (the multi-timeframe engine 'regime eval' scores) or ema (EMA crossover)"
+      }
+    },
+    {
+      "flags": [
         "--fast"
       ],
       "options": {
         "dest": "fast",
         "type": "int",
-        "default": 12,
-        "help": "fast EMA length in bars"
+        "default": null,
+        "help": "fast EMA length in bars (ema detector only; default 12)"
       }
     },
     {
@@ -31,8 +45,8 @@
       "options": {
         "dest": "slow",
         "type": "int",
-        "default": 48,
-        "help": "slow EMA length in bars"
+        "default": null,
+        "help": "slow EMA length in bars (ema detector only; default 48)"
       }
     }
   ]

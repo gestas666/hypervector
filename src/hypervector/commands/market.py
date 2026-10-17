@@ -46,7 +46,21 @@ def cmd_book_record(args: argparse.Namespace) -> int:
 
 
 def cmd_history(args: argparse.Namespace) -> int:
+    from hypervector.data.pipeline import cache_key
+
     df, prov = _load_bars(args)
+    key = cache_key(args.symbol, args.timeframe, args.lookback)
+    cache_path = Path(args.data_root) / "cache" / f"{key}.parquet"
+    start, end = _bar_window(df)
+    dataset = {
+        "symbol": args.symbol,
+        "timeframe": args.timeframe,
+        "start": start,
+        "end": end,
+        "rows": len(df),
+        "sources": prov.get("sources") if isinstance(prov, dict) else None,
+        "cache_path": str(cache_path.resolve()),
+    }
     print(
         json.dumps(
             {
@@ -55,12 +69,29 @@ def cmd_history(args: argparse.Namespace) -> int:
                 "timeframe": args.timeframe,
                 "lookback_days": args.lookback,
                 "provenance": prov,
+                "artifacts": {"dataset": dataset},
             },
             indent=2,
             default=str,
         )
     )
     return 0
+
+
+def _bar_window(df: object) -> tuple[str | None, str | None]:
+    """First and last bar open times as ISO strings (None when empty)."""
+    import pandas as pd
+
+    frame = df if isinstance(df, pd.DataFrame) else pd.DataFrame()
+    if frame.empty:
+        return None, None
+    if "timestamp" in frame.columns:
+        stamps = pd.to_datetime(frame["timestamp"], utc=True)
+    elif isinstance(frame.index, pd.DatetimeIndex):
+        stamps = pd.Series(frame.index)
+    else:
+        return None, None
+    return stamps.min().isoformat(), stamps.max().isoformat()
 
 
 def cmd_book_align(args: argparse.Namespace) -> int:

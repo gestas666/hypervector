@@ -256,34 +256,3 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
     }
     print(json.dumps(report, indent=2))
     return 0
-
-
-def cmd_live_check(args: argparse.Namespace) -> int:
-    """Live readiness (policy only; never prints secret values; no submit)."""
-    from hypervector.live.policy import LivePolicyError, live_policy_from_env
-
-    paths = paths_for(args.data_root)
-    enabled = bool(getattr(args, "enabled", False))
-    armed = bool(getattr(args, "i_accept_live_risk", False))
-    policy = live_policy_from_env(enabled=enabled, armed=armed)
-    ready = policy.readiness()
-    report = {
-        "ok": True,
-        "root": str(paths.root.resolve()),
-        "live_decisions": str(paths.live_decisions),
-        "live_ledger": str(paths.live_ledger),
-        "live": ready,
-        "paper_path_unchanged": True,
-        # 'live check' never places; True only would mean an active submit session.
-        "venue_submit": False,
-        "submit_wired": bool(ready.get("submit_wired")),
-    }
-    # Attempt start gate only for diagnostics (do not start daemon).
-    try:
-        policy.require_start()
-        report["start_gate"] = "ok"
-    except LivePolicyError as exc:
-        report["start_gate"] = "refused"
-        report["start_gate_reason"] = str(exc)
-    print(json.dumps(report, indent=2, default=str))
-    return 0

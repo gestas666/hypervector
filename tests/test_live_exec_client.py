@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
 import pytest
@@ -269,22 +268,6 @@ def test_submit_wired_surface_true():
     assert r["submit_wired"] is True
     # Default still cannot start
     assert r["can_start"] is False
-
-
-def test_cli_live_check_submit_wired_true_can_start_false_default(
-    tmp_path, capsys, monkeypatch
-):
-    from hypervector.cli import main
-
-    monkeypatch.delenv("HYPERVECTOR_HL_WALLET_ADDRESS", raising=False)
-    monkeypatch.delenv("HYPERVECTOR_HL_API_PRIVATE_KEY", raising=False)
-    rc = main(["live", "check"])
-    assert rc == 0
-    rep = json.loads(capsys.readouterr().out)
-    assert rep["live"]["submit_wired"] is True
-    assert rep["live"]["can_start"] is False
-    assert rep["start_gate"] == "refused"
-    assert rep["venue_submit"] is False
 
 
 def test_cancel_all_calls_transport():

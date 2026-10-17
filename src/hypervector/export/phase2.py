@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +44,10 @@ def export_candidate(
         "package_version": __version__,
         "schema_version": EXPORT_SCHEMA_VERSION,
     }
+    # Recency key for 'latest' bundle references (caller may pin its own).
+    full_meta.setdefault(
+        "created_at_utc", datetime.now(timezone.utc).isoformat(timespec="seconds")
+    )
     # Mirror strategy onto meta for consumers that only read meta.json
     strategy = params.get("strategy") if isinstance(params, dict) else None
     if strategy and "strategy" not in full_meta:

@@ -2,7 +2,7 @@
   "schema": 2,
   "help": "Backtest a strict strategy bundle event by event with NautilusTrader",
   "kind": "inprocess",
-  "handler": "hypervector.commands.nautilus:cmd_phase2_run",
+  "handler": "hypervector.commands.nautilus:cmd_run",
   "authority": "none",
   "environment": [],
   "data_root": "honored",
@@ -20,7 +20,7 @@
       "options": {
         "dest": "export",
         "default": null,
-        "help": "strategy bundle directory"
+        "help": "strategy bundle: a directory, a candidate id under exports/, or latest"
       },
       "required": true,
       "legacy_flags": [
@@ -60,7 +60,7 @@
         "dest": "no_network",
         "action": "store_true",
         "default": false,
-        "help": "load history from the local cache without a network refresh"
+        "help": "read history only from the local cache; a cache miss exits 1"
       }
     }
   ]

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -29,6 +30,42 @@ class TrialRow:
     research_meta: dict[str, Any] | None = None
     id: int | None = None
     created_at: str | None = None
+
+
+_INSERT_TRIAL_SQL = """
+    INSERT INTO trials (
+        run_id, track, strategy, params_json,
+        net_pnl, total_return_pct, sharpe, trade_count,
+        wins, losses, win_pct, max_drawdown, status, created_at,
+        research_meta_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+"""
+
+
+def _trial_values(trial: TrialRow) -> tuple[Any, ...]:
+    created = trial.created_at or datetime.now(timezone.utc).isoformat()
+    meta_json = (
+        json.dumps(trial.research_meta, sort_keys=True, default=str)
+        if trial.research_meta is not None
+        else None
+    )
+    return (
+        trial.run_id,
+        trial.track,
+        trial.strategy,
+        json.dumps(trial.params, sort_keys=True),
+        float(trial.net_pnl),
+        float(trial.total_return_pct),
+        float(trial.sharpe),
+        int(trial.trade_count),
+        int(trial.wins),
+        int(trial.losses),
+        float(trial.win_pct),
+        float(trial.max_drawdown),
+        trial.status,
+        created,
+        meta_json,
+    )
 
 
 class RunsDB:
@@ -77,41 +114,17 @@ class RunsDB:
         self._conn.commit()
 
     def insert_trial(self, trial: TrialRow) -> int:
-        created = trial.created_at or datetime.now(timezone.utc).isoformat()
-        meta_json = (
-            json.dumps(trial.research_meta, sort_keys=True, default=str)
-            if trial.research_meta is not None
-            else None
-        )
-        cur = self._conn.execute(
-            """
-            INSERT INTO trials (
-                run_id, track, strategy, params_json,
-                net_pnl, total_return_pct, sharpe, trade_count,
-                wins, losses, win_pct, max_drawdown, status, created_at,
-                research_meta_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                trial.run_id,
-                trial.track,
-                trial.strategy,
-                json.dumps(trial.params, sort_keys=True),
-                float(trial.net_pnl),
-                float(trial.total_return_pct),
-                float(trial.sharpe),
-                int(trial.trade_count),
-                int(trial.wins),
-                int(trial.losses),
-                float(trial.win_pct),
-                float(trial.max_drawdown),
-                trial.status,
-                created,
-                meta_json,
-            ),
-        )
-        self._conn.commit()
-        return int(cur.lastrowid)
+        """Insert one trial and commit."""
+        return self.insert_trials([trial])[0]
+
+    def insert_trials(self, trials: Iterable[TrialRow]) -> list[int]:
+        """Insert trials in one transaction: all rows commit together or none do."""
+        ids: list[int] = []
+        with self._conn:
+            for trial in trials:
+                cur = self._conn.execute(_INSERT_TRIAL_SQL, _trial_values(trial))
+                ids.append(int(cur.lastrowid))
+        return ids
 
     def list_trials(
         self, track: str | None = None, run_id: str | None = None

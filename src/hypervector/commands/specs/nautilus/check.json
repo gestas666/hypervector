@@ -1,8 +1,8 @@
 {
   "schema": 2,
-  "help": "Load a strategy bundle as a Nautilus loadout and probe the engine offline",
+  "help": "Load a strategy bundle as a Nautilus loadout and probe the engine offline (read-only)",
   "kind": "inprocess",
-  "handler": "hypervector.commands.nautilus:cmd_phase2_check",
+  "handler": "hypervector.commands.nautilus:cmd_check",
   "authority": "none",
   "environment": [],
   "data_root": "honored",
@@ -20,7 +20,7 @@
       "options": {
         "dest": "export",
         "default": null,
-        "help": "strategy bundle directory"
+        "help": "strategy bundle: a directory, a candidate id under exports/, or latest"
       },
       "required": true,
       "legacy_flags": [

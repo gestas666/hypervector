@@ -2,7 +2,7 @@
   "schema": 2,
   "help": "Tune Hypervelocity regime parameters against recorded entries (chronological holdout)",
   "kind": "inprocess",
-  "handler": "hypervector.commands.regime:cmd_hypervelocity_regime_autotune",
+  "handler": "hypervector.commands.regime:cmd_regime_tune",
   "authority": "none",
   "environment": [],
   "data_root": "honored",

@@ -1,8 +1,8 @@
 {
   "schema": 2,
-  "help": "Validate a strategy bundle (strict by default)",
+  "help": "Validate a strategy bundle (strict by default; exit 1 when invalid)",
   "kind": "inprocess",
-  "handler": "hypervector.commands.export:cmd_export_validate",
+  "handler": "hypervector.commands.export:cmd_validate",
   "authority": "none",
   "environment": [],
   "data_root": "honored",
@@ -21,7 +21,7 @@
       "options": {
         "dest": "export",
         "default": null,
-        "help": "strategy bundle directory"
+        "help": "strategy bundle: a directory, a candidate id under exports/, or latest"
       },
       "required": true,
       "legacy_flags": [

@@ -24,8 +24,12 @@ def test_read_commands_close_their_database(
     expected: int,
     failed_query: bool,
 ) -> None:
-    """Even early refusal or a technical query failure must release the handle."""
-    database = RunsDB(tmp_path / "trials.db")
+    """Even early refusal or a technical query failure must release the handle.
+
+    Read-only commands open an existing runs database only (they never create
+    one), so the fixture database lives at the data root's runs path.
+    """
+    database = RunsDB(tmp_path / "runs" / "hypervector.db")
     monkeypatch.setattr(f"hypervector.commands.{owner}.RunsDB", lambda _path: database)
     if failed_query:
 
