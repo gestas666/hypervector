@@ -2,27 +2,34 @@
 
 Primary surface: :class:`~hypervector.ml.metalabel.Metalabeler` — a reusable
 metalabel process parameterized by bundle root (any asset/interval version).
+Exports resolve lazily so status and help never import pandas or numpy.
 """
 
-from hypervector.ml.metalabel import (
-    ENV_ROOT,
-    ENV_ROOT_LEGACY,
-    MetalabelError,
-    Metalabeler,
-    probe_metalabel,
-    resolve_metalabel_root,
-)
-from hypervector.ml.feature_matrix import FEATURE_NAMES, build_feature_matrix
-from hypervector.ml.walk_forward import run_walk_forward_metalabel
+from importlib import import_module
 
-__all__ = [
-    "ENV_ROOT",
-    "ENV_ROOT_LEGACY",
-    "FEATURE_NAMES",
-    "MetalabelError",
-    "Metalabeler",
-    "build_feature_matrix",
-    "probe_metalabel",
-    "resolve_metalabel_root",
-    "run_walk_forward_metalabel",
-]
+_EXPORTS = {
+    "ENV_ROOT": ("hypervector.ml.metalabel", "ENV_ROOT"),
+    "ENV_ROOT_LEGACY": ("hypervector.ml.metalabel", "ENV_ROOT_LEGACY"),
+    "MetalabelError": ("hypervector.ml.metalabel", "MetalabelError"),
+    "Metalabeler": ("hypervector.ml.metalabel", "Metalabeler"),
+    "probe_metalabel": ("hypervector.ml.metalabel", "probe_metalabel"),
+    "resolve_metalabel_root": ("hypervector.ml.metalabel", "resolve_metalabel_root"),
+    "FEATURE_NAMES": ("hypervector.ml.feature_matrix", "FEATURE_NAMES"),
+    "build_feature_matrix": ("hypervector.ml.feature_matrix", "build_feature_matrix"),
+    "run_walk_forward_metalabel": (
+        "hypervector.ml.walk_forward",
+        "run_walk_forward_metalabel",
+    ),
+}
+
+__all__ = sorted(_EXPORTS)
+
+
+def __getattr__(name: str) -> object:
+    """Resolve public services without importing unrelated numerical stacks."""
+    if name not in _EXPORTS:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module, attribute = _EXPORTS[name]
+    value = getattr(import_module(module), attribute)
+    globals()[name] = value
+    return value
