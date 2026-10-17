@@ -55,7 +55,7 @@ def forbid_unit_operational_data(
 
     if any(
         request.node.get_closest_marker(marker)
-        for marker in ("network", "integration", "evidence", "performance")
+        for marker in ("network", "integration")
     ):
         return
     root = Path(__file__).resolve().parents[1] / "data"
@@ -89,7 +89,7 @@ def forbid_unit_operational_directories(
 
     if any(
         request.node.get_closest_marker(marker)
-        for marker in ("network", "integration", "evidence", "performance")
+        for marker in ("network", "integration")
     ):
         return
     root = Path(__file__).resolve().parents[1] / "data"

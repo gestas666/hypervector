@@ -1,6 +1,6 @@
 # Measured lower-risk source-follow candidate. Shadow-only and report-only.
 profile = "hypervelocity_source_follow_bidirectional_minrange12_alloc10_lev5_shadow_v1"
-base_profile = "hypervelocity_faithful.toml"
+base_profile = "../../../configs/hypervelocity_faithful.toml"
 base_profile_sha256 = "fa9e65ac518f18bbc5305cdbb35f5737a3c5ffc0dce86eecb27359a3910984d8"
 symbol = "BTC"
 timeframe = "1m"
@@ -13,7 +13,7 @@ switch_after_exit = true
 
 [signal]
 source_revision = "ad15f2bdc949619be495a5f516babd08f7f52a90"
-upstream_backend = "../data/cache/vendor/hypertrader_ad15/backend"
+upstream_backend = "../../../data/cache/vendor/hypertrader_ad15/backend"
 primary_timeframe = "5m"
 primary_regime = "TREND_UP_OR_TREND_DOWN_OR_UPWARD_BREAKOUT"
 side = "bidirectional"
@@ -65,7 +65,7 @@ metalabel_mode = "observe"
 
 [evidence]
 status = "development_candidate_not_live_proven"
-artifact = "../data/logs/research/hypervelocity_measured_exposure_20260428_20260728_trade_through_v1.json"
+artifact = "../../../data/logs/research/hypervelocity_measured_exposure_20260428_20260728_trade_through_v1.json"
 artifact_sha256 = "25f8b7c1aa1490ee6766e4f7d1e06089e54c9f833d4c617f64c7e8dad947220f"
 execution_economics_conclusive = false
 active_book_gap_windows = 2

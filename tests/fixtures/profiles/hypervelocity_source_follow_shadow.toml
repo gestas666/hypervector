@@ -2,7 +2,7 @@
 # This profile inherits venue friction and safety controls from the checksum-pinned
 # faithful profile, then changes only the explicitly measured candidate fields.
 profile = "hypervelocity_source_follow_shadow_v1"
-base_profile = "hypervelocity_faithful.toml"
+base_profile = "../../../configs/hypervelocity_faithful.toml"
 base_profile_sha256 = "fa9e65ac518f18bbc5305cdbb35f5737a3c5ffc0dce86eecb27359a3910984d8"
 symbol = "BTC"
 timeframe = "1m"
@@ -15,7 +15,7 @@ switch_after_exit = true
 
 [signal]
 source_revision = "ad15f2bdc949619be495a5f516babd08f7f52a90"
-upstream_backend = "../data/cache/vendor/hypertrader_ad15/backend"
+upstream_backend = "../../../data/cache/vendor/hypertrader_ad15/backend"
 primary_timeframe = "5m"
 primary_regime = "TREND_DOWN"
 side = "short"

@@ -53,11 +53,9 @@ testpaths = ["tests"]
 pythonpath = ["src", "scripts", "."]
 markers = [
     "network: hits live Hyperliquid/Binance/Bybit APIs (explicit opt-in)",
-    "evidence: validates frozen historical operator artifacts (requires local evidence bundle)",
     "integration: optional third-party service integrations (explicit opt-in)",
-    "performance: recorded native replay and profiling workloads (explicit opt-in)",
 ]
-addopts = "-m 'not network and not evidence and not integration and not performance'"
+addopts = "-m 'not network and not integration'"
 
 [tool.uv]
 package = true
