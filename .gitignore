@@ -72,3 +72,6 @@ docs/reports/**/artifact.reader-fallback.json
 docs/reports/**/artifact.rejected-*.json
 
 .pytest-*.txt
+
+# Agent worktrees
+.claude/worktrees/
