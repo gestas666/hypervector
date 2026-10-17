@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import fcntl
+import os
 import shutil
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Iterator
 
 from hypervector.runtime_lock import hypervelocity_runtime_lock
 
@@ -51,11 +55,26 @@ def reset_shadow_state(
         return ShadowResetReport(True, root, targets, None, ())
     timestamp = now or datetime.now(timezone.utc)
     backup_dir = root / "backups" / _backup_name(timestamp)
-    with hypervelocity_runtime_lock(root):
+    with hypervelocity_runtime_lock(root), ExitStack() as stack:
+        # Hold each file's append lock so a concurrent paper writer can neither
+        # interleave with the backup nor land a record between copy and clear.
+        for target in existing:
+            stack.enter_context(_exclusive_file_lock(target))
         backed_up = _backup_targets(root, existing, backup_dir)
         for target in existing:
             target.write_text("", encoding="utf-8")
     return ShadowResetReport(False, root, targets, backup_dir, backed_up)
+
+
+@contextmanager
+def _exclusive_file_lock(path: Path) -> Iterator[None]:
+    """Take the same advisory ``flock`` the paper ledger appender uses."""
+    descriptor = os.open(path, os.O_RDWR)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        yield
+    finally:
+        os.close(descriptor)
 
 
 def _backup_targets(

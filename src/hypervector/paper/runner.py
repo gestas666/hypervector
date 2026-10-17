@@ -40,6 +40,7 @@ from hypervector.paper.replay import (
     split_resume_history,
 )
 from hypervector.paper.session import PaperSession
+from hypervector.paper.warmup import WarmTailFetcher, refresh_warm_history
 from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
 from hypervector.strategies.source_follow_profile import (
     SourceFollowHypervelocityProfile,
@@ -72,6 +73,7 @@ class PaperDaemonResult:
     fills_count: int
     stop_reason: str
     execution_mode: str = "paper"
+    warmup_provenance: dict[str, Any] | None = None
 
 
 def _requires_fresh_warmup(profile: HypervelocityProfile | None) -> bool:
@@ -107,6 +109,7 @@ def start_paper_daemon(
     enforce_live_boundary: bool | None = None,
     funding_history_fn: FundingHistoryFetcher | None = None,
     event_stream_pump: EventStreamPump | None = None,
+    warm_tail_fn: WarmTailFetcher | None = None,
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
 
@@ -122,6 +125,10 @@ def start_paper_daemon(
 
     The injected feed, clock, sleeper, stream, and bounded bar count make the
     lifecycle deterministic in tests without changing its no-submit contract.
+
+    Cached warm-up history is topped up from public Hyperliquid candles before
+    activation (see :mod:`hypervector.paper.warmup`); a stale cache is never
+    spliced in front of fresh bars and a failed refresh aborts start-up.
     """
     mode = str(execution_mode)
     _print_banner(mode)
@@ -195,6 +202,7 @@ def start_paper_daemon(
         )
 
     # --- warm-up (cache-first history or injected frame) ---
+    warmup_provenance: dict[str, Any] = {"mode": "injected"}
     if warm_ohlcv is not None:
         warm_df = warm_ohlcv
     else:
@@ -215,6 +223,21 @@ def start_paper_daemon(
             len(warm_df),
             prov,
         )
+        if warm_df is not None and len(warm_df):
+            warm_df, warmup_provenance = refresh_warm_history(
+                warm_df,
+                symbol=loadout.symbol,
+                timeframe=loadout.timeframe,
+                now=clock(),
+                resume_state_asof=(
+                    session.resume_state_asof
+                    if session.downtime_reconciliation_enabled
+                    or session.engine.position.qty != 0.0
+                    else None
+                ),
+                fetcher=warm_tail_fn,
+            )
+            logger.info("paper warm-up freshness %s", warmup_provenance)
 
     if warm_df is None or len(warm_df) == 0:
         raise RuntimeError(
@@ -425,7 +448,19 @@ def start_paper_daemon(
                     observed_at=clock(),
                 )
                 if not catchup.empty:
-                    if session.downtime_reconciliation_enabled:
+                    if session.event_downtime_funding_enabled:
+                        # A resumed event position still owes funding for every
+                        # hourly boundary in bars the warm-up did not cover.
+                        rates = historical_funding_rates(
+                            catchup,
+                            symbol=loadout.symbol,
+                            timeframe=loadout.timeframe,
+                            fetcher=funding_fetcher,
+                        )
+                        session.reconcile_event_downtime_funding(
+                            catchup, funding_rates=rates
+                        )
+                    elif session.downtime_reconciliation_enabled:
                         rates = historical_funding_rates(
                             catchup,
                             symbol=loadout.symbol,
@@ -460,6 +495,9 @@ def start_paper_daemon(
                 if stop_state["stop"]:
                     break
 
+            if max_live_bars is not None and live_bars >= max_live_bars:
+                # Stop at the cap now instead of idling one more poll interval.
+                _request_stop("max_live_bars")
             if stop_state["stop"]:
                 break
             sleep(float(poll_interval_secs))
@@ -489,6 +527,7 @@ def start_paper_daemon(
         fills_count=session.fills_count,
         stop_reason=str(stop_state["reason"]),
         execution_mode=mode,
+        warmup_provenance=warmup_provenance,
     )
     logger.info(
         "paper daemon stopped reason=%s warm=%s live=%s fills=%s",

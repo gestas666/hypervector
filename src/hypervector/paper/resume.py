@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import math
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -15,8 +16,14 @@ from hypervector.paper.portfolio_migration import migrated_portfolio_spec
 from hypervector.paper.position_hold_resume import recover_position_hold_resume
 from hypervector.paper.position_math import normalized_position_quantity
 
+logger = logging.getLogger(__name__)
+
 _EQUITY_ABS_TOLERANCE_USD = 0.01
 _EQUITY_REL_TOLERANCE = 1e-9
+# Report-only telemetry rows: they never carry position, PnL, cash, order or
+# execution-model state, so resume can drop them right after validation.
+# ``regime_observation`` is deliberately absent: it re-arms entry directions.
+RESUME_IGNORED_ACTIONS = frozenset({"book_observation", "entry_execution_observation"})
 
 
 class ShadowResumeError(ValueError):
@@ -308,6 +315,13 @@ def _read_matching_rows(
     symbol: str,
     timeframe: str,
 ) -> list[dict[str, object]]:
+    """Stream the ledger, retaining only rows that can carry resume state.
+
+    Every line is still parsed and validated (fail-closed), but report-only
+    telemetry rows are dropped immediately so memory stays bounded by trading
+    history rather than by runtime. Only a torn final line (no trailing
+    newline, left by a crash mid-append) is skipped; the next append repairs it.
+    """
     rows: list[dict[str, object]] = []
     with ledger_path.open(encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, start=1):
@@ -316,6 +330,13 @@ def _read_matching_rows(
             try:
                 row = json.loads(line)
             except json.JSONDecodeError as exc:
+                if not line.endswith("\n"):
+                    logger.warning(
+                        "skipping torn final shadow ledger line %s in %s",
+                        line_number,
+                        ledger_path,
+                    )
+                    continue
                 raise ShadowResumeError(
                     f"invalid shadow ledger JSON at line {line_number}: {exc.msg}"
                 ) from exc
@@ -323,6 +344,8 @@ def _read_matching_rows(
                 raise ShadowResumeError(
                     f"invalid shadow ledger row at line {line_number}: expected object"
                 )
+            if row.get("action") in RESUME_IGNORED_ACTIONS:
+                continue
             if (
                 row.get("execution_mode") == "shadow"
                 and is_hypervelocity_strategy(str(row.get("strategy_name") or ""))

@@ -822,8 +822,8 @@ def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
     )
     session.enable_live_telemetry()
     monkeypatch.setattr(
-        "hypervector.paper.session.current_hypervelocity_entry_allowed",
-        lambda _frame, direction: direction == "long",
+        "hypervector.paper.session.PaperSession._hypervelocity_allowed",
+        lambda _session, direction: direction == "long",
     )
     base_ms = int(pd.Timestamp("2026-07-26T20:02:01Z").timestamp() * 1_000)
     session.ingest_hyperliquid_event(
@@ -1147,8 +1147,8 @@ def test_event_shadow_backstop_transfer_preserves_ledger_parity(
         HypervelocityShadowController(port=port, initial_market=neutral)
     )
     monkeypatch.setattr(
-        "hypervector.paper.session.current_hypervelocity_entry_allowed",
-        lambda _frame, direction: direction == "long",
+        "hypervector.paper.session.PaperSession._hypervelocity_allowed",
+        lambda _session, direction: direction == "long",
     )
     base_ms = int(pd.Timestamp("2026-07-26T20:02:01Z").timestamp() * 1_000)
     session.ingest_hyperliquid_event(
@@ -1370,8 +1370,8 @@ def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
     session = PaperSession(export_dir=export, data_root=tmp_path / "data")
     session.enable_live_telemetry()
     monkeypatch.setattr(
-        "hypervector.paper.session.current_hypervelocity_entry_allowed",
-        lambda frame, direction: True,
+        "hypervector.paper.session.PaperSession._hypervelocity_allowed",
+        lambda _session, direction: True,
     )
 
     def bar(minute: int, *, high: float, low: float) -> dict[str, object]:
@@ -1444,8 +1444,8 @@ def test_completed_hypervelocity_trade_requires_regime_reset_before_same_side_re
     state = {"eligible": True}
 
     monkeypatch.setattr(
-        "hypervector.paper.session.current_hypervelocity_entry_allowed",
-        lambda _frame, direction: state["eligible"],
+        "hypervector.paper.session.PaperSession._hypervelocity_allowed",
+        lambda _session, direction: state["eligible"],
     )
 
     def bar(
@@ -1491,12 +1491,12 @@ def test_expired_hypervelocity_entry_waits_for_regime_reset_before_retry(
     session.enable_live_telemetry()
     state = {"eligible": True}
 
-    def entry_allowed(_frame: pd.DataFrame, direction: str) -> bool:
+    def entry_allowed(_session: PaperSession, direction: str) -> bool:
         assert direction == "short"
         return state["eligible"]
 
     monkeypatch.setattr(
-        "hypervector.paper.session.current_hypervelocity_entry_allowed",
+        "hypervector.paper.session.PaperSession._hypervelocity_allowed",
         entry_allowed,
     )
 
@@ -1739,8 +1739,8 @@ def test_downtime_reconciliation_never_synthesizes_new_entry(
         execution_mode="shadow",
     )
     monkeypatch.setattr(
-        "hypervector.paper.session.current_hypervelocity_entry_allowed",
-        lambda frame, direction: True,
+        "hypervector.paper.session.PaperSession._hypervelocity_allowed",
+        lambda _session, direction: True,
     )
 
     resumed.reconcile_downtime(
@@ -1792,8 +1792,8 @@ def test_downtime_reconciliation_fills_restored_pending_entry(
         execution_mode="shadow",
     )
     monkeypatch.setattr(
-        "hypervector.paper.session.current_hypervelocity_entry_allowed",
-        lambda frame, direction: True,
+        "hypervector.paper.session.PaperSession._hypervelocity_allowed",
+        lambda _session, direction: True,
     )
 
     resumed.reconcile_downtime(

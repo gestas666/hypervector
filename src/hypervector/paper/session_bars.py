@@ -1,21 +1,21 @@
-"""Shared paper bars contracts.
+"""Bar normalization, buffer and funding-boundary helpers for paper sessions.
 
-Offline multi-bar walk and incremental ``on_bar`` for the live daemon share
-the same alpha path. No Nautilus node, no venue orders. Funding uses the
-configured/last hourly rate offline; optional live refresh is opt-in.
+Pure functions over OHLCV rows shared by :mod:`hypervector.paper.session` and
+the live session: frame preparation, the rolling indicator buffer, candle
+close timestamps, and hourly Hyperliquid funding boundaries.
 """
 
 from __future__ import annotations
 
-import logging
 import math
 from typing import Any, Mapping
 
 import pandas as pd
 
-
-logger = logging.getLogger(__name__)
 _OHLCV_REQUIRED = ("open", "high", "low", "close", "volume")
+# Candle durations whose closes can be tested against hourly funding. Funding is
+# charged one hour per boundary, so durations above one hour are unsupported.
+_FUNDING_TIMEFRAME_MINUTES = {"1m": 1, "5m": 5, "15m": 15, "1h": 60}
 
 
 def _prepare_ohlcv(ohlcv: pd.DataFrame, *, max_bars: int | None) -> pd.DataFrame:
@@ -69,10 +69,9 @@ def _feed_ts(record: dict[str, Any]) -> str:
 
 
 def _timeframe_minutes(timeframe: str) -> int:
-    values = {"1m": 1, "5m": 5, "15m": 15}
-    if timeframe not in values:
+    if timeframe not in _FUNDING_TIMEFRAME_MINUTES:
         raise ValueError(f"unsupported funding timeframe: {timeframe}")
-    return values[timeframe]
+    return _FUNDING_TIMEFRAME_MINUTES[timeframe]
 
 
 def _bar_close_timestamp(
