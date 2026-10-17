@@ -264,7 +264,11 @@ def start_paper_daemon(
         session.activate_hypervelocity_event_runtime(
             observed_at=activated_at.isoformat()
         )
-    if session.event_downtime_funding_enabled:
+    # Only a position that was already open at restart owes downtime funding;
+    # one the event stream opens after activation must not be charged for
+    # pre-activation catch-up bars.
+    resumed_event_funding = session.event_downtime_funding_enabled
+    if resumed_event_funding:
         state_asof = session.resume_state_asof
         if state_asof is None:
             raise RuntimeError("active resumed state has no reconciliation timestamp")
@@ -448,7 +452,10 @@ def start_paper_daemon(
                     observed_at=clock(),
                 )
                 if not catchup.empty:
-                    if session.event_downtime_funding_enabled:
+                    if (
+                        resumed_event_funding
+                        and session.event_downtime_funding_enabled
+                    ):
                         # A resumed event position still owes funding for every
                         # hourly boundary in bars the warm-up did not cover.
                         rates = historical_funding_rates(

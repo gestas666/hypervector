@@ -235,11 +235,14 @@ def test_resumed_state_extends_tail_window_to_its_reconciliation_point() -> None
         fetcher=fetcher,
     )
 
-    expected = (NOW - (pd.Timestamp(state_asof) - pd.Timedelta(minutes=2))) / (
-        pd.Timedelta(days=1)
+    seed_start = pd.Timestamp(state_asof) - pd.Timedelta(
+        minutes=DEFAULT_MAX_LOOKBACK + 1
     )
+    expected = (NOW - seed_start) / pd.Timedelta(days=1)
     assert fetcher.calls == [pytest.approx(expected)]
-    assert pd.Timestamp(warm["timestamp"].min()) <= pd.Timestamp(state_asof)
+    # The replay seed holds a full indicator buffer before the persisted state.
+    closes = pd.to_datetime(warm["timestamp"], utc=True) + pd.Timedelta(minutes=1)
+    assert int((closes <= pd.Timestamp(state_asof)).sum()) >= DEFAULT_MAX_LOOKBACK
     assert provenance["mode"] == "tail_replaced_stale_cache"
 
     unknown = _TailFetcher()
@@ -248,3 +251,148 @@ def test_resumed_state_extends_tail_window_to_its_reconciliation_point() -> None
         resume_state_asof="session_start", fetcher=unknown,
     )
     assert unknown.calls[0] * 1440 == pytest.approx(DEFAULT_MAX_LOOKBACK + 1, abs=1)
+
+
+def test_catchup_funding_skips_position_opened_after_activation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Only a position open at restart owes funding for pre-activation bars."""
+    from hypervector.paper.hypervelocity_session_bridge import (
+        HypervelocitySessionBridge,
+    )
+
+    export = write_strict_export(tmp_path, strategy="hypervelocity_1m_scalper_long")
+    profile = faithful_profile(tmp_path, export)
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+        hypervelocity_profile=profile,
+    )
+    original.ensure_session_identity()
+    for feed_ts, action, side in (
+        ("2026-07-26T20:50:00Z", "enter_long", "buy"),
+        ("2026-07-26T20:55:00Z", "close", "sell"),
+    ):
+        original.engine.apply_market_fill(
+            feed_ts=feed_ts,
+            action=action,
+            side=side,
+            qty=1.0,
+            mark_px=100.0,
+            fill_model=PostOnlyLimitFillModel(),
+        )
+    monkeypatch.setattr(
+        PaperSession, "initialize_hypervelocity_venue", lambda _self: 0.0
+    )
+    charged: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        HypervelocitySessionBridge,
+        "apply_funding",
+        lambda _self, **kwargs: charged.append(kwargs),
+    )
+    warm = hl_bars("2026-07-26T20:50:00Z", 8)
+    catchup = hl_bars("2026-07-26T20:58:00Z", 2)  # 20:59 closes on 21:00
+    polls = {"n": 0}
+
+    def poll(**_kwargs: object) -> pd.DataFrame:
+        polls["n"] += 1
+        return catchup.copy() if polls["n"] == 1 else catchup.iloc[0:0].copy()
+
+    def funding_history(symbol: str, *, start_time, end_time) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "timestamp": [pd.Timestamp("2026-07-26T21:00:00Z")],
+                "funding_rate": [0.001],
+                "source": ["hl_funding_history"],
+            }
+        )
+
+    class _FillingPump:
+        """The first pump fills a restored entry after activation (21:00:30)."""
+
+        def __init__(self) -> None:
+            self.filled = False
+
+        def start(self) -> None:
+            return None
+
+        def pump(self, consumer: PaperSession) -> int:
+            if not self.filled:
+                self.filled = True
+                consumer.engine.apply_market_fill(
+                    feed_ts="2026-07-26T21:00:40Z",
+                    action="enter_long",
+                    side="buy",
+                    qty=1.0,
+                    mark_px=100.0,
+                    fill_model=PostOnlyLimitFillModel(),
+                )
+            return 0
+
+        def close(self) -> None:
+            return None
+
+    start_paper_daemon(
+        export_dir=export,
+        data_root=data_root,
+        warm_ohlcv=warm,
+        poll_fn=poll,
+        funding_history_fn=funding_history,
+        event_stream_pump=_FillingPump(),
+        hypervelocity_profile=profile,
+        max_live_bars=1,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _s: None,
+        install_signal_handlers=False,
+        enforce_live_boundary=True,
+        execution_mode="shadow",
+        now_fn=lambda: pd.Timestamp("2026-07-26T21:00:30Z"),
+    )
+
+    assert charged == []
+
+
+def test_event_funding_reconciliation_never_reapplies_a_reconciled_bar(
+    tmp_path: Path,
+) -> None:
+    export = write_strict_export(tmp_path, strategy="hypervelocity_1m_scalper_long")
+    profile = faithful_profile(tmp_path, export)
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+        hypervelocity_profile=profile,
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-26T20:58:00Z",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        fill_model=PostOnlyLimitFillModel(),
+    )
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+        hypervelocity_profile=profile,
+    )
+    resumed.activate_hypervelocity_event_runtime(
+        observed_at="2026-07-26T21:00:30+00:00"
+    )
+    assert resumed.event_downtime_funding_enabled
+    bars = hl_bars("2026-07-26T20:58:00Z", 2)  # 20:59 closes on 21:00
+    rates = {pd.Timestamp("2026-07-26T21:00:00Z"): 0.001}
+
+    assert resumed.reconcile_event_downtime_funding(bars, funding_rates=rates) == 2
+    assert resumed.reconcile_event_downtime_funding(bars, funding_rates=rates) == 0
+
+    rows = [
+        json.loads(line) for line in resumed.decisions_path.read_text().splitlines()
+    ]
+    funding = [row for row in rows if row.get("action") == "funding"]
+    assert [row["feed_ts"] for row in funding] == ["2026-07-26T21:00:00+00:00"]

@@ -10,8 +10,9 @@ public Hyperliquid candles, in memory only (the shared cache is not written):
 * if the missing span is longer than the indicator buffer, the old cache
   cannot connect to fresh data and is dropped instead of spliced, so the
   buffer never mixes months-old bars with today's;
-* a resumed shadow state extends the window back to its reconciliation
-  timestamp so downtime replay keeps venue coverage where HL still has it;
+* a resumed shadow state extends the window back to a full indicator buffer
+  before its reconciliation timestamp, so downtime replay keeps venue coverage
+  and a full seed where HL still has it;
 * a failed refresh is a technical failure and aborts start-up (fail-closed).
 
 Internal venue gaps are reported, never refused; no trading gate is added.
@@ -64,7 +65,11 @@ def refresh_warm_history(
     floor_start = observed - step * (DEFAULT_MAX_LOOKBACK + 1)
     reconcile_from = _optional_utc(resume_state_asof)
     if reconcile_from is not None:
-        floor_start = min(floor_start, reconcile_from - 2 * step)
+        # Replay needs the full indicator buffer that preceded the persisted
+        # state, not just the bars after it (HL retention permitting).
+        floor_start = min(
+            floor_start, reconcile_from - step * (DEFAULT_MAX_LOOKBACK + 1)
+        )
     # Start one bar early: the window round-trips through float days and
     # millisecond truncation, and the last cached candle must be re-fetched.
     connects = last_open - step >= floor_start
