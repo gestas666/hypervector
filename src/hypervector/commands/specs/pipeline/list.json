@@ -1,0 +1,45 @@
+{
+  "schema": 2,
+  "help": "List pipeline runs under runs/pipeline/, newest first, flagging unreadable manifests",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.pipeline:cmd_list",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--strategy"
+      ],
+      "options": {
+        "dest": "strategy",
+        "default": null,
+        "help": "only runs of this registered strategy name"
+      }
+    },
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": null,
+        "help": "only runs for this Hyperliquid coin, e.g. BTC"
+      }
+    },
+    {
+      "flags": [
+        "--timeframe"
+      ],
+      "options": {
+        "dest": "timeframe",
+        "default": null,
+        "help": "only runs on this bar size, e.g. 5m"
+      }
+    }
+  ]
+}
