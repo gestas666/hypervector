@@ -54,6 +54,17 @@ OPTIONAL_FILES: tuple[str, ...] = (
 )
 
 VALID_TP_SL_MODES: frozenset[str] = frozenset({"fixed_rr", "atr", "trail"})
+#: Strategy-managed lifecycle with a fixed target and no stop. Valid only for
+#: Hypervelocity bundles, so no other consumer can apply it by mistake.
+STRATEGY_TARGET_ONLY = "strategy_target_only"
+
+
+def _strategy_target_only_allowed(strategy: Any) -> bool:
+    from hypervector.strategies.hypervelocity_contract import (
+        is_hypervelocity_strategy,
+    )
+
+    return bool(strategy) and is_hypervelocity_strategy(str(strategy))
 
 
 class ExportSchemaError(ValueError):
@@ -114,13 +125,41 @@ def _check_risk(risk: Any, errors: list[str], *, prefix: str = "meta.risk") -> N
         pass
 
 
-def _check_exits(exits: Any, errors: list[str], *, prefix: str = "meta.exits") -> None:
+def _check_target_only_exits(
+    exits: dict[str, Any], errors: list[str], *, prefix: str, strategy: Any
+) -> None:
+    if not _strategy_target_only_allowed(strategy):
+        errors.append(
+            f"{prefix}.mode={STRATEGY_TARGET_ONLY!r} is only valid for "
+            f"strategy-managed Hypervelocity bundles (strategy={strategy!r})"
+        )
+    target = exits.get("target_price_fraction")
+    try:
+        valid_target = target is not None and float(target) > 0.0
+    except (TypeError, ValueError):
+        valid_target = False
+    if not valid_target:
+        errors.append(f"{prefix}.target_price_fraction must be a number > 0")
+    if exits.get("stop") is not None:
+        errors.append(f"{prefix}.stop must be null for {STRATEGY_TARGET_ONLY}")
+
+
+def _check_exits(
+    exits: Any,
+    errors: list[str],
+    *,
+    prefix: str = "meta.exits",
+    strategy: Any = None,
+) -> None:
     if not isinstance(exits, dict):
         errors.append(f"{prefix} must be an object")
         return
     mode = exits.get("mode")
     if mode is None or mode == "":
         errors.append(f"{prefix}.mode missing")
+    elif str(mode) == STRATEGY_TARGET_ONLY:
+        _check_target_only_exits(exits, errors, prefix=prefix, strategy=strategy)
+        return
     elif str(mode) not in VALID_TP_SL_MODES:
         errors.append(
             f"{prefix}.mode={mode!r} invalid "
@@ -213,7 +252,13 @@ def validate_export_dir(
 
     if "tp_sl_mode" in meta and meta["tp_sl_mode"] is not None:
         mode = str(meta["tp_sl_mode"])
-        if mode not in VALID_TP_SL_MODES:
+        if mode == STRATEGY_TARGET_ONLY:
+            if not _strategy_target_only_allowed(strategy):
+                errors.append(
+                    f"meta.tp_sl_mode={mode!r} is only valid for strategy-managed "
+                    f"Hypervelocity bundles (strategy={strategy!r})"
+                )
+        elif mode not in VALID_TP_SL_MODES:
             errors.append(
                 f"meta.tp_sl_mode={mode!r} invalid (expected one of {sorted(VALID_TP_SL_MODES)})"
             )
@@ -223,7 +268,7 @@ def validate_export_dir(
     if "risk" in meta and meta["risk"] is not None:
         _check_risk(meta["risk"], errors)
     if "exits" in meta and meta["exits"] is not None:
-        _check_exits(meta["exits"], errors)
+        _check_exits(meta["exits"], errors, strategy=strategy)
         # Mode string and exits.mode should agree when both present
         if (
             isinstance(meta.get("exits"), dict)

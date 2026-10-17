@@ -165,6 +165,7 @@ def register_oi_divergence() -> None:
             param_grid={"lookback": [12, 24, 48], "volume_mult": [1.1, 1.3]},
             build_signals=build_oi_divergence_long_signals,
             description="Open Interest + Price Acceleration Agreement Long Strategy",
+            supports_book_gate=True,
         )
     )
     register(
@@ -174,5 +175,6 @@ def register_oi_divergence() -> None:
             param_grid={"lookback": [12, 24, 48], "volume_mult": [1.1, 1.3]},
             build_signals=build_oi_divergence_short_signals,
             description="Open Interest + Price Acceleration Agreement Short Strategy",
+            supports_book_gate=True,
         )
     )

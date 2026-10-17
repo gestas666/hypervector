@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
+import numpy as np
 import pandas as pd
 
 from hypervector.data.source_position_records import (
@@ -155,11 +156,156 @@ def _available_decisions(
     return available
 
 
+_NANOSECONDS_PER_MINUTE = 60_000_000_000
+_DIRECTION_COLUMNS = ("primary_regime", "breakout_direction", "entry_direction")
+
+
+@dataclass(frozen=True)
+class _PreparedEntries:
+    """Recorded entries de-duplicated once and reused across candidates."""
+
+    recorded_positions: int
+    unique: pd.DataFrame
+    event_times: pd.DatetimeIndex
+    sides: np.ndarray
+
+
+@dataclass(frozen=True)
+class _PreparedDecisions:
+    """Per-candidate decision arrays shared by every split and lookback."""
+
+    index: pd.DatetimeIndex
+    times_ns: np.ndarray
+    directions: np.ndarray
+    primary: np.ndarray
+    long_prefix: np.ndarray
+    short_prefix: np.ndarray
+    range_prefix: np.ndarray
+
+
+def _prepare_entries(
+    positions: pd.DataFrame, *, cluster_seconds: float
+) -> _PreparedEntries:
+    unique = _unique_entry_decisions(positions, cluster_seconds=cluster_seconds)
+    return _PreparedEntries(
+        recorded_positions=len(positions),
+        unique=unique,
+        event_times=pd.DatetimeIndex(unique["event_time"]).as_unit("ns"),
+        sides=unique["side"].astype(str).str.lower().to_numpy(),
+    )
+
+
+def _prefix(mask: np.ndarray) -> np.ndarray:
+    return np.concatenate(([0], np.cumsum(mask, dtype=np.int64)))
+
+
+def _prepare_decisions(
+    decisions: pd.DataFrame, bar_duration: pd.Timedelta
+) -> _PreparedDecisions | None:
+    """Derive directions and prefix counts once; None means use the slow path.
+
+    The vectorised path needs a unique, increasing DatetimeIndex (which the
+    original ``reindex(method="ffill")`` also required).
+    """
+    index = decisions.index
+    if not (
+        isinstance(index, pd.DatetimeIndex)
+        and index.is_monotonic_increasing
+        and index.is_unique
+    ):
+        return None
+    columns = [name for name in _DIRECTION_COLUMNS if name in decisions.columns]
+    available = _available_decisions(decisions[columns], bar_duration)
+    directions = _decision_directions(available).to_numpy(dtype=object)
+    primary = available["primary_regime"].to_numpy(dtype=object)
+    available_index = available.index.as_unit("ns")
+    return _PreparedDecisions(
+        index=available_index,
+        times_ns=available_index.asi8,
+        directions=directions,
+        primary=primary,
+        long_prefix=_prefix(directions == "long"),
+        short_prefix=_prefix(directions == "short"),
+        range_prefix=_prefix(primary == PrimaryRegime.RANGE.value),
+    )
+
+
+def _entry_alignment_report(
+    prepared: _PreparedDecisions,
+    entries: _PreparedEntries,
+    lookback_minutes: tuple[int, ...],
+) -> EntryAlignmentReport:
+    """Vectorised equivalent of the per-position window loop."""
+    end = prepared.index.searchsorted(entries.event_times, side="right") - 1
+    found = end >= 0
+    safe_end = np.where(found, end, 0)
+    if prepared.times_ns.size:
+        predicted = np.where(found, prepared.directions[safe_end], None)
+        primary = np.where(found, prepared.primary[safe_end], None)
+        end_ns = prepared.times_ns[safe_end]
+    else:  # no decisions: every entry precedes the first available state
+        predicted = np.full(len(end), None, dtype=object)
+        primary = np.full(len(end), None, dtype=object)
+        end_ns = np.zeros(len(end), dtype=np.int64)
+    wanted = entries.sides
+    matches = int((predicted == wanted).sum())
+    total = len(entries.unique)
+    is_long = wanted == "long"
+    is_short = wanted == "short"
+    by_window: dict[int, tuple[int, int]] = {}
+    for minutes in lookback_minutes:
+        low = np.searchsorted(
+            prepared.times_ns, end_ns - minutes * _NANOSECONDS_PER_MINUTE, side="left"
+        )
+        high = np.searchsorted(prepared.times_ns, end_ns, side="right")
+        longs = prepared.long_prefix[high] - prepared.long_prefix[low]
+        shorts = prepared.short_prefix[high] - prepared.short_prefix[low]
+        ranges = prepared.range_prefix[high] - prepared.range_prefix[low]
+        matched = found & ((is_long & (longs > 0)) | (is_short & (shorts > 0)))
+        range_only = found & (high > low) & (ranges == high - low)
+        by_window[minutes] = (int(matched.sum()), int(range_only.sum()))
+    return _alignment_report(
+        entries.recorded_positions,
+        total,
+        matches,
+        int((primary == PrimaryRegime.RANGE.value).sum()),
+        int(pd.isna(predicted).sum()),
+        by_window,
+    )
+
+
+def _alignment_report(
+    recorded: int,
+    total: int,
+    matches: int,
+    false_range: int,
+    no_entry_state: int,
+    by_window: dict[int, tuple[int, int]],
+) -> EntryAlignmentReport:
+    return EntryAlignmentReport(
+        recorded_positions=recorded,
+        unique_entry_decisions=total,
+        total_entries=total,
+        direction_matches=matches,
+        direction_recall_pct=(100.0 * matches / total) if total else 0.0,
+        false_range_at_entries=false_range,
+        no_entry_state_at_entries=no_entry_state,
+        direction_recall_by_lookback_pct={
+            f"{minutes}m": (100.0 * values[0] / total) if total else 0.0
+            for minutes, values in by_window.items()
+        },
+        range_only_entries_by_lookback={
+            f"{minutes}m": values[1] for minutes, values in by_window.items()
+        },
+    )
+
+
 def _window_alignment(
     decisions: pd.DataFrame,
     positions: pd.DataFrame,
     minutes: int,
 ) -> tuple[int, int]:
+    """Original per-position loop, kept for indexes the fast path cannot use."""
     matches = 0
     range_only = 0
     normalized_index = decisions.index.as_unit("ns")
@@ -191,46 +337,63 @@ def evaluate_entry_alignment(
     bar_duration: pd.Timedelta = pd.Timedelta(minutes=1),
 ) -> EntryAlignmentReport:
     """Measure whether candidate states recover recorded entry directions."""
-    unique = _unique_entry_decisions(
-        positions,
-        cluster_seconds=decision_cluster_seconds,
-    )
+    entries = _prepare_entries(positions, cluster_seconds=decision_cluster_seconds)
+    prepared = _prepare_decisions(decisions, bar_duration)
+    if prepared is not None:
+        return _entry_alignment_report(prepared, entries, lookback_minutes)
+    return _loop_entry_alignment(decisions, entries, lookback_minutes, bar_duration)
+
+
+def _loop_entry_alignment(
+    decisions: pd.DataFrame,
+    entries: _PreparedEntries,
+    lookback_minutes: tuple[int, ...],
+    bar_duration: pd.Timedelta,
+) -> EntryAlignmentReport:
+    """Original implementation; raises where it always did on bad indexes."""
+    unique = entries.unique
     available = _available_decisions(decisions, bar_duration)
     aligned = available.reindex(pd.DatetimeIndex(unique["event_time"]), method="ffill")
-    wanted = unique["side"].astype(str).str.lower().to_numpy()
     predicted = _decision_directions(aligned).to_numpy()
     primary = aligned["primary_regime"]
-    matches = int((predicted == wanted).sum())
-    total = len(unique)
     by_window = {
         minutes: _window_alignment(available, unique, minutes)
         for minutes in lookback_minutes
     }
-    return EntryAlignmentReport(
-        recorded_positions=len(positions),
-        unique_entry_decisions=total,
-        total_entries=total,
-        direction_matches=matches,
-        direction_recall_pct=(100.0 * matches / total) if total else 0.0,
-        false_range_at_entries=int(primary.eq(PrimaryRegime.RANGE.value).sum()),
-        no_entry_state_at_entries=int(pd.isna(predicted).sum()),
-        direction_recall_by_lookback_pct={
-            f"{minutes}m": (100.0 * values[0] / total) if total else 0.0
-            for minutes, values in by_window.items()
-        },
-        range_only_entries_by_lookback={
-            f"{minutes}m": values[1] for minutes, values in by_window.items()
-        },
+    return _alignment_report(
+        entries.recorded_positions,
+        len(unique),
+        int((predicted == entries.sides).sum()),
+        int(primary.eq(PrimaryRegime.RANGE.value).sum()),
+        int(pd.isna(predicted).sum()),
+        by_window,
     )
 
 
 def _future_extreme(series: pd.Series, horizon: int, kind: str) -> pd.Series:
+    """Extreme of the next ``horizon`` values (NaN if any is missing).
+
+    A reversed rolling window equals the former concat-of-shifts reduction
+    with ``skipna=False`` exactly, in O(n) instead of O(n * horizon).
+    """
     if horizon < 1:
         raise ValueError("forward_horizon must be positive")
-    future = pd.concat([series.shift(-step) for step in range(1, horizon + 1)], axis=1)
-    if kind == "max":
-        return future.max(axis=1, skipna=False)
-    return future.min(axis=1, skipna=False)
+    window = series.iloc[::-1].rolling(horizon, min_periods=horizon)
+    extreme = window.max() if kind == "max" else window.min()
+    return extreme.iloc[::-1].shift(-1).rename(None)
+
+
+def _future_extremes(
+    bars: pd.DataFrame,
+    forward_horizon: int,
+    future_high: pd.Series | None,
+    future_low: pd.Series | None,
+) -> tuple[pd.Series, pd.Series]:
+    if future_high is None:
+        future_high = _future_extreme(bars["high"].astype(float), forward_horizon, "max")
+    if future_low is None:
+        future_low = _future_extreme(bars["low"].astype(float), forward_horizon, "min")
+    return future_high, future_low
 
 
 def evaluate_breakout_quality(
@@ -239,10 +402,17 @@ def evaluate_breakout_quality(
     *,
     target_price_fraction: float,
     forward_horizon: int,
+    future_high: pd.Series | None = None,
+    future_low: pd.Series | None = None,
 ) -> BreakoutQualityReport:
-    """Report breakouts that fail to reach their directional target."""
-    future_high = _future_extreme(bars["high"].astype(float), forward_horizon, "max")
-    future_low = _future_extreme(bars["low"].astype(float), forward_horizon, "min")
+    """Report breakouts that fail to reach their directional target.
+
+    ``future_high``/``future_low`` may be precomputed for these exact ``bars``
+    and ``forward_horizon`` (they depend on nothing else).
+    """
+    future_high, future_low = _future_extremes(
+        bars, forward_horizon, future_high, future_low
+    )
     close = bars["close"].astype(float)
     direction = decisions["breakout_direction"]
     directional = direction.isin(
@@ -276,10 +446,13 @@ def evaluate_range_quality(
     *,
     target_price_fraction: float,
     forward_horizon: int,
+    future_high: pd.Series | None = None,
+    future_low: pd.Series | None = None,
 ) -> RangeQualityReport:
     """Classify forward outcomes after range states without gating execution."""
-    future_high = _future_extreme(bars["high"].astype(float), forward_horizon, "max")
-    future_low = _future_extreme(bars["low"].astype(float), forward_horizon, "min")
+    future_high, future_low = _future_extremes(
+        bars, forward_horizon, future_high, future_low
+    )
     close = bars["close"].astype(float)
     valid = decisions["primary_regime"].eq(PrimaryRegime.RANGE.value)
     valid &= future_high.notna() & future_low.notna()

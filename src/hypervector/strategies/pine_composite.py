@@ -184,6 +184,7 @@ def register_pine_composite() -> None:
             },
             build_signals=pine_composite_long,
             description="Pine Composite: Supertrend+ZLEMA+Squeeze+Chop+Vortex+PMARP uptrend long",
+            supports_book_gate=True,
         )
     )
     register(
@@ -200,5 +201,6 @@ def register_pine_composite() -> None:
             },
             build_signals=pine_composite_short,
             description="Pine Composite: Supertrend+ZLEMA+Squeeze+Chop+Vortex+PMARP downtrend short",
+            supports_book_gate=True,
         )
     )

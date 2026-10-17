@@ -53,8 +53,17 @@ hypervector model train --path data/exports/example
 
 VectorBT, its Rust accelerator and TA-Lib indicators remain required.
 Nautilus is the event-driven historical engine. Karpathy is the default
-optimizer. Explicit Optuna/hybrid selection requires `hypervector[optuna]`;
+optimizer. Explicit Optuna selection requires `hypervector[optuna]` (`hybrid`
+is a deprecated alias of Optuna TPE, recorded as `sampler_requested`);
 missing dependencies cause a technical error rather than a sampler change.
+Autotune searches, adapts and exports by one objective (`net_pnl` by
+default), searches the first 70% of bars and re-measures the chosen
+configuration once on the chronological holdout: exported `best_metrics` are
+holdout metrics (`evaluation_window` in `metrics.json`; train and holdout both
+in `meta.evaluation`). The board in `logs/research/` records seed, data window,
+costs, search space, code identity and report-only warnings (zero-trade
+winners, technical trial errors, an exhausted discrete space). One trial's
+technical error never discards the search; an all-failed search still raises.
 Other VectorBT adapters are available through `hypervector[integrations]`.
 Nautilus `--no-network` requires compatible cached history.
 
