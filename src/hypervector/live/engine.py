@@ -4,7 +4,8 @@ Warm-up uses place_enabled=False (synthetic position tracking, no venue).
 Live phase sets place_enabled=True and stamps submitted from PlaceResult.
 Synthetic exposure is discarded before arming, every live position change uses
 the venue-reported fill, and the venue position is re-read after every live
-order so an ambiguous fill or a second owner of the coin stops the daemon.
+order so an ambiguous fill or a second owner of the coin stops the daemon; a
+matching read is adopted so float residue never reaches the next order size.
 """
 
 from __future__ import annotations
@@ -304,6 +305,14 @@ class LiveFillEngine:
                 feed_ts=feed_ts, venue_qty=venue, error=message
             )
             raise LiveReconciliationError(message)
+        # Adopt the venue's exact lot-sized value: float residue from netting
+        # (0.3 - 0.1 = 0.19999999999999998) would otherwise round a later
+        # reduce-only close down one lot and strand that lot open.
+        if venue == 0.0:
+            self._position.qty = 0.0
+            self._position.avg_px = 0.0
+        else:
+            self._position.qty = venue
 
     def _record_reconciliation_failure(
         self, *, feed_ts: Any, venue_qty: float | None, error: str

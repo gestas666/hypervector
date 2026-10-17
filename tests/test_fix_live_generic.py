@@ -20,6 +20,15 @@ from hypervector.export.phase2 import export_candidate
 from hypervector.live.policy import LivePolicy, LivePolicyError
 from hypervector.nautilus.signals import SignalIntent
 
+
+@pytest.fixture(autouse=True)
+def _isolated_account_lock_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep the daemon's shared-account lock out of the checkout's data/live."""
+    root = tmp_path / "account-live"
+    monkeypatch.setattr("hypervector.live.runner.canonical_live_root", lambda: root)
+
 WALLET = "0x" + "1" * 40
 OTHER_WALLET = "0x" + "2" * 40
 KEY = "test-signing-key"

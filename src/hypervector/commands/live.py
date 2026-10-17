@@ -169,27 +169,40 @@ def _profile_readiness(path: Path, blockers: list[str]) -> dict[str, object]:
 
 
 def cmd_live_run(args: argparse.Namespace) -> int:
-    """Live daemon: mainnet place when enabled+armed+secrets (fail-closed)."""
+    """Live daemon: mainnet place when enabled+armed+secrets (fail-closed).
+
+    Missing authority flags, missing credentials, a missing export and a shared
+    account another live backend owns are refusals before any venue call (exit
+    2, ``CommandRefused``); failures after start exit 1.
+    """
     from hypervector.live.policy import LivePolicyError
     from hypervector.live.runner import start_live_daemon
+    from hypervector.runtime_lock import RuntimeLockError
 
+    if not (
+        getattr(args, "enabled", False) and getattr(args, "i_accept_live_risk", False)
+    ):
+        raise CommandRefused(
+            "live run refused: requires both --enabled and --i-accept-live-risk"
+        )
     path = Path(args.export)
     if not path.is_dir():
-        print(f"export path not found: {path}", file=sys.stderr)
-        return 1
+        raise CommandRefused(f"export path not found: {path}")
 
     try:
         policy = _armed_policy(args)
         wallet, key = _live_credentials()
     except LivePolicyError as exc:
-        print(f"live run refused: {exc}", file=sys.stderr)
-        return 1
+        raise CommandRefused(f"live run refused: {exc}") from exc
     _ensure_root(args)
     stop_file = Path(args.stop_file) if getattr(args, "stop_file", None) else None
     try:
         result = start_live_daemon(
             **_live_options(args, path, policy, wallet, key, stop_file)
         )
+    except RuntimeLockError as exc:
+        # Another live owner holds the shared account; nothing was sent.
+        raise CommandRefused(f"live run refused: {exc}") from exc
     except LivePolicyError as exc:
         print(f"live run refused: {exc}", file=sys.stderr)
         return 1
@@ -294,6 +307,8 @@ def _live_result(result: LiveDaemonResult, policy: LivePolicy) -> dict[str, obje
         "fills_count": result.fills_count,
         "places_count": result.places_count,
         "catchup_bars": getattr(result, "catchup_bars", 0),
+        # Open exposure at stop: the daemon never flattens when it stops.
+        "position_qty": getattr(result, "position_qty", 0.0),
         "stop_reason": result.stop_reason,
         "cancel_attempted": result.cancel_attempted,
         "cancel_ok": result.cancel_ok,

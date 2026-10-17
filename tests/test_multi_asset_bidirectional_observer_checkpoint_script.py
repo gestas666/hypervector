@@ -124,33 +124,52 @@ def test_an_out_owned_by_a_live_checkpoint_writer_is_refused(
     assert len(calls) == 1
 
 
-def test_the_loop_stops_when_a_live_writer_takes_the_output(
-    tmp_path: Path, capsys
+def test_a_live_writer_cannot_take_the_output_while_the_observer_runs(
+    tmp_path: Path,
 ) -> None:
-    """A live writer that starts after the observer began is never overwritten."""
-    from contextlib import ExitStack
+    """A live writer that starts after the observer began is refused, not raced.
 
-    from hypervector.runtime_lock import cohort_checkpoint_runtime_lock
+    The observer owns the output's writer lock for its whole loop, so the
+    check-then-publish window that let a (re)starting writer be overwritten no
+    longer exists.
+    """
+    import pytest
+
+    from hypervector.runtime_lock import (
+        RuntimeLockError,
+        cohort_checkpoint_runtime_lock,
+    )
 
     module = _load_module()
     output = tmp_path / "latest_checkpoint.json"
     published: list[Path] = []
+    refusals: list[str] = []
+
+    class Stop(Exception):
+        pass
 
     def publish(_ledger: Path, out: Path, *, run_id: str | None) -> dict[str, object]:
         published.append(out)
         return {"status": "ready"}
 
+    def live_writer_starts(_seconds: float) -> None:
+        # The live checkpoint writer (re)starts between two observer publications.
+        try:
+            with cohort_checkpoint_runtime_lock(output):
+                pass
+        except RuntimeLockError as exc:
+            refusals.append(str(exc))
+        raise Stop
+
     args = module.build_parser().parse_args(
         ["--out", str(output), "--interval-seconds", "1"]
     )
-    with ExitStack() as stack:
-        # The live checkpoint writer (re)starts between two observer publications.
-        def live_writer_starts(_seconds: float) -> None:
-            stack.enter_context(cohort_checkpoint_runtime_lock(output))
-
-        code = module.run_checkpoint_loop(
+    with pytest.raises(Stop):
+        module.run_checkpoint_loop(
             args, publish_fn=publish, sleep_fn=live_writer_starts
         )
-    assert code == 2
     assert published == [output]
-    assert "active live checkpoint writer" in capsys.readouterr().err
+    assert len(refusals) == 1
+    # Released when the loop ends: the writer can then take the output.
+    with cohort_checkpoint_runtime_lock(output):
+        pass

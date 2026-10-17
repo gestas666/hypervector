@@ -55,7 +55,9 @@ data/
     cohort/                                # paper observe ledgers (zero execution authority)
       decisions.jsonl                      # paper checkpoint / paper audit default
   live/                                    # live only; never shares files with paper/
+    shared-account.lock                    # one live owner of the account at a time
     decisions/decisions.jsonl              # live run (generic daemon) decisions; live report
+    generic_live/process.lock              # live run ownership (checkout data/live only)
     bidirectional_cohort/                  # the cohort backend (paths fixed by the profile)
       decisions.jsonl                      # append-only cohort authority and telemetry
       <symbol>.jsonl                       # per-symbol journals

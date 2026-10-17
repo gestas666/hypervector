@@ -14,6 +14,15 @@ from hypervector.export.phase2 import export_candidate
 from hypervector.live.policy import LivePolicy, LivePolicyError
 
 
+@pytest.fixture(autouse=True)
+def _isolated_account_lock_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep the daemon's shared-account lock out of the checkout's data/live."""
+    root = tmp_path / "account-live"
+    monkeypatch.setattr("hypervector.live.runner.canonical_live_root", lambda: root)
+
+
 class RecordingTransport:
     """Offline venue: records calls and tracks the net position it filled."""
 
@@ -400,7 +409,7 @@ def test_cli_live_run_refuses_without_arm(tmp_path: Path, capsys, monkeypatch):
             "0",
         ]
     )
-    assert rc == 1
+    assert rc == 2  # refusal before any side effect
     err = capsys.readouterr().err
     assert (
         "arm" in err.lower()
@@ -428,7 +437,7 @@ def test_cli_live_run_refuses_without_enabled(tmp_path: Path, capsys, monkeypatc
             "0",
         ]
     )
-    assert rc == 1
+    assert rc == 2  # refusal before any side effect
     err = capsys.readouterr().err
     assert "enabled" in err.lower()
 

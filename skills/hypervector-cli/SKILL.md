@@ -202,7 +202,13 @@ hypervector live request --inbox <dir> --run-id RUN --profile-fingerprint FP --a
   4 degraded.
 - **`live run`** trades one strict bundle with a hard per-order notional cap. It
   arms only when the venue position for the coin reads flat. Its decisions go to
-  `live/decisions/decisions.jsonl`, and `live report` summarizes them.
+  `live/decisions/decisions.jsonl`, and `live report` summarizes them. It owns
+  the shared live account for its whole run (`data/live/shared-account.lock` in
+  the checkout, whatever `--data-root` says), so it and the cohort refuse each
+  other. It refuses (exit 2) before any venue call when a flag, the credentials
+  or the bundle is missing, or another live backend owns the account. A strategy
+  failure on an armed bar is recorded as `intent_error` and stops it (exit 1);
+  the run JSON reports the open `position_qty` at stop.
 - **`live request`** is a dry run by default. Its actions are `manual_enter`,
   `manual_close`, `transition_drain` and `stage_profile` (with `--settings`).
   `--submit` publishes, and needs both authority flags for every action except
