@@ -540,7 +540,8 @@ def test_without_the_opt_in_the_start_hold_alerts_and_stays_alive(
     title, body = recorder.sent[0]
     assert title == "HYPERVECTOR SUPERVISOR HELD AT START"
     assert body.startswith("operator_signal_stop; ")
-    assert "cohort_resume_after_reboot.py" in body
+    assert "hypervector live supervisor resume" in body
+    assert "--yes --enabled --i-accept-live-risk" in body
     # The SIGTERM that ended the hold latched nothing new.
     assert (tmp_path / "events_restart_state.json").read_bytes() == before
 

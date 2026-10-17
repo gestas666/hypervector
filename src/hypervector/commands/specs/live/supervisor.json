@@ -1,6 +1,7 @@
 {
   "schema": 2,
-  "help": "Cohort supervision: status, watch, supervise, print-launchd",
+  "help": "Cohort supervision: status, watch, supervise, print-launchd, resume",
+  "description": "Forward one supervisor action. resume checks the host after a reboot and is a dry run unless given --yes with both --enabled and --i-accept-live-risk, because it kickstarts the supervise agent that starts the armed backend (resume exits 0 ready, 1 refused, 2 failed or refused authority).",
   "section": "supervise",
   "kind": "passthrough",
   "handler": "hypervector.commands.services:cmd_supervisor",
@@ -23,7 +24,7 @@
       "options": {
         "nargs": "...",
         "default": [],
-        "help": "status | watch | supervise -- CMD... | print-launchd, followed by service options"
+        "help": "status | watch | supervise -- CMD... | print-launchd | resume [--yes --enabled --i-accept-live-risk], followed by service options"
       }
     }
   ]

@@ -197,6 +197,17 @@ def build_parser() -> argparse.ArgumentParser:
         nargs=argparse.REMAINDER,
         help="-- followed by the arguments for that subcommand",
     )
+
+    resume = commands.add_parser(
+        "resume",
+        help="after a host restart: check, then (--yes --enabled "
+        "--i-accept-live-risk) archive the hold and kickstart supervise",
+    )
+    resume.add_argument(
+        "arguments",
+        nargs=argparse.REMAINDER,
+        help="resume options; dry run unless --yes with both live-authority flags",
+    )
     return parser
 
 
@@ -245,7 +256,16 @@ def _strip_separator(values: Sequence[str]) -> list[str]:
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run one subcommand from the repository root."""
-    args = build_parser().parse_args(argv)
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments[:1] == ["resume"]:
+        # Imported only here: the resume helper is an operator tool, never part of
+        # the status, watch or supervise loops.
+        from hypervector_supervision.cohort_resume_after_reboot import (
+            main as resume_main,
+        )
+
+        return resume_main(arguments[1:])
+    args = build_parser().parse_args(arguments)
     os.chdir(REPOSITORY_ROOT)
     paths = SupervisorPaths()
 

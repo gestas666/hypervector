@@ -50,6 +50,10 @@ REFUSED = {
     "live start",
     "live request",
     "live audit-delta",
+    "live validate",
+    "live backup",
+    "live backup-verify",
+    "live rollback-profile",
     "live supervisor",
 }
 ALL_SPECS = [(f"{g} {a}", spec) for g, a, spec in command_specs()]

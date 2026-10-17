@@ -94,3 +94,31 @@ def test_main_treats_operator_interrupt_as_a_clean_stop() -> None:
         assert module.main([]) == 130
     finally:
         module.run_checkpoint_loop = original
+
+
+def test_defaults_read_the_paper_ledger_and_write_the_observer_directory() -> None:
+    """The observer never reads the live ledger or overwrites the live checkpoint."""
+    module = _load_module()
+    args = module.build_parser().parse_args([])
+    assert args.decisions == Path("data/paper/cohort/decisions.jsonl")
+    assert args.out == Path("data/runtime/cohort_observer/latest_checkpoint.json")
+
+
+def test_an_out_owned_by_a_live_checkpoint_writer_is_refused(
+    tmp_path: Path, capsys
+) -> None:
+    """A live checkpoint writer's output can never be overwritten by the observer."""
+    from hypervector.runtime_lock import cohort_checkpoint_runtime_lock
+
+    module = _load_module()
+    output = tmp_path / "latest_checkpoint.json"
+    calls: list[object] = []
+    module.run_checkpoint_loop = lambda args: calls.append(args) or 0
+    with cohort_checkpoint_runtime_lock(output):
+        assert module.main(["--out", str(output), "--once"]) == 2
+    assert calls == []
+    assert not output.exists()
+    assert "active live checkpoint writer" in capsys.readouterr().err
+    # Once the live writer is gone the same output is accepted.
+    assert module.main(["--out", str(output), "--once"]) == 0
+    assert len(calls) == 1

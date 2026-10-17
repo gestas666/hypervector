@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from collections.abc import Mapping
-from importlib.util import module_from_spec, spec_from_file_location
+from importlib import import_module
 import json
 from pathlib import Path
-import sys
 from types import ModuleType
 from types import SimpleNamespace
 
@@ -18,16 +17,8 @@ from hypervector.research.hip3_roster_observer import ACTIVE_HIP3_MARKETS
 from test_hip3_roster_observer import _Reader
 
 
-SCRIPT = Path(__file__).parents[1] / "scripts" / "hip3_roster_observer.py"
-
-
 def _load_module() -> ModuleType:
-    spec = spec_from_file_location("hip3_roster_observer_script", SCRIPT)
-    assert spec is not None and spec.loader is not None
-    module = module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+    return import_module("hypervector.operations.hip3_roster_observer")
 
 
 class _Observer:

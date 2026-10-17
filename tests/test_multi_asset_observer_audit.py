@@ -483,3 +483,13 @@ def _load_script() -> ModuleType:
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def test_observer_audit_defaults_to_the_paper_ledger() -> None:
+    """The observer audit reads the paper ledger unless told otherwise."""
+    from hypervector.operations.multi_asset_bidirectional_observer_audit import (
+        build_parser,
+    )
+
+    args = build_parser().parse_args(["--out", "audit.json"])
+    assert args.decisions == Path("data/paper/cohort/decisions.jsonl")

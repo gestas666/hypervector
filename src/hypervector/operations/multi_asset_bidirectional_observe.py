@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 import sys
@@ -56,9 +56,6 @@ from hypervector.runtime_lock import (
     bidirectional_observer_runtime_lock,
 )
 
-_DEFAULT_CONFIG = Path(
-    "configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml"
-)
 _DEFAULT_BACKTEST_LAB = Path("../backtest-lab/backtest_lab")
 
 
@@ -81,7 +78,9 @@ class _EmptyCanonicalRegimeCollector:
 def build_parser() -> argparse.ArgumentParser:
     """Build an observe-only command surface without live-arm flags."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=_DEFAULT_CONFIG)
+    parser.add_argument(
+        "--config", type=Path, required=True, help="cohort profile TOML to observe"
+    )
     parser.add_argument(
         "--backtest-lab-root",
         type=Path,
@@ -252,10 +251,11 @@ def _build_observer_poller(
     )
 
 
-def main() -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     """Run the observer and report bounded fail-closed errors."""
+    args = build_parser().parse_args(argv)
     try:
-        run_observer(build_parser().parse_args())
+        run_observer(args)
         return 0
     except KeyboardInterrupt:
         return 130

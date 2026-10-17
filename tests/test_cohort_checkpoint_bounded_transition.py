@@ -24,6 +24,9 @@ V66_CONFIG = Path(
 )
 
 
+_CHECKPOINT_CONFIG = ["--config", "configs/multi_asset_bidirectional_canary.toml"]
+
+
 def _load_checkpoint_script() -> ModuleType:
     """Load the checkpoint entry point without executing its CLI."""
     spec = spec_from_file_location("bounded_transition_checkpoint", CHECKPOINT_SCRIPT)
@@ -110,8 +113,7 @@ def test_once_flag_can_force_a_bounded_current_run_checkpoint(tmp_path: Path) ->
         return {"status": "ready"}
 
     module.publish_live_checkpoint = publish
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--out",
             str(tmp_path / "latest.json"),
             "--run-id",

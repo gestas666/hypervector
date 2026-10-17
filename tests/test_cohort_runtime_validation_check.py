@@ -8,8 +8,11 @@ import tomllib
 
 import pytest
 
-import cohort_runtime_validation_check as check
-from cohort_supervisor_models import REPOSITORY_ROOT, SupervisorPaths
+import hypervector.operations.cohort_runtime_validation_check as check
+from hypervector_supervision.cohort_supervisor_models import (
+    REPOSITORY_ROOT,
+    SupervisorPaths,
+)
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfigError,
     load_multi_asset_live_config,

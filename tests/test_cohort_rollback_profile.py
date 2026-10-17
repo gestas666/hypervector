@@ -10,7 +10,7 @@ import tomllib
 
 import pytest
 
-import cohort_rollback_profile as rollback
+import hypervector.operations.cohort_rollback_profile as rollback
 from hypervector.live.cohort_prestart_backup import CohortPrestartBackupResult
 from hypervector.live.cohort_profile_change_approval import (
     ProfileChangeApprovalError,

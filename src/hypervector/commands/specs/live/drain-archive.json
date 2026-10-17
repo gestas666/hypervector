@@ -1,0 +1,63 @@
+{
+  "schema": 2,
+  "help": "Archive completed transition-drain evidence after the backend stops",
+  "description": "Dry run unless --yes. Takes exclusive cohort runtime ownership, so it refuses while a backend runs. Exit 0 done, 2 refused.",
+  "section": "transition",
+  "kind": "operation",
+  "operation": "hypervector.operations.cohort_transition_drain_archive",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--expected-run-id"
+      ],
+      "options": {
+        "dest": "expected_run_id",
+        "default": null,
+        "help": "run ID the drained transition must belong to"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--state"
+      ],
+      "options": {
+        "dest": "state",
+        "type": "Path",
+        "default": null,
+        "help": "transition-drain state JSON beside the cohort ledger"
+      },
+      "data_default": "live/bidirectional_cohort/transition_drain.json"
+    },
+    {
+      "flags": [
+        "--archive-root"
+      ],
+      "options": {
+        "dest": "archive_root",
+        "type": "Path",
+        "default": null,
+        "help": "directory that receives archived drain evidence"
+      },
+      "data_default": "backups/bidirectional_cohort/transition_drains"
+    },
+    {
+      "flags": [
+        "--yes"
+      ],
+      "options": {
+        "dest": "yes",
+        "action": "store_true",
+        "default": false,
+        "help": "archive and clear the next-start blocker (default: dry run)"
+      }
+    }
+  ]
+}

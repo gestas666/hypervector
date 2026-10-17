@@ -1,0 +1,110 @@
+{
+  "schema": 2,
+  "help": "Resumable paired book/trade backfill over a UTC window",
+  "description": "Fetch 0xArchive evidence in fixed chunks, skipping chunks already archived, with JSONL progress lines and one summary line. Exit 0 when the job completed, 1 when it is incomplete or failed.",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.archive:cmd_backfill",
+  "authority": "none",
+  "environment": [
+    "oxa"
+  ],
+  "data_root": "honored",
+  "include": [
+    "window"
+  ],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC",
+        "help": "Hyperliquid coin (core) or deployer:asset (HIP-3)"
+      }
+    },
+    {
+      "flags": [
+        "--market-family"
+      ],
+      "options": {
+        "dest": "market_family",
+        "choices": [
+          "core",
+          "hip3"
+        ],
+        "default": "core",
+        "help": "0xArchive market family: core perps or HIP-3 builder markets"
+      }
+    },
+    {
+      "flags": [
+        "--chunk-minutes"
+      ],
+      "options": {
+        "dest": "chunk_minutes",
+        "type": "int",
+        "default": 60,
+        "help": "minutes per archived evidence bundle (must match the backfill)"
+      }
+    },
+    {
+      "flags": [
+        "--workers"
+      ],
+      "options": {
+        "dest": "workers",
+        "type": "int",
+        "default": 4,
+        "help": "concurrent fetch workers (1..10)"
+      }
+    },
+    {
+      "flags": [
+        "--retries"
+      ],
+      "options": {
+        "dest": "retries",
+        "type": "int",
+        "default": 10,
+        "help": "attempts per chunk before the job fails"
+      }
+    },
+    {
+      "flags": [
+        "--include-prices"
+      ],
+      "options": {
+        "dest": "include_prices",
+        "action": "store_true",
+        "default": false,
+        "help": "also fetch mark/oracle price evidence"
+      }
+    },
+    {
+      "flags": [
+        "--prices-only"
+      ],
+      "options": {
+        "dest": "prices_only",
+        "action": "store_true",
+        "default": false,
+        "help": "fetch only mark/oracle price evidence"
+      }
+    },
+    {
+      "flags": [
+        "--books-only"
+      ],
+      "options": {
+        "dest": "books_only",
+        "action": "store_true",
+        "default": false,
+        "help": "fetch only orderbook evidence (no trades)"
+      }
+    }
+  ]
+}

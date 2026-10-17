@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from importlib.util import module_from_spec, spec_from_file_location
+from importlib import import_module
 import json
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -10,16 +10,11 @@ from types import ModuleType, SimpleNamespace
 import pytest
 
 from hypervector.live.cohort_prestart_backup import CohortPrestartBackupError
-
-SCRIPT = Path(__file__).parents[1] / "scripts/cohort_prechange_backup.py"
+from hypervector_supervision.cohort_supervisor_models import REPOSITORY_ROOT
 
 
 def _load_module() -> ModuleType:
-    spec = spec_from_file_location("cohort_prechange_backup", SCRIPT)
-    assert spec is not None and spec.loader is not None
-    module = module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    return import_module("hypervector.operations.cohort_prechange_backup")
 
 
 def test_snapshot_uses_observe_mode_and_reports_verified_identity(
@@ -77,6 +72,8 @@ def test_snapshot_uses_observe_mode_and_reports_verified_identity(
 
     payload = json.loads(capsys.readouterr().out)
     assert calls["load"] == (config_path, "observe")
+    # The checkout root, never the package directory a parents[1] would give.
+    assert calls["discover"] == (REPOSITORY_ROOT, provider_root.resolve())
     assert calls["create"] == (config, {"engine": tmp_path / "engine.py"})
     assert payload == {
         "bundle": str(bundle),

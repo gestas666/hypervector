@@ -15,6 +15,9 @@ from test_multi_asset_live_audit import _asset_rows, _cohort_rows
 from test_multi_asset_bidirectional_live_checkpoint_script import _load_module
 
 
+_CHECKPOINT_CONFIG = ["--config", "configs/multi_asset_bidirectional_canary.toml"]
+
+
 @pytest.mark.parametrize("failure", [False, True])
 def test_once_import_status_reaches_real_publication(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: bool
@@ -33,8 +36,7 @@ def test_once_import_status_reaches_real_publication(
             raise module.ResearchSyncError("database locked")
         return {"imported_events": 4}
 
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--once",
             "--research-database",
             str(tmp_path / "db"),
@@ -68,8 +70,7 @@ def test_continuous_deferral_survives_log_consumption(
     def stop(_seconds: float) -> None:
         raise RuntimeError("bounded test stop")
 
-    args = module.build_parser().parse_args(
-        ["--research-database", str(tmp_path / "db"), "--out", str(tmp_path / "out")]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--research-database", str(tmp_path / "db"), "--out", str(tmp_path / "out")]
     )
     with pytest.raises(RuntimeError, match="bounded test stop"):
         module.run_checkpoint_loop(args, sync_fn=lambda *_: {}, sleep_fn=stop)

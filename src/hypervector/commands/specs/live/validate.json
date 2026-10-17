@@ -1,0 +1,66 @@
+{
+  "schema": 2,
+  "help": "Offline runtime validation of a profile, as the live runner sees it",
+  "description": "Reproduce the live runner's construction-time validation without credentials or a venue client. Exit 0 accepted, 1 runner objection, 2 config refusal, 3 book-level advisory (report-only; the runner never reads it).",
+  "section": "transition",
+  "kind": "operation",
+  "operation": "hypervector.operations.cohort_runtime_validation_check",
+  "authority": "none",
+  "environment": [],
+  "data_root": "refused",
+  "data_root_reason": "the profile paths are fixed by the profile and the supervisor",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "type": "Path",
+        "default": null,
+        "help": "cohort profile TOML to validate"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--mode"
+      ],
+      "options": {
+        "dest": "mode",
+        "choices": [
+          "live",
+          "observe"
+        ],
+        "default": "live",
+        "help": "validate as an armed start (live) or an observer (observe)"
+      }
+    },
+    {
+      "flags": [
+        "--equity"
+      ],
+      "options": {
+        "dest": "equity",
+        "type": "float",
+        "default": null,
+        "help": "account equity in USD for the book-level risk and margin check"
+      }
+    },
+    {
+      "flags": [
+        "--backtest-lab-root"
+      ],
+      "options": {
+        "dest": "backtest_lab_root",
+        "type": "Path",
+        "default": null,
+        "help": "backtest-lab provider package directory (default: beside the repository root, as the supervised start uses)"
+      }
+    }
+  ]
+}

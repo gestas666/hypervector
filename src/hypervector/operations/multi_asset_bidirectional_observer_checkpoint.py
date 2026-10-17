@@ -13,9 +13,13 @@ from hypervector.research.cohort_observer_checkpoint import (
     publish_observer_checkpoint,
     publish_unavailable_observer_checkpoint,
 )
+from hypervector.runtime_lock import cohort_checkpoint_writer_active
 
-_DEFAULT_DECISIONS = Path("data/live/bidirectional_cohort/decisions.jsonl")
-_DEFAULT_OUTPUT = Path("data/runtime/bidirectional_cohort/latest_checkpoint.json")
+# The paper observer ledger (paper observe's default ledger root) and the
+# observer's own runtime directory: never the live ledger or live checkpoint.
+_DEFAULT_DECISIONS = Path("data/paper/cohort/decisions.jsonl")
+_DEFAULT_OUTPUT = Path("data/runtime/cohort_observer/latest_checkpoint.json")
+EXIT_REFUSED = 2
 
 PublishFn = Callable[..., dict[str, object]]
 
@@ -54,10 +58,25 @@ def run_checkpoint_loop(
         sleep_fn(args.interval_seconds)
 
 
+def refuse_live_checkpoint_output(out: Path) -> str | None:
+    """Name the conflict when a live checkpoint writer owns ``out``, else None."""
+    if cohort_checkpoint_writer_active(out):
+        return (
+            f"{out} is owned by an active live checkpoint writer; choose an "
+            "observer --out (default: data/runtime/cohort_observer/)"
+        )
+    return None
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run a bounded setup-analysis sidecar with no execution authority."""
+    args = build_parser().parse_args(argv)
     try:
-        return run_checkpoint_loop(build_parser().parse_args(argv))
+        refusal = refuse_live_checkpoint_output(args.out)
+        if refusal is not None:
+            print(f"observer checkpoint refused: {refusal}", file=sys.stderr)
+            return EXIT_REFUSED
+        return run_checkpoint_loop(args)
     except KeyboardInterrupt:
         return 130
     except (OSError, ValueError) as exc:

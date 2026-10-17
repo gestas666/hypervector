@@ -1,0 +1,97 @@
+{
+  "schema": 2,
+  "help": "Read-only hourly coverage audit of archived book/trade evidence",
+  "description": "Verify every expected evidence bundle in the window without fetching or creating anything. Prints complete, expected, present and every missing bundle start. An incomplete archive still exits 0.",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.archive:cmd_audit",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "window"
+  ],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC",
+        "help": "Hyperliquid coin (core) or deployer:asset (HIP-3)"
+      }
+    },
+    {
+      "flags": [
+        "--market-family"
+      ],
+      "options": {
+        "dest": "market_family",
+        "choices": [
+          "core",
+          "hip3"
+        ],
+        "default": "core",
+        "help": "0xArchive market family: core perps or HIP-3 builder markets"
+      }
+    },
+    {
+      "flags": [
+        "--depth"
+      ],
+      "options": {
+        "dest": "depth",
+        "type": "int",
+        "choices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "default": 20,
+        "help": "orderbook levels per side (1..20)"
+      }
+    },
+    {
+      "flags": [
+        "--books-only"
+      ],
+      "options": {
+        "dest": "books_only",
+        "action": "store_true",
+        "default": false,
+        "help": "audit only orderbook evidence (no trades)"
+      }
+    },
+    {
+      "flags": [
+        "--chunk-minutes"
+      ],
+      "options": {
+        "dest": "chunk_minutes",
+        "type": "int",
+        "default": 60,
+        "help": "minutes per archived evidence bundle (must match the backfill)"
+      }
+    }
+  ]
+}
