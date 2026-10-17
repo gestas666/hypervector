@@ -73,7 +73,20 @@ NO_ORDERS_NOTE = (
 EXPORT_START_NOTE = (
     "started from an existing bundle: data and search skipped, window not pinned"
 )
-WINDOW_FIELDS: tuple[str, ...] = ("symbol", "timeframe", "lookback_days", "bars")
+WINDOW_FIELDS: tuple[str, ...] = (
+    "symbol",
+    "timeframe",
+    "lookback_days",
+    "bars",
+    "start",
+    "end",
+)
+#: Export ``evaluation_window`` labels whose metrics cover only part of the
+#: window, and the ``meta.evaluation`` key that records that part.
+PARTIAL_EVALUATION_WINDOWS: dict[str, str] = {
+    "holdout": "holdout_window",
+    "train_in_sample": "train_window",
+}
 MODEL_METRICS: tuple[str, ...] = (
     "n_labels",
     "class_balance",
@@ -432,7 +445,8 @@ def _stage_argv(plan: Plan, stage: str, export_ref: str) -> list[str]:
     else:
         tune = ("tune", "strategy", "--strategy", plan.strategy, *market, *fees)
         search = (*tune, "--n-trials", args.n_trials, "--sampler", args.sampler)
-        search += hl_only
+        # The data stage pinned (and, when allowed, refreshed) the window.
+        search += (*hl_only, "--pin-cache")
     words: dict[str, tuple[object, ...]] = {
         "data": ("data", "history", *market, *hl_only, *refresh),
         "search": search,
@@ -702,6 +716,10 @@ class PipelineRun:
             strict_hl_only=bool(args.strict_hl_only),
             force_refresh=False,
             export_best=True,
+            # The data stage pinned the window and is the only stage that may
+            # fetch: serve that cached window as is and never reach the network.
+            pin_cache=True,
+            allow_network=False,
         )
         if result.export_dir is None:
             raise RuntimeError("the tune search exported no strategy bundle")
@@ -992,50 +1010,125 @@ def parity_block(
     export_report: Mapping[str, Any],
     nautilus: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """VectorBT (export metrics) next to Nautilus; report-only, never a gate.
+    """VectorBT next to Nautilus on one window; report-only, never a gate.
 
-    ``window_mismatch`` is true when the Nautilus bars window differs from the
-    pinned window (or, when the run started from a bundle, from the window the
-    bundle records) on any field both sides report.
+    The VectorBT side is the bundle's full-window re-measure of the selected
+    trial when it records one (an autotune bundle with a holdout); otherwise it
+    is the export metrics, labelled with the window they actually cover (the
+    holdout or training slice for an autotune bundle, the data window else).
+    A holdout-only bundle's metrics are kept as ``vectorbt_export`` next to the
+    re-measure.
+
+    ``window_mismatch`` is true when the Nautilus window, the VectorBT window
+    and the pinned window (or, when the run started from a bundle, the data
+    window the bundle records) disagree on any field both sides of a pair
+    report.
     """
     meta = export_report.get("meta") or {}
     metrics = export_report.get("metrics") or {}
-    provenance = meta.get("data_provenance") or {}
-    vectorbt = {
-        "source": "export metrics",
-        "net_pnl": metrics.get("net_pnl"),
-        "trades": metrics.get("trade_count"),
-        "window": {
-            "symbol": meta.get("symbol"),
-            "timeframe": meta.get("timeframe"),
-            "lookback_days": meta.get("lookback_days"),
-            "bars": provenance.get("bar_count")
-            if isinstance(provenance, Mapping)
-            else None,
-        },
-    }
-    reference = dict(pinned) if pinned else dict(vectorbt["window"])
-    window = nautilus.get("window") or {}
-    compared = [
-        field
-        for field in WINDOW_FIELDS
-        if reference.get(field) is not None and window.get(field) is not None
-    ]
-    mismatched = [
-        field
-        for field in compared
-        if _window_value(field, reference[field]) != _window_value(field, window[field])
-    ]
-    return {
+    evaluation = meta.get("evaluation")
+    evaluation = evaluation if isinstance(evaluation, Mapping) else {}
+    data_window = _export_data_window(meta)
+    exported: dict[str, Any] | None = _export_metrics_entry(
+        meta, metrics, evaluation, data_window
+    )
+    full_metrics = evaluation.get("full_window_metrics")
+    if isinstance(full_metrics, Mapping):
+        vectorbt: dict[str, Any] = {
+            "source": "full-window re-measure",
+            "evaluation_window": "full",
+            "net_pnl": full_metrics.get("net_pnl"),
+            "trades": full_metrics.get("trade_count"),
+            "window": _evaluation_window(
+                meta, evaluation.get("full_window"), data_window
+            ),
+        }
+    else:
+        vectorbt, exported = dict(exported or {}), None
+    reference = dict(pinned) if pinned else dict(data_window)
+    window = dict(nautilus.get("window") or {})
+    compared: set[str] = set()
+    mismatched: set[str] = set()
+    for left, right in (
+        (reference, window),
+        (vectorbt["window"], window),
+        (reference, vectorbt["window"]),
+    ):
+        for field in WINDOW_FIELDS:
+            if left.get(field) is None or right.get(field) is None:
+                continue
+            compared.add(field)
+            if _window_value(field, left[field]) != _window_value(field, right[field]):
+                mismatched.add(field)
+    block: dict[str, Any] = {
         "report_only": True,
         "note": PARITY_NOTE,
         "vectorbt": vectorbt,
         "nautilus": dict(nautilus),
         "reference_window": "pinned" if pinned else "export",
         "window_mismatch": bool(mismatched) if compared else None,
-        "window_mismatch_fields": mismatched,
-        "compared_fields": compared,
+        "window_mismatch_fields": [f for f in WINDOW_FIELDS if f in mismatched],
+        "compared_fields": [f for f in WINDOW_FIELDS if f in compared],
     }
+    if exported is not None:
+        block["vectorbt_export"] = exported
+    return block
+
+
+def _export_data_window(meta: Mapping[str, Any]) -> dict[str, Any]:
+    """The data window a bundle records (its provenance), in pinned-window fields."""
+    provenance = meta.get("data_provenance")
+    provenance = provenance if isinstance(provenance, Mapping) else {}
+    return {
+        "symbol": meta.get("symbol"),
+        "timeframe": meta.get("timeframe"),
+        "lookback_days": meta.get("lookback_days"),
+        "bars": provenance.get("bar_count"),
+        "start": provenance.get("start"),
+        "end": provenance.get("end"),
+    }
+
+
+def _evaluation_window(
+    meta: Mapping[str, Any], recorded: object, fallback: Mapping[str, Any]
+) -> dict[str, Any]:
+    """A ``bars_window`` record (first/last bar, count) in pinned-window fields."""
+    if not isinstance(recorded, Mapping):
+        return dict(fallback)
+    return {
+        "symbol": meta.get("symbol"),
+        "timeframe": meta.get("timeframe"),
+        "lookback_days": meta.get("lookback_days"),
+        "bars": recorded.get("bar_count"),
+        "start": recorded.get("first_bar_utc"),
+        "end": recorded.get("last_bar_utc"),
+    }
+
+
+def _export_metrics_entry(
+    meta: Mapping[str, Any],
+    metrics: Mapping[str, Any],
+    evaluation: Mapping[str, Any],
+    data_window: Mapping[str, Any],
+) -> dict[str, Any]:
+    """The export metrics with the window they were scored on."""
+    label = metrics.get("evaluation_window") or evaluation.get("evaluation_window")
+    entry: dict[str, Any] = {
+        "source": "export metrics",
+        "net_pnl": metrics.get("net_pnl"),
+        "trades": metrics.get("trade_count"),
+    }
+    if label is not None:
+        entry["evaluation_window"] = label
+    part = PARTIAL_EVALUATION_WINDOWS.get(str(label)) if label is not None else None
+    if part is None:
+        entry["window"] = dict(data_window)
+    else:
+        # Scored on a slice: without its record the bars are unknown, never
+        # the full window's count.
+        unknown = {**data_window, "bars": None, "start": None, "end": None}
+        entry["window"] = _evaluation_window(meta, evaluation.get(part), unknown)
+    return entry
 
 
 def _window_value(field: str, value: object) -> object:
@@ -1046,6 +1139,15 @@ def _window_value(field: str, value: object) -> object:
             return int(value)  # type: ignore[call-overload]
         except (TypeError, ValueError):
             return value
+    if field in ("start", "end"):
+        # ISO strings from different writers ("T" or " ", "Z" or "+00:00").
+        try:
+            stamp = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError:
+            return str(value)
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=UTC)
+        return stamp.astimezone(UTC).isoformat()
     return str(value)
 
 

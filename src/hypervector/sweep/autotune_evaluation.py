@@ -17,7 +17,7 @@ from hypervector.sweep.autotune_sampling import (
     effective_exit_key,
 )
 from hypervector.sweep.costs import CostModel
-from hypervector.sweep.exits import ExitConfig
+from hypervector.sweep.exits import ExitConfig, stop_distance_frac
 from hypervector.sweep.sizing import RiskConfig
 
 _INITIAL_CASH = 10_000.0
@@ -202,8 +202,9 @@ class TrialEvaluator:
     ) -> tuple[dict[str, object], dict[str, object]]:
         """Measure one configuration on ``bars[evaluation_start:]``.
 
-        Signals are always built on every bar (earlier bars act as causal
-        warmup); only the evaluation window is scored.
+        Signals and stop distances are always built on every bar (earlier bars
+        act as causal warmup, so an ATR stop is not cold at the window start);
+        only the evaluation window is scored.
         """
         entries, exit_signals, tag = self.strategy.build_signals(self.bars, **params)
         direction = self._direction(tag)
@@ -214,6 +215,10 @@ class TrialEvaluator:
         contract = HypervelocityContract() if self.hypervelocity else None
         exit_config, leverage = self._exits(exits, contract)
         venue = {} if self.symbol is None else {"symbol": self.symbol}
+        warmup: dict[str, object] = {}
+        if evaluation_start and contract is None:
+            stops = stop_distance_frac(self.bars, exit_config)
+            warmup["stop_distance"] = stops.iloc[evaluation_start:]
         metrics = self.calculate(
             window["close"].astype(float),
             entries,
@@ -229,6 +234,7 @@ class TrialEvaluator:
             fixed_margin_fraction=contract.margin_fraction if contract else None,
             strategy_managed_exits=self.hypervelocity,
             **venue,
+            **warmup,
         )
         if contract is not None:
             # The run used strategy-managed exits with no stop; report that

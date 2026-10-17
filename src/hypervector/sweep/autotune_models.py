@@ -74,6 +74,8 @@ class SearchSettings:
     #: refresh only windows older than that; neither keeps the loader default.
     pin_cache: bool = False
     max_cache_age_hours: float | None = None
+    #: ``False`` reads only the local cache (a miss fails, nothing is fetched).
+    allow_network: bool = True
 
     @property
     def requested_fee_model(self) -> str:

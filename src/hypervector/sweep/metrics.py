@@ -8,9 +8,14 @@ Model (reported on every result so rows can be told apart):
   and the funding hold time of each trade.
 * **Leverage.** Position notional is ``size x init_cash`` (non-compounding).
   VectorBT caps long buys at free cash, so its broker is funded with a large
-  virtual cash base and every reported figure (P&L, drawdown, Sharpe) is
-  measured on the real equity ``init_cash + (value - virtual_cash)``. Leverage
-  above the Hyperliquid venue cap is refused (ValueError), never clamped.
+  virtual cash base and every reported figure (P&L, drawdown, Sharpe, min
+  equity, wins/losses) is measured on the real equity
+  ``init_cash + (value - virtual_cash)`` net of funding. Leverage above the
+  Hyperliquid venue cap is refused (ValueError), never clamped.
+* **Funding.** Each trade pays ``|notional| x |hourly rate| x hold hours``,
+  accrued into real equity over its held bars (entry to exit, in proportion
+  to elapsed bar time), so the drag shows in the equity curve and not only in
+  the final P&L. A trade is a win or a loss on its P&L net of its funding.
 * **Isolated liquidation.** Each position carries a liquidation barrier at the
   adverse move where its margin (``notional / leverage``) falls to the venue
   maintenance margin; it merges with the strategy stop (whichever is nearer).
@@ -31,7 +36,7 @@ import numpy as np
 import pandas as pd
 
 from hypervector.sweep.costs import DEFAULT_COST_MODEL, CostModel, resolve_cost_model
-from hypervector.sweep.exits import ExitConfig, apply_exit_mode
+from hypervector.sweep.exits import ExitConfig, apply_exit_mode, tp_distance_frac
 from hypervector.sweep.sizing import (
     RiskConfig,
     conviction_series,
@@ -86,6 +91,7 @@ def compute_trial_metrics(
     symbol: str | None = None,
     venue_max_leverage: float | None = None,
     intrabar_stops: bool = True,
+    stop_distance: pd.Series | None = None,
 ) -> dict[str, Any]:
     """VectorBT portfolio with costs, TP/SL, leverage, liquidation and funding drag.
 
@@ -94,6 +100,10 @@ def compute_trial_metrics(
     maintenance margin; without them the charter maximum (40x) bounds the
     leverage and liquidation is placed at a full loss of margin.
     ``intrabar_stops=False`` reproduces legacy close-only, zero-slippage stops.
+    ``stop_distance`` replaces the per-bar stop distance computed on ``df``
+    (the take profit follows it), e.g. one computed on a longer history so an
+    ATR stop is warmed up when ``df`` is a slice; bars it lacks keep the
+    distance computed on ``df``.
     """
     import vectorbt as vbt
 
@@ -128,6 +138,10 @@ def compute_trial_metrics(
         entries, exits, sl_frac, tp_frac = apply_exit_mode(
             work, entries, exits, direction=direction, cfg=exit_cfg
         )
+        if stop_distance is not None:
+            warm = pd.Series(stop_distance, dtype=float).reindex(close.index)
+            sl_frac = warm.fillna(sl_frac)
+            tp_frac = tp_distance_frac(sl_frac, exit_cfg)
 
     conv = conviction_series(close.index, conviction, risk_cfg)
     risk_pct = risk_pct_from_conviction(conv, risk_cfg)
@@ -199,25 +213,41 @@ def compute_trial_metrics(
     real_equity = init_cash + (pf.value().to_numpy(dtype=float) - virtual_cash)
     margin_credit = _loss_beyond_margin(records, position_leverage, len(real_equity))
     real_equity = real_equity + margin_credit
-    net_pnl = float(real_equity[-1] - init_cash) if len(real_equity) else 0.0
-    sharpe = _sharpe(real_equity, init_cash, freq)
-    max_dd = _max_drawdown(real_equity, init_cash)
-    min_equity = float(min(init_cash, real_equity.min())) if len(real_equity) else init_cash
 
     trade_count = int(len(records))
-    pnls = records["pnl"].astype(float)
-    wins = int((pnls > 0).sum())
-    losses = int((pnls <= 0).sum())
-    win_pct = float(wins) / trade_count if trade_count else 0.0
     entry_idx = records["entry_idx"].astype(np.int64)
     exit_idx = records["exit_idx"].astype(np.int64)
     notional = np.abs(records["size"] * records["entry_price"]).astype(float)
 
-    funding_cost = 0.0
+    trade_funding = np.zeros(trade_count)
     if trade_count and apply_costs and (cost.funding_rate_1h or cost.funding_rate_8h):
-        funding_cost = _funding(notional, entry_idx, exit_idx, bar_ns, bar_minutes, cost)
-        net_pnl -= funding_cost
+        trade_funding = _trade_funding(
+            notional, entry_idx, exit_idx, bar_ns, bar_minutes, cost
+        )
+        real_equity = real_equity - _funding_curve(
+            trade_funding, entry_idx, exit_idx, bar_ns, len(real_equity)
+        )
+    funding_cost = float(trade_funding.sum())
+    net_pnl = float(real_equity[-1] - init_cash) if len(real_equity) else 0.0
+    sharpe = _sharpe(real_equity, init_cash, freq)
+    max_dd = _max_drawdown(real_equity, init_cash)
+    min_equity = float(min(init_cash, real_equity.min())) if len(real_equity) else init_cash
     total_return = net_pnl / init_cash
+
+    # Per-trade P&L as real equity books it: losses capped at the margin, net
+    # of the trade's own funding.
+    pnls = (
+        records["pnl"].astype(float)
+        + _trade_loss_beyond_margin(records, position_leverage)
+        - trade_funding
+    )
+    wins = int((pnls > 0).sum())
+    losses = int((pnls <= 0).sum())
+    win_pct = float(wins) / trade_count if trade_count else 0.0
+    gross_loss = float(-pnls[pnls < 0].sum())
+    profit_factor = (
+        float(pnls[pnls > 0].sum()) / gross_loss if gross_loss > 0.0 else None
+    )
 
     liquidations = _count_liquidations(
         records, close.to_numpy(dtype=float), liq_frac, sl_raw, direction
@@ -249,6 +279,7 @@ def compute_trial_metrics(
         "losses": losses,
         "win_pct": win_pct * 100.0 if win_pct <= 1.0 else win_pct,
         "max_drawdown": max_dd,
+        "profit_factor": profit_factor,
         "funding_cost": float(funding_cost),
         "avg_risk_pct": avg_risk * 100.0,
         "requested_risk_pct": requested_risk * 100.0,
@@ -354,6 +385,18 @@ def _loss_beyond_margin(
     credit = np.zeros(n_bars)
     if not len(records) or not n_bars:
         return credit
+    excess = _trade_loss_beyond_margin(records, position_leverage)
+    hit = excess > 0.0
+    np.add.at(credit, records["exit_idx"].astype(np.int64)[hit], excess[hit])
+    return np.cumsum(credit)
+
+
+def _trade_loss_beyond_margin(
+    records: np.ndarray, position_leverage: np.ndarray
+) -> np.ndarray:
+    """Per trade, the closed loss beyond its margin (zero for open trades)."""
+    if not len(records):
+        return np.zeros(0)
     entry_idx = records["entry_idx"].astype(np.int64)
     leverage = np.asarray(position_leverage, dtype=float)[entry_idx]
     notional = np.abs(records["size"] * records["entry_price"]).astype(float)
@@ -362,10 +405,7 @@ def _loss_beyond_margin(
             np.isfinite(leverage) & (leverage > 0.0), notional / leverage, np.inf
         )
     excess = np.maximum(-records["pnl"].astype(float) - margin, 0.0)
-    excess = np.where(records["status"] == 1, excess, 0.0)
-    hit = excess > 0.0
-    np.add.at(credit, records["exit_idx"].astype(np.int64)[hit], excess[hit])
-    return np.cumsum(credit)
+    return np.where(records["status"] == 1, excess, 0.0)
 
 
 def _require_unbound_cash(pf: Any, virtual_cash: float) -> None:
@@ -419,23 +459,59 @@ def _max_drawdown(real_equity: np.ndarray, init_cash: float) -> float:
     return max(value, -1.0) if math.isfinite(value) else 0.0
 
 
-def _funding(
+def _trade_funding(
     notional: np.ndarray,
     entry_idx: np.ndarray,
     exit_idx: np.ndarray,
     bar_ns: np.ndarray | None,
     bar_minutes: float,
     cost: CostModel,
-) -> float:
-    """Sum |notional| x |hourly rate| x hold hours over trades (hold >= 1 minute)."""
+) -> np.ndarray:
+    """Per trade |notional| x |hourly rate| x hold hours (hold >= 1 minute)."""
     if bar_ns is not None:
         hold_min = (bar_ns[exit_idx] - bar_ns[entry_idx]) / 6.0e10
     else:
         hold_min = (exit_idx - entry_idx) * bar_minutes
-    hold_min = np.maximum(hold_min.astype(float), 1.0)
-    live = notional > 0.0
-    periods = hold_min[live] / cost.minutes_per_funding
-    return float(np.sum(notional[live] * abs(cost.funding_rate_1h) * periods))
+    hold_min = np.maximum(np.asarray(hold_min, dtype=float), 1.0)
+    periods = hold_min / cost.minutes_per_funding
+    paid = np.asarray(notional, dtype=float) * abs(cost.funding_rate_1h) * periods
+    return np.where(np.asarray(notional) > 0.0, paid, 0.0)
+
+
+def _funding_curve(
+    trade_funding: np.ndarray,
+    entry_idx: np.ndarray,
+    exit_idx: np.ndarray,
+    bar_ns: np.ndarray | None,
+    n_bars: int,
+) -> np.ndarray:
+    """Cumulative funding paid by the end of each bar.
+
+    Each trade's funding accrues over bars ``entry+1 .. exit`` (``exit`` is the
+    last bar while a trade is still open) in proportion to elapsed bar time, so
+    the curve reaches the trade's total at its exit bar; a same-bar round trip
+    pays on its exit bar. The last value equals the summed trade funding.
+    """
+    if not n_bars:
+        return np.zeros(0)
+    if bar_ns is not None and len(bar_ns) == n_bars:
+        steps = np.diff(np.asarray(bar_ns, dtype=np.int64), prepend=bar_ns[0])
+        steps = np.maximum(steps, 0)  # unordered stamps never accrue negatively
+    else:
+        steps = np.ones(n_bars, dtype=np.int64)  # uniform bars without timestamps
+        steps[0] = 0
+    clock = np.cumsum(steps)  # exact integer elapsed time since the first bar
+    elapsed = steps.astype(float)
+    span = (clock[exit_idx] - clock[entry_idx]).astype(float)
+    spread = span > 0.0
+    accrual = np.zeros(n_bars)
+    np.add.at(accrual, exit_idx[~spread], trade_funding[~spread])
+    rate = np.zeros(n_bars + 1)
+    per_unit = trade_funding[spread] / span[spread]
+    np.add.at(rate, entry_idx[spread] + 1, per_unit)
+    np.add.at(rate, exit_idx[spread] + 1, -per_unit)
+    accrual += np.cumsum(rate)[:n_bars] * elapsed
+    return np.cumsum(accrual)
 
 
 def _count_liquidations(

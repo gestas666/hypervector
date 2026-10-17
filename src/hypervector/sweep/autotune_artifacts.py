@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 import json
 import logging
@@ -51,6 +51,11 @@ class _Selection:
     selection_basis: str
     evaluation_window: str
     best_metrics: dict[str, object]
+    #: The selected trial re-measured on every bar, only when ``best_metrics``
+    #: cover the holdout alone: the like-for-like VectorBT figure for engine
+    #: parity (Nautilus replays the whole window). In-sample; never a gate.
+    full_window_metrics: dict[str, object] | None = None
+    full_window_error: str | None = None
 
 
 def sampler_label(sampler: str) -> str:
@@ -67,17 +72,20 @@ def finish_search(
     exporter: Callable[..., Path],
     holdout: HoldoutMeasure | None = None,
     context: BoardContext | None = None,
+    full_window: HoldoutMeasure | None = None,
 ) -> AutotuneResult:
     """Preserve error evidence and refuse to call an all-failed search successful.
 
     The best trial is chosen by the same objective the search maximised. When
     a holdout measure is given, the chosen trial is measured once out of
-    sample; both windows are reported and neither is a gate.
+    sample; both windows are reported and neither is a gate. ``full_window``
+    then re-measures that trial on every bar, so engine parity can compare
+    like with like.
     """
     context = context or BoardContext()
     valid = [trial for trial in trials if trial["status"] == "ok"]
     valid.sort(key=lambda trial: selection_key(trial, settings.objective), reverse=True)
-    selection = _select(settings, valid, holdout)
+    selection = _with_full_window(_select(settings, valid, holdout), full_window)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
     label = sampler_label(settings.sampler)
     warnings = _warnings(settings, trials, valid, selection, context)
@@ -203,6 +211,19 @@ def _select(
     )
 
 
+def _with_full_window(
+    selection: _Selection, measure: HoldoutMeasure | None
+) -> _Selection:
+    """Add the selected trial's full-window metrics when it was scored on the holdout."""
+    if measure is None or selection.evaluation_window != "holdout":
+        return selection
+    try:
+        metrics = measure(selection.best["params"], selection.best["exit_cfg"])  # type: ignore[arg-type]
+    except Exception as exc:  # noqa: BLE001 - report-only, like the holdout measure
+        return replace(selection, full_window_error=f"{type(exc).__name__}: {exc}")
+    return replace(selection, full_window_metrics=metrics)
+
+
 def _trade_count(metrics: dict[str, object]) -> int | None:
     value = metrics.get("trade_count", metrics.get("trades"))
     try:
@@ -262,9 +283,12 @@ def _evaluation(
         "train_fraction": settings.train_fraction,
         "train_window": context.train_window or context.data_window,
         "holdout_window": context.holdout_window,
+        "full_window": context.data_window,
         "train_metrics": selection.train_metrics,
         "holdout_metrics": selection.holdout_metrics,
         "holdout_error": selection.holdout_error,
+        "full_window_metrics": selection.full_window_metrics,
+        "full_window_error": selection.full_window_error,
         "best_trial_number": selection.best.get("trial_number"),
         "board_path": str(board_path),
     }
@@ -343,6 +367,8 @@ def _publish_board(
         "best_train_metrics": selection.train_metrics,
         "best_holdout_metrics": selection.holdout_metrics,
         "holdout_error": selection.holdout_error,
+        "best_full_window_metrics": selection.full_window_metrics,
+        "full_window_error": selection.full_window_error,
         "best_trade_count": _trade_count(selection.train_metrics),
         "warnings": warnings,
         "all_trials": [

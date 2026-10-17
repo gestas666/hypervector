@@ -91,7 +91,9 @@ def _backtest_report(
             "net_pnl": round(m["net_pnl"], 2),
             "total_return_pct": round(m["total_return_pct"], 2),
             "sharpe_annualized": round(m["sharpe"], 2),
-            "max_drawdown_pct": round(m["max_drawdown"], 2),
+            # max_drawdown is a negative fraction; report it in percent like
+            # total_return_pct (-0.3729 -> -37.29).
+            "max_drawdown_pct": round(m["max_drawdown"] * 100.0, 2),
             "total_trades": m["trade_count"],
             "wins": m["wins"],
             "losses": m["losses"],
