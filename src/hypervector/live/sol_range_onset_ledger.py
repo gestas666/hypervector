@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 from array import array
+from collections import OrderedDict
+import io
 import json
+import math
 import os
 from collections.abc import Callable, Collection, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+import threading
 from typing import Literal
+import zlib
 
 SOL_LIVE_EVENT_TYPES = frozenset(
     {
@@ -220,11 +225,38 @@ class SolLiveLedger:
         return [record for record in self._iter_records(excluded) if predicate(record)]
 
     def _validated_record_count(self) -> int:
-        count = 0
-        for record in self._iter_records():
+        """Validate every existing row once and return how many there are.
+
+        Rows a previous instance in this process already validated are reused
+        only while the file is the same file and its validated prefix is
+        byte-identical (CRC-32), so the result equals a full validation.
+        """
+        if not self.path.exists():
+            return 0
+        key = _prefix_key(self.path)
+        prefix = _cached_prefix(key, self.path)
+        scan = _PrefixScan(self.path, prefix)
+        if prefix is not None:
+            self._envelope_codes = array("I", prefix.codes[: prefix.record_count])
+            self._envelope_keys = prefix.keys[: prefix.key_count]
+            self._envelope_code_by_key = {
+                envelope: code
+                for code, envelope in enumerate(self._envelope_keys)
+                if code
+            }
+        for line_number, line in scan.lines():
+            if not line.strip():
+                raise SolLiveLedgerError(f"live ledger line {line_number} is empty")
+            record = scan.screen(line, line_number)
+            if record.get("sequence") != line_number:
+                raise SolLiveLedgerError(
+                    f"live ledger line {line_number} sequence must equal {line_number}"
+                )
             self._remember_envelope(record)
-            count += 1
-        return count
+            if line.endswith("\n"):
+                scan.mark_boundary(line_number, len(self._envelope_keys))
+        _store_prefix(key, scan.boundary(self._envelope_codes, self._envelope_keys))
+        return scan.record_count
 
     def _remember_envelope(self, record: Mapping[str, object]) -> None:
         key = (record.get("event_type"), record.get("profile_fingerprint"))
@@ -364,7 +396,37 @@ def _validate_observer_path(path: Path) -> None:
         )
 
 
+def _reject_constant(token: str) -> object:
+    raise ValueError(f"non-finite JSON constant {token}")
+
+
+def _finite_float(text: str) -> float:
+    value = float(text)
+    if math.isinf(value):
+        raise ValueError(f"non-finite JSON number {text}")
+    return value
+
+
+# Decodes exactly as ``json.loads`` while refusing the only values
+# ``_validate_json_value`` can reject in decoded JSON: NaN/Infinity constants
+# and float literals that overflow. Any refusal or decode error falls back to
+# the strict path, so every rejected row keeps its exact error.
+_FINITE_DECODER = json.JSONDecoder(
+    parse_constant=_reject_constant, parse_float=_finite_float
+)
+
+
 def _decode_record(line: str, line_number: int) -> dict[str, object]:
+    try:
+        value: object = _FINITE_DECODER.decode(line)
+    except ValueError:
+        return _decode_record_strict(line, line_number)
+    if not isinstance(value, dict):
+        raise SolLiveLedgerError(f"live ledger line {line_number} must be an object")
+    return value
+
+
+def _decode_record_strict(line: str, line_number: int) -> dict[str, object]:
     try:
         value: object = json.loads(line)
     except json.JSONDecodeError as exc:
@@ -375,6 +437,162 @@ def _decode_record(line: str, line_number: int) -> dict[str, object]:
         raise SolLiveLedgerError(f"live ledger line {line_number} must be an object")
     _validate_json_value(value, path=f"line {line_number}")
     return value
+
+
+class _EnvelopeScreen:
+    """Validate rows exactly as ``_decode_record`` without building floats.
+
+    Construction keeps only each row's sequence and envelope, so float literals
+    are collected as text and checked for overflow instead of being converted.
+    A row is handed to the strict decoder whenever the screen cannot vouch for
+    it: any decode error or NaN/Infinity constant, a possibly overflowing float,
+    or a sequence that is not an integer or an envelope field that is not text.
+    """
+
+    def __init__(self) -> None:
+        self._floats: list[str] = []
+        self._decoder = json.JSONDecoder(
+            parse_constant=_reject_constant, parse_float=self._floats.append
+        )
+
+    def record(self, line: str, line_number: int) -> Mapping[str, object]:
+        floats = self._floats
+        floats.clear()
+        try:
+            value: object = self._decoder.decode(line)
+        except ValueError:
+            return _decode_record_strict(line, line_number)
+        if not isinstance(value, dict):
+            raise SolLiveLedgerError(f"live ledger line {line_number} must be an object")
+        if floats and _may_overflow(floats):
+            return _decode_record_strict(line, line_number)
+        # Integers and strings decode identically either way; any other
+        # sequence or envelope value is taken from the strict decode.
+        if (
+            type(value.get("sequence")) is not int
+            or type(value.get("event_type")) is not str
+            or type(value.get("profile_fingerprint")) is not str
+        ):
+            return _decode_record_strict(line, line_number)
+        return value
+
+
+def _may_overflow(floats: list[str]) -> bool:
+    """Return whether any float literal decodes to an infinity."""
+    joined = "".join(floats)
+    # Without an exponent, a literal shorter than 309 characters has at most
+    # 308 integer digits and therefore stays below the largest finite double.
+    if "e" in joined or "E" in joined or max(map(len, floats)) >= 309:
+        return any(map(math.isinf, map(float, floats)))
+    return False
+
+
+@dataclass(frozen=True)
+class _ValidatedPrefix:
+    """A byte-exact ledger prefix every row of which was validated."""
+
+    byte_offset: int
+    record_count: int
+    crc32: int
+    # Append-only arrays owned by the validating instance; only the first
+    # ``record_count`` codes and ``key_count`` keys belong to this prefix.
+    codes: array
+    keys: list[tuple[object, object] | None]
+    key_count: int
+
+
+_PREFIX_CACHE_LIMIT = 64
+_PREFIXES: OrderedDict[tuple[str, int, int], _ValidatedPrefix] = OrderedDict()
+_PREFIXES_LOCK = threading.Lock()
+
+
+def _prefix_key(path: Path) -> tuple[str, int, int]:
+    status = path.stat()
+    return (os.path.abspath(path), status.st_dev, status.st_ino)
+
+
+def _cached_prefix(key: tuple[str, int, int], path: Path) -> _ValidatedPrefix | None:
+    """Return the cached prefix only while the file still holds its exact bytes."""
+    with _PREFIXES_LOCK:
+        prefix = _PREFIXES.get(key)
+    if prefix is None:
+        return None
+    crc = 0
+    with path.open("rb") as handle:
+        remaining = prefix.byte_offset
+        while remaining:
+            chunk = handle.read(min(remaining, 1 << 20))
+            if not chunk:
+                return None
+            crc = zlib.crc32(chunk, crc)
+            remaining -= len(chunk)
+    return prefix if crc == prefix.crc32 else None
+
+
+def _store_prefix(key: tuple[str, int, int], prefix: _ValidatedPrefix | None) -> None:
+    if prefix is None:
+        return
+    with _PREFIXES_LOCK:
+        _PREFIXES[key] = prefix
+        _PREFIXES.move_to_end(key)
+        while len(_PREFIXES) > _PREFIX_CACHE_LIMIT:
+            _PREFIXES.popitem(last=False)
+
+
+class _PrefixScan:
+    """Iterate rows after a validated prefix with the full read's line splitting.
+
+    Lines keep their original terminators (universal newlines, untranslated) so
+    byte offsets are exact; decoding ignores the trailing whitespace either way.
+    The cached boundary always follows a ``\\n``, where the UTF-8 decoder and the
+    newline splitter are both in their initial state, so the rows after it
+    split exactly as in a read from the start of the file.
+    """
+
+    def __init__(self, path: Path, prefix: _ValidatedPrefix | None) -> None:
+        self._path = path
+        self._screen = _EnvelopeScreen()
+        self._offset = 0
+        self._crc = 0
+        self.record_count = 0
+        self._boundary: tuple[int, int, int, int] | None = None
+        if prefix is not None:
+            self._offset = prefix.byte_offset
+            self._crc = prefix.crc32
+            self.record_count = prefix.record_count
+            self._boundary = (
+                prefix.byte_offset,
+                prefix.record_count,
+                prefix.crc32,
+                prefix.key_count,
+            )
+
+    def lines(self) -> Iterator[tuple[int, str]]:
+        with self._path.open("rb") as raw:
+            raw.seek(self._offset)
+            text = io.TextIOWrapper(raw, encoding="utf-8", newline="")
+            for line_number, line in enumerate(text, start=self.record_count + 1):
+                encoded = line.encode("utf-8")
+                self._offset += len(encoded)
+                self._crc = zlib.crc32(encoded, self._crc)
+                self.record_count = line_number
+                yield line_number, line
+
+    def screen(self, line: str, line_number: int) -> Mapping[str, object]:
+        return self._screen.record(line, line_number)
+
+    def mark_boundary(self, record_count: int, key_count: int) -> None:
+        self._boundary = (self._offset, record_count, self._crc, key_count)
+
+    def boundary(
+        self,
+        codes: array,
+        keys: list[tuple[object, object] | None],
+    ) -> _ValidatedPrefix | None:
+        if self._boundary is None:
+            return None
+        offset, record_count, crc, key_count = self._boundary
+        return _ValidatedPrefix(offset, record_count, crc, codes, keys, key_count)
 
 
 def _ends_with_newline(path: Path) -> bool:
