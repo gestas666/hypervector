@@ -166,6 +166,10 @@ def start_live_daemon(
         place_enabled=False,  # warm-up never places
     )
 
+    # Activation is stamped before the warm-up fetch: a candle still forming
+    # when the history snapshot was taken must not be seeded as complete just
+    # because it closed while the (multi-venue) load was still running.
+    activated_at = _utc(clock())
     if warm_ohlcv is not None:
         warm_df = warm_ohlcv
     else:
@@ -184,7 +188,6 @@ def start_live_daemon(
             f"no warm-up bars for {loadout.symbol} {timeframe} lookback={lb}d"
         )
 
-    activated_at = _utc(clock())
     if enforce:
         warm_df = _causal_warmup(
             warm_df,
@@ -247,6 +250,10 @@ def start_live_daemon(
                 _request_stop("max_live_bars")
                 break
 
+            # Stamp the observation before the request: the snapshot is taken
+            # somewhere inside the round trip, so only candles closed by the
+            # time the request left are guaranteed final in it.
+            observed_at = _utc(clock()) if enforce else None
             try:
                 new_bars = feed(after_ts=after_ts)
             except Exception as exc:
@@ -262,7 +269,7 @@ def start_live_daemon(
                     timeframe=timeframe,
                     bar_interval=bar_interval,
                     activated_at=activated_at,
-                    observed_at=_utc(clock()) if enforce else None,
+                    observed_at=observed_at,
                 )
 
             if observe.empty and actionable is None:

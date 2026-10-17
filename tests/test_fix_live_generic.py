@@ -609,6 +609,99 @@ def test_loaded_warmup_history_is_force_refreshed(
     assert captured["force_refresh"] is True
 
 
+class MutableClock:
+    """Wall clock a fake feed or loader can advance while a request is in flight."""
+
+    def __init__(self, value: str) -> None:
+        self.now = pd.Timestamp(value, tz="UTC")
+
+    def set(self, value: str) -> None:
+        self.now = pd.Timestamp(value, tz="UTC")
+
+    def __call__(self) -> pd.Timestamp:
+        return self.now
+
+
+def test_poll_in_flight_across_a_candle_close_does_not_act_on_the_partial_candle(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The snapshot is taken mid-request; a candle that closed after the request
+    left is still partial in it and must wait for the next poll's final value."""
+    intents = ScriptedIntents(default=HOLD)
+    _patch_intents(monkeypatch, intents)
+    clock = MutableClock("2026-10-17 12:55:30")  # activation
+    warm = _bars("2026-10-17 12:00", 55)  # last close 12:55
+    partial = _bars("2026-10-17 12:55", 1)
+    partial["close"] = 40_100.6
+    final = _bars("2026-10-17 12:55", 2)
+    final.loc[0, "close"] = 40_102.9
+    polls: list[pd.Timestamp | None] = []
+
+    def feed(*, after_ts: pd.Timestamp | None = None, **_: Any) -> pd.DataFrame:
+        polls.append(after_ts)
+        if len(polls) == 1:
+            clock.set("2026-10-17 12:55:59.8")  # request leaves; 12:55 still forming
+            snapshot = partial.copy()
+            clock.set("2026-10-17 12:56:00.3")  # response lands after the close
+            return snapshot
+        clock.set("2026-10-17 12:56:05")
+        return final
+
+    result = _daemon(
+        tmp_path,
+        transport=SimVenueTransport(),
+        warm=warm,
+        poll_fn=feed,
+        max_live_bars=1,
+        now_fn=clock,
+        enforce_live_boundary=True,
+    )
+
+    assert result.live_bars == 1
+    assert intents.seen == [(pd.Timestamp("2026-10-17 12:55", tz="UTC"), 40_102.9)]
+    last_warm = pd.Timestamp("2026-10-17 12:54", tz="UTC")
+    assert polls[:2] == [last_warm, last_warm]
+
+
+def test_warmup_candle_closing_while_history_loads_is_not_seeded(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Activation is stamped before the warm-up fetch, so a candle that was
+    forming in the history snapshot is left for the live feed's final value."""
+    _patch_intents(monkeypatch, ScriptedIntents())
+    clock = MutableClock("2026-10-17 12:54:50")
+
+    def fake_load(root: Any, **kwargs: Any) -> tuple[pd.DataFrame, dict[str, Any]]:
+        bars = _bars("2026-10-17 12:00", 55)  # 12:54 forming (partial) in snapshot
+        clock.set("2026-10-17 12:55:10")  # multi-venue load finishes after its close
+        return bars, {"sources": {"fixture": len(bars)}}
+
+    monkeypatch.setattr("hypervector.live.runner.load_research_history", fake_load)
+    stop = tmp_path / "STOP"
+    after: list[pd.Timestamp | None] = []
+
+    def stop_after_first_poll(
+        *, after_ts: pd.Timestamp | None = None, **_: Any
+    ) -> pd.DataFrame:
+        after.append(after_ts)
+        stop.write_text("stop", encoding="utf-8")
+        return pd.DataFrame()
+
+    result = _daemon(
+        tmp_path,
+        transport=SimVenueTransport(),
+        warm=None,
+        poll_fn=stop_after_first_poll,
+        max_live_bars=None,
+        stop_file=stop,
+        now_fn=clock,
+        enforce_live_boundary=True,
+    )
+
+    assert result.warm_bars == 54
+    assert after == [pd.Timestamp("2026-10-17 12:53", tz="UTC")]
+
+
 # --------------------------------------------------------------------------- #
 # Finding 2: synthetic warm-up position must not reach the armed phase
 # --------------------------------------------------------------------------- #
