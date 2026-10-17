@@ -34,7 +34,9 @@ exit codes and the legacy-name map.
   pre-start bundle and needs an operator go-ahead.
 - **Result contract.** Read the JSON on stdout; errors go to stderr, normally
   as one JSON document. Exit codes: 0 done, 1 technical failure, 2 refused
-  before any side effect.
+  before any side effect. A few commands keep their own codes (`live start`,
+  `live preflight`, `live validate`, `live supervisor status|resume`,
+  `live monitor`); `README.md` lists them, and the non-JSON outputs.
 
 ## Discovery
 
@@ -89,8 +91,12 @@ hypervector archive repair-trades --bundle <dir>_trades                         
 - **API key.** Fetches load only `OXA_API_KEY`, and all arguments are validated
   before any API call.
 - **Window bounds.** A window that needs more than `--max-pages` is refused and
-  nothing is stored. `--allow-partial` stores it under a `_partial` directory
-  that backfill, audit and `db build` never read.
+  nothing is stored. For `trade-fetch`, `book-fetch` and `liquidation-fetch`,
+  `--allow-partial` stores the window under a `_partial` directory that
+  backfill, audit and `db build` never read.
+  `candle-fetch` and `price-fetch` have no partial option (passing
+  `--allow-partial` is a usage error, exit 2); `candle-fetch` derives
+  `--max-pages` from the window when it is omitted.
 - **Backfill** skips chunks already archived. It exits 0 when complete and 1
   when incomplete.
 - **Audit** always exits 0 and reports `complete`, `expected`, `present` and
@@ -188,7 +194,7 @@ Run section. Readiness, execution and requests:
 ```sh
 hypervector live check --config configs/multi_asset_growth_first_5000_review_fixes_v95.toml   # exit 0 ready, 1 not
 hypervector live start --config <profile.toml> --enabled --i-accept-live-risk                 # ARMS: operator request only
-hypervector live run --export <bundle-dir> --enabled --i-accept-live-risk --max-notional-usd 50   # ARMS: generic daemon
+hypervector live run --export <bundle> --enabled --i-accept-live-risk --max-notional-usd 50   # ARMS: generic daemon
 hypervector live request --inbox <dir> --run-id RUN --profile-fingerprint FP --action manual_close --symbol SOL
 ```
 
@@ -200,8 +206,11 @@ hypervector live request --inbox <dir> --run-id RUN --profile-fingerprint FP --a
   flag is missing, the profile does not load or dependencies fail. After that
   the backend's own codes pass through: 1 run failed, 2 start refused,
   4 degraded.
-- **`live run`** trades one strict bundle with a hard per-order notional cap. It
-  arms only when the venue position for the coin reads flat. Its decisions go to
+- **`live run`** trades one strict bundle with a hard per-order notional cap.
+  `--export` takes a bundle directory, a candidate id under `exports/` or
+  `latest`. An unresolvable bundle, a missing authority flag or missing
+  credentials refuses with exit 2 before anything starts. It arms only when the
+  venue position for the coin reads flat. Its decisions go to
   `live/decisions/decisions.jsonl`, and `live report` summarizes them.
 - **`live request`** is a dry run by default. Its actions are `manual_enter`,
   `manual_close`, `transition_drain` and `stage_profile` (with `--settings`).
@@ -226,7 +235,8 @@ hypervector live report --last 5
   selected run by default (`--no-current-run-only` lifts that). Never point two
   checkpoint writers at the same `--out`.
 - **Monitor.** `live monitor` owns no backend and checks run/profile identity
-  and freshness (`--maximum-age-seconds`).
+  and freshness (`--maximum-age-seconds`). It exits 2 for any missing, stale,
+  wrong-identity or unreadable checkpoint or config, I/O errors included.
 - **Audit.** A current-run `live audit` needs `--run-id`; use
   `--history-scope all-time` for everything.
 - **Audit delta.** `live audit-delta` compares two immutable audit prefixes. The
@@ -255,6 +265,8 @@ hypervector live supervisor resume                                        # dry 
 hypervector live supervisor resume --yes --enabled --i-accept-live-risk  # kickstarts the armed supervise agent
 ```
 
+- **Status.** `live supervisor status` prints the health report and exits 0
+  when healthy, 1 when unhealthy.
 - **launchd.** The plists run the unchanged `scripts/` entry points. Never
   regenerate installed plists with `print-launchd`; copy them and edit only the
   intended arguments.

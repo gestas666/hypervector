@@ -198,16 +198,18 @@ the bounded execution sources, `pyproject.toml`, `uv.lock`, the profile and the
 ledgers. The log shows one line like this:
 
 ```text
-pre-start backup verified: path=... manifest_sha256=... strategy_changed=yes
+pre-start backup verified: path=data/backups/bidirectional_cohort/prestart_<stamp>_<fp12> manifest_sha256=... implementation_files=... implementation_sha256=... strategy_changed=yes
 ```
 
 ### 8. Verify the new pre-start bundle
 
 ```bash
-$HV live backup-verify --bundle data/backups/bidirectional_cohort/prestart_<exact path from the log>
+$HV live backup-verify --bundle <path= value from the pre-start log line>
 ```
 
-Never guess the directory name. Require `"status": "verified"`, the previous
+The printed `path=` value already starts with
+`data/backups/bidirectional_cohort/prestart_`, so paste it unchanged. Never
+guess the directory name. Require `"status": "verified"`, the previous
 and target profiles you expect, a nonzero `implementation_file_count` and a
 nonempty `implementation_sha256`. A missing implementation identity is a
 refused start, not a warning.

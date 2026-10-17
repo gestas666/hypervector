@@ -400,7 +400,7 @@ def test_cli_live_run_refuses_without_arm(tmp_path: Path, capsys, monkeypatch):
             "0",
         ]
     )
-    assert rc == 1
+    assert rc == 2  # refusal before any side effect
     err = capsys.readouterr().err
     assert (
         "arm" in err.lower()
@@ -428,7 +428,7 @@ def test_cli_live_run_refuses_without_enabled(tmp_path: Path, capsys, monkeypatc
             "0",
         ]
     )
-    assert rc == 1
+    assert rc == 2  # refusal before any side effect
     err = capsys.readouterr().err
     assert "enabled" in err.lower()
 

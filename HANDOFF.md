@@ -34,8 +34,13 @@ holds the group table, output contract, exit codes and legacy-name map, and
   hand-off, writes `runs/pipeline/<id>/pipeline.json` and never touches `live`.
 - **Nautilus** models BTC, ETH, SOL and HYPE built in, and other perps through
   the bundle's `meta.instrument`; the pipeline skips it for any other symbol.
-- **Data and fees.** Loads report provenance and take `--pin-cache` and
-  `--max-cache-age-hours`. The default fee model is `hl_base_taker`.
+- **Data and fees.** History loads in `data history`, `data book-align`,
+  `backtest run/sweep`, `tune strategy/regime` and the `regime` commands report
+  provenance and take `--pin-cache`, `--max-cache-age-hours` and `--refresh`.
+  `pipeline run` takes `--refresh` and `--no-network`, and only its data stage
+  fetches. `nautilus run` takes `--no-network`. `paper run` and `model train`
+  take neither; they use `--lookback-days` and the export bundle's window. The
+  default fee model is `hl_base_taker`.
 - **Old names** still parse as hidden aliases; retired ones exit 2 and name the
   replacement.
 

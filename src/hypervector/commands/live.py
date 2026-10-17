@@ -169,21 +169,21 @@ def _profile_readiness(path: Path, blockers: list[str]) -> dict[str, object]:
 
 
 def cmd_live_run(args: argparse.Namespace) -> int:
-    """Live daemon: mainnet place when enabled+armed+secrets (fail-closed)."""
+    """Live daemon: mainnet place when enabled+armed+secrets (fail-closed).
+
+    An unresolvable ``--export``, a missing authority flag or missing credentials
+    is a refusal before any side effect (``CommandRefused``, exit 2).
+    """
+    from hypervector.commands.exports import resolve_export
     from hypervector.live.policy import LivePolicyError
     from hypervector.live.runner import start_live_daemon
 
-    path = Path(args.export)
-    if not path.is_dir():
-        print(f"export path not found: {path}", file=sys.stderr)
-        return 1
-
+    path = resolve_export(args.export, args.data_root)
     try:
         policy = _armed_policy(args)
         wallet, key = _live_credentials()
     except LivePolicyError as exc:
-        print(f"live run refused: {exc}", file=sys.stderr)
-        return 1
+        raise CommandRefused(f"live run refused: {exc}") from exc
     _ensure_root(args)
     stop_file = Path(args.stop_file) if getattr(args, "stop_file", None) else None
     try:

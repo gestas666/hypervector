@@ -13,7 +13,8 @@ execution. One command, `hypervector`, covers:
 - paper and shadow trading on live mainnet data, with no venue orders;
 - the double-armed live cohort backend and its operator tooling.
 
-Every command prints JSON. There is no terminal UI.
+Commands print JSON (the few exceptions are listed under
+[Output contract](#output-contract-and-exit-codes)). There is no terminal UI.
 
 ## Install
 
@@ -134,7 +135,10 @@ A reference that resolves to nothing exits 2 and lists the places it looked.
   are `hl_base_taker`, `hl_referred_taker`, `hl_vip1_taker`, `hl_vip2_taker`,
   `hl_maker` and `zero`. An unknown name exits 2.
 - **Leverage** is refused above the venue cap: BTC 40x, ETH 25x, SOL 20x, HYPE
-  and other perps 10x.
+  10x. Other perps get 10x, or the venue's `maxLeverage` when the caller
+  supplies venue metadata (Nautilus reads it from the bundle's
+  `meta.instrument`), and never more than the charter's 15x altcoin ceiling.
+  CLI backtests supply no metadata, so other perps backtest at 10x.
 - **Tuning.** `tune strategy` searches the first `--train-fraction` of bars
   (default 0.7). It ranks by `--objective` (`net_pnl` by default, or `score` or
   `sharpe`) and re-measures the chosen parameters once on the chronological
@@ -155,7 +159,7 @@ A reference that resolves to nothing exits 2 and lists the places it looked.
 
 | Authority | Commands | Rule |
 | --- | --- | --- |
-| live | `live start`, `live run` | Arm only with both `--enabled --i-accept-live-risk`, plus credentials. `live start` checks both flags, loads the profile in observe mode and checks provider dependencies before it hands over to the backend. |
+| live | `live start`, `live run` | Arm only with both `--enabled --i-accept-live-risk`, plus credentials. `live start` checks both flags, loads the profile in observe mode and checks provider dependencies before it hands over to the backend. `live run` resolves `--export`, then checks both flags and credentials, and refuses with exit 2 before any side effect when one is missing. |
 | request | `live request` | Dry run by default. `--submit` publishes, and needs both authority flags for every action except `stage_profile`. Publishing is not execution. |
 | simulate | `live check` | The flags only change the readiness report (`would_arm`). It never arms anything. |
 | passthrough | `live supervisor` | `resume` is a dry run. `resume --yes` needs both authority flags, because it kickstarts the supervise agent, which starts the armed backend. |
@@ -199,16 +203,25 @@ The layout is in [docs/infra-data-layout.md](docs/infra-data-layout.md).
 
 - **stdout.** A finite command prints exactly one JSON document. These commands
   stream JSON lines instead:
-  - `data book-record` and `data hip3-roster`;
+  - `data hip3-roster`;
   - `archive backfill` progress (then one summary line);
   - `live monitor --follow`;
   - checkpoint loops run without `--once`.
+
+  `data book-record` writes its snapshots to `cache/book/*.jsonl` and prints one
+  summary document when recording ends (with `--once`, one document for the
+  snapshot row). Not JSON:
+  - `live drain-archive` prints one plain-text line,
+    `transition drain dry-run|archived: source=... destination=...`;
+  - `live supervisor print-launchd` prints LaunchAgent plist XML;
+  - `backtest report --format table` prints a human-readable table.
 - **stderr.** Human notes and progress.
-- **Table format.** `backtest report --format table` is the only human-readable
-  format.
 - **Errors** that reach the CLI boundary print one JSON document on stderr:
   `{"ok": false, "command": "<group action>", "error_type": "...", "error": "..."}`.
-  A few handlers print a plain-text refusal line instead; the exit code is the
+  Failures a handler catches itself (many `db` and `archive` commands,
+  `data book-record`, `db import-cohort`) print a reduced document on stderr,
+  `{"ok": false, "error": "..."}`, sometimes with extra context fields. A few
+  handlers print a plain-text refusal line instead. The exit code is the
   contract.
 - **Artifacts.** Stage commands add an `artifacts` object (dataset, board,
   export, validation, model, paper).
@@ -219,7 +232,7 @@ The layout is in [docs/infra-data-layout.md](docs/infra-data-layout.md).
 | 1 | Technical failure: I/O, network, cache miss under `--no-network`, engine error, every trial failed, invalid bundle in `export validate`, `live check` not ready, failed pipeline stage. |
 | 2 | Usage error or refusal before any side effect: bad arguments, unknown strategy or fee model, unresolvable `--export`, missing authority, refused data root, retired command, unsupported Nautilus symbol. |
 | 130 | Interrupted (Ctrl-C). |
-| other | Codes a tool keeps for itself: `live start` passes the backend's 1, 2 and 4 through; `live preflight` 3 = not ready; `live validate` 3 = book-level advisory (report-only); `live supervisor resume` 0 ready, 1 refused, 2 failed. |
+| other | Codes a tool keeps for itself: `live start` passes the backend's 1, 2 and 4 through; `live preflight` 3 = not ready; `live validate` 3 = book-level advisory (report-only); `live supervisor resume` 0 ready, 1 refused, 2 failed; `live supervisor status` 0 = healthy, 1 = unhealthy (the health report is still printed on stdout); `live monitor` 2 = any OSError, RuntimeError or ValueError, including a missing, stale, wrong-run, wrong-identity or unreadable checkpoint or config (I/O errors are 2 here, not 1). |
 
 `HYPERVECTOR_DEBUG=1` re-raises technical errors with a traceback instead of
 printing error JSON.
@@ -242,16 +255,18 @@ Old command names still parse as hidden aliases. They never appear in help.
 | `paper-run`, `paper-check`, `paper-report` | `paper run`, `paper check`, `paper report` |
 | `paper shadow-run`, `hypervelocity-shadow-run`, `hypervelocity-shadow-reset` | `paper shadow`, `paper shadow-reset` |
 | `research shadow-compare`, `hypervelocity-shadow-compare` | `paper compare` |
-| `cohort observe`, `cohort observer-checkpoint`, `cohort observer-audit` | `paper observe`, `paper checkpoint`, `paper audit` |
+| `cohort observe`, `cohort observer-checkpoint`, `cohort observer-audit`, `cohort-observe`, `cohort-observer-checkpoint`, `cohort-observer-audit` | `paper observe`, `paper checkpoint`, `paper audit` |
 | `cohort live`, `cohort-live` | `live start` |
-| `cohort request`, `cohort checkpoint`, `cohort monitor`, `cohort audit`, `cohort audit-delta`, `cohort supervisor` (and their `cohort-*` spellings) | `live request`, `live checkpoint`, `live monitor`, `live audit`, `live audit-delta`, `live supervisor` |
+| `cohort request`, `cohort checkpoint`, `cohort monitor`, `cohort audit`, `cohort audit-delta`, `cohort supervisor` | `live request`, `live checkpoint`, `live monitor`, `live audit`, `live audit-delta`, `live supervisor` |
+| `cohort-request`, `cohort-checkpoint`, `cohort-monitor`, `cohort-live-audit`, `cohort-live-audit-delta`, `cohort-supervisor` | the same, in the same order |
 | `live-check`, `live-run`, `live-report` | `live check`, `live run`, `live report` |
 | `research economics`, `research-economics` | `live economics` |
 | `regime <options>`, `regime-eval`, `regime-export` | `regime classify`, `regime eval`, `regime export` |
 | `regime hypervelocity-eval`, `hypervelocity-regime-eval`, `hypervelocity-regime-challengers` | `regime align`, `regime challengers` |
 | `metalabel-train` | `model train` |
 | `research export`, `export <options>`, `research export-validate`, `export-validate` | `export create`, `export validate` |
-| `research db-build`, `db-status`, `db-live-event-import`, `db-shadow-import`, `db-shadow-trades`, `hip3-liquidity-profile` (and `research-*` spellings) | `db build`, `db status`, `db import-events`, `db import-paper`, `db paper-trades`, `db hip3-liquidity` |
+| `research db-build`, `research db-status`, `research db-live-event-import`, `research db-shadow-import`, `research db-shadow-trades`, `research hip3-liquidity-profile` | `db build`, `db status`, `db import-events`, `db import-paper`, `db paper-trades`, `db hip3-liquidity` |
+| `research-db-build`, `research-db-status`, `research-db-live-event-import`, `research-db-shadow-import`, `research-db-shadow-trades`, `research-hip3-liquidity-profile` | the same, in the same order |
 | `cohort research-import`, `cohort-research-import` | `db import-cohort` |
 | `infra-init`, `status` | `system init`, `system status` |
 
