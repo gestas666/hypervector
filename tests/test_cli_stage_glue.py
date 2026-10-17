@@ -342,15 +342,31 @@ def test_nautilus_run_technical_errors_are_json_exit_one(
         pass
 
     def broken(**_kwargs: object) -> None:
-        raise EngineError("Instrument ETH-PERP.HYPERLIQUID not found in the cache")
+        raise EngineError("offline history cache missing")
 
     monkeypatch.setattr("hypervector.nautilus.runner.run_phase2_backtest", broken)
     data = tmp_path / "data"
-    _strict_export(data, "eth", symbol="ETH")
-    assert main(["--data-root", str(data), "nautilus", "run", "--export", "eth"]) == 1
+    _strict_export(data, "btc_err")
+    assert (
+        main(["--data-root", str(data), "nautilus", "run", "--export", "btc_err"]) == 1
+    )
     error = json.loads(capsys.readouterr().err)
     assert error["ok"] is False and error["error_type"] == "EngineError"
     assert error["command"] == "nautilus run"
+
+
+def test_nautilus_run_refuses_non_btc_bundles_before_the_engine(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    phase2_calls: list[dict[str, object]],
+) -> None:
+    data = tmp_path / "data"
+    _strict_export(data, "eth", symbol="ETH")
+    assert main(["--data-root", str(data), "nautilus", "run", "--export", "eth"]) == 2
+    error = json.loads(capsys.readouterr().err)
+    assert error["command"] == "nautilus run"
+    assert "supports BTC exports only" in error["error"]
+    assert phase2_calls == []
 
 
 def test_nautilus_check_never_creates_directories(
@@ -470,6 +486,8 @@ def test_paper_run_resolves_candidate_ids_and_metalabel_bundles(
         "paper": str(tmp_path / "decisions.jsonl"),
     }
     assert call["lock_held"] is False and out["hypervelocity_runtime_lock"] is False
+    # The model override lasts for the session only.
+    assert "HYPERVECTOR_METALABEL_ROOT" not in os.environ
     assert main([*argv, "--metalabel-bundle", "nope"]) == 2
     assert main(["--data-root", str(data), "paper", "run", "--export", "gone"]) == 2
 
@@ -530,6 +548,13 @@ def test_model_train_factors_training_and_keeps_the_json_error_contract(
     out = json.loads(capsys.readouterr().out)
     assert out["artifacts"]["model"] == str((tmp_path / "model").resolve())
     assert out["export_dir"] == str(bundle.resolve())
+    assert f"hypervector --data-root {data} paper run --export ml " in out["paper_hint"]
+
+    outside = _strict_export(tmp_path / "elsewhere", "ml_out")
+    argv = ["--data-root", str(data), "model", "train", "--export", str(outside)]
+    assert main(argv) == 0
+    hint = json.loads(capsys.readouterr().out)["paper_hint"]
+    assert f"--export {outside.resolve()} " in hint
 
     class LightGBMError(Exception):
         pass

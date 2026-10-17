@@ -14,6 +14,8 @@ from hypervector.commands.exports import resolve_export
 from hypervector.export.schema import ExportSchemaError
 
 CATALOG_BATCH_SIZE = 1000
+# The Phase-2 runner builds one synthetic BTC perpetual instrument (CLI-15).
+NAUTILUS_SYMBOLS = frozenset({"BTC"})
 
 
 def cmd_check(args: argparse.Namespace) -> int:
@@ -45,10 +47,12 @@ def cmd_check(args: argparse.Namespace) -> int:
 def cmd_run(args: argparse.Namespace) -> int:
     """Backtest a strict strategy bundle event by event with NautilusTrader.
 
-    The lookback defaults to the bundle's own window. Technical failures (a
-    cache miss with --no-network, an engine error) print error JSON and exit 1.
+    The lookback defaults to the bundle's own window. A non-BTC bundle is
+    refused (exit 2) before the engine loads. Technical failures (a cache miss
+    with --no-network, an engine error) print error JSON and exit 1.
     """
     path = resolve_export(args.export, args.data_root)
+    _require_supported_symbol(path)
     lookback, lookback_source = _run_lookback(args, path)
     try:
         from hypervector.nautilus.runner import run_phase2_backtest
@@ -146,6 +150,20 @@ def cmd_catalog(args: argparse.Namespace) -> int:
     return 0
 
 
+def _require_supported_symbol(path: Path) -> None:
+    """Refuse non-BTC bundles: the runner prices every bar on a synthetic BTC perp."""
+    try:
+        meta = json.loads((path / "meta.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return  # the runner reports an unreadable bundle as a schema error
+    symbol = meta.get("symbol") if isinstance(meta, dict) else None
+    if symbol is not None and str(symbol).strip().upper() not in NAUTILUS_SYMBOLS:
+        raise CommandRefused(
+            "Nautilus validation currently supports BTC exports only (CLI-15); "
+            f"bundle {path.name} is {symbol}"
+        )
+
+
 def _run_lookback(args: argparse.Namespace, path: Path) -> tuple[int | None, str]:
     """The explicit lookback, else the bundle's recorded window, else the runner default."""
     if args.lookback is not None:
@@ -167,6 +185,7 @@ def _schema_error(args: argparse.Namespace, path: Path, exc: ExportSchemaError) 
                 "ok": False,
                 "command": args.command,
                 "error_type": "ExportSchemaError",
+                "error": str(exc),
                 "export_dir": str(path),
                 "path": str(path),
                 "errors": exc.errors,

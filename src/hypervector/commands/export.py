@@ -92,6 +92,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
                     "ok": False,
                     "command": args.command,
                     "error_type": "ExportSchemaError",
+                    "error": str(exc),
                     "export_dir": str(path),
                     "path": str(path),
                     "strict": strict,

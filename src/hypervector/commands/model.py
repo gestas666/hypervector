@@ -94,13 +94,22 @@ def cmd_model_train(args: argparse.Namespace) -> int:
 
     bundle_dir = Path(report["bundle_dir"])
     install_path = _install_model(bundle_dir, root) if args.install else None
+    # A candidate id only resolves under <root>/exports of the same data root.
+    export_ref = (
+        export_path.name
+        if export_path.parent == (root / "exports").resolve()
+        else str(export_path)
+    )
+    root_flag = (
+        "" if Path(args.data_root) == Path("data") else f"--data-root {args.data_root} "
+    )
     out = {
         **report,
         "export_dir": str(export_path),
         "installed_to": install_path,
         "env_hint": f"export HYPERVECTOR_METALABEL_ROOT={install_path or bundle_dir}",
         "paper_hint": (
-            f"hypervector paper run --export {export_path.name} "
+            f"hypervector {root_flag}paper run --export {export_ref} "
             f"--metalabel-bundle {bundle_dir} --metalabel-mode observe"
         ),
         "artifacts": {"export": str(export_path), "model": str(bundle_dir)},

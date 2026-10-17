@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import AbstractContextManager, nullcontext
+from collections.abc import Iterator
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 import json
 import os
 import sys
@@ -51,16 +52,13 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
     except PaperArgumentsError as exc:
         print(f"paper run refused: {exc}", file=sys.stderr)
         return 2
-    if bundle is not None:
-        # This process only: the session's model loader reads the env root first.
-        os.environ[METALABEL_ROOT_ENV] = str(bundle)
     hypervelocity_shadow = (
         is_hypervelocity_strategy(strategy_name)
         and options["execution_mode"] == "shadow"
     )
     try:
         ensure_data_layout(Path(args.data_root))
-        with _runtime_guard(args, hypervelocity_shadow):
+        with _runtime_guard(args, hypervelocity_shadow), _metalabel_root(bundle):
             result = start_paper_daemon(**options)
     except RuntimeLockError as exc:
         print(f"paper run refused: {exc}", file=sys.stderr)
@@ -109,6 +107,27 @@ def cmd_paper_report(args: argparse.Namespace) -> int:
         return 1
     print(json.dumps(report, indent=2, default=str))
     return 0
+
+
+@contextmanager
+def _metalabel_root(bundle: Path | None) -> Iterator[None]:
+    """Point the session's model loader (env root first) at ``bundle``, then restore.
+
+    The override lasts for this session only and never outlives it, so an
+    in-process caller keeps its own environment.
+    """
+    if bundle is None:
+        yield
+        return
+    previous = os.environ.get(METALABEL_ROOT_ENV)
+    os.environ[METALABEL_ROOT_ENV] = str(bundle)
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop(METALABEL_ROOT_ENV, None)
+        else:
+            os.environ[METALABEL_ROOT_ENV] = previous
 
 
 def _runtime_guard(
