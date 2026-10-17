@@ -29,7 +29,7 @@ from hypervector.live.exec_client import (
     create_live_exec_client,
 )
 from hypervector.live.policy import LivePolicy
-from hypervector.live.session import LiveSession
+from hypervector.live.session import LiveIntentError, LiveSession
 from hypervector.nautilus.load_export import load_strategy_loadout
 from hypervector.paper.live_node import (
     DEFAULT_POLL_INTERVAL_SECS,
@@ -39,6 +39,7 @@ from hypervector.paper.live_node import (
     partition_live_bars,
     timeframe_delta,
 )
+from hypervector.runtime_lock import canonical_live_root, generic_live_runtime_lock
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,9 @@ class LiveDaemonResult:
     cancel_error: str | None = None
     # Live-phase bars recorded without execution authority (catch-up / stale).
     catchup_bars: int = 0
+    # Engine position at stop (venue-reconciled after every live order). The
+    # daemon never flattens on stop, so a non-zero value is open exposure.
+    position_qty: float = 0.0
 
 
 def _utc_now() -> pd.Timestamp:
@@ -98,6 +102,7 @@ def start_live_daemon(
     funding_rate_hourly: float | None = None,
     now_fn: Callable[[], pd.Timestamp] | None = None,
     enforce_live_boundary: bool | None = None,
+    account_lock_root: Path | str | None = None,
 ) -> LiveDaemonResult:
     """Start live daemon after policy.require_start(); place only in live phase.
 
@@ -109,10 +114,17 @@ def start_live_daemon(
     candle have execution authority. ``now_fn`` and ``enforce_live_boundary``
     let offline tests drive that boundary with a deterministic clock.
 
+    The daemon owns the shared live account for its whole run, from before the
+    exec client exists through the stop cancel: it takes
+    :func:`generic_live_runtime_lock` on ``account_lock_root`` (default: the
+    cohort's canonical ``data/live``, never ``data_root``) and raises
+    ``RuntimeLockError`` before any venue call while the cohort or another live
+    backend owns the account.
+
     Offline-testable via warm_ohlcv, poll_fn, transport, max_live_bars, sleep_fn.
     Raises on technical failure (unreadable or non-flat venue position before
-    arming, venue/engine position drift after an order, warm-up gaps the feed
-    cannot bridge).
+    arming, venue/engine position drift after an order, an armed-phase strategy
+    failure, warm-up gaps the feed cannot bridge).
     """
     # Fail closed before any client construction or IO side effects beyond layout.
     policy.require_start()
@@ -139,247 +151,258 @@ def start_live_daemon(
         else bool(enforce_live_boundary)
     )
 
-    client = create_live_exec_client(
-        policy,
-        wallet_address=wallet_address,
-        private_key=private_key,
-        transport=transport,
+    lock_root = (
+        Path(account_lock_root)
+        if account_lock_root is not None
+        else canonical_live_root()
     )
-
-    print(LIVE_BANNER, file=sys.stderr, flush=True)
-    sleep = sleep_fn if sleep_fn is not None else time.sleep
-    root = Path(data_root)
-    lb = lookback_days
-    if lb is None:
-        meta_lb = (loadout.meta or {}).get("lookback_days")
-        lb = int(meta_lb) if meta_lb is not None else DEFAULT_LOOKBACK
-    lb = max(int(lb), FLOOR_LOOKBACK)
-
-    session = LiveSession(
-        export_dir=export_path,
-        data_root=root,
-        client=client,
-        max_notional_usd=policy.max_notional_usd,
-        conviction=conviction,
-        fee_tier=fee_tier,
-        funding_rate_hourly=funding_rate_hourly,
-        place_enabled=False,  # warm-up never places
-    )
-
-    # Activation is stamped before the warm-up fetch: a candle still forming
-    # when the history snapshot was taken must not be seeded as complete just
-    # because it closed while the (multi-venue) load was still running.
-    activated_at = _utc(clock())
-    if warm_ohlcv is not None:
-        warm_df = warm_ohlcv
-    else:
-        # Never decide on a stale cache: refresh history at every live start.
-        warm_df, prov = load_research_history(
-            root,
-            symbol=loadout.symbol,
-            timeframe=timeframe,
-            lookback_days=lb,
-            force_refresh=True,
-        )
-        logger.info("live warm-up loaded bars=%s provenance=%s", len(warm_df), prov)
-
-    if warm_df is None or len(warm_df) == 0:
-        raise RuntimeError(
-            f"no warm-up bars for {loadout.symbol} {timeframe} lookback={lb}d"
+    with generic_live_runtime_lock(lock_root):
+        client = create_live_exec_client(
+            policy,
+            wallet_address=wallet_address,
+            private_key=private_key,
+            transport=transport,
         )
 
-    if enforce:
-        warm_df = _causal_warmup(
-            warm_df,
-            timeframe=timeframe,
-            bar_interval=bar_interval,
-            activated_at=activated_at,
+        print(LIVE_BANNER, file=sys.stderr, flush=True)
+        sleep = sleep_fn if sleep_fn is not None else time.sleep
+        root = Path(data_root)
+        lb = lookback_days
+        if lb is None:
+            meta_lb = (loadout.meta or {}).get("lookback_days")
+            lb = int(meta_lb) if meta_lb is not None else DEFAULT_LOOKBACK
+        lb = max(int(lb), FLOOR_LOOKBACK)
+
+        session = LiveSession(
+            export_dir=export_path,
+            data_root=root,
+            client=client,
+            max_notional_usd=policy.max_notional_usd,
+            conviction=conviction,
+            fee_tier=fee_tier,
+            funding_rate_hourly=funding_rate_hourly,
+            place_enabled=False,  # warm-up never places
         )
 
-    warm_bars = session.seed_history(warm_df)
-    session.ensure_session_identity()
-    after_ts = session.last_timestamp
-
-    # Live phase: the venue must be flat for this coin, then arm venue place.
-    _require_flat_venue(client, loadout.symbol)
-    session.enable_live_place()
-
-    feed = poll_fn
-    if feed is None:
-        feed = make_rest_poll_fn(
-            loadout.symbol, timeframe, lookback_days=LIVE_POLL_LOOKBACK_DAYS
-        )
-
-    stop_state: dict[str, Any] = {"reason": None, "stop": False}
-
-    def _request_stop(reason: str) -> None:
-        if not stop_state["stop"]:
-            stop_state["stop"] = True
-            stop_state["reason"] = reason
-
-    prev_handlers: dict[int, Any] = {}
-    if install_signal_handlers:
-
-        def _handle_signal(signum: int, _frame: Any) -> None:
-            name = (
-                signal.Signals(signum).name
-                if signum in signal.Signals._value2member_map_
-                else str(signum)
+        # Activation is stamped before the warm-up fetch: a candle still forming
+        # when the history snapshot was taken must not be seeded as complete just
+        # because it closed while the (multi-venue) load was still running.
+        activated_at = _utc(clock())
+        if warm_ohlcv is not None:
+            warm_df = warm_ohlcv
+        else:
+            # Never decide on a stale cache: refresh history at every live start.
+            warm_df, prov = load_research_history(
+                root,
+                symbol=loadout.symbol,
+                timeframe=timeframe,
+                lookback_days=lb,
+                force_refresh=True,
             )
-            logger.info("live daemon received %s — stopping", name)
-            _request_stop(f"signal_{name}")
+            logger.info("live warm-up loaded bars=%s provenance=%s", len(warm_df), prov)
 
-        for sig in (signal.SIGINT, signal.SIGTERM):
-            try:
-                prev_handlers[sig] = signal.signal(sig, _handle_signal)
-            except (ValueError, OSError):
-                pass
+        if warm_df is None or len(warm_df) == 0:
+            raise RuntimeError(
+                f"no warm-up bars for {loadout.symbol} {timeframe} lookback={lb}d"
+            )
 
-    live_bars = 0
-    catchup_bars = 0
-    empty_polls = 0
-    max_empty_when_capped = 3
-    failure: LiveReconciliationError | None = None
+        if enforce:
+            warm_df = _causal_warmup(
+                warm_df,
+                timeframe=timeframe,
+                bar_interval=bar_interval,
+                activated_at=activated_at,
+            )
 
-    try:
-        while not stop_state["stop"]:
-            if stop_file is not None and Path(stop_file).exists():
-                _request_stop("stop_file")
-                break
-            if max_live_bars is not None and live_bars >= max_live_bars:
-                _request_stop("max_live_bars")
-                break
+        warm_bars = session.seed_history(warm_df)
+        session.ensure_session_identity()
+        after_ts = session.last_timestamp
 
-            # Stamp the observation before the request: the snapshot is taken
-            # somewhere inside the round trip, so only candles closed by the
-            # time the request left are guaranteed final in it.
-            observed_at = _utc(clock()) if enforce else None
-            try:
-                new_bars = feed(after_ts=after_ts)
-            except Exception as exc:
-                logger.warning("live poll failed: %s", exc)
-                new_bars = None
+        # Live phase: the venue must be flat for this coin, then arm venue place.
+        _require_flat_venue(client, loadout.symbol)
+        session.enable_live_place()
 
-            frame = _unseen_bars(new_bars, after_ts=after_ts)
-            observe = frame.iloc[0:0]
-            actionable: pd.Series | None = None
-            if not frame.empty:
-                observe, actionable = _split_authority(
-                    frame,
-                    timeframe=timeframe,
-                    bar_interval=bar_interval,
-                    activated_at=activated_at,
-                    observed_at=observed_at,
+        feed = poll_fn
+        if feed is None:
+            feed = make_rest_poll_fn(
+                loadout.symbol, timeframe, lookback_days=LIVE_POLL_LOOKBACK_DAYS
+            )
+
+        stop_state: dict[str, Any] = {"reason": None, "stop": False}
+
+        def _request_stop(reason: str) -> None:
+            if not stop_state["stop"]:
+                stop_state["stop"] = True
+                stop_state["reason"] = reason
+
+        prev_handlers: dict[int, Any] = {}
+        if install_signal_handlers:
+
+            def _handle_signal(signum: int, _frame: Any) -> None:
+                name = (
+                    signal.Signals(signum).name
+                    if signum in signal.Signals._value2member_map_
+                    else str(signum)
                 )
+                logger.info("live daemon received %s — stopping", name)
+                _request_stop(f"signal_{name}")
 
-            if observe.empty and actionable is None:
-                # Nothing new, or only the still-forming candle.
-                empty_polls += 1
-                if (
-                    injected_feed
-                    and max_live_bars is not None
-                    and empty_polls >= max_empty_when_capped
-                ):
-                    _request_stop("poll_exhausted")
-                    break
-                sleep(float(poll_interval_secs))
-                continue
+            for sig in (signal.SIGINT, signal.SIGTERM):
+                try:
+                    prev_handlers[sig] = signal.signal(sig, _handle_signal)
+                except (ValueError, OSError):
+                    pass
 
-            empty_polls = 0
-            if not observe.empty:
-                for _, row in observe.iterrows():
-                    session.observe_bar(row)
-                    catchup_bars += 1
-                after_ts = _utc(observe["timestamp"].iloc[-1])
-                logger.info(
-                    "live recorded %s bars without order authority "
-                    "(catch-up/stale) %s..%s",
-                    len(observe),
-                    observe["timestamp"].iloc[0],
-                    observe["timestamp"].iloc[-1],
-                )
+        live_bars = 0
+        catchup_bars = 0
+        empty_polls = 0
+        max_empty_when_capped = 3
+        failure: LiveReconciliationError | LiveIntentError | None = None
 
-            if actionable is not None:
-                if max_live_bars is not None and live_bars >= max_live_bars:
-                    _request_stop("max_live_bars")
-                    break
+        try:
+            while not stop_state["stop"]:
                 if stop_file is not None and Path(stop_file).exists():
                     _request_stop("stop_file")
                     break
+                if max_live_bars is not None and live_bars >= max_live_bars:
+                    _request_stop("max_live_bars")
+                    break
+
+                # Stamp the observation before the request: the snapshot is taken
+                # somewhere inside the round trip, so only candles closed by the
+                # time the request left are guaranteed final in it.
+                observed_at = _utc(clock()) if enforce else None
                 try:
-                    session.on_bar(actionable)
-                except LiveReconciliationError as exc:
-                    failure = exc
-                    _request_stop("venue_position_mismatch")
-                live_bars += 1
-                after_ts = _utc(actionable["timestamp"])
+                    new_bars = feed(after_ts=after_ts)
+                except Exception as exc:
+                    logger.warning("live poll failed: %s", exc)
+                    new_bars = None
 
-            if stop_state["stop"]:
-                break
-            sleep(float(poll_interval_secs))
-    finally:
-        for sig, handler in prev_handlers.items():
+                frame = _unseen_bars(new_bars, after_ts=after_ts)
+                observe = frame.iloc[0:0]
+                actionable: pd.Series | None = None
+                if not frame.empty:
+                    observe, actionable = _split_authority(
+                        frame,
+                        timeframe=timeframe,
+                        bar_interval=bar_interval,
+                        activated_at=activated_at,
+                        observed_at=observed_at,
+                    )
+
+                if observe.empty and actionable is None:
+                    # Nothing new, or only the still-forming candle.
+                    empty_polls += 1
+                    if (
+                        injected_feed
+                        and max_live_bars is not None
+                        and empty_polls >= max_empty_when_capped
+                    ):
+                        _request_stop("poll_exhausted")
+                        break
+                    sleep(float(poll_interval_secs))
+                    continue
+
+                empty_polls = 0
+                if not observe.empty:
+                    for _, row in observe.iterrows():
+                        session.observe_bar(row)
+                        catchup_bars += 1
+                    after_ts = _utc(observe["timestamp"].iloc[-1])
+                    logger.info(
+                        "live recorded %s bars without order authority "
+                        "(catch-up/stale) %s..%s",
+                        len(observe),
+                        observe["timestamp"].iloc[0],
+                        observe["timestamp"].iloc[-1],
+                    )
+
+                if actionable is not None:
+                    if max_live_bars is not None and live_bars >= max_live_bars:
+                        _request_stop("max_live_bars")
+                        break
+                    if stop_file is not None and Path(stop_file).exists():
+                        _request_stop("stop_file")
+                        break
+                    try:
+                        session.on_bar(actionable)
+                    except LiveReconciliationError as exc:
+                        failure = exc
+                        _request_stop("venue_position_mismatch")
+                    except LiveIntentError as exc:
+                        failure = exc
+                        _request_stop("intent_error")
+                    live_bars += 1
+                    after_ts = _utc(actionable["timestamp"])
+
+                if stop_state["stop"]:
+                    break
+                sleep(float(poll_interval_secs))
+        finally:
+            for sig, handler in prev_handlers.items():
+                try:
+                    signal.signal(sig, handler)
+                except (ValueError, OSError):
+                    pass
+
+        if stop_state["reason"] is None:
+            stop_state["reason"] = "stop"
+
+        # F4 kill: cancel resting orders this daemon placed after live phase armed.
+        cancel_attempted = False
+        cancel_ok: bool | None = None
+        cancel_error: str | None = None
+        if session.engine.place_enabled:
+            cancel_attempted = True
             try:
-                signal.signal(sig, handler)
-            except (ValueError, OSError):
-                pass
+                cancel_result = client.cancel_all(symbol=loadout.symbol)
+                cancel_ok = bool(cancel_result.submitted)
+                cancel_error = cancel_result.error
+                if cancel_ok:
+                    logger.info(
+                        "live kill cancel_all ok: %s",
+                        cancel_result.detail or cancel_result.venue_order_id,
+                    )
+                else:
+                    logger.warning("live kill cancel_all failed: %s", cancel_error)
+            except Exception as exc:  # noqa: BLE001 — never block stop summary
+                cancel_ok = False
+                cancel_error = str(exc)
+                logger.warning("live kill cancel_all exception: %s", exc)
 
-    if stop_state["reason"] is None:
-        stop_state["reason"] = "stop"
-
-    # F4 kill: cancel resting orders this daemon placed after live phase armed.
-    cancel_attempted = False
-    cancel_ok: bool | None = None
-    cancel_error: str | None = None
-    if session.engine.place_enabled:
-        cancel_attempted = True
-        try:
-            cancel_result = client.cancel_all(symbol=loadout.symbol)
-            cancel_ok = bool(cancel_result.submitted)
-            cancel_error = cancel_result.error
-            if cancel_ok:
-                logger.info(
-                    "live kill cancel_all ok: %s",
-                    cancel_result.detail or cancel_result.venue_order_id,
-                )
-            else:
-                logger.warning("live kill cancel_all failed: %s", cancel_error)
-        except Exception as exc:  # noqa: BLE001 — never block stop summary
-            cancel_ok = False
-            cancel_error = str(exc)
-            logger.warning("live kill cancel_all exception: %s", exc)
-
-    result = LiveDaemonResult(
-        run_id=session.run_id,
-        decisions_path=session.decisions_path,
-        export_dir=session.loadout.export_dir,
-        warm_bars=warm_bars,
-        live_bars=live_bars,
-        bars_processed=session.bars_processed,
-        fills_count=session.fills_count,
-        places_count=session.places_count,
-        stop_reason=str(stop_state["reason"]),
-        execution_mode="live",
-        cancel_attempted=cancel_attempted,
-        cancel_ok=cancel_ok,
-        cancel_error=cancel_error,
-        catchup_bars=catchup_bars,
-    )
-    logger.info(
-        "live daemon stopped reason=%s warm=%s catchup=%s live=%s fills=%s "
-        "places=%s cancel=%s",
-        result.stop_reason,
-        result.warm_bars,
-        result.catchup_bars,
-        result.live_bars,
-        result.fills_count,
-        result.places_count,
-        result.cancel_attempted,
-    )
-    if failure is not None:
-        # Technical failure: the open exposure is no longer under engine control.
-        raise failure
-    return result
+        result = LiveDaemonResult(
+            run_id=session.run_id,
+            decisions_path=session.decisions_path,
+            export_dir=session.loadout.export_dir,
+            warm_bars=warm_bars,
+            live_bars=live_bars,
+            bars_processed=session.bars_processed,
+            fills_count=session.fills_count,
+            places_count=session.places_count,
+            stop_reason=str(stop_state["reason"]),
+            execution_mode="live",
+            cancel_attempted=cancel_attempted,
+            cancel_ok=cancel_ok,
+            cancel_error=cancel_error,
+            catchup_bars=catchup_bars,
+            position_qty=float(session.engine.position.qty),
+        )
+        logger.info(
+            "live daemon stopped reason=%s warm=%s catchup=%s live=%s fills=%s "
+            "places=%s cancel=%s",
+            result.stop_reason,
+            result.warm_bars,
+            result.catchup_bars,
+            result.live_bars,
+            result.fills_count,
+            result.places_count,
+            result.cancel_attempted,
+        )
+        if failure is not None:
+            # Technical failure: the open exposure is no longer under engine
+            # control (drift) or its exits can no longer be evaluated (intent).
+            raise failure
+        return result
 
 
 def _causal_warmup(

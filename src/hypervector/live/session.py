@@ -4,6 +4,8 @@ Warm-up history is seeded into the rolling buffer without evaluating intents
 (:meth:`LiveSession.seed_history`), bars without execution authority are only
 recorded (:meth:`LiveSession.observe_bar`), and arming discards any synthetic
 exposure so the armed phase always starts from the venue-reconciled flat state.
+A strategy failure with execution authority is a technical failure: it is
+recorded and raised (:class:`LiveIntentError`), never a silent hold.
 """
 
 from __future__ import annotations
@@ -42,6 +44,10 @@ from hypervector.nautilus.load_export import load_strategy_loadout
 from hypervector.strategies import register_all_strategies
 
 logger = logging.getLogger(__name__)
+
+
+class LiveIntentError(RuntimeError):
+    """The strategy failed on an armed bar, so its exits cannot be evaluated."""
 
 
 @dataclass(frozen=True)
@@ -228,8 +234,17 @@ class LiveSession:
             intent = last_bar_intent(
                 df, self.loadout.strategy_name, dict(self.loadout.params)
             )
-        except Exception:
-            return None
+        except Exception as exc:  # noqa: BLE001 — every builder failure counts
+            if not self.engine.place_enabled:
+                # Without execution authority there is no exposure to manage.
+                logger.debug("live warm-up intent failed: %s", exc)
+                return None
+            self._record_intent_error(record, exc)
+            raise LiveIntentError(
+                f"strategy {self.loadout.strategy_name} failed on an armed bar "
+                f"with position {self.engine.position.qty!r} "
+                f"{self.loadout.symbol}: {exc}"
+            ) from exc
 
         pos = self.engine.position
         is_flat = pos.qty == 0.0
@@ -311,6 +326,36 @@ class LiveSession:
             return None
 
         return None
+
+    def _record_intent_error(self, record: dict[str, Any], exc: Exception) -> None:
+        """Log and journal an armed-phase strategy failure before it is raised."""
+        error = f"{type(exc).__name__}: {exc}"
+        logger.error(
+            "live intent failed on an armed bar (position %s %s): %s",
+            self.engine.position.qty,
+            self.loadout.symbol,
+            error,
+        )
+        append_live_decision(
+            self.root,
+            {
+                "feed_ts": _feed_ts(record),
+                "run_id": self.run_id,
+                "export_id": str(self.export_id),
+                "strategy_name": self.loadout.strategy_name,
+                "symbol": self.loadout.symbol,
+                "timeframe": self.loadout.timeframe,
+                "action": "intent_error",
+                "error": error,
+                "position_qty": self.engine.position.qty,
+                "position_avg_px": self.engine.position.avg_px,
+                "execution_mode": "live",
+                "submitted": False,
+                "place_attempted": False,
+                "live_phase": bool(self.engine.place_enabled),
+                "network": NETWORK_MAINNET,
+            },
+        )
 
     def process_frame(self, ohlcv: pd.DataFrame, *, max_bars: int | None = None) -> int:
         """Replay bars through :meth:`on_bar` (synthetic when unarmed).

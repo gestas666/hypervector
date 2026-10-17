@@ -170,16 +170,23 @@ def _profile_readiness(path: Path, blockers: list[str]) -> dict[str, object]:
 def cmd_live_run(args: argparse.Namespace) -> int:
     """Live daemon: mainnet place when enabled+armed+secrets (fail-closed).
 
-    Missing authority flags or credentials are refused (exit 2) before any
-    write or client; daemon failures are technical (exit 1). Both print the
-    shared JSON error document.
+    Missing authority flags, missing credentials, a missing export and a shared
+    account another live backend owns are refusals before any venue call (exit
+    2, ``CommandRefused``); failures after start exit 1.
     """
     from hypervector.live.policy import LivePolicyError
     from hypervector.live.runner import start_live_daemon
+    from hypervector.runtime_lock import RuntimeLockError
 
+    if not (
+        getattr(args, "enabled", False) and getattr(args, "i_accept_live_risk", False)
+    ):
+        raise CommandRefused(
+            "live run refused: requires both --enabled and --i-accept-live-risk"
+        )
     path = Path(args.export)
     if not path.is_dir():
-        raise FileNotFoundError(f"export path not found: {path}")
+        raise CommandRefused(f"export path not found: {path}")
 
     try:
         policy = _armed_policy(args)
@@ -192,6 +199,9 @@ def cmd_live_run(args: argparse.Namespace) -> int:
         result = start_live_daemon(
             **_live_options(args, path, policy, wallet, key, stop_file)
         )
+    except RuntimeLockError as exc:
+        # Another live owner holds the shared account; nothing was sent.
+        raise CommandRefused(f"live run refused: {exc}") from exc
     except LivePolicyError as exc:
         return print_error(args, exc, error=f"live run refused: {exc}")
     except FileNotFoundError as exc:
@@ -301,6 +311,8 @@ def _live_result(result: LiveDaemonResult, policy: LivePolicy) -> dict[str, obje
         "fills_count": result.fills_count,
         "places_count": result.places_count,
         "catchup_bars": getattr(result, "catchup_bars", 0),
+        # Open exposure at stop: the daemon never flattens when it stops.
+        "position_qty": getattr(result, "position_qty", 0.0),
         "stop_reason": result.stop_reason,
         "cancel_attempted": result.cancel_attempted,
         "cancel_ok": result.cancel_ok,

@@ -14,6 +14,15 @@ from hypervector.export.phase2 import export_candidate
 from hypervector.live.policy import LivePolicy, LivePolicyError
 
 
+@pytest.fixture(autouse=True)
+def _isolated_account_lock_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep the daemon's shared-account lock out of the checkout's data/live."""
+    root = tmp_path / "account-live"
+    monkeypatch.setattr("hypervector.live.runner.canonical_live_root", lambda: root)
+
+
 class RecordingTransport:
     """Offline venue: records calls and tracks the net position it filled."""
 

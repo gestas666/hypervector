@@ -13,10 +13,29 @@ from hypervector.infra import ensure_data_layout
 LOCK_NAME = "hypervelocity-shadow.lock"
 _LIVE_ACCOUNT_LOCK_NAME = "shared-account.lock"
 _CHECKPOINT_WRITER_LOCK_SUFFIX = ".writer.lock"
+_GENERIC_LIVE_LOCK = "generic_live/process.lock"
+_GENERIC_LIVE_LABEL = "generic live daemon"
+_SOURCE_ROOT = Path(__file__).resolve().parents[2]
+# Same resolution as the cohort supervisor's REPOSITORY_ROOT: the launchd cohort
+# runs from the checkout, so its relative data/live ledger lands under it.
+_REPOSITORY_ROOT = (
+    _SOURCE_ROOT
+    if (_SOURCE_ROOT / "pyproject.toml").is_file()
+    else Path.cwd().resolve()
+)
 
 
 class RuntimeLockError(RuntimeError):
     """A backend runtime cannot acquire exclusive process ownership."""
+
+
+def canonical_live_root() -> Path:
+    """The shared live account's lock root: the armed cohort's ``data/live``.
+
+    Absolute and independent of any ``--data-root``, so a live executor cannot
+    move its shared-account lock away from the one the cohort holds.
+    """
+    return _REPOSITORY_ROOT / "data" / "live"
 
 
 @contextmanager
@@ -73,6 +92,7 @@ def sol_live_runtime_lock(live_ledger: Path) -> Iterator[Path]:
             live_root / "bidirectional_cohort/process.lock",
             "bidirectional live cohort",
         ),
+        (live_root / _GENERIC_LIVE_LOCK, _GENERIC_LIVE_LABEL),
     )
     with _runtime_lock(lock_path, "SOL live backend"):
         with _shared_live_account_lock(live_root):
@@ -93,6 +113,7 @@ def source_follow_live_runtime_lock(live_ledger: Path) -> Iterator[Path]:
             live_root / "bidirectional_cohort/process.lock",
             "bidirectional live cohort",
         ),
+        (live_root / _GENERIC_LIVE_LOCK, _GENERIC_LIVE_LABEL),
     )
     with _runtime_lock(lock_path, "BTC source-follow live backend"):
         with _shared_live_account_lock(live_root):
@@ -116,6 +137,7 @@ def apex_mm_live_runtime_lock(live_ledger: Path) -> Iterator[Path]:
             live_root / "bidirectional_cohort/process.lock",
             "bidirectional live cohort",
         ),
+        (live_root / _GENERIC_LIVE_LOCK, _GENERIC_LIVE_LABEL),
     )
     with _runtime_lock(lock_path, "Apex MM live backend"):
         with _shared_live_account_lock(live_root):
@@ -155,6 +177,7 @@ def hulk_smash_live_runtime_lock(live_ledger: Path) -> Iterator[Path]:
             live_root / "bidirectional_cohort/process.lock",
             "bidirectional live cohort",
         ),
+        (live_root / _GENERIC_LIVE_LOCK, _GENERIC_LIVE_LABEL),
     )
     with _runtime_lock(lock_path, "Hulk Smash live backend"):
         with _shared_live_account_lock(live_root):
@@ -180,8 +203,37 @@ def bidirectional_live_runtime_lock(live_ledger: Path) -> Iterator[Path]:
             live_ledger.parent / "observer.lock",
             "bidirectional cohort observer",
         ),
+        (live_root / _GENERIC_LIVE_LOCK, _GENERIC_LIVE_LABEL),
     )
     with _runtime_lock(lock_path, "bidirectional live cohort"):
+        with _shared_live_account_lock(live_root):
+            _refuse_active_owners(other_owners)
+            yield lock_path
+
+
+@contextmanager
+def generic_live_runtime_lock(live_root: Path) -> Iterator[Path]:
+    """Own the shared account for the generic single-export ``live run`` daemon.
+
+    ``live_root`` must be the account's canonical root (:func:`canonical_live_root`),
+    never an operator ``--data-root``: the lock only serializes against the
+    cohort and the other live backends when it lands next to theirs.
+    """
+    lock_path = live_root / _GENERIC_LIVE_LOCK
+    other_owners = (
+        (
+            live_root / "bidirectional_cohort/process.lock",
+            "bidirectional live cohort",
+        ),
+        (live_root / "hulk_smash/process.lock", "Hulk Smash live backend"),
+        (live_root / "sol_range_onset_canary/process.lock", "SOL live backend"),
+        (live_root / "apex_regime_mm/process.lock", "Apex MM live backend"),
+        (
+            live_root / "hypervelocity_source_follow/process.lock",
+            "BTC source-follow live backend",
+        ),
+    )
+    with _runtime_lock(lock_path, _GENERIC_LIVE_LABEL):
         with _shared_live_account_lock(live_root):
             _refuse_active_owners(other_owners)
             yield lock_path
