@@ -174,3 +174,31 @@ def history_failure(args: argparse.Namespace, exc: BaseException) -> int:
     }
     print(json.dumps(report), file=sys.stderr)
     return 1
+
+
+def print_error(
+    args: argparse.Namespace | None,
+    exc: BaseException,
+    *,
+    code: int = 1,
+    error: str | None = None,
+    **context: object,
+) -> int:
+    """Print the shared error document on stderr and return ``code``.
+
+    The shape matches the ``cli.main`` boundary: ``{"ok": false, "command",
+    "error_type", "error"}`` plus any handler ``context``. Handlers that must
+    catch their own failures use this instead of plain text.
+    """
+    import json
+    import sys
+
+    report: dict[str, object] = {
+        "ok": False,
+        "command": getattr(args, "command", None),
+        "error_type": type(exc).__name__,
+        "error": str(exc) if error is None else error,
+    }
+    report.update({key: value for key, value in context.items() if key not in report})
+    print(json.dumps(report, default=str), file=sys.stderr)
+    return code

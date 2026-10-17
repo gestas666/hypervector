@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import sys
 
+from hypervector.commands.common import CommandRefused
 from hypervector.live.cohort_operator_requests import build_request, publish_request
 
 
@@ -17,11 +17,10 @@ def cmd_operator_request(args: argparse.Namespace) -> int:
         and args.request_action != "stage_profile"
         and not (args.enabled and args.i_accept_live_risk)
     ):
-        print(
-            "operator request refused: publication requires both --enabled and --i-accept-live-risk",
-            file=sys.stderr,
+        raise CommandRefused(
+            "operator request refused: publication requires both --enabled and "
+            "--i-accept-live-risk"
         )
-        return 2
     try:
         settings = (
             json.loads(Path(args.settings).read_text()) if args.settings else None
@@ -37,8 +36,7 @@ def cmd_operator_request(args: argparse.Namespace) -> int:
         )
         path = publish_request(Path(args.inbox), request) if args.submit else None
     except (OSError, ValueError) as exc:
-        print(f"operator request refused: {exc}", file=sys.stderr)
-        return 2
+        raise CommandRefused(f"operator request refused: {exc}") from exc
     print(
         json.dumps(
             {

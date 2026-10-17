@@ -36,5 +36,5 @@ def cmd_oxa_liquidation_fetch(args: argparse.Namespace) -> int:
             **acquisition_options(args),
         )
     except (OxaHistoryError, ValueError, OSError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     return _print_success(report)

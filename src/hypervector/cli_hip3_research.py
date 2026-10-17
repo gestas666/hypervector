@@ -6,7 +6,6 @@ import argparse
 from datetime import datetime
 import json
 from pathlib import Path
-import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -69,8 +68,9 @@ def cmd_hip3_liquidity_profile(args: argparse.Namespace) -> int:
         if args.out is not None:
             _write_exclusive(Path(args.out), rendered)
     except (duckdb.Error, OSError, TypeError, ValueError) as exc:
-        print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
-        return 1
+        from hypervector.commands.common import print_error
+
+        return print_error(args, exc)
     print(rendered)
     return 0
 

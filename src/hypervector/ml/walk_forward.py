@@ -103,6 +103,7 @@ def run_walk_forward_metalabel(
     max_hold_bars: int = 120,
     n_cv_splits: int = 5,
     ohlcv: pd.DataFrame | None = None,
+    ohlcv_provenance: dict[str, Any] | None = None,
 ) -> WalkForwardResult:
     """Label strategy entries → walk-forward OOS scores → final metalabel bundle."""
     try:
@@ -128,7 +129,7 @@ def run_walk_forward_metalabel(
 
     if ohlcv is not None:
         df = ohlcv
-        prov: dict[str, Any] = {"injected": True}
+        prov: dict[str, Any] = {"injected": True, **(ohlcv_provenance or {})}
     else:
         df, prov = load_research_history(
             root,

@@ -45,7 +45,8 @@ def snapshot_decision_ledger(
 ) -> Iterator[tuple[list[dict[str, object]], dict[str, object]]]:
     """Copy and load a complete JSONL prefix without mutating its source."""
     if not path.is_file():
-        raise FileNotFoundError(f"live decisions ledger does not exist: {path}")
+        # Shared by the live audit and the paper observer audit: name neither.
+        raise FileNotFoundError(f"decisions ledger does not exist: {path}")
     start_offset, selected_run_id = _snapshot_start(path, run_id, latest_armed_run)
     extra = {"selected_run_id": selected_run_id} if selected_run_id is not None else {}
     with _loaded_suffix_snapshot(

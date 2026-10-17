@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import sys
 
 from hypervector.infra import paths_for
 
@@ -17,10 +16,11 @@ def research_database_path(args: argparse.Namespace) -> Path:
     return paths_for(args.data_root).research_db
 
 
-def print_failure(exc: Exception) -> int:
-    """Print one machine-readable command failure."""
-    print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
-    return 1
+def print_failure(exc: Exception, args: argparse.Namespace | None = None) -> int:
+    """Print one machine-readable command failure (the shared error shape)."""
+    from hypervector.commands.common import print_error
+
+    return print_error(args, exc)
 
 
 def print_success(report: dict[str, object]) -> int:

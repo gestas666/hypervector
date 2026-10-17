@@ -400,8 +400,11 @@ def test_cli_live_run_refuses_without_arm(tmp_path: Path, capsys, monkeypatch):
             "0",
         ]
     )
-    assert rc == 1
-    err = capsys.readouterr().err
+    # A missing authority flag is a refusal (exit 2) with the JSON error shape.
+    assert rc == 2
+    error = json.loads(capsys.readouterr().err)
+    assert (error["command"], error["error_type"]) == ("live run", "CommandRefused")
+    err = error["error"]
     assert (
         "arm" in err.lower()
         or "accept-live-risk" in err.lower()
@@ -428,9 +431,10 @@ def test_cli_live_run_refuses_without_enabled(tmp_path: Path, capsys, monkeypatc
             "0",
         ]
     )
-    assert rc == 1
-    err = capsys.readouterr().err
-    assert "enabled" in err.lower()
+    assert rc == 2
+    error = json.loads(capsys.readouterr().err)
+    assert error["error_type"] == "CommandRefused"
+    assert "enabled" in error["error"].lower()
 
 
 def test_paper_package_still_has_no_live_exec_import():

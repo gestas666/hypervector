@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 from hypervector.paper.runner import start_paper_daemon
 from hypervector.strategies.runtime_profile import load_hypervelocity_runtime_profile
-from hypervector.commands.common import _ensure_root
+from hypervector.commands.common import _ensure_root, print_error
 
 
 def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
@@ -34,8 +33,7 @@ def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
                 hypervelocity_profile=profile,
             )
     except (FileNotFoundError, OSError, RuntimeError, ValueError) as exc:
-        print(f"paper shadow failed: {exc}", file=sys.stderr)
-        return 1
+        return print_error(args, exc, error=f"paper shadow failed: {exc}")
     print(
         json.dumps(
             {
@@ -68,8 +66,7 @@ def cmd_hypervelocity_shadow_reset(args: argparse.Namespace) -> int:
             confirmed=bool(args.yes),
         )
     except (FileExistsError, OSError, RuntimeError, ValueError) as exc:
-        print(f"paper shadow-reset failed: {exc}", file=sys.stderr)
-        return 1
+        return print_error(args, exc, error=f"paper shadow-reset failed: {exc}")
     print(json.dumps(report.as_dict(), indent=2))
     return 0
 

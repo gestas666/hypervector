@@ -12,6 +12,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import UTC, datetime
 import json
 import math
+import os
 from pathlib import Path
 from typing import Any
 
@@ -102,8 +103,9 @@ def _resolve_reference(
         if chosen is not None:
             return chosen.resolve()
         looked.append(f"'latest' under {root} (newest bundle that {latest_rule})")
-    elif _is_plain_name(text):
-        candidate = root / text
+    elif _is_plain_name(name := text.rstrip("/" + os.sep)):
+        # 'export_uptrend_1/' (shell completion) names the same candidate id.
+        candidate = root / name
         if candidate.is_dir():
             return candidate.resolve()
         looked.append(f"candidate id {candidate}")
@@ -138,9 +140,14 @@ def latest_metalabel_bundle(models_root: Path) -> Path | None:
 
 
 def _bundle_dirs(root: Path) -> list[Path]:
+    """Bundle directories; hidden ones (``.staging-*`` exports in flight) are not."""
     if not root.is_dir():
         return []
-    return sorted(entry for entry in root.iterdir() if entry.is_dir())
+    return sorted(
+        entry
+        for entry in root.iterdir()
+        if entry.is_dir() and not entry.name.startswith(".")
+    )
 
 
 def _newest(paths: Sequence[Path], recency: Callable[[Path], float]) -> Path | None:

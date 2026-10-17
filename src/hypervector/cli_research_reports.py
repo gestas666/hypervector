@@ -19,7 +19,9 @@ def cmd_research_db_status(args: argparse.Namespace) -> int:
     """Report current DuckDB research-market table counts."""
     path = research_database_path(args)
     if not path.is_file():
-        return print_failure(FileNotFoundError(f"research database is missing: {path}"))
+        return print_failure(
+            FileNotFoundError(f"research database is missing: {path}"), args
+        )
     try:
         database = ResearchDatabase(path)
         report: dict[str, object] = {
@@ -32,7 +34,7 @@ def cmd_research_db_status(args: argparse.Namespace) -> int:
             "portfolio_research": database.portfolio_research_summary(),
         }
     except (duckdb.Error, OSError, ValueError) as exc:
-        return print_failure(exc)
+        return print_failure(exc, args)
     return print_success(report)
 
 
@@ -40,7 +42,9 @@ def cmd_research_db_shadow_trades(args: argparse.Namespace) -> int:
     """Report causally attributed completed shadow trades."""
     path = research_database_path(args)
     if not path.is_file():
-        return print_failure(FileNotFoundError(f"research database is missing: {path}"))
+        return print_failure(
+            FileNotFoundError(f"research database is missing: {path}"), args
+        )
     try:
         report = {
             "ok": True,
@@ -49,5 +53,5 @@ def cmd_research_db_shadow_trades(args: argparse.Namespace) -> int:
             "venue": "hyperliquid",
         }
     except (duckdb.Error, OSError, ValueError) as exc:
-        return print_failure(exc)
+        return print_failure(exc, args)
     return print_success(report)

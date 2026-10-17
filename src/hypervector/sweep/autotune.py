@@ -81,6 +81,7 @@ def run_autotune(
     train_fraction: float = DEFAULT_TRAIN_FRACTION,
     pin_cache: bool = False,
     max_cache_age_hours: float | None = None,
+    allow_network: bool = True,
 ) -> AutotuneResult:
     """Run a measured search; abort technical failures without rejecting weak trials.
 
@@ -94,7 +95,8 @@ def run_autotune(
     an existing cached window as is (``max_cache_age=None``),
     ``max_cache_age_hours`` refreshes only windows older than that, and
     neither keeps the loader's default. Pinning excludes both the hours and
-    ``force_refresh``.
+    ``force_refresh``. ``allow_network=False`` never fetches: a stale cached
+    window is served as is and a cache miss raises ``FileNotFoundError``.
 
     A strategy contract may replace ``fee_model`` (Hypervelocity is measured
     with ``hl_maker``); the board and result record both the requested and
@@ -119,6 +121,8 @@ def run_autotune(
     ):
         raise ValueError("train_fraction must be in (0, 1]")
     _check_cache_policy(pin_cache, max_cache_age_hours, force_refresh)
+    if force_refresh and not allow_network:
+        raise ValueError("force_refresh needs the network; allow_network is False")
     selected_root = _resolve_root(root, data_root)
     if book_data_path not in (None, "") and not Path(book_data_path).is_file():  # type: ignore[arg-type]
         raise FileNotFoundError(f"book data path is not a file: {book_data_path}")
@@ -147,6 +151,7 @@ def run_autotune(
         max_cache_age_hours=(
             None if max_cache_age_hours is None else float(max_cache_age_hours)
         ),
+        allow_network=bool(allow_network),
     )
     return _run_search(settings)
 
@@ -209,6 +214,7 @@ def _load_inputs(settings: SearchSettings) -> tuple[pd.DataFrame, dict[str, obje
         lookback_days=settings.lookback_days,
         strict_hl_only=settings.strict_hl_only,
         force_refresh=settings.force_refresh,
+        allow_network=settings.allow_network,
         **_cache_age_kwargs(settings),
     )
     if bars.empty:

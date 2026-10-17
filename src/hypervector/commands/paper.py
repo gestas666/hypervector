@@ -7,17 +7,16 @@ from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 import json
 import os
-import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from hypervector.commands.common import _secrets_present
+from hypervector.commands.common import CommandRefused, _secrets_present, print_error
 from hypervector.commands.exports import resolve_export, resolve_metalabel_bundle
 from hypervector.infra import ensure_data_layout
 from hypervector.nautilus.load_export import load_strategy_loadout
 from hypervector.paper.fill_models import DEFAULT_MAX_BOOK_AGE_MS, FILL_MODEL_L2_WALK_V1
 from hypervector.paper.order_intent import NETWORK_MAINNET
-from hypervector.paper.report import report_from_data_root
+from hypervector.paper.report import default_decisions_path, report_from_data_root
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 
 if TYPE_CHECKING:
@@ -69,8 +68,7 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         strategy_name = load_strategy_loadout(path, strict=True).strategy_name
         options = _paper_options(args, path, strategy_name)
     except PaperArgumentsError as exc:
-        print(f"paper run refused: {exc}", file=sys.stderr)
-        return 2
+        raise CommandRefused(f"paper run refused: {exc}") from exc
     hypervelocity_shadow = (
         is_hypervelocity_strategy(strategy_name)
         and options["execution_mode"] == "shadow"
@@ -80,24 +78,13 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         with _runtime_guard(args, hypervelocity_shadow), _metalabel_root(bundle):
             result = start_paper_daemon(**options)
     except RuntimeLockError as exc:
-        print(f"paper run refused: {exc}", file=sys.stderr)
-        return 2
+        raise CommandRefused(f"paper run refused: {exc}") from exc
     except Exception as exc:  # noqa: BLE001 - session failures are technical (exit 1)
         if os.environ.get("HYPERVECTOR_DEBUG") == "1":
             raise
-        print(
-            json.dumps(
-                {
-                    "ok": False,
-                    "command": args.command,
-                    "error_type": type(exc).__name__,
-                    "error": f"paper run failed: {exc}",
-                    "export_dir": str(path),
-                }
-            ),
-            file=sys.stderr,
+        return print_error(
+            args, exc, error=f"paper run failed: {exc}", export_dir=str(path)
         )
-        return 1
     report = _paper_result(args, result, options)
     report["hypervelocity_runtime_lock"] = hypervelocity_shadow
     report["metalabel_bundle"] = str(bundle) if bundle is not None else None
@@ -111,9 +98,20 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
 
 
 def cmd_paper_report(args: argparse.Namespace) -> int:
-    """Summarize paper/shadow decisions JSONL (read-only; no venue orders)."""
+    """Summarize paper/shadow decisions JSONL (read-only; no venue orders).
+
+    A missing decisions file (explicit or default) exits 1 rather than
+    reporting an empty session.
+    """
     root = Path(args.data_root)
-    decisions = Path(args.decisions) if getattr(args, "decisions", None) else None
+    decisions = (
+        Path(args.decisions)
+        if getattr(args, "decisions", None)
+        else default_decisions_path(root)
+    )
+    if not decisions.is_file():
+        missing = FileNotFoundError(f"decisions file not found: {decisions}")
+        return print_error(args, missing)
     last_n = int(getattr(args, "last", 5))
     try:
         report = report_from_data_root(
@@ -124,8 +122,7 @@ def cmd_paper_report(args: argparse.Namespace) -> int:
             strategy=getattr(args, "strategy", None),
         )
     except ValueError as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
+        return print_error(args, exc)
     print(json.dumps(report, indent=2, default=str))
     return 0
 

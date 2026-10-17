@@ -5,11 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from hypervector.commands.common import CommandRefused, _ensure_root
+from hypervector.commands.common import CommandRefused, _ensure_root, print_error
 from hypervector.paper.order_intent import NETWORK_MAINNET
 
 if TYPE_CHECKING:
@@ -169,21 +168,24 @@ def _profile_readiness(path: Path, blockers: list[str]) -> dict[str, object]:
 
 
 def cmd_live_run(args: argparse.Namespace) -> int:
-    """Live daemon: mainnet place when enabled+armed+secrets (fail-closed)."""
+    """Live daemon: mainnet place when enabled+armed+secrets (fail-closed).
+
+    Missing authority flags or credentials are refused (exit 2) before any
+    write or client; daemon failures are technical (exit 1). Both print the
+    shared JSON error document.
+    """
     from hypervector.live.policy import LivePolicyError
     from hypervector.live.runner import start_live_daemon
 
     path = Path(args.export)
     if not path.is_dir():
-        print(f"export path not found: {path}", file=sys.stderr)
-        return 1
+        raise FileNotFoundError(f"export path not found: {path}")
 
     try:
         policy = _armed_policy(args)
         wallet, key = _live_credentials()
     except LivePolicyError as exc:
-        print(f"live run refused: {exc}", file=sys.stderr)
-        return 1
+        raise CommandRefused(f"live run refused: {exc}") from exc
     _ensure_root(args)
     stop_file = Path(args.stop_file) if getattr(args, "stop_file", None) else None
     try:
@@ -191,14 +193,11 @@ def cmd_live_run(args: argparse.Namespace) -> int:
             **_live_options(args, path, policy, wallet, key, stop_file)
         )
     except LivePolicyError as exc:
-        print(f"live run refused: {exc}", file=sys.stderr)
-        return 1
+        return print_error(args, exc, error=f"live run refused: {exc}")
     except FileNotFoundError as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
+        return print_error(args, exc)
     except (OSError, RuntimeError, ValueError) as exc:
-        print(f"live run failed: {exc}", file=sys.stderr)
-        return 1
+        return print_error(args, exc, error=f"live run failed: {exc}")
 
     print(json.dumps(_live_result(result, policy), indent=2, default=str))
     return 0
@@ -207,11 +206,20 @@ def cmd_live_run(args: argparse.Namespace) -> int:
 def cmd_live_report(args: argparse.Namespace) -> int:
     """Summarize live decisions JSONL (read-only; no place)."""
     from hypervector.live.report import (
+        default_live_decisions_path,
         report_from_data_root as live_report_from_data_root,
     )
 
     root = Path(args.data_root)
-    decisions = Path(args.decisions) if getattr(args, "decisions", None) else None
+    decisions = (
+        Path(args.decisions)
+        if getattr(args, "decisions", None)
+        else default_live_decisions_path(root)
+    )
+    if not decisions.is_file():
+        # A mistyped path must not read as an empty session (exit 1).
+        missing = FileNotFoundError(f"decisions file not found: {decisions}")
+        return print_error(args, missing)
     last_n = int(getattr(args, "last", 5))
     try:
         report = live_report_from_data_root(
@@ -220,8 +228,7 @@ def cmd_live_report(args: argparse.Namespace) -> int:
             last_n=last_n,
         )
     except ValueError as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
+        return print_error(args, exc)
     print(json.dumps(report, indent=2, default=str))
     return 0
 

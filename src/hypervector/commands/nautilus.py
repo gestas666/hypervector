@@ -133,7 +133,12 @@ def cmd_run(args: argparse.Namespace) -> int:
         "loadout": result.loadout_summary,
         "artifacts": {
             "export": str(result.export_dir),
-            "validation": str(result.report_path),
+            # One shape with export validate: the replay loads the bundle strictly.
+            "validation": {
+                "strict": True,
+                "valid": True,
+                "report_path": str(result.report_path),
+            },
         },
     }
     print(json.dumps(out, indent=2, default=str))

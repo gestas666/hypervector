@@ -330,7 +330,9 @@ def test_nautilus_run_defaults_to_the_bundle_lookback(
     assert phase2_calls[0]["allow_network"] is False
     assert Path(str(phase2_calls[0]["export_dir"])) == bundle.resolve()
     assert (out["lookback_days"], out["lookback_source"]) == (180, "export")
-    assert out["artifacts"]["validation"] == str(tmp_path / "summary.json")
+    validation = out["artifacts"]["validation"]
+    assert validation["report_path"] == str(tmp_path / "summary.json")
+    assert validation["valid"] is True
     assert main([*base, "--lookback-days", "60"]) == 0
     assert phase2_calls[1]["lookback_days"] == 60
 

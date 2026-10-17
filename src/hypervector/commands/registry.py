@@ -357,6 +357,13 @@ class HelpFormatter(argparse.RawDescriptionHelpFormatter):
             return action.help
         return f"{text} (default: %(default)s)"
 
+    def _split_lines(self, text: str, width: int) -> list[str]:
+        """Wrap help at spaces only, so a long default path stays whole."""
+        import textwrap
+
+        text = self._whitespace_matcher.sub(" ", text).strip()
+        return textwrap.wrap(text, width, break_long_words=False)
+
 
 class CommandParser(argparse.ArgumentParser):
     """Group and command parser: shared formatter, no option abbreviations."""
@@ -460,6 +467,16 @@ def _argparse_options(argument: Spec) -> dict[str, Any]:
         options["action"] = argparse.BooleanOptionalAction
     if argument.get("required") and options.get("help"):
         options["help"] = f"{options['help']} (required)"
+    relative = argument.get("data_default")
+    text = options.get("help")
+    if (
+        relative
+        and isinstance(text, str)
+        and not argument.get("hidden")
+        and "default" not in text.lower()
+    ):
+        # Filled after parsing (options.default is null), so state it here.
+        options["help"] = f"{text} (default: DATA_ROOT/{relative})"
     if argument.get("hidden"):
         options.update(help=argparse.SUPPRESS, default=argparse.SUPPRESS)
     return options

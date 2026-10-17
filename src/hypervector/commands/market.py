@@ -14,6 +14,7 @@ from hypervector.commands.common import (
     cache_age_options,
     history_failure,
     json_safe,
+    print_error,
 )
 
 
@@ -31,10 +32,7 @@ def cmd_book_record(args: argparse.Namespace) -> int:
         try:
             row = append_snapshot(paths.root, symbol)
         except Exception as exc:  # noqa: BLE001
-            print(
-                json.dumps({"ok": False, "error": str(exc)}, indent=2), file=sys.stderr
-            )
-            return 1
+            return print_error(args, exc)
         print(json.dumps({"ok": True, "mode": "once", **row}, indent=2, default=str))
         return 0
 
@@ -51,8 +49,7 @@ def cmd_book_record(args: argparse.Namespace) -> int:
             max_consecutive_errors=max_errors,
         )
     except Exception as exc:  # noqa: BLE001
-        print(json.dumps({"ok": False, "error": str(exc)}, indent=2), file=sys.stderr)
-        return 1
+        return print_error(args, exc)
     print(json.dumps(result, indent=2, default=str))
     return 0
 
@@ -70,8 +67,19 @@ def cmd_history(args: argparse.Namespace) -> int:
         df, prov = _load_bars(args)
     except (RuntimeError, OSError) as exc:
         return history_failure(args, exc)
-    key = cache_key(args.symbol, args.timeframe, args.lookback)
-    cache_path = Path(args.data_root) / "cache" / f"{key}.parquet"
+    served = prov.get("cache_path") if isinstance(prov, dict) else None
+    if served:
+        # The cache the loader actually served (a strict load may be an all-HL
+        # default key); otherwise the strict-aware key rule.
+        cache_path = Path(str(served))
+    else:
+        key = cache_key(
+            args.symbol,
+            args.timeframe,
+            args.lookback,
+            strict_hl_only=bool(getattr(args, "strict_hl_only", False)),
+        )
+        cache_path = Path(args.data_root) / "cache" / f"{key}.parquet"
     start, end = _bar_window(df)
     dataset = {
         "symbol": args.symbol,

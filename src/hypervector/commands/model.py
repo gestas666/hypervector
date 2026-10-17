@@ -32,11 +32,15 @@ def train_metalabel_bundle(
     step_days: int | None = None,
     embargo_minutes: int = 60,
     max_hold_bars: int = 120,
+    ohlcv: Any = None,
+    ohlcv_provenance: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Walk-forward LightGBM metalabel training on one strategy bundle's entries.
 
     Writes the model bundle (default ``<root>/models/metalabel/wf_<strategy>_<ts>``)
-    and returns its report with ``bundle_dir``. Never installs.
+    and returns its report with ``bundle_dir``. Never installs. ``ohlcv`` trains
+    on an already loaded window (``pipeline run`` passes its pinned frame) and
+    skips the history load; ``ohlcv_provenance`` is recorded with it.
     """
     from hypervector.ml.walk_forward import run_walk_forward_metalabel
 
@@ -50,6 +54,8 @@ def train_metalabel_bundle(
         step_days=int(step_days) if step_days is not None else None,
         embargo_minutes=int(embargo_minutes),
         max_hold_bars=int(max_hold_bars),
+        ohlcv=ohlcv,
+        ohlcv_provenance=ohlcv_provenance,
     )
     return {**result.report, "bundle_dir": str(Path(result.bundle_dir).resolve())}
 

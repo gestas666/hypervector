@@ -15,14 +15,17 @@ from hypervector.commands.common import CommandRefused, cache_age_options
 def cmd_autotune(args: argparse.Namespace) -> int:
     """Run Karpathy (or optional Optuna TPE) autotuning for one strategy.
 
-    An unavailable sampler, an unknown strategy or objective, a train fraction
-    outside (0, 1], a missing book file or contradictory cache flags
-    (``--pin-cache`` with ``--max-cache-age-hours`` or ``--refresh``) is
-    refused (exit 2) before any data load; an all-failed search is a
-    technical failure (exit 1). The search
+    A non-positive ``--n-trials``, an unavailable sampler, an unknown strategy
+    or objective, a train fraction outside (0, 1], a missing book file or
+    contradictory cache flags (``--pin-cache`` with ``--max-cache-age-hours``
+    or ``--refresh``) is refused (exit 2) before any data load; an all-failed
+    search is a technical failure (exit 1). The search
     covers the first ``--train-fraction`` of bars and the selected trial is
     measured once on the remaining holdout (report-only, never a gate).
     """
+    n_trials = getattr(args, "n_trials", None)
+    if type(n_trials) is not int or n_trials < 1:
+        raise CommandRefused("--n-trials must be at least 1")
     sampler = getattr(args, "sampler", "karpathy")
     if sampler == "optuna" and find_spec("optuna") is None:
         raise CommandRefused(

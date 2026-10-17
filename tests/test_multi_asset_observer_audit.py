@@ -298,7 +298,9 @@ def test_duplicate_provider_contract_is_rejected() -> None:
         audit_cohort_observer_run(rows, run_id=_RUN_ID)
 
 
-def test_script_publishes_one_immutable_cohort_snapshot(tmp_path: Path) -> None:
+def test_script_publishes_one_immutable_cohort_snapshot(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """The CLI fingerprints its source and refuses to overwrite evidence."""
     content = "".join(json.dumps(row) + "\n" for row in _observer_rows()).encode()
     ledger = tmp_path / "decisions.jsonl"
@@ -312,8 +314,12 @@ def test_script_publishes_one_immutable_cohort_snapshot(tmp_path: Path) -> None:
     report = json.loads(output.read_text(encoding="utf-8"))
     assert report["evidence"]["sha256"] == hashlib.sha256(content).hexdigest()
     assert report["observer_contract"]["execution_authority"] == "none"
-    with pytest.raises(FileExistsError, match="observer audit output exists"):
-        module.main(args)
+    capsys.readouterr()
+    # A second publish is refused as one JSON error document (exit 1).
+    assert module.main(args) == 1
+    error = json.loads(capsys.readouterr().err)
+    assert (error["command"], error["error_type"]) == ("paper audit", "FileExistsError")
+    assert "observer audit output exists" in error["error"]
     source = _SCRIPT.read_text(encoding="utf-8")
     assert "private_key" not in source
     assert "create_armed" not in source

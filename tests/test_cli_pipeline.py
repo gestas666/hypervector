@@ -427,7 +427,9 @@ def test_full_run_pins_the_window_and_reports_parity(
         "30",
         "--no-network",
     ]
-    assert stages["nautilus"]["artifacts"]["validation"].endswith("summary.json")
+    validation = stages["nautilus"]["artifacts"]["validation"]
+    assert validation["valid"] is True and validation["strict"] is True
+    assert validation["report_path"].endswith("summary.json")
 
     parity = manifest["parity"]
     assert parity["report_only"] is True
@@ -573,9 +575,28 @@ def test_a_stage_calling_sys_exit_is_a_technical_failure(
 
 
 def test_no_network_model_training_never_fetches_a_missing_window(
-    tmp_path: Path, fakes: Fakes, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """From a bundle the data stage is skipped, so only the cache may feed training."""
+    """From a bundle the data stage is skipped, so only the cache may feed training.
+
+    The real history loader runs (offline under --no-network) with the network
+    fetch refused; only the engines are faked.
+    """
+    from hypervector.data import pipeline as data_pipeline
+    from hypervector.data.cache import ParquetCache
+    from hypervector.data.sources import fixture_ohlcv
+
+    fakes = Fakes()
+    monkeypatch.setattr("hypervector.commands.model.train_metalabel_bundle", fakes.model)
+    fetched: list[object] = []
+
+    def refuse(*_args: object) -> None:
+        fetched.append(_args)
+        raise AssertionError("network fetch attempted")
+
+    monkeypatch.setattr(data_pipeline, "_fetch", refuse)
     data = tmp_path / "data"
     strict_bundle(data / "exports", "cand", lookback_days=30)
     flags = ["--strategy", "crown_stack_long", "--export", "cand", "--no-network"]
@@ -591,12 +612,14 @@ def test_no_network_model_training_never_fetches_a_missing_window(
     assert _stages(manifest)["paper"]["status"] == "not_started"
     capsys.readouterr()
 
-    (data / "cache").mkdir(parents=True, exist_ok=True)
-    (data / "cache" / "BTC_1m_30d.parquet").write_bytes(b"")
+    frame = fixture_ohlcv(n_bars=BARS, drift=20.0, wave_period=30, source="hl")
+    ParquetCache(data / "cache").save("BTC_1m_30d", frame, metadata={})
     cached = tmp_path / "cached"
     assert main([*_run(data, *flags), "--out-dir", str(cached)]) == 0
     assert _stages(json.loads(capsys.readouterr().out))["model"]["status"] == "ok"
-    assert len(fakes.calls["model"]) == 1
+    [model_call] = fakes.calls["model"]
+    assert len(model_call["ohlcv"]) == BARS
+    assert fetched == []
 
 
 def test_too_few_model_labels_is_a_result_not_a_failure(

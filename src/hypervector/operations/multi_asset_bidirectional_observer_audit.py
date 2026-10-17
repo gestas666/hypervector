@@ -7,6 +7,7 @@ import argparse
 from collections.abc import Sequence
 import json
 from pathlib import Path
+import sys
 
 from hypervector.data.oxa_storage import write_immutable_json
 from hypervector.research.cohort_observer_audit import audit_cohort_observer_run
@@ -54,8 +55,26 @@ def _output_path(args: argparse.Namespace, report: dict[str, object]) -> Path:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Publish setup diagnostics without execution or performance authority."""
-    report, output = publish_observer_audit(build_parser().parse_args(argv))
+    """Publish setup diagnostics without execution or performance authority.
+
+    A missing ledger, an existing output or another technical failure prints
+    the CLI's shared JSON error document (``command: "paper audit"``), exit 1.
+    """
+    try:
+        report, output = publish_observer_audit(build_parser().parse_args(argv))
+    except (OSError, RuntimeError, ValueError) as exc:
+        print(
+            json.dumps(
+                {
+                    "ok": False,
+                    "command": "paper audit",
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                }
+            ),
+            file=sys.stderr,
+        )
+        return 1
     run = report.get("run")
     runtime = report.get("runtime")
     technical = report.get("technical")

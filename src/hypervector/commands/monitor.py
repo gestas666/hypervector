@@ -6,8 +6,8 @@ import argparse
 import json
 import math
 from pathlib import Path
-import sys
 
+from hypervector.commands.common import CommandRefused
 from hypervector.live.cohort_accounting_rollover import load_required_accounting_epoch
 from hypervector.live.cohort_checkpoint_identity import (
     require_checkpoint_accounting_epoch,
@@ -31,13 +31,12 @@ from hypervector.runtime_lock import cohort_checkpoint_runtime_lock
 def cmd_monitor(args: argparse.Namespace) -> int:
     """Observe an exact active profile without owning or restarting its backend."""
     if not math.isfinite(args.interval_seconds) or args.interval_seconds <= 0:
-        print("monitor interval must be positive and finite", file=sys.stderr)
-        return 2
+        raise CommandRefused("monitor interval must be positive and finite")
     try:
         return _monitor(args)
     except (OSError, RuntimeError, ValueError) as exc:
-        print(f"live monitor refused: {exc}", file=sys.stderr)
-        return 2
+        # Exit 2 with the shared error document (cli.main boundary).
+        raise CommandRefused(f"live monitor refused: {exc}") from exc
 
 
 def _monitor(args: argparse.Namespace) -> int:

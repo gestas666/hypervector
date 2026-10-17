@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -57,7 +56,7 @@ def cmd_oxa_book_fetch(args: argparse.Namespace) -> int:
             **acquisition_options(args),
         )
     except (OxaHistoryError, ValueError, OSError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     return _print_success(report)
 
 
@@ -85,7 +84,7 @@ def cmd_oxa_trade_fetch(args: argparse.Namespace) -> int:
             **acquisition_options(args),
         )
     except (OxaHistoryError, ValueError, OSError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     return _print_success(report)
 
 
@@ -112,7 +111,7 @@ def cmd_oxa_price_fetch(args: argparse.Namespace) -> int:
             request=request,
         )
     except (OxaHistoryError, ValueError, OSError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     return _print_success(report)
 
 
@@ -130,7 +129,7 @@ def cmd_hl_funding_fetch(args: argparse.Namespace) -> int:
             request=request,
         )
     except (RuntimeError, ValueError, OSError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     return _print_success(report)
 
 
@@ -169,13 +168,14 @@ def cmd_oxa_candle_fetch(args: argparse.Namespace) -> int:
             request=request,
         )
     except (OxaHistoryError, ValueError, OSError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     if args.install_research_cache:
         try:
             cache_path, gap_fills = _install_candle_cache(args, report)
         except (ValueError, OSError) as exc:
             return _print_failure(
                 exc,
+                args,
                 research_cache_error=str(exc),
                 acquisition={**report, "venue": "hyperliquid"},
             )
@@ -227,7 +227,7 @@ def cmd_research_db_build(args: argparse.Namespace) -> int:
             "summary": database.summary(),
         }
     except (duckdb.Error, OSError, ValueError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     return _print_success(report)
 
 
@@ -256,7 +256,7 @@ def cmd_research_db_shadow_import(args: argparse.Namespace) -> int:
             "shadow_summary": database.shadow_summary(),
         }
     except (duckdb.Error, json.JSONDecodeError, OSError, ValueError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     return _print_success(report)
 
 
@@ -280,7 +280,7 @@ def cmd_research_db_live_event_import(args: argparse.Namespace) -> int:
             "ingest": ingest.to_dict(),
         }
     except (duckdb.Error, json.JSONDecodeError, OSError, ValueError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     return _print_success(report)
 
 
@@ -304,7 +304,7 @@ def cmd_research_db_regime_label_import(args: argparse.Namespace) -> int:
             "ingest": ingest.to_dict(),
         }
     except (duckdb.Error, json.JSONDecodeError, OSError, ValueError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     return _print_success(report)
 
 
@@ -317,7 +317,7 @@ def cmd_research_db_regime_compare(args: argparse.Namespace) -> int:
     path = _research_database_path(args)
     if not path.is_file():
         return _print_failure(
-            FileNotFoundError(f"research database is missing: {path}")
+            FileNotFoundError(f"research database is missing: {path}"), args
         )
     try:
         report = {
@@ -326,7 +326,7 @@ def cmd_research_db_regime_compare(args: argparse.Namespace) -> int:
             **ResearchDatabase(path).regime_comparison_summary(),
         }
     except (duckdb.Error, OSError, ValueError) as exc:
-        return _print_failure(exc)
+        return _print_failure(exc, args)
     return _print_success(report)
 
 
@@ -338,9 +338,12 @@ def _research_database_path(args: argparse.Namespace) -> Path:
     return paths_for(args.data_root).research_db
 
 
-def _print_failure(exc: Exception, **context: object) -> int:
-    print(json.dumps({"ok": False, "error": str(exc), **context}), file=sys.stderr)
-    return 1
+def _print_failure(
+    exc: Exception, args: argparse.Namespace | None = None, **context: object
+) -> int:
+    from hypervector.commands.common import print_error
+
+    return print_error(args, exc, **context)
 
 
 def _print_success(report: dict[str, object]) -> int:

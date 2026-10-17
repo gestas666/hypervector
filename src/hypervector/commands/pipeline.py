@@ -12,7 +12,8 @@ imported inside the stage that needs them, and only these entry points are used
 (the stage allowlist):
 
 - validate: the strategy registry, ``commands.exports.resolve_export``
-- data: ``data.pipeline.load_research_history``
+- data: ``data.pipeline.load_research_history`` (also the offline cached-window
+  read for the nautilus and model stages when a run starts from ``--export``)
 - search: ``sweep.autotune.run_autotune`` or ``commands.sweep.run_sweep``
 - export: ``export.schema.validate_export_dir``, ``nautilus.load_export.load_strategy_loadout``
 - nautilus: the ``nautilus run`` symbol predicate, ``nautilus.config_stub.phase2_check_report``
@@ -433,6 +434,8 @@ def _stage_argv(plan: Plan, stage: str, export_ref: str) -> list[str]:
         tune = ("tune", "strategy", "--strategy", plan.strategy, *market, *fees)
         search = (*tune, "--n-trials", args.n_trials, "--sampler", args.sampler)
         search += hl_only
+    # The data stage pinned the window; the search serves that cache as is.
+    search += ("--pin-cache",)
     words: dict[str, tuple[object, ...]] = {
         "data": ("data", "history", *market, *hl_only, *refresh),
         "search": search,
@@ -528,6 +531,9 @@ class PipelineRun:
         self.export_report: dict[str, Any] = {}
         self.loadout: Any = None
         self.model_dir: Path | None = None
+        # The data stage's pinned window; later stages reuse it, never refetch.
+        self.frame: Any = None
+        self.frame_provenance: dict[str, Any] = {}
 
     def run(self) -> int:
         """0 when every requested stage completed; 1 on the first technical failure."""
@@ -653,9 +659,25 @@ class PipelineRun:
                 f"lookback={plan.lookback}d"
             )
         start, end = _bar_window(frame)
-        key = cache_key(plan.symbol, plan.timeframe, plan.lookback)
-        cache_path = _cache_path(self.root, key)
         prov = provenance if isinstance(provenance, dict) else {}
+        # The loader names the cache it served (a strict load may come from an
+        # all-HL default key); fall back to the strict-aware key rule.
+        key = str(
+            prov.get("cache_key")
+            or cache_key(
+                plan.symbol,
+                plan.timeframe,
+                plan.lookback,
+                strict_hl_only=bool(args.strict_hl_only),
+            )
+        )
+        cache_path = (
+            Path(str(prov["cache_path"]))
+            if prov.get("cache_path")
+            else _cache_path(self.root, key)
+        )
+        self.frame = frame
+        self.frame_provenance = prov
         window = {
             "symbol": plan.symbol,
             "timeframe": plan.timeframe,
@@ -702,6 +724,9 @@ class PipelineRun:
             strict_hl_only=bool(args.strict_hl_only),
             force_refresh=False,
             export_best=True,
+            # The data stage pinned the window: serve that cache as is, offline.
+            pin_cache=True,
+            allow_network=False,
         )
         if result.export_dir is None:
             raise RuntimeError("the tune search exported no strategy bundle")
@@ -782,9 +807,13 @@ class PipelineRun:
         check = phase2_check_report(
             path, data_root=self.root, strict=True, probe_nautilus=False
         )
+        frame, _provenance = self._window(
+            self.loadout.symbol, self.loadout.timeframe, allow_network=False
+        )
         result = run_phase2_backtest(
             export_dir=path,
             data_root=self.root,
+            ohlcv=frame,
             conviction=float(self.args.conviction),
             lookback_days=self.plan.lookback,
             allow_network=False,
@@ -792,7 +821,11 @@ class PipelineRun:
         payload = _read_object(Path(result.report_path))
         entry["artifacts"] = {
             "export": str(path),
-            "validation": str(result.report_path),
+            "validation": {
+                "strict": True,
+                "valid": True,
+                "report_path": str(result.report_path),
+            },
         }
         entry["metrics"] = {
             "check_ok": bool(check.get("ok", False)),
@@ -826,27 +859,24 @@ class PipelineRun:
     def _model(self, entry: dict[str, Any]) -> None:
         """Walk-forward metalabel training into ``<out-dir>/model``; never installed."""
         from hypervector.commands.model import train_metalabel_bundle
-        from hypervector.data.pipeline import cache_key
         from hypervector.ml.walk_forward import InsufficientLabelsError
 
         path = self._require_export()
-        if self.args.no_network:
-            # Training loads history cache-first but fetches on a miss; with
-            # --no-network a miss must fail here instead of reaching the network.
-            key = cache_key(
-                self.loadout.symbol, self.loadout.timeframe, self.plan.lookback
-            )
-            cached = _cache_path(self.root, key)
-            if not cached.is_file():
-                raise FileNotFoundError(
-                    f"offline history cache missing for model training: {cached}"
-                )
+        # Train on the pinned window; from a bundle, --no-network keeps the read
+        # offline so a cache miss fails here instead of reaching the network.
+        frame, provenance = self._window(
+            self.loadout.symbol,
+            self.loadout.timeframe,
+            allow_network=not self.args.no_network,
+        )
         try:
             report = train_metalabel_bundle(
                 export_dir=path,
                 data_root=self.root,
                 out_dir=self.plan.out_dir / "model",
                 lookback_days=self.plan.lookback,
+                ohlcv=frame,
+                ohlcv_provenance=provenance,
             )
         except InsufficientLabelsError as exc:
             # Too few entries is a measured result (trade count), not a technical
@@ -857,6 +887,41 @@ class PipelineRun:
         entry["artifacts"] = {"export": str(path), "model": str(self.model_dir)}
         entry["metrics"] = {key: report.get(key) for key in MODEL_METRICS}
         entry["metrics"]["installed"] = False
+
+    def _window(
+        self, symbol: str, timeframe: str, *, allow_network: bool
+    ) -> tuple[Any, dict[str, Any]]:
+        """The data stage's pinned frame, else this market's cached window.
+
+        Only the data stage may refresh. Without a pinned frame (a run started
+        from ``--export``) the window is read with the request's
+        ``--strict-hl-only``; ``allow_network=False`` serves a stale cache as is
+        and fails on a miss.
+        """
+        plan = self.plan
+        if (
+            self.frame is not None
+            and str(symbol).upper() == plan.symbol.upper()
+            and str(timeframe) == plan.timeframe
+        ):
+            # A copy: one stage's engine must not alter the next stage's bars.
+            return self.frame.copy(), dict(self.frame_provenance)
+        from hypervector.data.pipeline import load_research_history
+
+        frame, provenance = load_research_history(
+            self.root,
+            symbol=str(symbol),
+            timeframe=str(timeframe),
+            lookback_days=plan.lookback,
+            strict_hl_only=bool(self.args.strict_hl_only),
+            force_refresh=False,
+            allow_network=allow_network,
+        )
+        if len(frame) == 0:
+            raise RuntimeError(
+                f"no history bars for {symbol} {timeframe} lookback={plan.lookback}d"
+            )
+        return frame, provenance if isinstance(provenance, dict) else {}
 
     # --- stage 6: paper ---------------------------------------------------------
 

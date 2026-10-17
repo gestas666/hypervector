@@ -845,6 +845,9 @@ def test_paper_report_filters_reach_the_report(
         return {"ok": True, "filters": {"run_id": kwargs.get("run_id")}}
 
     monkeypatch.setattr("hypervector.commands.paper.report_from_data_root", fake)
+    ledger = tmp_path / "paper" / "decisions" / "decisions.jsonl"
+    ledger.parent.mkdir(parents=True)
+    ledger.write_text("", encoding="utf-8")
     argv = ["--data-root", str(tmp_path), "paper", "report"]
     assert main([*argv, "--run-id", "r7", "--strategy", "crown_stack_long"]) == 0
     assert (seen["run_id"], seen["strategy"]) == ("r7", "crown_stack_long")

@@ -74,6 +74,9 @@ class SearchSettings:
     #: refresh only windows older than that; neither keeps the loader default.
     pin_cache: bool = False
     max_cache_age_hours: float | None = None
+    #: ``False`` keeps the history load offline (``pipeline run`` after its
+    #: data stage pinned the window): stale is served as is, a miss fails.
+    allow_network: bool = True
 
     @property
     def requested_fee_model(self) -> str:
