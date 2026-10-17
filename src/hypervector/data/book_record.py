@@ -8,13 +8,21 @@ research and offline fill replay.
 from __future__ import annotations
 
 import json
+import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Protocol, Sequence
 
+import requests
+
 from hypervector.data.hl import fetch_hl_l2_book
 from hypervector.infra import ensure_data_layout
+
+logger = logging.getLogger(__name__)
+
+# Failed polls in a row before a recording ends as a technical failure.
+DEFAULT_MAX_CONSECUTIVE_ERRORS = 10
 
 
 class BookLevelLike(Protocol):
@@ -74,9 +82,14 @@ def record_path(data_root: Path | str, symbol: str) -> Path:
     return root.cache_book / f"{symbol.upper()}_l2_{day}.jsonl"
 
 
-def append_snapshot(data_root: Path | str, symbol: str = "BTC") -> dict[str, Any]:
+def append_snapshot(
+    data_root: Path | str,
+    symbol: str = "BTC",
+    *,
+    session: requests.Session | None = None,
+) -> dict[str, Any]:
     """Fetch one L2 snapshot and append to today's jsonl. Returns row dict."""
-    snap = fetch_hl_l2_book(symbol)
+    snap = fetch_hl_l2_book(symbol, session=session)
     return append_book_snapshot(data_root, snap)
 
 
@@ -108,23 +121,61 @@ def run_book_recorder(
     interval_secs: float = 2.0,
     max_snapshots: int | None = None,
     stop_file: Path | str | None = None,
+    max_consecutive_errors: int = DEFAULT_MAX_CONSECUTIVE_ERRORS,
+    session: requests.Session | None = None,
 ) -> dict[str, Any]:
-    """Poll L2 until max_snapshots or stop_file appears."""
+    """Poll L2 until max_snapshots or stop_file appears.
+
+    One Session is reused for every poll. A failed poll (``fetch_hl_l2_book``
+    already retried it) is counted and skipped; ``max_consecutive_errors``
+    failures in a row end the recording with a ``RuntimeError``.
+    """
+    if max_consecutive_errors < 1:
+        raise ValueError("max_consecutive_errors must be at least 1")
+    owned_session = session is None
+    sess = session or requests.Session()
     n = 0
+    errors = 0
+    consecutive = 0
+    last_error: str | None = None
     last_path: str | None = None
     stop = Path(stop_file) if stop_file else None
-    while True:
-        if stop is not None and stop.exists():
-            break
-        if max_snapshots is not None and n >= int(max_snapshots):
-            break
-        row = append_snapshot(data_root, symbol)
-        last_path = row.get("_path")
-        n += 1
-        time.sleep(max(0.2, float(interval_secs)))
+    pause = max(0.2, float(interval_secs))
+    try:
+        while True:
+            if stop is not None and stop.exists():
+                break
+            if max_snapshots is not None and n >= int(max_snapshots):
+                break
+            try:
+                snap = fetch_hl_l2_book(symbol, session=sess)
+            except RuntimeError as exc:
+                errors += 1
+                consecutive += 1
+                last_error = str(exc)
+                if consecutive >= max_consecutive_errors:
+                    raise RuntimeError(
+                        f"book recorder stopped after {consecutive} consecutive failed "
+                        f"snapshots ({n} recorded); last error: {exc}"
+                    ) from exc
+                logger.warning(
+                    "book snapshot failed (%d in a row); continuing: %s", consecutive, exc
+                )
+                time.sleep(pause)
+                continue
+            consecutive = 0
+            row = append_book_snapshot(data_root, snap)
+            last_path = row.get("_path")
+            n += 1
+            time.sleep(pause)
+    finally:
+        if owned_session:
+            sess.close()
     return {
         "ok": True,
         "snapshots": n,
+        "errors": errors,
+        "last_error": last_error,
         "symbol": symbol.upper(),
         "path": last_path,
         "stop_reason": "stop_file"

@@ -8,7 +8,8 @@ import pandas as pd
 import pytest
 
 from hypervector.data.cache import ParquetCache
-from hypervector.data.history import load_or_fetch_history, merge_history
+from hypervector.data.history import merge_history
+from hypervector.data.pipeline import cache_key, load_research_history
 from hypervector.data.provenance import OHLCV_COLUMNS, summarize_provenance
 from hypervector.data.sources import fixture_ohlcv, split_source_frames
 
@@ -45,56 +46,104 @@ def test_provenance_summary_has_fractions_and_sources():
     assert "gaps" in summary
 
 
-def test_cache_first_does_not_call_fetcher(tmp_path: Path):
-    cache = ParquetCache(tmp_path / "cache")
-    key = "BTC_1m_90d"
-    df = fixture_ohlcv(n_bars=50, source="hl")
-    cache.save(key, df)
+def _patch_fetchers(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    hl=None,
+    binance=None,
+    bybit=None,
+) -> dict[str, int]:
+    """Route the production pipeline's live fetchers to frames and count calls."""
+    calls = {"hl": 0, "binance": 0, "bybit": 0}
 
-    def boom(*_a, **_k):
-        raise AssertionError("fetcher must not be called on cache hit")
+    def make(name, frame):
+        def fetch(*_a, **_k):
+            calls[name] += 1
+            if isinstance(frame, Exception):
+                raise frame
+            return frame
 
-    loaded, prov = load_or_fetch_history(
-        cache,
-        key,
-        hl_fetcher=boom,
-        backfill_fetchers=[("binance", boom)],
-    )
-    assert len(loaded) == 50
-    assert prov["bar_count"] == 50
+        return fetch
+
+    monkeypatch.setattr("hypervector.data.pipeline.live_hl_fetcher", make("hl", hl))
+    monkeypatch.setattr("hypervector.data.pipeline.live_binance_fetcher", make("binance", binance))
+    monkeypatch.setattr("hypervector.data.pipeline.live_bybit_fetcher", make("bybit", bybit))
+    return calls
+
+
+def _now_after(frame: pd.DataFrame) -> pd.Timestamp:
+    return pd.to_datetime(frame["timestamp"], utc=True).max() + pd.Timedelta(minutes=1)
+
+
+def test_duplicate_cache_loader_is_gone():
+    """Production has one cache-first loader: pipeline.load_research_history."""
+    import hypervector.data as data
+    import hypervector.data.history as history
+
+    assert not hasattr(history, "load_or_fetch_history")
+    assert "load_or_fetch_history" not in data.__all__
+
+
+def test_cache_first_does_not_call_fetcher(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    df = fixture_ohlcv(n_bars=1441, source="hl")  # a full 1-day window
+    ParquetCache(tmp_path / "cache").save(cache_key("BTC", "1m", 1), df)
+    boom = AssertionError("fetcher must not be called on cache hit")
+    calls = _patch_fetchers(monkeypatch, hl=boom, binance=boom, bybit=boom)
+
+    loaded, prov = load_research_history(tmp_path, lookback_days=1, now=_now_after(df))
+
+    assert calls == {"hl": 0, "binance": 0, "bybit": 0}
+    assert len(loaded) == 1441
+    assert prov["bar_count"] == 1441
+    assert prov["cache_hit"] is True
     assert (loaded["source"] == "hl").all()
 
 
-def test_load_or_fetch_writes_cache_and_merges(tmp_path: Path):
-    cache = ParquetCache(tmp_path / "cache")
-    key = "BTC_1m_30d"
+def test_load_writes_cache_and_second_call_is_cache_first(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     frames = split_source_frames(hl_bars=40, binance_extra=20)
+    now = _now_after(frames["binance"])
+    calls = _patch_fetchers(monkeypatch, hl=frames["hl"], binance=frames["binance"])
 
-    def hl_f(*_a, **_k):
-        return frames["hl"]
+    df, prov = load_research_history(tmp_path, lookback_days=30, now=now)
 
-    def bn_f(*_a, **_k):
-        return frames["binance"]
-
-    df, prov = load_or_fetch_history(
-        cache,
-        key,
-        symbol="BTC",
-        timeframe="1m",
-        lookback_days=30,
-        hl_fetcher=hl_f,
-        backfill_fetchers=[("binance", bn_f)],
-    )
-    assert cache.exists(key)
+    assert ParquetCache(tmp_path / "cache").exists(cache_key("BTC", "1m", 30))
     assert len(df) == 60
     assert prov["sources"]["hl"] == 40
-    # Second load is cache-first
-    df2, _ = load_or_fetch_history(
-        cache,
-        key,
-        hl_fetcher=lambda *_: (_ for _ in ()).throw(RuntimeError("no")),
-    )
+    assert prov["cache_hit"] is False
+    # Second load is cache-first (the window was fetched moments ago).
+    df2, prov2 = load_research_history(tmp_path, lookback_days=30, now=now)
+    assert calls["hl"] == 1
+    assert prov2["cache_hit"] is True
     pd.testing.assert_frame_equal(df.reset_index(drop=True), df2.reset_index(drop=True))
+
+
+def test_low_coverage_fetches_bybit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    frames = split_source_frames(hl_bars=40, binance_extra=20, bybit_extra=15)
+    calls = _patch_fetchers(
+        monkeypatch, hl=frames["hl"], binance=frames["binance"], bybit=frames["bybit"]
+    )
+
+    _df, prov = load_research_history(
+        tmp_path, lookback_days=1, now=_now_after(frames["binance"])
+    )
+
+    assert calls["bybit"] == 1
+    assert prov["sources"]["bybit"] == 15
+    assert prov["backfill"]["bybit"].startswith("ok")
+
+
+def test_full_coverage_skips_bybit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    full = fixture_ohlcv(n_bars=1441, source="binance")
+    hl = full.tail(300).assign(source="hl")
+    calls = _patch_fetchers(monkeypatch, hl=hl, binance=full, bybit=AssertionError("no"))
+
+    _df, prov = load_research_history(tmp_path, lookback_days=1, now=_now_after(full))
+
+    assert calls["bybit"] == 0
+    assert prov["backfill"]["bybit"].startswith("skipped")
+    assert prov["coverage_ratio"] >= 0.95
 
 
 def test_parquet_roundtrip_preserves_source(tmp_path: Path):
@@ -120,35 +169,21 @@ def test_provenance_gapped_bars_reports_gaps_without_error():
     assert isinstance(summary["gaps"]["max_gap_bars"], int)
 
 
-def test_merge_bybit_prefix_and_provenance_via_load_or_fetch(tmp_path: Path):
+def test_merge_bybit_prefix_and_provenance_via_pipeline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     """Bybit-only prefix + HL/binance; gapped merge still summarizes safely."""
     frames = split_source_frames(hl_bars=40, binance_extra=20, bybit_extra=15)
     assert "bybit" in frames
     # Punch a hole in HL so provenance gap path runs after merge
     hl = frames["hl"].copy()
     hl = pd.concat([hl.iloc[:10], hl.iloc[20:]], ignore_index=True)
+    _patch_fetchers(monkeypatch, hl=hl, binance=frames["binance"], bybit=frames["bybit"])
 
-    cache = ParquetCache(tmp_path / "cache")
-    key = "BTC_1m_gapped_multi"
-
-    def hl_f(*_a, **_k):
-        return hl
-
-    def bn_f(*_a, **_k):
-        return frames["binance"]
-
-    def bb_f(*_a, **_k):
-        return frames["bybit"]
-
-    df, prov = load_or_fetch_history(
-        cache,
-        key,
-        symbol="BTC",
-        timeframe="1m",
-        lookback_days=30,
-        hl_fetcher=hl_f,
-        backfill_fetchers=[("binance", bn_f), ("bybit", bb_f)],
+    df, prov = load_research_history(
+        tmp_path, lookback_days=30, now=_now_after(frames["binance"])
     )
+
     assert "bybit" in prov["sources"]
     assert prov["sources"]["bybit"] == 15
     assert "hl" in prov["sources"]
