@@ -41,10 +41,19 @@ def run_checkpoint_loop(
     publish_fn: PublishFn = publish_observer_checkpoint,
     sleep_fn: Callable[[float], None] = time.sleep,
 ) -> int:
-    """Publish until terminated, exposing incomplete startup evidence."""
+    """Publish until terminated, exposing incomplete startup evidence.
+
+    The live-writer refusal is re-checked before every publication: a live
+    checkpoint writer that (re)starts after this loop began must never have its
+    output overwritten by the observer.
+    """
     if args.interval_seconds <= 0.0:
         raise ValueError("checkpoint interval must be positive")
     while True:
+        refusal = refuse_live_checkpoint_output(args.out)
+        if refusal is not None:
+            print(f"observer checkpoint refused: {refusal}", file=sys.stderr)
+            return EXIT_REFUSED
         try:
             publish_fn(args.decisions, args.out, run_id=args.run_id)
         except (FileNotFoundError, ValueError) as exc:

@@ -21,10 +21,6 @@ from hypervector.commands.registry import (
 OPERATIONS = [
     f"{g} {a}" for g, a, spec in command_specs() if spec["kind"] == "operation"
 ]
-# Module defaults that differ from a CLI value of None (the CLI then sends nothing,
-# exactly like the explicit default it used to send). Removed when the module
-# default itself becomes None.
-MODULE_DEFAULTS_FOR_UNSENT = {("live checkpoint", "asymmetric_forward_journal")}
 
 
 def _service_parser(command: str) -> argparse.ArgumentParser:
@@ -76,11 +72,6 @@ def test_transport_round_trips_every_value(command: str, tmp_path: Path) -> None
         if argument.get("hidden") or argument.get("transport") is False:
             continue
         value = getattr(args, argument_dest(argument))
-        if (
-            value is None
-            and (command, argument_dest(argument)) in MODULE_DEFAULTS_FOR_UNSENT
-        ):
-            continue
         assert getattr(transported, _module_dest(argument)) == value, argument["flags"]
 
 
