@@ -170,10 +170,12 @@ def _profile_readiness(path: Path, blockers: list[str]) -> dict[str, object]:
 def cmd_live_run(args: argparse.Namespace) -> int:
     """Live daemon: mainnet place when enabled+armed+secrets (fail-closed).
 
-    Missing authority flags, missing credentials, a missing export and a shared
-    account another live backend owns are refusals before any venue call (exit
-    2, ``CommandRefused``); failures after start exit 1.
+    Missing authority flags, missing credentials, an unresolvable ``--export``
+    (a bundle directory, a candidate id under ``exports/`` or ``latest``) and a
+    shared account another live backend owns are refusals before any venue call
+    (exit 2, ``CommandRefused``); failures after start exit 1.
     """
+    from hypervector.commands.exports import resolve_export
     from hypervector.live.policy import LivePolicyError
     from hypervector.live.runner import start_live_daemon
     from hypervector.runtime_lock import RuntimeLockError
@@ -184,9 +186,7 @@ def cmd_live_run(args: argparse.Namespace) -> int:
         raise CommandRefused(
             "live run refused: requires both --enabled and --i-accept-live-risk"
         )
-    path = Path(args.export)
-    if not path.is_dir():
-        raise CommandRefused(f"export path not found: {path}")
+    path = resolve_export(args.export, args.data_root)
 
     try:
         policy = _armed_policy(args)

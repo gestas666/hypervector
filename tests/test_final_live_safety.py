@@ -276,7 +276,8 @@ def test_live_run_missing_export_is_a_refusal(
         ]
     )
     assert rc == 2
-    assert "export path not found" in capsys.readouterr().err
+    err = capsys.readouterr().err
+    assert "strategy bundle reference" in err and "missing" in err
 
 
 def test_live_run_account_lock_conflict_is_a_refusal(

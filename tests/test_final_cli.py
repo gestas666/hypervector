@@ -370,7 +370,7 @@ def test_live_run_missing_export_is_a_refusal(
     assert main([*argv, "--export", str(tmp_path / "absent"), *authority]) == 2
     error = _error(capsys.readouterr().err)
     assert error["error_type"] == "CommandRefused"
-    assert "export path not found" in error["error"]
+    assert "absent" in error["error"]
 
 
 def test_tune_strategy_zero_trials_is_refused_before_any_load(

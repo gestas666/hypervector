@@ -8,8 +8,9 @@ the conviction, sets the exposure; trial metrics report the effective risk.
 
 Hyperliquid venue leverage caps (SRS_HV1_VENUE_SPEC) live here as the single
 research table: BTC 40x, ETH 25x, SOL 20x, HYPE 10x, other perps 10x unless the
-venue metadata (``maxLeverage``) says otherwise. Maintenance margin on
-Hyperliquid is half the initial margin at maximum leverage.
+venue metadata (``maxLeverage``) says otherwise, and never above the charter's
+15x altcoin ceiling (the same ceiling ``nautilus.venue_spec`` applies).
+Maintenance margin on Hyperliquid is half the initial margin at maximum leverage.
 """
 
 from __future__ import annotations
@@ -28,6 +29,9 @@ VENUE_LEVERAGE_CAPS: dict[str, float] = {
     "HYPE": 10.0,
 }
 DEFAULT_ALT_LEVERAGE_CAP = 10.0
+# Charter altcoin ceiling: venue metadata never lifts a non-charter perp above it.
+# Kept equal to ``hypervector.nautilus.venue_spec.ALTCOIN_MAX_LEVERAGE``.
+ALTCOIN_MAX_LEVERAGE = 15.0
 # Highest cap in the charter table; bounds any request whose symbol is unknown.
 MAX_VENUE_LEVERAGE = max(VENUE_LEVERAGE_CAPS.values())
 _LEVERAGE_CAP_RTOL = 1e-9
@@ -47,8 +51,8 @@ def venue_leverage_cap(
     """Maximum position leverage for ``symbol``.
 
     Venue metadata (``maxLeverage``) is authoritative for assets outside the
-    charter table and can only lower a charter cap. With no symbol the
-    charter maximum applies.
+    charter table up to the charter's altcoin ceiling (15x), and can only lower
+    a charter cap. With no symbol the charter maximum applies.
     """
     if symbol is None or not str(symbol).strip():
         cap = MAX_VENUE_LEVERAGE
@@ -61,7 +65,7 @@ def venue_leverage_cap(
         venue = float(venue_max_leverage)
         if not math.isfinite(venue) or venue <= 0.0:
             raise ValueError(f"venue max leverage must be positive, got {venue_max_leverage!r}")
-        cap = min(cap, venue) if charter else venue
+        cap = min(cap, venue) if charter else min(venue, ALTCOIN_MAX_LEVERAGE)
     return float(cap)
 
 

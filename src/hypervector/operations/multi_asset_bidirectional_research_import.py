@@ -57,6 +57,10 @@ def build_import_report(
     accounting_epoch: CohortAccountingEpoch | None = None,
 ) -> dict[str, object]:
     """Import journals and rebuild projections only after execution fills change."""
+    if not ledger_root.is_dir():
+        # Checked before the research database is opened, so a failed import
+        # leaves no new DuckDB file behind.
+        raise FileNotFoundError(f"cohort ledger root is missing: {ledger_root}")
     database = ResearchDatabase(database_path)
     ingest = database.ingest_cohort_live_ledger(ledger_root)
     source = load_cohort_live_archive_source(database_path)
@@ -167,7 +171,10 @@ def main(argv: list[str] | None = None) -> int:
             accounting_epoch=_accounting_epoch(args),
         )
     except (duckdb.Error, json.JSONDecodeError, OSError, ValueError) as exc:
-        print(json.dumps({"ok": False, "error": str(exc)}, sort_keys=True))
+        print(
+            json.dumps({"ok": False, "error": str(exc)}, sort_keys=True),
+            file=sys.stderr,
+        )
         return 1
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0

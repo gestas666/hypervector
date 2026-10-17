@@ -23,7 +23,7 @@
       "options": {
         "dest": "export",
         "default": null,
-        "help": "strict strategy bundle directory"
+        "help": "strategy bundle: a directory, a candidate id under exports/, or latest"
       },
       "required": true,
       "legacy_flags": [
