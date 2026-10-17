@@ -13,7 +13,7 @@ from hypervector.live.hip3_breakout_shadow_specs import SNDK_SHADOW_SPEC
 from hypervector.live.hip3_provider_availability import Hip3ObserverUnavailableError
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live import cohort_pressure_dependencies as dependencies
-from hypervector.live import cohort_tui_dependency_supervision as supervision
+from hypervector.live import cohort_dependency_supervision as supervision
 
 _CONFIG = Path(
     "configs/multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86.toml"

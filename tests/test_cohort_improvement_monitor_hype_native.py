@@ -26,6 +26,7 @@ def test_monitor_defaults_to_the_exact_native_hype_lifecycle_status() -> None:
     assert args.maximum_hype_native_lifecycle_age_seconds == 90.0
 
 
+@pytest.mark.evidence
 def test_refresh_attaches_native_hype_status_and_exact_evidence(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

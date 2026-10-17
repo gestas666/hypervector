@@ -116,15 +116,15 @@ def test_cli_writes_stamped_screening_and_l2_shortlist(
     end = datetime(2026, 1, 1, 1, tzinfo=UTC)
     bundle = OxaArchiveBundle(start, end, None, None, 0, 0)
     monkeypatch.setattr(
-        "hypervector.cli._load_bars",
+        "hypervector.commands.replay._load_bars",
         lambda _args: (bars.reset_index(names="timestamp"), {"source": "fixture"}),
     )
     monkeypatch.setattr(
-        "hypervector.cli._verified_replay_archive",
+        "hypervector.commands.replay._verified_replay_archive",
         lambda _args: (bundle,),
     )
     monkeypatch.setattr(
-        "hypervector.cli._archive_replay_reports",
+        "hypervector.commands.replay._archive_replay_reports",
         lambda _args, _decisions, _bundles: {
             rule: _replay_report(rule) for rule in ("touch", "through", "trade-through")
         },

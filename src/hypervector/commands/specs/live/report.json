@@ -1,0 +1,29 @@
+{
+  "name": "live-report",
+  "action": "report",
+  "help": "Summarize live decisions.jsonl (submitted/place_attempted, modes; read-only; no place)",
+  "handler": "hypervector.commands.live:cmd_live_report",
+  "arguments": [
+    {
+      "flags": [
+        "--path"
+      ],
+      "options": {
+        "dest": "path",
+        "default": null,
+        "help": "optional decisions JSONL path (default: <data-root>/live/decisions/decisions.jsonl)"
+      }
+    },
+    {
+      "flags": [
+        "--last"
+      ],
+      "options": {
+        "dest": "last",
+        "default": 5,
+        "help": "include last N market fills in sample (default 5)",
+        "type": "int"
+      }
+    }
+  ]
+}

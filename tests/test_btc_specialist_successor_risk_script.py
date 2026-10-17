@@ -1,5 +1,7 @@
 """CLI contract for immutable BTC successor risk evidence."""
 
+import pytest
+
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
@@ -10,6 +12,7 @@ from types import ModuleType
 _SCRIPT = Path("scripts/btc_specialist_successor_risk.py")
 
 
+@pytest.mark.evidence
 def test_command_writes_report_only_current_and_growth_scenarios(
     tmp_path: Path,
 ) -> None:

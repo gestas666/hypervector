@@ -20,6 +20,7 @@ def _module() -> object:
     return module
 
 
+@pytest.mark.evidence
 def test_command_loads_exact_sources_and_reconciles_real_economics(
     tmp_path: Path,
 ) -> None:
@@ -39,6 +40,7 @@ def test_command_loads_exact_sources_and_reconciles_real_economics(
     assert report["decision"] == "collect_forward_v52_no_live_change_from_this_report"
 
 
+@pytest.mark.evidence
 def test_command_publishes_once_and_refuses_overwrite(tmp_path: Path) -> None:
     """An immutable evidence identity cannot be replaced by a later run."""
     module = _module()

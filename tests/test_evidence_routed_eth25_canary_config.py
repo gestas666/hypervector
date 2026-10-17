@@ -72,6 +72,7 @@ def test_v12_keeps_both_eth_sides_and_the_reproduced_exit_contract() -> None:
     assert provider.execution.maximum_hold_seconds == 43_200
 
 
+@pytest.mark.integration
 def test_v12_builds_runtime_collectors_and_retains_low_confidence_evidence() -> None:
     """Execution scope does not inflate the candidate's research confidence."""
     config = load_multi_asset_live_config(_V12, mode="observe")

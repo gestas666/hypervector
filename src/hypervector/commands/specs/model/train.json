@@ -1,0 +1,106 @@
+{
+  "name": "metalabel-train",
+  "action": "train",
+  "help": "Walk-forward LightGBM metalabel retrain on strategy entries from a Phase-1.5 export (labels match export TP/SL)",
+  "handler": "hypervector.commands.model:cmd_metalabel_train",
+  "arguments": [
+    {
+      "flags": [
+        "--path"
+      ],
+      "options": {
+        "dest": "path",
+        "required": true,
+        "default": null,
+        "help": "export directory (params/meta with strategy + exits)"
+      }
+    },
+    {
+      "flags": [
+        "--lookback"
+      ],
+      "options": {
+        "dest": "lookback",
+        "default": null,
+        "help": "history lookback days (default: export meta or 90)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--train-days"
+      ],
+      "options": {
+        "dest": "train_days",
+        "default": 45,
+        "help": "walk-forward train window in days (default 45)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--test-days"
+      ],
+      "options": {
+        "dest": "test_days",
+        "default": 15,
+        "help": "walk-forward OOS test window in days (default 15)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--step-days"
+      ],
+      "options": {
+        "dest": "step_days",
+        "default": null,
+        "help": "step between OOS windows (default: test-days)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--embargo-minutes"
+      ],
+      "options": {
+        "dest": "embargo_minutes",
+        "default": 60,
+        "help": "purged-CV embargo minutes (default 60)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--max-hold-bars"
+      ],
+      "options": {
+        "dest": "max_hold_bars",
+        "default": 120,
+        "help": "label barrier timeout in bars (default 120 = 2h on 1m)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "default": null,
+        "help": "bundle output dir (default data/models/metalabel/wf_<strategy>_<ts>)"
+      }
+    },
+    {
+      "flags": [
+        "--install"
+      ],
+      "options": {
+        "dest": "install",
+        "default": false,
+        "help": "also copy final model files into data/models/metalabel/ and print HYPERVECTOR_METALABEL_ROOT",
+        "action": "store_true"
+      }
+    }
+  ]
+}

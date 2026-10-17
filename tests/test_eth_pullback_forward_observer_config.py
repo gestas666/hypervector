@@ -107,6 +107,7 @@ def test_eth_pullback_v9_preserves_cutoff_and_reports_no_entry_nearmiss() -> Non
     }
 
 
+@pytest.mark.evidence
 def test_eth_pullback_v9_source_evidence_matches_current_bytes() -> None:
     """Every frozen observer generator must retain its recorded bytes."""
     report = json.loads(JOURNAL.read_text(encoding="utf-8"))

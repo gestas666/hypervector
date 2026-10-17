@@ -16,6 +16,7 @@ _STRESS = Path(
 )
 
 
+@pytest.mark.evidence
 @pytest.mark.parametrize(
     ("symbol", "stress_bps", "scope"),
     (
@@ -69,6 +70,7 @@ def test_contract_rejects_a_superseded_or_changed_profile(tmp_path: Path) -> Non
         module.load_v51_index_lifecycle_contract(changed, _STRESS, "xyz:SP500")
 
 
+@pytest.mark.evidence
 def test_contract_rejects_changed_route_economics(tmp_path: Path) -> None:
     """Fail closed when a source artifact changes the frozen stop contract."""
     module = importlib.import_module(

@@ -74,6 +74,7 @@ def test_v80_is_a_new_immutable_profile_generation() -> None:
     assert candidate.transition_approval is not None
 
 
+@pytest.mark.evidence
 def test_v80_approval_binds_the_last_armed_profile_directly() -> None:
     """The never-started V79 generation must not be invented as live lineage."""
     previous = load_multi_asset_live_config(_V78, mode="observe")

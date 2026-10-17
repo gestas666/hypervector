@@ -194,6 +194,7 @@ def test_v58_preflight_rejects_a_current_fee_above_the_stress_input() -> None:
         module.validate_preflight(config, preflight, venue)
 
 
+@pytest.mark.evidence
 def test_v58_report_binds_eight_slots_and_retains_zero_authority() -> None:
     """The report must expose exact V58 topology without becoming an execution gate."""
     module = _module()
@@ -219,6 +220,7 @@ def test_v58_report_binds_eight_slots_and_retains_zero_authority() -> None:
     assert report["v58_preflight_evidence"] == {"configured_assets": 8}
 
 
+@pytest.mark.evidence
 def test_v58_command_publishes_one_immutable_source_bound_report(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

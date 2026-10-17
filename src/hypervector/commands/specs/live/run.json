@@ -1,0 +1,117 @@
+{
+  "name": "live-run",
+  "action": "run",
+  "help": "Live mainnet daemon: requires --enabled + --i-accept-live-risk + secrets; writes data/live/ decisions (fail-closed)",
+  "handler": "hypervector.commands.live:cmd_live_run",
+  "arguments": [
+    {
+      "flags": [
+        "--path"
+      ],
+      "options": {
+        "dest": "path",
+        "required": true,
+        "default": null,
+        "help": "path to strict Phase 1.5 export directory"
+      }
+    },
+    {
+      "flags": [
+        "--enabled"
+      ],
+      "options": {
+        "dest": "enabled",
+        "default": false,
+        "help": "set [live] enabled=true for this run (required)",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--i-accept-live-risk"
+      ],
+      "options": {
+        "dest": "i_accept_live_risk",
+        "default": false,
+        "help": "explicit arm for mainnet risk (required)",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--max-notional-usd"
+      ],
+      "options": {
+        "dest": "max_notional_usd",
+        "default": 50.0,
+        "help": "hard notional cap (default 50.0)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--conviction"
+      ],
+      "options": {
+        "dest": "conviction",
+        "default": 0.5,
+        "help": "fixed conviction [0,1] (default 0.5)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--fee-tier"
+      ],
+      "options": {
+        "dest": "fee_tier",
+        "default": 0,
+        "help": "HL fee tier index (default 0)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--stop-file"
+      ],
+      "options": {
+        "dest": "stop_file",
+        "default": null,
+        "help": "path: when this file exists, stop gracefully"
+      }
+    },
+    {
+      "flags": [
+        "--poll-interval"
+      ],
+      "options": {
+        "dest": "poll_interval",
+        "default": 5.0,
+        "help": "seconds between bar polls (default 5)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--max-live-bars"
+      ],
+      "options": {
+        "dest": "max_live_bars",
+        "default": null,
+        "help": "stop after N live bars (smoke / offline cap)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--lookback"
+      ],
+      "options": {
+        "dest": "lookback",
+        "default": null,
+        "help": "warm-up lookback days (default from export meta)",
+        "type": "int"
+      }
+    }
+  ]
+}

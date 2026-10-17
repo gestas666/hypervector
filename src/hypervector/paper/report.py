@@ -7,7 +7,8 @@ under ``data/live/``. Used by ``paper-report`` CLI.
 from __future__ import annotations
 
 import json
-from collections import Counter
+from collections import Counter, deque
+from dataclasses import dataclass, field
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -43,11 +44,10 @@ def load_decision_rows(path: Path | str) -> list[dict[str, Any]]:
         return load_decision_stream(fh, source_label=str(p))
 
 
-def load_decision_stream(
+def iter_decision_stream(
     lines: Iterable[str], *, source_label: str
-) -> list[dict[str, object]]:
-    """Load the same strict JSONL records from a caller-owned immutable stream."""
-    rows: list[dict[str, object]] = []
+) -> Iterable[dict[str, object]]:
+    """Yield strict JSONL records from a caller-owned immutable stream."""
     for line_no, line in enumerate(lines, start=1):
         text = line.strip()
         if not text:
@@ -60,8 +60,7 @@ def load_decision_stream(
             ) from exc
         if not isinstance(obj, dict):
             raise ValueError(f"decision row must be object at {source_label}:{line_no}")
-        rows.append(obj)
-    return rows
+        yield obj
 
 
 def _count(values: list[Any]) -> dict[str, int]:
@@ -70,115 +69,21 @@ def _count(values: list[Any]) -> dict[str, int]:
 
 
 def summarize_paper_decisions(
-    rows: list[dict[str, Any]],
-    *,
-    decisions_path: Path | str | None = None,
-    data_root: Path | str | None = None,
-    last_n: int = 5,
-) -> dict[str, Any]:
-    """Aggregate honesty + ops counters for paper/shadow dry-run ledgers.
-
-    Parameters
-    ----------
-    rows:
-        Decision dicts (typically from :func:`load_decision_rows`).
-    decisions_path:
-        Optional path echoed in the report.
-    data_root:
-        If set, count files under ``live/`` (must be zero for paper-complete).
-    last_n:
-        How many recent market rows to sample (not funding).
-    """
-    n = max(0, int(last_n))
-    # Prefer explicit market actions; if fill_model without action, keep those too.
-    market_fills = [
-        r
-        for r in rows
-        if r.get("action") != "funding" and r.get("fill_model_id") is not None
-    ]
-    funding = [r for r in rows if r.get("action") == "funding"]
-    intents = [
-        r.get("order_intent")
-        for r in market_fills
-        if isinstance(r.get("order_intent"), dict)
-    ]
-
+    rows: Iterable[dict[str, object]],
+    *, decisions_path: Path | str | None = None,
+    data_root: Path | str | None = None, last_n: int = 5,
+) -> dict[str, object]:
+    """Summarize a single-pass ledger using counters and a bounded recent sample."""
+    state = _PaperSummary(last_n=max(0, int(last_n)))
+    for row in rows:
+        state.add(row)
     live_files = 0
     if data_root is not None:
         live_root = paths_for(data_root).live
         if live_root.is_dir():
-            live_files = sum(1 for p in live_root.rglob("*") if p.is_file())
+            live_files = sum(1 for path in live_root.rglob("*") if path.is_file())
+    return state.report(decisions_path, live_files)
 
-    submitted_true = sum(1 for r in rows if r.get("submitted") is True)
-    intent_submit_true = sum(
-        1 for oi in intents if isinstance(oi, dict) and oi.get("submit_enabled") is True
-    )
-
-    sample = []
-    for r in market_fills[-n:]:
-        oi = r.get("order_intent") if isinstance(r.get("order_intent"), dict) else {}
-        sample.append(
-            {
-                "feed_ts": r.get("feed_ts"),
-                "action": r.get("action"),
-                "execution_mode": r.get("execution_mode"),
-                "submitted": r.get("submitted"),
-                "network": r.get("network"),
-                "fill_model_id": r.get("fill_model_id"),
-                "fill_fallback_reason": r.get("fill_fallback_reason"),
-                "order_intent_schema": oi.get("schema") if oi else None,
-                "order_intent_submit_enabled": oi.get("submit_enabled") if oi else None,
-            }
-        )
-
-    honesty = {
-        "all_submitted_false_or_absent": submitted_true == 0,
-        "all_intent_submit_enabled_false": intent_submit_true == 0,
-        "live_files": live_files,
-        "no_live_files": live_files == 0,
-        "modes_seen": sorted(
-            {
-                str(r.get("execution_mode"))
-                for r in rows
-                if r.get("execution_mode") is not None
-            }
-        ),
-        "networks_seen": sorted(
-            {str(r.get("network")) for r in rows if r.get("network") is not None}
-        ),
-    }
-
-    return {
-        "ok": True,
-        "decisions_path": str(decisions_path) if decisions_path is not None else None,
-        "rows": len(rows),
-        "market_fills": len(market_fills),
-        "funding_rows": len(funding),
-        "execution_mode": _count([r.get("execution_mode") for r in rows]),
-        "submitted": _count([r.get("submitted") for r in rows]),
-        "network": _count([r.get("network") for r in rows]),
-        "action": _count([r.get("action") for r in market_fills]),
-        "fill_model_id": _count([r.get("fill_model_id") for r in market_fills]),
-        "fill_fallback_reason": _count(
-            [r.get("fill_fallback_reason") for r in market_fills]
-        ),
-        "order_intent": {
-            "count": len(intents),
-            "missing_on_market_fills": max(0, len(market_fills) - len(intents)),
-            "schema": _count(
-                [oi.get("schema") for oi in intents if isinstance(oi, dict)]
-            ),
-            "submit_enabled": _count(
-                [oi.get("submit_enabled") for oi in intents if isinstance(oi, dict)]
-            ),
-        },
-        "honesty": honesty,
-        "last_market": sample,
-        "no_submit": True,  # this ledger path never submits
-        # Product-wide: venue submit exists via live-run (not this paper report).
-        "live_submit_implemented": True,
-        "live_submit_command": "live-run",
-    }
 
 
 def _is_under(path: Path, ancestor: Path) -> bool:
@@ -213,10 +118,100 @@ def report_from_data_root(
     if "live" in path.resolve().parts and "paper" not in path.resolve().parts:
         raise ValueError(f"refusing paper-report on live path: {path}")
 
-    rows = load_decision_rows(path)
+    rows = iter_decision_rows(path)
     return summarize_paper_decisions(
         rows,
         decisions_path=path,
         data_root=root,
         last_n=last_n,
     )
+
+
+def load_decision_stream(lines: Iterable[str], *, source_label: str) -> list[dict[str, object]]:
+    """Retain the materialized API for callers requiring immutable replay rows."""
+    return list(iter_decision_stream(lines, source_label=source_label))
+
+
+def iter_decision_rows(path: Path | str) -> Iterable[dict[str, object]]:
+    """Stream a ledger while owning its file for the duration of iteration."""
+    source = Path(path)
+    if not source.is_file():
+        return
+    with source.open(encoding="utf-8") as stream:
+        yield from iter_decision_stream(stream, source_label=str(source))
+
+
+@dataclass
+class _PaperSummary:
+    last_n: int
+    rows: int = 0
+    markets: int = 0
+    funding: int = 0
+    intents: int = 0
+    submitted: int = 0
+    intent_submit: int = 0
+    counts: dict[str, Counter[str]] = field(default_factory=dict)
+    modes: set[str] = field(default_factory=set)
+    networks: set[str] = field(default_factory=set)
+    recent: deque[dict[str, object]] = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.recent = deque(maxlen=self.last_n)
+
+    def count(self, field_name: str, value: object) -> None:
+        self.counts.setdefault(field_name, Counter())["" if value is None else str(value)] += 1
+
+    def add(self, row: dict[str, object]) -> None:
+        self.rows += 1
+        self.funding += row.get("action") == "funding"
+        self.submitted += row.get("submitted") is True
+        for name in ("execution_mode", "submitted", "network"):
+            self.count(name, row.get(name))
+        if row.get("execution_mode") is not None:
+            self.modes.add(str(row["execution_mode"]))
+        if row.get("network") is not None:
+            self.networks.add(str(row["network"]))
+        if row.get("action") == "funding" or row.get("fill_model_id") is None:
+            return
+        self.markets += 1
+        for name in ("action", "fill_model_id", "fill_fallback_reason"):
+            self.count(name, row.get(name))
+        intent = row.get("order_intent")
+        if isinstance(intent, dict):
+            self.intents += 1
+            self.intent_submit += intent.get("submit_enabled") is True
+            self.count("intent_schema", intent.get("schema"))
+            self.count("intent_submit_enabled", intent.get("submit_enabled"))
+        self.recent.append(_paper_sample(row))
+
+    def totals(self, name: str) -> dict[str, int]:
+        return dict(sorted(self.counts.get(name, {}).items(), key=lambda item: (-item[1], item[0])))
+
+    def report(self, path: Path | str | None, live_files: int) -> dict[str, object]:
+        report: dict[str, object] = {
+            "ok": True, "decisions_path": str(path) if path is not None else None,
+            "rows": self.rows, "market_fills": self.markets, "funding_rows": self.funding,
+            "order_intent": {"count": self.intents,
+                "missing_on_market_fills": self.markets - self.intents,
+                "schema": self.totals("intent_schema"),
+                "submit_enabled": self.totals("intent_submit_enabled")},
+            "honesty": {"all_submitted_false_or_absent": self.submitted == 0,
+                "all_intent_submit_enabled_false": self.intent_submit == 0,
+                "live_files": live_files, "no_live_files": live_files == 0,
+                "modes_seen": sorted(self.modes), "networks_seen": sorted(self.networks)},
+            "last_market": list(self.recent), "no_submit": True,
+            "live_submit_implemented": True, "live_submit_command": "live-run",
+        }
+        for name in ("execution_mode", "submitted", "network", "action", "fill_model_id", "fill_fallback_reason"):
+            report[name] = self.totals(name)
+        return report
+
+
+def _paper_sample(row: dict[str, object]) -> dict[str, object]:
+    intent = row.get("order_intent")
+    sample = {name: row.get(name) for name in (
+        "feed_ts", "action", "execution_mode", "submitted", "network",
+        "fill_model_id", "fill_fallback_reason")}
+    sample["order_intent_schema"] = intent.get("schema") if isinstance(intent, dict) else None
+    sample["order_intent_submit_enabled"] = intent.get("submit_enabled") if isinstance(intent, dict) else None
+    return sample

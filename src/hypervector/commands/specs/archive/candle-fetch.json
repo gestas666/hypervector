@@ -1,0 +1,111 @@
+{
+  "name": "oxa-candle-fetch",
+  "action": "candle-fetch",
+  "help": "Fetch bounded Hyperliquid-native OHLCV candles from 0xArchive",
+  "handler": "hypervector.cli_oxa:cmd_oxa_candle_fetch",
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC"
+      }
+    },
+    {
+      "flags": [
+        "--market-family"
+      ],
+      "options": {
+        "dest": "market_family",
+        "default": "core",
+        "choices": [
+          "core",
+          "hip3"
+        ]
+      }
+    },
+    {
+      "flags": [
+        "--start"
+      ],
+      "options": {
+        "dest": "start",
+        "required": true,
+        "default": null,
+        "type": "_parse_utc_datetime"
+      }
+    },
+    {
+      "flags": [
+        "--end"
+      ],
+      "options": {
+        "dest": "end",
+        "required": true,
+        "default": null,
+        "type": "_parse_utc_datetime"
+      }
+    },
+    {
+      "flags": [
+        "--interval"
+      ],
+      "options": {
+        "dest": "interval",
+        "default": "1m",
+        "choices": [
+          "1m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "4h",
+          "1d",
+          "1w"
+        ]
+      }
+    },
+    {
+      "flags": [
+        "--limit"
+      ],
+      "options": {
+        "dest": "limit",
+        "default": 10000,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--max-pages"
+      ],
+      "options": {
+        "dest": "max_pages",
+        "default": 20,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--timeout"
+      ],
+      "options": {
+        "dest": "timeout",
+        "default": 30.0,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--install-research-cache"
+      ],
+      "options": {
+        "dest": "install_research_cache",
+        "default": false,
+        "action": "store_true"
+      }
+    }
+  ]
+}

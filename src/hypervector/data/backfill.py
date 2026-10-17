@@ -45,80 +45,14 @@ def bybit_symbol(symbol: str) -> str:
     return binance_symbol(symbol)
 
 
-def bars_from_binance_klines(
-    raw: list[list[Any]], *, source: str = "binance"
-) -> pd.DataFrame:
-    """Parse Binance/fapi kline arrays into OHLCV."""
-    rows: list[dict[str, Any]] = []
-    for k in raw:
-        try:
-            rows.append(
-                {
-                    "timestamp": pd.to_datetime(int(k[0]), unit="ms", utc=True),
-                    "open": float(k[1]),
-                    "high": float(k[2]),
-                    "low": float(k[3]),
-                    "close": float(k[4]),
-                    "volume": float(k[5]),
-                    "source": source,
-                }
-            )
-        except (IndexError, TypeError, ValueError):
-            continue
-    if not rows:
-        return normalize_ohlcv(
-            pd.DataFrame(
-                columns=[
-                    "timestamp",
-                    "open",
-                    "high",
-                    "low",
-                    "close",
-                    "volume",
-                    "source",
-                ]
-            ),
-            source=source,
-        )
-    return normalize_ohlcv(pd.DataFrame(rows), source=source)
+def bars_from_binance_klines(raw: list[list[object]], *, source: str = "binance") -> pd.DataFrame:
+    """Parse Binance kline arrays with the shared venue-array contract."""
+    return _bars_from_klines(raw, source=source)
 
 
-def bars_from_bybit_list(
-    raw: list[list[Any]], *, source: str = "bybit"
-) -> pd.DataFrame:
-    """Parse Bybit v5 kline list (often newest-first): [start, open, high, low, close, volume, ...]."""
-    rows: list[dict[str, Any]] = []
-    for k in raw:
-        try:
-            rows.append(
-                {
-                    "timestamp": pd.to_datetime(int(k[0]), unit="ms", utc=True),
-                    "open": float(k[1]),
-                    "high": float(k[2]),
-                    "low": float(k[3]),
-                    "close": float(k[4]),
-                    "volume": float(k[5]),
-                    "source": source,
-                }
-            )
-        except (IndexError, TypeError, ValueError):
-            continue
-    if not rows:
-        return normalize_ohlcv(
-            pd.DataFrame(
-                columns=[
-                    "timestamp",
-                    "open",
-                    "high",
-                    "low",
-                    "close",
-                    "volume",
-                    "source",
-                ]
-            ),
-            source=source,
-        )
-    return normalize_ohlcv(pd.DataFrame(rows), source=source)
+def bars_from_bybit_list(raw: list[list[object]], *, source: str = "bybit") -> pd.DataFrame:
+    """Parse Bybit kline arrays with the shared venue-array contract."""
+    return _bars_from_klines(raw, source=source)
 
 
 def _pick_binance_endpoint(
@@ -258,3 +192,41 @@ def fetch_bybit_ohlcv(
         "Bybit %s %s lookback=%sd → %d bars", pair, timeframe, lookback_days, len(df)
     )
     return df
+
+
+def _bars_from_klines(
+    raw: list[list[object]], *, source: str
+) -> pd.DataFrame:
+    """Parse the shared REST array layout, validating every retained row."""
+    rows: list[dict[str, object]] = []
+    for k in raw:
+        try:
+            rows.append(
+                {
+                    "timestamp": pd.to_datetime(int(k[0]), unit="ms", utc=True),
+                    "open": float(k[1]),
+                    "high": float(k[2]),
+                    "low": float(k[3]),
+                    "close": float(k[4]),
+                    "volume": float(k[5]),
+                    "source": source,
+                }
+            )
+        except (IndexError, TypeError, ValueError):
+            continue
+    if not rows:
+        return normalize_ohlcv(
+            pd.DataFrame(
+                columns=[
+                    "timestamp",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "source",
+                ]
+            ),
+            source=source,
+        )
+    return normalize_ohlcv(pd.DataFrame(rows), source=source)

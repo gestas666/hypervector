@@ -23,7 +23,7 @@ from cohort_live_audit_delta_fixtures import signal_outcomes as _signal_outcomes
 
 
 MODULE = Path("src/hypervector/research/cohort_live_audit_delta.py")
-SCRIPT = Path("scripts/cohort_live_audit_delta.py")
+SCRIPT = Path("src/hypervector/operations/cohort_live_audit_delta.py")
 
 
 def test_live_audit_delta_sources_exist() -> None:

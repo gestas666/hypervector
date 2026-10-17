@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
@@ -11,6 +13,7 @@ from types import ModuleType
 _SCRIPT = Path("scripts/v42_successor_design.py")
 
 
+@pytest.mark.evidence
 def test_report_is_source_bound_and_execution_incapable(tmp_path: Path) -> None:
     """The command captures every input without granting runtime authority."""
     module = _module()

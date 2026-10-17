@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from collections.abc import Mapping
 from hashlib import sha256
 import json
@@ -135,6 +137,7 @@ def test_v67_preregistrations_are_run_bound_and_source_frozen() -> None:
         )
 
 
+@pytest.mark.evidence
 def test_v67_monitor_evidence_is_hash_bound() -> None:
     """The monitor decision file must reject drift in its source evidence."""
     overrides = _load_json(_OVERRIDES)

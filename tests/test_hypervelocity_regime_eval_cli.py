@@ -33,7 +33,7 @@ def test_cli_hypervelocity_regime_eval_is_report_only(
         }
     )
     monkeypatch.setattr(
-        "hypervector.cli._load_bars",
+        "hypervector.commands.regime._load_bars",
         lambda _args: (bars, {"source": "fixture"}),
     )
     positions_path = tmp_path / "positions.csv"

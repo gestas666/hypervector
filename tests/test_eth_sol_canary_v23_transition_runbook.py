@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -26,6 +28,7 @@ _START = "<!-- cohort-transition-contract:start -->"
 _END = "<!-- cohort-transition-contract:end -->"
 
 
+@pytest.mark.evidence
 def test_v23_runbook_binds_exact_identity_routes_and_evidence() -> None:
     """The transition must reject nearby profiles or changed replay evidence."""
     text = _RUNBOOK.read_text(encoding="utf-8")

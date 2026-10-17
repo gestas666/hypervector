@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from pathlib import Path
 
 from hypervector.live.multi_asset_intent_poller import (
@@ -56,6 +58,7 @@ def test_v15_preserves_audited_exit_and_risk_shapes() -> None:
     assert assets["SOL"].leverage == 5.0
 
 
+@pytest.mark.integration
 def test_v15_constructs_every_declared_provider() -> None:
     """An inactive profile is invalid if any declared collector is unavailable."""
     config = load_multi_asset_live_config(_PROFILE, mode="observe")

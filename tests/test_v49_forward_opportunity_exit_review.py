@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -38,6 +40,7 @@ def _provider(source: dict[str, object], key: str) -> dict[str, object]:
     return value
 
 
+@pytest.mark.evidence
 def test_review_is_source_bound_and_non_executable() -> None:
     """The review must bind exact observer and SOL lifecycle artifacts."""
     report = _load(_REPORT)
@@ -60,6 +63,7 @@ def test_review_is_source_bound_and_non_executable() -> None:
         assert source == {"path": str(path), "sha256": _digest(path)}
 
 
+@pytest.mark.evidence
 def test_review_reconciles_independent_sixty_minute_near_misses() -> None:
     """Relaxation findings must equal non-overlapping source outcomes."""
     report = _load(_REPORT)
@@ -90,6 +94,7 @@ def test_review_does_not_relax_an_entry_gate_from_negative_near_misses() -> None
     assert gate["hype_state"] == "near_flat_mean_but_negative_ex_largest"
 
 
+@pytest.mark.evidence
 def test_review_reconciles_sol_giveback_and_predeclared_profit_locks() -> None:
     """The exit diagnosis must preserve current and causal challenger economics."""
     report = _load(_REPORT)

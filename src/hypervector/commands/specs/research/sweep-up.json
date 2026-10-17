@@ -1,0 +1,211 @@
+{
+  "name": "sweep-up",
+  "action": "sweep-up",
+  "help": "Search sweep-up track on live/cached history (VectorBT engine)",
+  "handler": "hypervector.commands.sweep:cmd_sweep_up",
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC"
+      }
+    },
+    {
+      "flags": [
+        "--timeframe"
+      ],
+      "options": {
+        "dest": "timeframe",
+        "default": "1m"
+      }
+    },
+    {
+      "flags": [
+        "--lookback"
+      ],
+      "options": {
+        "dest": "lookback",
+        "default": 90,
+        "help": "calendar days (floor=30, default=90, promo=180)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--strict-hl-only"
+      ],
+      "options": {
+        "dest": "strict_hl_only",
+        "default": false,
+        "help": "do not backfill from Binance/Bybit",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--force"
+      ],
+      "options": {
+        "dest": "force",
+        "default": false,
+        "help": "ignore Parquet cache and re-fetch",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--strategy"
+      ],
+      "options": {
+        "dest": "strategy",
+        "default": null,
+        "help": "strategy name (default: trend_ride then crown_stack)"
+      }
+    },
+    {
+      "flags": [
+        "--cash"
+      ],
+      "options": {
+        "dest": "cash",
+        "default": 10000.0,
+        "help": "starting cash for VectorBT portfolio (default: 10000)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--tp-sl-mode"
+      ],
+      "options": {
+        "dest": "tp_sl_mode",
+        "default": "atr",
+        "help": "TP/SL mode: fixed_rr | atr | trail (default: atr)",
+        "choices": [
+          "fixed_rr",
+          "atr",
+          "trail"
+        ]
+      }
+    },
+    {
+      "flags": [
+        "--sl-pct"
+      ],
+      "options": {
+        "dest": "sl_pct",
+        "default": 0.01,
+        "help": "fixed_rr stop as fraction",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--rr"
+      ],
+      "options": {
+        "dest": "rr",
+        "default": 2.0,
+        "help": "reward:risk for fixed_rr/atr",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--atr-length"
+      ],
+      "options": {
+        "dest": "atr_length",
+        "default": 14,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--sl-atr-mult"
+      ],
+      "options": {
+        "dest": "sl_atr_mult",
+        "default": 1.5,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--trail-atr-mult"
+      ],
+      "options": {
+        "dest": "trail_atr_mult",
+        "default": 2.0,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--risk-min"
+      ],
+      "options": {
+        "dest": "risk_min",
+        "default": 0.01,
+        "help": "min equity risk fraction (default 1%%)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--risk-max"
+      ],
+      "options": {
+        "dest": "risk_max",
+        "default": 0.05,
+        "help": "max equity risk fraction (default 5%%)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--conviction"
+      ],
+      "options": {
+        "dest": "conviction",
+        "default": 0.5,
+        "help": "0-1 conviction \u2192 risk between min and max (default 0.5 \u2192 ~3%%)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--fee-model"
+      ],
+      "options": {
+        "dest": "fee_model",
+        "default": "hl_taker_default",
+        "help": "hl_taker_default | hl_taker_tight | zero"
+      }
+    },
+    {
+      "flags": [
+        "--no-costs"
+      ],
+      "options": {
+        "dest": "no_costs",
+        "default": false,
+        "help": "disable fees/slippage/funding (debug only)",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--export"
+      ],
+      "options": {
+        "dest": "export",
+        "default": false,
+        "action": "store_true"
+      }
+    }
+  ]
+}

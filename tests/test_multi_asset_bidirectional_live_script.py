@@ -23,7 +23,7 @@ from hypervector.live.cohort_transition_drain import load_transition_drain_snaps
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfigError
 from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunnerError
 
-SCRIPT = Path(__file__).parents[1] / "scripts" / "multi_asset_bidirectional_live.py"
+SCRIPT = Path(__file__).parents[1] / "src" / "hypervector" / "operations" / "multi_asset_bidirectional_live.py"
 V25 = Path("configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml")
 V90_CONFIG = Path(
     "configs/multi_asset_growth_first_5000_bankroll_builder_candidate_v90.toml"
@@ -271,7 +271,9 @@ def test_live_operator_inbox_uses_cohort_aware_command_age_budget(
         captured.update(kwargs)
         return object()
 
-    monkeypatch.setattr(live_script, "CohortOperatorInbox", capture)
+    from hypervector.operations import cohort_live_construction
+
+    monkeypatch.setattr(cohort_live_construction, "CohortOperatorInbox", capture)
 
     inbox = live_script._create_operator_inbox(config, "fixture-run")
 
@@ -307,6 +309,8 @@ def test_locked_start_refuses_before_adapter_when_backup_fails(
         adapter_constructed = True
         raise AssertionError("adapter construction bypassed failed backup")
 
+    monkeypatch.setattr(live_script, "_await_venue", lambda _config: None)
+    monkeypatch.setattr(live_script, "_implementation_sources", lambda _args: {"fixture.py": Path(__file__)})
     monkeypatch.setattr(
         live_script,
         "create_cohort_prestart_backup",
@@ -688,7 +692,9 @@ def test_locked_start_refuses_uncleared_transition_before_backup_or_adapter(
         adapter_attempted = True
         raise AssertionError("adapter ran after stale drain")
 
-    monkeypatch.setattr(live_script, "ensure_transition_drain_startable", refuse)
+    from hypervector.operations import cohort_live_construction
+
+    monkeypatch.setattr(cohort_live_construction, "ensure_transition_drain_startable", refuse)
     monkeypatch.setattr(live_script, "create_cohort_prestart_backup", forbidden_backup)
     monkeypatch.setattr(live_script, "_create_adapters", forbidden_adapter)
 
@@ -862,7 +868,7 @@ def test_locked_start_snapshots_discovered_implementation_before_adapter(
     adapter_constructed = False
 
     def discover(repository: Path, provider: Path) -> dict[str, Path]:
-        assert repository == SCRIPT.parents[1].resolve()
+        assert repository == SCRIPT.parents[3].resolve()
         assert provider == provider_root.resolve()
         discovered.update(expected)
         return expected

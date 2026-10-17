@@ -81,6 +81,7 @@ def test_v62_hype_profit_lock_rejects_parameter_drift() -> None:
         validate_multi_asset_live_config(replace(candidate, providers=providers))
 
 
+@pytest.mark.evidence
 def test_v62_exact_operator_approval_authorizes_the_profile_change() -> None:
     """The approved transition binds exact profiles, evidence, and rollback."""
     baseline = _load(_V61)

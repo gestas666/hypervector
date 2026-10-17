@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -76,6 +78,7 @@ def test_v65_preserves_retained_routes_and_removes_every_retired_scope() -> None
     assert len(candidate.executable_provider_directions) == 13
 
 
+@pytest.mark.evidence
 def test_v65_approval_records_ten_terminal_retirements() -> None:
     """Every removed symbol-side scope must be explicit and replacement-free."""
     baseline = _load(_V64)

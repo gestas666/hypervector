@@ -25,7 +25,10 @@ Paths (project-scoped):
 - Live: fail-closed; arm only on explicit user request.
 - Never print wallet/API secret values.
 - Mainnet only. No neural-trader.
-- GUI deferred until acceptance guide gates B+C PASS.
+- The TUI is retired; use the unified CLI and headless acceptance guide.
+- Develop execution changes in an isolated checkout with its own venv. Do not
+  synchronize dependencies or merge/restart an armed deployment outside an
+  explicitly approved transition boundary.
 
 ## Project Charter
 
@@ -39,7 +42,6 @@ Paths (project-scoped):
 ## Quick verify
 
 ```bash
-uv run pytest tests/ -q -m "not network"
-cargo test -p hypervector-tui
-uv run python -m hypervector status
+.venv/bin/python -m pytest tests/ -q -n 4 --dist loadfile
+.venv/bin/python -m hypervector status
 ```

@@ -50,6 +50,7 @@ def test_script_refuses_to_replace_immutable_output(tmp_path: Path) -> None:
         module.run(args)
 
 
+@pytest.mark.evidence
 def test_active_v25_checkpoint_is_rejected_without_output(tmp_path: Path) -> None:
     module = _module()
     out = tmp_path / "must-not-exist.json"

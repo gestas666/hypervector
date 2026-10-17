@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
@@ -22,6 +24,7 @@ def _load_module() -> ModuleType:
     return module
 
 
+@pytest.mark.evidence
 def test_report_separates_defects_from_strategy_evidence() -> None:
     """Confirmed defects must not be mislabeled as negative edge."""
     module = _load_module()
@@ -43,6 +46,7 @@ def test_report_separates_defects_from_strategy_evidence() -> None:
     assert decisions["HIP3 Swing commodity"]["decision"] == "retire unchanged route"
 
 
+@pytest.mark.evidence
 def test_report_preserves_exact_candidate_risk_and_authority() -> None:
     """The report must preserve v47 identity, sizing, and inactive authority."""
     module = _load_module()
@@ -72,6 +76,7 @@ def test_report_preserves_exact_candidate_risk_and_authority() -> None:
     assert "execution_authority" not in json.dumps(artifact).lower()
 
 
+@pytest.mark.evidence
 def test_report_reconciles_live_checkpoint_and_uses_portable_sources() -> None:
     """Live totals and local evidence paths must remain source-reconciled."""
     module = _load_module()

@@ -44,6 +44,7 @@ def test_v53_override_is_exact_report_only_and_marks_repair_deployed() -> None:
     )
 
 
+@pytest.mark.evidence
 def test_v53_override_evidence_is_immutable_and_loadable() -> None:
     """Every declared v53 source must reconcile before a digest is built."""
     spec = spec_from_file_location("v53_improvement_monitor", _SCRIPT)
@@ -475,6 +476,7 @@ def test_v53_override_freezes_verified_hype_exit_runtime_contract() -> None:
     assert decision["decision_source"] == journal_path.removeprefix("../../")
 
 
+@pytest.mark.evidence
 def test_v53_first_event_baseline_is_an_exact_zero_counter_live_audit() -> None:
     """The watcher baseline must be diffable, not deployment acceptance metadata."""
     payload = json.loads(_OVERRIDES.read_text())

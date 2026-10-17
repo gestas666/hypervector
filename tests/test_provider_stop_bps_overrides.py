@@ -60,6 +60,7 @@ def test_v49_runtime_contract_selection_honors_symbol_override() -> None:
     assert manual == sol
 
 
+@pytest.mark.evidence
 def test_v49_stress_uses_effective_symbol_stop_contracts() -> None:
     """Sizing evidence must not collapse SOL back to the provider default."""
     friction = json.loads(_FRICTION.read_text(encoding="utf-8"))
@@ -79,6 +80,7 @@ def test_v49_stress_uses_effective_symbol_stop_contracts() -> None:
     assert sol["stacked_p99_stop_loss_usd"] > eth["stacked_p99_stop_loss_usd"]
 
 
+@pytest.mark.evidence
 def test_v49_immutable_stress_artifact_matches_repaired_contract() -> None:
     """Published $5K evidence must retain the exact symbol stops and wave loss."""
     config = load_multi_asset_live_config(_PROFILE, mode="observe")

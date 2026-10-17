@@ -1,0 +1,39 @@
+{
+  "name": "hl-funding-fetch",
+  "action": "funding-fetch",
+  "help": "Fetch complete official Hyperliquid hourly funding history",
+  "handler": "hypervector.cli_oxa:cmd_hl_funding_fetch",
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC"
+      }
+    },
+    {
+      "flags": [
+        "--start"
+      ],
+      "options": {
+        "dest": "start",
+        "required": true,
+        "default": null,
+        "type": "_parse_utc_datetime"
+      }
+    },
+    {
+      "flags": [
+        "--end"
+      ],
+      "options": {
+        "dest": "end",
+        "required": true,
+        "default": null,
+        "type": "_parse_utc_datetime"
+      }
+    }
+  ]
+}

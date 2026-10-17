@@ -78,8 +78,8 @@ class LivePolicy:
 
     def readiness(self) -> dict[str, Any]:
         """JSON-safe readiness (never secret values)."""
-        # Import locally to avoid circular import (exec_client → policy).
-        from hypervector.live.exec_client import is_submit_wired
+        # Capability metadata does not import execution clients.
+        from hypervector.live.capabilities import is_submit_wired
 
         wired = bool(is_submit_wired())
         return {

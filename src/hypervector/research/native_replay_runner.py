@@ -6,7 +6,7 @@ from datetime import datetime
 from itertools import count
 from pathlib import Path
 
-from scripts.multi_asset_bidirectional_live import build_router
+from hypervector.live.cohort_runtime_preflight import build_cohort_router as build_router
 
 from hypervector.live.cohort_entry_submission import entry_delays_from_providers
 from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter

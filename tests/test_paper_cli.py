@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from dataclasses import replace
 
 import pandas as pd
 import pytest
@@ -125,7 +126,7 @@ def test_daemon_activates_authoritative_event_stream_without_rest_book_poll(
         ),
         encoding="utf-8",
     )
-    profile = load_hypervelocity_profile(profile_path)
+    profile = replace(load_hypervelocity_profile(profile_path), metalabel_mode="off")
     warm = fixture_ohlcv(n_bars=5)
     pump = _EventPump()
     monkeypatch.setattr(
@@ -178,7 +179,7 @@ def test_event_authority_defaults_to_websocket_context_not_rest_refresh(
         ),
         encoding="utf-8",
     )
-    profile = load_hypervelocity_profile(profile_path)
+    profile = replace(load_hypervelocity_profile(profile_path), metalabel_mode="off")
     warm = fixture_ohlcv(n_bars=5)
     live = warm.iloc[-1:].copy()
     live.loc[:, "timestamp"] = pd.Timestamp("2026-07-26T20:00:00Z")
@@ -241,7 +242,7 @@ def test_event_stream_start_failure_is_not_masked_by_cleanup(
         ),
         encoding="utf-8",
     )
-    profile = load_hypervelocity_profile(profile_path)
+    profile = replace(load_hypervelocity_profile(profile_path), metalabel_mode="off")
     pump = _FailingStartEventPump()
     monkeypatch.setattr(
         PaperSession,
@@ -804,7 +805,7 @@ def test_cli_paper_run_offline_via_monkeypatch(tmp_path: Path, capsys, monkeypat
             install_signal_handlers=False,
         )
 
-    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+    monkeypatch.setattr("hypervector.commands.paper.start_paper_daemon", fake_daemon)
     rc = main(
         [
             "--data-root",
@@ -826,6 +827,7 @@ def test_cli_paper_run_offline_via_monkeypatch(tmp_path: Path, capsys, monkeypat
     assert payload["warm_bars"] == 20
 
 
+@pytest.mark.usefixtures("annotation_model")
 def test_cli_paper_run_passes_fill_and_metalabel_flags(tmp_path: Path, monkeypatch):
     """CLI flags for preferred fill model, book age, metalabel flow into daemon."""
     export = _write_strict_export(tmp_path)
@@ -851,7 +853,7 @@ def test_cli_paper_run_passes_fill_and_metalabel_flags(tmp_path: Path, monkeypat
             install_signal_handlers=False,
         )
 
-    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+    monkeypatch.setattr("hypervector.commands.paper.start_paper_daemon", fake_daemon)
     rc = main(
         [
             "--data-root",
@@ -873,6 +875,7 @@ def test_cli_paper_run_passes_fill_and_metalabel_flags(tmp_path: Path, monkeypat
     assert captured["execution_mode"] == "shadow"  # CLI default
 
 
+@pytest.mark.usefixtures("annotation_model")
 def test_cli_paper_run_observe_mode_reaches_daemon(tmp_path: Path, monkeypatch):
     """Observe mode is explicit and reaches the backend without enabling a gate."""
     export = _write_strict_export(tmp_path)
@@ -896,7 +899,7 @@ def test_cli_paper_run_observe_mode_reaches_daemon(tmp_path: Path, monkeypatch):
             install_signal_handlers=False,
         )
 
-    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+    monkeypatch.setattr("hypervector.commands.paper.start_paper_daemon", fake_daemon)
 
     rc = main(
         [
@@ -939,7 +942,7 @@ def test_cli_forces_hypervelocity_model_policy_to_annotation_only(
             execution_mode="shadow",
         )
 
-    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+    monkeypatch.setattr("hypervector.commands.paper.start_paper_daemon", fake_daemon)
     rc = main(
         [
             "--data-root",
@@ -979,7 +982,7 @@ def test_hypervelocity_shadow_cli_uses_websocket_funding_authority(
             execution_mode="shadow",
         )
 
-    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+    monkeypatch.setattr("hypervector.commands.shadow.start_paper_daemon", fake_daemon)
 
     result = main(
         [
@@ -1021,7 +1024,7 @@ def test_cli_paper_run_mode_flag_wires_execution_mode(tmp_path: Path, monkeypatc
             install_signal_handlers=False,
         )
 
-    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+    monkeypatch.setattr("hypervector.commands.paper.start_paper_daemon", fake_daemon)
     rc = main(
         [
             "--data-root",
@@ -1035,3 +1038,16 @@ def test_cli_paper_run_mode_flag_wires_execution_mode(tmp_path: Path, monkeypatc
     )
     assert rc == 0
     assert captured["execution_mode"] == "paper"
+
+
+@pytest.fixture
+def annotation_model(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Model-option forwarding is exercised with a deterministic local model."""
+    class Model:
+        root = tmp_path / "fixture-model"
+        feature_names = ["close"]
+
+        def predict_probability(self, _features: dict[str, float]) -> float:
+            return 0.73
+
+    monkeypatch.setattr("hypervector.ml.metalabel.Metalabeler.from_env", lambda **_kwargs: Model())

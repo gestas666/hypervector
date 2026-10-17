@@ -82,7 +82,7 @@ def test_challenger_cli_writes_complete_report(
 ) -> None:
     bars = _bars()
     monkeypatch.setattr(
-        "hypervector.cli._load_bars",
+        "hypervector.commands.regime._load_bars",
         lambda _args: (bars.reset_index(names="timestamp"), {"source": "fixture"}),
     )
     output = tmp_path / "challengers.json"

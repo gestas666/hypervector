@@ -1,0 +1,60 @@
+{
+  "name": "book-record",
+  "action": "book-record",
+  "help": "Record HL public L2 snapshots under data/cache/book/ (jsonl)",
+  "handler": "hypervector.commands.market:cmd_book_record",
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC"
+      }
+    },
+    {
+      "flags": [
+        "--interval"
+      ],
+      "options": {
+        "dest": "interval",
+        "default": 2.0,
+        "help": "seconds between snapshots (default 2)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--once"
+      ],
+      "options": {
+        "dest": "once",
+        "default": false,
+        "help": "fetch and write a single snapshot then exit",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--max-snapshots"
+      ],
+      "options": {
+        "dest": "max_snapshots",
+        "default": null,
+        "help": "stop after N snapshots (omit = run until stop-file)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--stop-file"
+      ],
+      "options": {
+        "dest": "stop_file",
+        "default": null,
+        "help": "stop when this path exists"
+      }
+    }
+  ]
+}

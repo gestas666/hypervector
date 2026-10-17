@@ -51,6 +51,7 @@ def load_research_history(
     lookback_days: int = DEFAULT_LOOKBACK,
     strict_hl_only: bool = False,
     force_refresh: bool = False,
+    allow_network: bool = True,
     config: ResearchConfig | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Cache-first live history: HL max, then Binance → Bybit gap fill.
@@ -59,6 +60,8 @@ def load_research_history(
     Bybit is only called when HL+Binance still leave a material hole
     (<95% of expected bars for the lookback).
     """
+    if force_refresh and not allow_network:
+        raise ValueError("offline history cannot force a network refresh")
     if config is not None:
         symbol = config.symbol
         timeframe = config.timeframe
@@ -78,6 +81,9 @@ def load_research_history(
         if not strict_hl_only or cache_is_hl_only:
             return df, summarize_provenance(df)
         logger.info("strict HL load bypassing incompatible mixed-venue cache %s", key)
+
+    if not allow_network:
+        raise FileNotFoundError(f"offline history cache missing or incompatible: {cache.path_for(key)}")
 
     hl_df = live_hl_fetcher(symbol, timeframe, lookback_days)
     if hl_df is not None and len(hl_df):

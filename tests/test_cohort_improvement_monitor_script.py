@@ -111,6 +111,7 @@ def test_default_override_binds_decisions_and_active_drain_proposal() -> None:
     assert args.maximum_checkpoint_age_seconds == 180.0
 
 
+@pytest.mark.evidence
 def test_default_override_evidence_hashes_reconcile() -> None:
     """The active monitor manifest must match every source-bound evidence file."""
     module = _load()

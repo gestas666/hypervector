@@ -16,8 +16,7 @@ from hypervector.research.cohort_live_portfolio_archive import CohortAccountingE
 
 SCRIPT = (
     Path(__file__).parents[1]
-    / "scripts"
-    / "multi_asset_bidirectional_research_import.py"
+    / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_research_import.py'
 )
 
 

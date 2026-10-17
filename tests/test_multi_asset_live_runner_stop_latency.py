@@ -303,6 +303,7 @@ def _loopback_session() -> requests.Session:
     return session
 
 
+@pytest.mark.integration
 @pytest.mark.usefixtures("restored_signal_handlers")
 def test_a_real_sigterm_neither_cuts_short_nor_extends_a_hung_socket_read(
     monkeypatch: pytest.MonkeyPatch,
@@ -338,6 +339,7 @@ def test_a_real_sigterm_neither_cuts_short_nor_extends_a_hung_socket_read(
     assert 0.9 <= elapsed < 2.0
 
 
+@pytest.mark.integration
 @pytest.mark.usefixtures("restored_signal_handlers")
 def test_a_real_sigterm_mid_poll_reaches_the_clean_stop_within_one_read_timeout(
     monkeypatch: pytest.MonkeyPatch,
@@ -616,10 +618,11 @@ def test_the_runner_waits_on_the_latch_it_was_handed(
 
 
 def test_run_live_hands_one_latch_to_the_candle_reads_and_the_runner(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The latch the runner installs is the one the public candle reads consult."""
-    module, _session = _boundary(monkeypatch)
+    module, _session = _boundary(monkeypatch, tmp_path)
     seen: dict[str, object] = {}
 
     def run(

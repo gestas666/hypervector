@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
 from hypervector.data.hl import HL_INFO_URL, hl_coin
+from hypervector.live.capabilities import is_submit_wired as is_submit_wired
 from hypervector.live.policy import (
     LivePolicy,
     LivePolicyError,
@@ -90,9 +91,6 @@ class LiveExecClient(Protocol):
     def cancel_all(self, *, symbol: str | None = None) -> PlaceResult: ...
 
 
-def is_submit_wired() -> bool:
-    """True when the live exec client module is present (F2+)."""
-    return True
 
 
 def _parse_oid(response: dict[str, Any]) -> str | None:

@@ -20,6 +20,7 @@ def _load(path: Path) -> dict[str, object]:
     return value
 
 
+@pytest.mark.evidence
 def test_disposition_binds_latest_unresolved_sol_exit_snapshot() -> None:
     """Native recovery must remain visible without selecting a policy."""
     report = _load(_REPORT)

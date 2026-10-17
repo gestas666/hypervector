@@ -1,0 +1,41 @@
+{
+  "name": "phase2-check",
+  "action": "check",
+  "help": "Load export as Phase 2 StrategyLoadout stub (historical; paper dry-run is paper-run)",
+  "handler": "hypervector.commands.nautilus:cmd_phase2_check",
+  "arguments": [
+    {
+      "flags": [
+        "--path"
+      ],
+      "options": {
+        "dest": "path",
+        "required": true,
+        "default": null,
+        "help": "path to export directory"
+      }
+    },
+    {
+      "flags": [
+        "--loose"
+      ],
+      "options": {
+        "dest": "loose",
+        "default": false,
+        "help": "do not require Phase 1.5 fields",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--no-nautilus-probe"
+      ],
+      "options": {
+        "dest": "no_nautilus_probe",
+        "default": false,
+        "help": "skip offline Nautilus import/config probe",
+        "action": "store_true"
+      }
+    }
+  ]
+}

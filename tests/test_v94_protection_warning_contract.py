@@ -52,7 +52,7 @@ def _published(warnings: list[dict[str, object]]) -> dict[str, object]:
 
 def test_checkpoint_job_publishes_the_file_the_probe_reads() -> None:
     assert (
-        REPOSITORY_ROOT / checkpoint_job._DEFAULT_OUTPUT == SupervisorPaths().checkpoint
+        REPOSITORY_ROOT / checkpoint_job.build_parser().parse_args([]).out == SupervisorPaths().checkpoint
     )
 
 

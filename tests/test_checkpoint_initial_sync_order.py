@@ -12,8 +12,7 @@ from hypervector.research.cohort_research_sync_telemetry import ResearchSyncTele
 
 SCRIPT = (
     Path(__file__).parents[1]
-    / "scripts"
-    / "multi_asset_bidirectional_live_checkpoint.py"
+    / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_live_checkpoint.py'
 )
 
 

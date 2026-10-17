@@ -33,6 +33,7 @@ def _acceptance() -> ModuleType:
     return import_module(name)
 
 
+@pytest.mark.evidence
 def test_exact_v58_accepts_all_routes_sizing_and_exit_contracts(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -61,6 +62,7 @@ def test_exact_v58_accepts_all_routes_sizing_and_exit_contracts(
     assert report["checks"]["provider_exit_identity"]["passed"] is True
 
 
+@pytest.mark.evidence
 def test_v58_rejects_runtime_direction_or_sizing_drift(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -86,6 +88,7 @@ def test_v58_rejects_runtime_direction_or_sizing_drift(
     assert "runtime_asset_sizing_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v58_rejects_runtime_exit_policy_drift(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -107,6 +110,7 @@ def test_v58_rejects_runtime_exit_policy_drift(
     assert "runtime_provider_exit_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v58_missing_provider_coverage_returns_a_rejection(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -126,6 +130,7 @@ def test_v58_missing_provider_coverage_returns_a_rejection(
     assert "v58_provider_coverage_incomplete" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v58_rejects_stress_evidence_from_another_envelope() -> None:
     """Post-start acceptance must bind the exact V58 stress identity."""
     acceptance = _acceptance()

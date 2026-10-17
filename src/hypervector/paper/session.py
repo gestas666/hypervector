@@ -2413,36 +2413,29 @@ def _build_conviction_provider(
     )
     if mode == "off":
         return FixedConvictionProvider(conviction)
-    try:
-        from hypervector.ml.features import FeatureBuilder
-        from hypervector.ml.metalabel import Metalabeler
+    from hypervector.ml.features import FeatureBuilder
+    from hypervector.ml.metalabel import Metalabeler
 
-        ml = (
-            metalabeler
-            if metalabeler is not None
-            else Metalabeler.from_env(data_root=data_root)
-        )
-        if mode == "observe":
-            active_mode = "observe"
-        elif mode == "scale":
-            active_mode = "scale"
-        else:
-            active_mode = "filter"
-        return MetalabelConvictionProvider(
-            ml,
-            FeatureBuilder(),
-            fixed_fallback=float(conviction),
-            min_p=float(metalabel_min_p),
-            filter_entries=mode == "filter",
-            fail_closed=mode == "filter",
-            mode=active_mode,
-        )
-    except Exception as exc:  # noqa: BLE001 — keep session usable on load failure
-        logger.warning(
-            "metalabel_enabled but provider setup failed; using fixed conviction: %s",
-            exc,
-        )
-        return FixedConvictionProvider(conviction)
+    ml = (
+        metalabeler
+        if metalabeler is not None
+        else Metalabeler.from_env(data_root=data_root)
+    )
+    if mode == "observe":
+        active_mode = "observe"
+    elif mode == "scale":
+        active_mode = "scale"
+    else:
+        active_mode = "filter"
+    return MetalabelConvictionProvider(
+        ml,
+        FeatureBuilder(),
+        fixed_fallback=float(conviction),
+        min_p=float(metalabel_min_p),
+        filter_entries=mode == "filter",
+        fail_closed=mode == "filter",
+        mode=active_mode,
+    )
 
 
 def _build_hypervelocity_directional_provider(

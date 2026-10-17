@@ -13,7 +13,7 @@ import pytest
 
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 
-SCRIPT = Path(__file__).parents[1] / "scripts" / "multi_asset_bidirectional_observe.py"
+SCRIPT = Path(__file__).parents[1] / "src" / "hypervector" / "operations" / "multi_asset_bidirectional_observe.py"
 
 
 def _load_module() -> ModuleType:

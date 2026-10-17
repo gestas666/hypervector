@@ -49,7 +49,7 @@ def inject_history(monkeypatch):
             cache.save(key, df)
             return df, prov if prov is not None else summarize_provenance(df)
 
-        monkeypatch.setattr("hypervector.cli.load_research_history", fake_load)
+        monkeypatch.setattr("hypervector.data.pipeline.load_research_history", fake_load)
         monkeypatch.setattr(
             "hypervector.data.pipeline.load_research_history", fake_load
         )

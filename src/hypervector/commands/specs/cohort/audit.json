@@ -1,0 +1,69 @@
+{
+  "name": "cohort-live-audit",
+  "action": "audit",
+  "help": "Publish immutable report-only evidence for one cohort run",
+  "handler": "hypervector.cli_cohort:run_cohort_command",
+  "arguments": [
+    {
+      "flags": [
+        "--ledger-root"
+      ],
+      "options": {
+        "dest": "ledger_root",
+        "default": "data/live/bidirectional_cohort",
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null
+      }
+    },
+    {
+      "flags": [
+        "--history-scope"
+      ],
+      "options": {
+        "dest": "history_scope",
+        "default": "current-run",
+        "help": "Snapshot all compatible history or only the explicitly selected run.",
+        "choices": [
+          "all-time",
+          "current-run"
+        ]
+      }
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "default": null,
+        "type": "Path"
+      },
+      "exclusive_group": 0
+    },
+    {
+      "flags": [
+        "--out-dir"
+      ],
+      "options": {
+        "dest": "out_dir",
+        "default": null,
+        "type": "Path"
+      },
+      "exclusive_group": 0
+    }
+  ],
+  "exclusive_groups": [
+    {
+      "required": true
+    }
+  ],
+  "operation": "multi_asset_bidirectional_live_audit"
+}

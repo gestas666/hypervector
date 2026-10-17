@@ -1,0 +1,87 @@
+{
+  "name": "cohort-monitor",
+  "action": "monitor",
+  "help": "Read exact-run backend JSON telemetry; never owns the backend",
+  "handler": "hypervector.commands.monitor:cmd_monitor",
+  "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "type": "Path",
+        "required": true
+      }
+    },
+    {
+      "flags": [
+        "--source-checkpoint"
+      ],
+      "options": {
+        "dest": "source_checkpoint",
+        "type": "Path",
+        "default": "data/runtime/bidirectional_cohort/latest_checkpoint.json"
+      }
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null
+      }
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-bundle"
+      ],
+      "options": {
+        "dest": "accounting_epoch_bundle",
+        "type": "Path",
+        "default": null
+      }
+    },
+    {
+      "flags": [
+        "--follow"
+      ],
+      "options": {
+        "dest": "follow",
+        "action": "store_true",
+        "default": false
+      }
+    },
+    {
+      "flags": [
+        "--interval-seconds"
+      ],
+      "options": {
+        "dest": "interval_seconds",
+        "type": "float",
+        "default": 30
+      }
+    },
+    {
+      "flags": [
+        "--maximum-age-seconds"
+      ],
+      "options": {
+        "dest": "maximum_age_seconds",
+        "type": "float",
+        "default": 90
+      }
+    }
+  ]
+}

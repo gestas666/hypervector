@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from pathlib import Path
 
 from hypervector.live.cohort_profile_change_approval import (
@@ -56,6 +58,7 @@ def test_v63_retires_no_execution_scope_from_v62() -> None:
     )
 
 
+@pytest.mark.evidence
 def test_v63_transition_approval_is_valid() -> None:
     """The transition approval document binds V62 to V63 with valid cryptographic hashes."""
     baseline = _load(_V62)

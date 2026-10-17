@@ -130,7 +130,7 @@ def test_cli_autotune_emits_complete_report_only_board(
 ) -> None:
     bars = _bars()
     monkeypatch.setattr(
-        "hypervector.cli._load_bars",
+        "hypervector.commands.regime._load_bars",
         lambda _args: (bars.reset_index(names="timestamp"), {"source": "fixture"}),
     )
     positions_path = tmp_path / "positions.csv"

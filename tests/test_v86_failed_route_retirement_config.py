@@ -73,6 +73,7 @@ def test_v86_preserves_all_observers_and_retires_only_failed_authority() -> None
         assert candidate_by_id[strategy_id] == expected
 
 
+@pytest.mark.evidence
 def test_v86_approval_binds_both_retirements_without_replacements() -> None:
     """Transition lineage must name exactly the evidence-failed scopes."""
     prior = load_multi_asset_live_config(_V85, mode="observe")

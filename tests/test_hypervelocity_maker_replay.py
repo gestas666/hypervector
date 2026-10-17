@@ -1605,7 +1605,7 @@ def test_cli_reports_touch_and_through_without_placing_orders(
     )
     book = _book([60, 70, 80], [100.0, 99.0, 100.2], [101.0, 100.0, 100.3])
     monkeypatch.setattr(
-        "hypervector.cli._load_bars",
+        "hypervector.commands.replay._load_bars",
         lambda _args: (bars, {"source": "fixture"}),
     )
     monkeypatch.setattr(
@@ -1670,7 +1670,7 @@ def test_cli_streams_verified_archive_window_without_path_arguments(
         0,
     )
     monkeypatch.setattr(
-        "hypervector.cli._load_bars", lambda _args: (bars, {"source": "fixture"})
+        "hypervector.commands.replay._load_bars", lambda _args: (bars, {"source": "fixture"})
     )
     monkeypatch.setattr(
         "hypervector.regime.composite.classify_multitimeframe",
@@ -1725,7 +1725,7 @@ def test_cli_reports_trade_through_when_public_prints_are_supplied(
         }
     )
     monkeypatch.setattr(
-        "hypervector.cli._load_bars", lambda _args: (bars, {"source": "fixture"})
+        "hypervector.commands.replay._load_bars", lambda _args: (bars, {"source": "fixture"})
     )
     monkeypatch.setattr(
         "hypervector.regime.composite.classify_multitimeframe",

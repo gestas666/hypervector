@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
 import time
 
@@ -23,8 +24,15 @@ class MonitorIdentity:
 
 
 def active_ledger_identity(config: MultiAssetLiveConfig) -> MonitorIdentity:
-    """Return an armed ledger identity matching the selected monitor profile."""
-    record = _latest_configuration_identity(config.cohort_ledger)
+    """Read the latest armed identity for one exact selected profile."""
+    return _active_identity(
+        _latest_configuration_identity(config.cohort_ledger), config
+    )
+
+
+def _active_identity(
+    record: dict[str, object], config: MultiAssetLiveConfig
+) -> MonitorIdentity:
     identity = _monitor_identity(record, "active ledger")
     if record.get("execution_mode") != "live" or record.get("live_armed") is not True:
         raise MultiAssetLiveConfigError("active ledger identity is not armed live")
@@ -129,7 +137,32 @@ def fresh_checkpoint_document(
     maximum_age_seconds: float,
 ) -> dict[str, object] | None:
     """Return recent checkpoint bytes bound to the active and staged identities."""
-    active = active_ledger_identity(config)
+    return checkpoint_for_identity(
+        path,
+        config,
+        active_ledger_identity(config),
+        staged_config,
+        maximum_age_seconds=maximum_age_seconds,
+    )
+
+
+def checkpoint_for_identity(
+    path: Path,
+    config: MultiAssetLiveConfig,
+    active: MonitorIdentity,
+    staged_config: MultiAssetLiveConfig | None = None,
+    *,
+    maximum_age_seconds: float,
+) -> dict[str, object] | None:
+    """Validate a checkpoint against a previously read exact ledger identity."""
+    if (
+        active.profile_id != config.profile_id
+        or active.profile_fingerprint != config.profile_fingerprint
+    ):
+        raise MultiAssetLiveConfigError(
+            "monitor identity differs from the selected profile"
+        )
+
     try:
         age_seconds = time.time() - path.stat().st_mtime
     except FileNotFoundError:
@@ -223,3 +256,60 @@ def _monitor_identity(
     if not all(isinstance(value, str) and value.strip() for value in identity):
         raise MultiAssetLiveConfigError(f"{source} run/profile identity is invalid")
     return MonitorIdentity(str(run_id), str(profile_id), str(fingerprint))
+
+
+class LedgerIdentityReader:
+    """Incrementally validate one append-only ledger for a monitor attachment."""
+
+    def __init__(self, config: MultiAssetLiveConfig) -> None:
+        """Bind one profile without acquiring process or execution ownership."""
+        self._config = config
+        self._offset = 0
+        self._line = 0
+        self._record: dict[str, object] | None = None
+        self._file_identity: tuple[int, int] | None = None
+
+    def read(self) -> MonitorIdentity:
+        """Read appended complete lines and reject replacement or truncation."""
+        path = self._config.cohort_ledger
+        stat = path.stat()
+        identity = (stat.st_dev, stat.st_ino)
+        if self._file_identity not in (None, identity) or stat.st_size < self._offset:
+            raise MultiAssetLiveConfigError(
+                "monitor ledger changed or was truncated; attach again"
+            )
+        offset, line, record = self._offset, self._line, self._record
+        if stat.st_size > offset:
+            with path.open("rb") as stream:
+                opened = os.fstat(stream.fileno())
+                if (
+                    opened.st_dev,
+                    opened.st_ino,
+                ) != identity or opened.st_size < stat.st_size:
+                    raise MultiAssetLiveConfigError(
+                        "monitor ledger changed or was truncated; attach again"
+                    )
+                stream.seek(offset)
+                while offset < stat.st_size:
+                    raw = stream.readline(stat.st_size - offset)
+                    if not raw:
+                        raise MultiAssetLiveConfigError("monitor ledger was truncated")
+                    if not raw.endswith(b"\n"):
+                        break
+                    line += 1
+                    text = raw.decode("utf-8")
+                    if '"configuration_identity"' in text:
+                        record = _decode_configuration_identity(text, path, line)
+                    offset += len(raw)
+        if record is None:
+            raise MultiAssetLiveConfigError(
+                f"active ledger has no configuration identity: {path}"
+            )
+        active = _active_identity(record, self._config)
+        self._offset, self._line, self._record, self._file_identity = (
+            offset,
+            line,
+            record,
+            identity,
+        )
+        return active

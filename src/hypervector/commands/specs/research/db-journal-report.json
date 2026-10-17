@@ -1,0 +1,28 @@
+{
+  "name": "research-db-journal-report",
+  "action": "db-journal-report",
+  "help": "Report portfolio research revisions and evidence integrity",
+  "handler": "hypervector.cli_research_journal:cmd_research_db_journal_report",
+  "arguments": [
+    {
+      "flags": [
+        "--hypothesis-id"
+      ],
+      "options": {
+        "dest": "hypothesis_id",
+        "required": true,
+        "default": null
+      }
+    },
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "default": null,
+        "type": "Path"
+      }
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -50,6 +52,7 @@ def test_v85_retires_only_tuned_btc_execution_and_keeps_every_asset_tradable() -
         assert candidate_by_id[strategy_id] == expected
 
 
+@pytest.mark.evidence
 def test_v85_approval_names_exactly_one_retired_execution_scope() -> None:
     """The immutable transition approval must bind V80 directly to V85."""
     prior = load_multi_asset_live_config(_V80, mode="observe")

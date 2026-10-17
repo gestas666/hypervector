@@ -73,6 +73,7 @@ def _trade(at: datetime) -> PublicTradeEvent:
     )
 
 
+@pytest.mark.integration
 def test_source_profile_warmup_arms_one_fresh_l2_sized_short(tmp_path) -> None:
     """Warm labels submit once from fresh L2 using the measured 50%/30x size."""
     profile = load_source_follow_profile(
@@ -118,6 +119,7 @@ def test_source_profile_warmup_arms_one_fresh_l2_sized_short(tmp_path) -> None:
     assert canceled.cancel_requested is True
 
 
+@pytest.mark.integration
 def test_session_profile_holds_open_position_after_entry_window(tmp_path: Path) -> None:
     """Ending entry hours must not force-close a position awaiting its target."""
     profile = load_source_follow_profile(
@@ -155,6 +157,7 @@ def test_session_profile_holds_open_position_after_entry_window(tmp_path: Path) 
     assert telemetry["regime_reason"] == "source_follow_outside_entry_session"
 
 
+@pytest.mark.integration
 def test_source_profile_ledgers_exact_effective_backend_configuration(
     tmp_path: Path,
 ) -> None:
@@ -182,6 +185,7 @@ def test_source_profile_ledgers_exact_effective_backend_configuration(
     assert identity["execution"]["maximum_hold_exit"] == ("first_fresh_bbo_taker")
 
 
+@pytest.mark.integration
 def test_minrange12_profile_ledgers_its_distinct_entry_contract(
     tmp_path: Path,
 ) -> None:
@@ -212,6 +216,7 @@ def test_minrange12_profile_ledgers_its_distinct_entry_contract(
     assert identity["metalabel_mode"] == "observe"
 
 
+@pytest.mark.integration
 def test_alloc35_profile_ledgers_exact_backend_risk_contract(
     tmp_path: Path,
 ) -> None:
@@ -244,6 +249,7 @@ def test_alloc35_profile_ledgers_exact_backend_risk_contract(
     assert identity["metalabel_mode"] == "observe"
 
 
+@pytest.mark.evidence
 def test_measured_profile_ledgers_risk_target_and_evidence_status(
     tmp_path: Path,
 ) -> None:
@@ -289,6 +295,7 @@ def test_measured_profile_ledgers_risk_target_and_evidence_status(
     }
 
 
+@pytest.mark.integration
 def test_source_fill_and_restart_preserve_original_hold_deadline(
     tmp_path: Path,
 ) -> None:

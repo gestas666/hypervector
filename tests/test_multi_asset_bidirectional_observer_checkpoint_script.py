@@ -10,8 +10,7 @@ from types import ModuleType
 
 SCRIPT = (
     Path(__file__).parents[1]
-    / "scripts"
-    / "multi_asset_bidirectional_observer_checkpoint.py"
+    / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_observer_checkpoint.py'
 )
 
 

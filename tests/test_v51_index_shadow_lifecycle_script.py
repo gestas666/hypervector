@@ -16,6 +16,7 @@ _PROFILE = "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51"
 _FINGERPRINT = "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908"
 
 
+@pytest.mark.evidence
 def test_command_publishes_source_bound_authority_none_report(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -42,6 +43,7 @@ def test_command_publishes_source_bound_authority_none_report(
     assert persisted["input_evidence"]["candles_1m"]["rows"] == 1
 
 
+@pytest.mark.evidence
 def test_prefix_mutation_aborts_without_partial_publication(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -80,6 +82,7 @@ def test_existing_output_aborts_before_public_acquisition(tmp_path: Path) -> Non
         )
 
 
+@pytest.mark.evidence
 def test_command_fetches_signal_warmup_before_lifecycle_window(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

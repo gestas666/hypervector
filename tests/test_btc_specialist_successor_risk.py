@@ -14,6 +14,7 @@ _CORRECTED_PROFILE = Path(
 )
 
 
+@pytest.mark.evidence
 def test_v43_risk_scales_linearly_at_current_and_growth_equity() -> None:
     """The $500 and $5K stages use one percent policy and explicit fees."""
     report = build_btc_specialist_successor_risk(
@@ -46,6 +47,7 @@ def test_v43_risk_scales_linearly_at_current_and_growth_equity() -> None:
     assert long["net_target_usd"] == pytest.approx(7.361111111111112)
 
 
+@pytest.mark.evidence
 def test_v43_risk_discloses_evidence_and_fee_limitations() -> None:
     """Sizing arithmetic cannot be mistaken for proven strategy edge."""
     report = build_btc_specialist_successor_risk(
@@ -62,6 +64,7 @@ def test_v43_risk_discloses_evidence_and_fee_limitations() -> None:
     assert all(len(value["sha256"]) == 64 for value in report["inputs"].values())
 
 
+@pytest.mark.evidence
 def test_v44_risk_uses_corrected_target_and_honest_evidence_state() -> None:
     """The corrected taker challenger has distinct payoff and provenance."""
     report = build_btc_specialist_successor_risk(

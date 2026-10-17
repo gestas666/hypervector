@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from datetime import UTC, datetime
 from hashlib import sha256
 import json
@@ -16,6 +18,7 @@ ROOT = Path(__file__).parents[1]
 CATALOG = ROOT / "configs/research/v51_external_asset_pipeline.json"
 
 
+@pytest.mark.evidence
 def test_default_external_catalog_tracks_sp500_frozen_source_lane() -> None:
     """The repaired SP500 observer must remain visible without live authority."""
     payload = json.loads(CATALOG.read_text())
@@ -48,6 +51,7 @@ def test_default_external_catalog_tracks_sp500_frozen_source_lane() -> None:
         assert evidence["sha256"] == sha256(raw).hexdigest()
 
 
+@pytest.mark.evidence
 def test_default_pipeline_surfaces_sp500_open_lifecycle_without_pnl() -> None:
     """The central digest lane must expose the censored SP500 evidence."""
     pipeline = load_external_asset_pipeline(

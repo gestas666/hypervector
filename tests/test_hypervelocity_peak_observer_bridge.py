@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from dataclasses import replace
+from test_paper_session import _write_strict_export
 from typing import Literal
 
 import pytest
@@ -177,6 +179,7 @@ def _profile_session(
 ) -> tuple[PaperSession, HypervelocitySessionBridge]:
     """Attach the configured event runtime to a persistent paper root."""
     profile = load_hypervelocity_profile("configs/hypervelocity_faithful.toml")
+    profile = replace(profile, metalabel_mode="off", export_path=_write_strict_export(root, strategy="hypervelocity_1m_scalper_long"))
     session = PaperSession(
         export_dir=profile.export_path,
         data_root=root,

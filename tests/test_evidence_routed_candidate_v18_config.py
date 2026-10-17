@@ -57,6 +57,7 @@ def test_v18_changes_only_post_v14_execution_routing_and_identity() -> None:
     )
 
 
+@pytest.mark.integration
 def test_v18_preserves_bidirectional_risk_and_builds_collectors() -> None:
     """Routing does not change risk, sides, or collector availability."""
     config = load_multi_asset_live_config(_V18, mode="observe")

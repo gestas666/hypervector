@@ -52,6 +52,7 @@ class _StaleFundingReader:
         )
 
 
+@pytest.mark.evidence
 def test_current_funding_is_route_bound_and_not_a_forecast() -> None:
     """Every exact route must retain sides, hold, and frozen-risk comparison."""
     observed_at = datetime(2026, 8, 19, 12, tzinfo=UTC)
@@ -80,6 +81,7 @@ def test_current_funding_is_route_bound_and_not_a_forecast() -> None:
     assert payload["execution_authority"] == "none"
 
 
+@pytest.mark.evidence
 def test_current_funding_rejects_stale_official_evidence() -> None:
     """A report must fail closed when the latest event is more than two hours old."""
     with pytest.raises(

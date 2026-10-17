@@ -1,8 +1,0 @@
-[package]
-name = "hypervector-core"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-description = "Core Rust library for the hypervector quantitative pipeline"
-
-[dependencies]

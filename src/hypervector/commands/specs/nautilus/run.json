@@ -1,0 +1,74 @@
+{
+  "name": "phase2-run",
+  "action": "run",
+  "help": "Run Phase 2 historical backtest from a strict export (Nautilus engine)",
+  "handler": "hypervector.commands.nautilus:cmd_phase2_run",
+  "arguments": [
+    {
+      "flags": [
+        "--path"
+      ],
+      "options": {
+        "dest": "path",
+        "required": true,
+        "default": null,
+        "help": "path to export directory"
+      }
+    },
+    {
+      "flags": [
+        "--lookback"
+      ],
+      "options": {
+        "dest": "lookback",
+        "default": 90,
+        "help": "calendar days for research history (floor=30, default=90)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--conviction"
+      ],
+      "options": {
+        "dest": "conviction",
+        "default": 0.5,
+        "help": "0-1 conviction for position sizing (default 0.5)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--no-network"
+      ],
+      "options": {
+        "dest": "no_network",
+        "default": false,
+        "help": "offline intent: history load is cache-first (no force refresh)",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--paper"
+      ],
+      "options": {
+        "dest": "paper",
+        "default": false,
+        "help": "legacy flag: does not switch engines \u2014 use paper-run for dry-run",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--live"
+      ],
+      "options": {
+        "dest": "live",
+        "default": false,
+        "help": "legacy flag: does not place; use live-run for venue submit",
+        "action": "store_true"
+      }
+    }
+  ]
+}

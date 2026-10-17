@@ -1,0 +1,89 @@
+{
+  "name": "regime",
+  "action": "classify",
+  "help": "Run regime detector on live/cached history",
+  "handler": "hypervector.commands.regime:cmd_regime",
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC"
+      }
+    },
+    {
+      "flags": [
+        "--timeframe"
+      ],
+      "options": {
+        "dest": "timeframe",
+        "default": "1m"
+      }
+    },
+    {
+      "flags": [
+        "--lookback"
+      ],
+      "options": {
+        "dest": "lookback",
+        "default": 90,
+        "help": "calendar days (floor=30, default=90, promo=180)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--strict-hl-only"
+      ],
+      "options": {
+        "dest": "strict_hl_only",
+        "default": false,
+        "help": "do not backfill from Binance/Bybit",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--force"
+      ],
+      "options": {
+        "dest": "force",
+        "default": false,
+        "help": "ignore Parquet cache and re-fetch",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--fast"
+      ],
+      "options": {
+        "dest": "fast",
+        "default": 12,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--slow"
+      ],
+      "options": {
+        "dest": "slow",
+        "default": 48,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--export"
+      ],
+      "options": {
+        "dest": "export",
+        "default": false,
+        "action": "store_true"
+      }
+    }
+  ]
+}

@@ -169,6 +169,7 @@ def test_legacy_open_position_migrates_to_event_target_without_bar_fill() -> Non
     assert controller.port.execution_records() == ()
 
 
+@pytest.mark.integration
 def test_source_runtime_restores_original_maximum_hold_deadline() -> None:
     """Source-follow restart must not reset a position's 24-hour clock."""
     target = PendingTargetResume(
@@ -200,6 +201,7 @@ def test_source_runtime_restores_original_maximum_hold_deadline() -> None:
     assert controller.state.maximum_hold_seconds == 86_400.0
 
 
+@pytest.mark.integration
 def test_source_runtime_rejects_open_resume_without_hold_origin() -> None:
     """Missing hold-origin evidence must fail closed for source-follow restart."""
     with pytest.raises(ValueError, match="position-open timestamp"):

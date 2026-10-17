@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 import hashlib
 import json
 from pathlib import Path
@@ -21,6 +23,7 @@ def test_v55_sparsity_journal_is_exact_and_report_only() -> None:
     assert payload["highest_value_next_investigation"]["route"].endswith("xyz:SPCX")
 
 
+@pytest.mark.evidence
 def test_v55_sparsity_journal_reconciles_live_prefix() -> None:
     """The exact prefix cited by the decision must remain immutable."""
     payload = json.loads(_JOURNAL.read_text())

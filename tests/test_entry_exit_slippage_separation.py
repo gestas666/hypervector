@@ -29,7 +29,7 @@ _V79_FINGERPRINT = "6c12d96e3fe09dd5dcefd24761bc7462ec6d6aa0b0d0f023a21e4b8597b6
 _V80 = Path(
     "configs/multi_asset_growth_first_5000_seven_asset_entry_ioc_hardened_v80.toml"
 )
-_LIVE_SCRIPT = Path("scripts/multi_asset_bidirectional_live.py")
+_LIVE_SCRIPT = Path("src/hypervector/operations/multi_asset_bidirectional_live.py")
 
 
 class _Info:

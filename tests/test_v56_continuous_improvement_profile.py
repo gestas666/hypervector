@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
@@ -82,6 +84,7 @@ def test_v56_override_is_exact_report_only_and_has_all_routes() -> None:
     assert payload["contract"]["automatic_promotion"] is False
 
 
+@pytest.mark.evidence
 def test_v56_override_evidence_reconciles_and_tracks_first_v2_lifecycle() -> None:
     """The monitor must load exact bytes and retain the live v2 experiment."""
     spec = spec_from_file_location("v56_improvement_monitor", _SCRIPT)

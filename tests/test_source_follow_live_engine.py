@@ -327,6 +327,7 @@ def _engine(
     )
 
 
+@pytest.mark.integration
 def test_bidirectional_signal_submits_long_and_places_matching_target(
     tmp_path: Path,
 ) -> None:
@@ -386,6 +387,7 @@ def test_bidirectional_signal_submits_long_and_places_matching_target(
     assert regime["payload"]["decision_action"] == "enter_long"
 
 
+@pytest.mark.integration
 def test_bidirectional_restart_recovers_an_isolated_long_target(tmp_path: Path) -> None:
     """A restart adopts one valid long and its exact reduce-only sell target."""
     now = datetime(2026, 7, 31, 16, 5, tzinfo=UTC)
@@ -401,6 +403,7 @@ def test_bidirectional_restart_recovers_an_isolated_long_target(tmp_path: Path) 
     assert not [call for call in venue.calls if call[0] == "entry"]
 
 
+@pytest.mark.integration
 def test_short_only_wrapper_refuses_an_existing_long(tmp_path: Path) -> None:
     """A wrong wrapper cannot silently adopt exposure outside its side contract."""
     now = datetime(2026, 7, 31, 16, 5, tzinfo=UTC)
@@ -411,6 +414,7 @@ def test_short_only_wrapper_refuses_an_existing_long(tmp_path: Path) -> None:
         _engine(tmp_path, venue, now).start()
 
 
+@pytest.mark.integration
 def test_bidirectional_long_target_fill_is_verified_before_close_attribution(
     tmp_path: Path,
 ) -> None:
@@ -439,6 +443,7 @@ def test_bidirectional_long_target_fill_is_verified_before_close_attribution(
     assert closes[0]["payload"]["oid"] == 202
 
 
+@pytest.mark.integration
 def test_fresh_signal_submits_one_capped_post_only_short(tmp_path: Path) -> None:
     """A qualified completed-5m onset creates exactly one maker entry."""
     now = datetime(2026, 7, 31, 16, 5, tzinfo=UTC)
@@ -499,6 +504,7 @@ def test_fresh_signal_submits_one_capped_post_only_short(tmp_path: Path) -> None
     )
 
 
+@pytest.mark.integration
 def test_warm_history_is_visible_but_cannot_submit_an_order(tmp_path: Path) -> None:
     """Warm chart candles remain explicitly outside the execution path."""
     now = datetime(2026, 7, 31, 16, 5, tzinfo=UTC)
@@ -517,6 +523,7 @@ def test_warm_history_is_visible_but_cannot_submit_an_order(tmp_path: Path) -> N
     assert history["payload"]["reference_price"] == 64_000.0
 
 
+@pytest.mark.integration
 def test_exact_source_long_observation_cannot_submit_a_live_order(
     tmp_path: Path,
 ) -> None:
@@ -565,6 +572,7 @@ def test_exact_source_long_observation_cannot_submit_a_live_order(
     assert regime["payload"]["entry_allowed"] is False
 
 
+@pytest.mark.integration
 def test_new_live_ledger_baselines_preexisting_venue_fills(tmp_path: Path) -> None:
     """Historical account fills must not become trades in a fresh canary run."""
     now = datetime(2026, 7, 31, 16, 5, tzinfo=UTC)
@@ -591,6 +599,7 @@ def test_new_live_ledger_baselines_preexisting_venue_fills(tmp_path: Path) -> No
     assert [row["payload"]["oid"] for row in fills] == [901]
 
 
+@pytest.mark.integration
 def test_restart_retains_historical_fill_baseline_and_recovers_new_fill(
     tmp_path: Path,
 ) -> None:
@@ -611,6 +620,7 @@ def test_restart_retains_historical_fill_baseline_and_recovers_new_fill(
     assert [row["payload"]["oid"] for row in fills] == [901]
 
 
+@pytest.mark.integration
 def test_partial_entry_is_canceled_then_protected_by_exact_target(
     tmp_path: Path,
 ) -> None:
@@ -635,6 +645,7 @@ def test_partial_entry_is_canceled_then_protected_by_exact_target(
     assert target["limit_price"] == pytest.approx(63_830.3306667)
 
 
+@pytest.mark.integration
 def test_residual_cancel_rejection_faults_without_crashing(tmp_path: Path) -> None:
     """An uncanceled opening residual remains visible as a durable fault."""
     now = datetime(2026, 7, 31, 16, 5, tzinfo=UTC)
@@ -657,6 +668,7 @@ def test_residual_cancel_rejection_faults_without_crashing(tmp_path: Path) -> No
     )
 
 
+@pytest.mark.integration
 def test_target_rejection_closes_and_verifies_flat(tmp_path: Path) -> None:
     """A missing target cannot leave live exposure unmanaged."""
     now = datetime(2026, 7, 31, 16, 5, tzinfo=UTC)
@@ -680,6 +692,7 @@ def test_target_rejection_closes_and_verifies_flat(tmp_path: Path) -> None:
     assert close["payload"]["reason"] == "target_submission_failure"
 
 
+@pytest.mark.integration
 def test_target_rejection_faults_when_close_never_reconciles_flat(
     tmp_path: Path,
 ) -> None:
@@ -699,6 +712,7 @@ def test_target_rejection_faults_when_close_never_reconciles_flat(
     )
 
 
+@pytest.mark.integration
 def test_restart_preserves_the_venue_entry_time_for_maximum_hold(
     tmp_path: Path,
 ) -> None:
@@ -715,6 +729,7 @@ def test_restart_preserves_the_venue_entry_time_for_maximum_hold(
     assert snapshot.opened_at_ms == opened_at_ms
 
 
+@pytest.mark.integration
 def test_immediate_target_fill_emits_a_verified_close(tmp_path: Path) -> None:
     """A target filled before its first poll still closes the journal lifecycle."""
     now = datetime(2026, 7, 31, 16, 5, tzinfo=UTC)
@@ -738,6 +753,7 @@ def test_immediate_target_fill_emits_a_verified_close(tmp_path: Path) -> None:
     assert close["payload"]["verified_flat"] is True
 
 
+@pytest.mark.integration
 def test_reconciled_target_fill_records_verified_target_close(tmp_path: Path) -> None:
     """A venue-flat target lifecycle carries an explicit journal exit reason."""
     now = datetime(2026, 7, 31, 16, 5, tzinfo=UTC)
@@ -768,6 +784,7 @@ def test_reconciled_target_fill_records_verified_target_close(tmp_path: Path) ->
     }
 
 
+@pytest.mark.integration
 def test_unattributed_flat_does_not_claim_strategy_target(tmp_path: Path) -> None:
     """A different close order remains unattributed instead of becoming a false TP."""
     now = datetime(2026, 7, 31, 16, 5, tzinfo=UTC)
@@ -791,6 +808,7 @@ def test_unattributed_flat_does_not_claim_strategy_target(tmp_path: Path) -> Non
     )
 
 
+@pytest.mark.integration
 def test_unfilled_entry_expires_after_exact_sixty_second_ttl(tmp_path: Path) -> None:
     """An old maker quote is canceled and cannot chase the same onset."""
     clock = [datetime(2026, 7, 31, 16, 5, tzinfo=UTC)]
@@ -809,6 +827,7 @@ def test_unfilled_entry_expires_after_exact_sixty_second_ttl(tmp_path: Path) -> 
     assert ("cancel", 101) in venue.calls
 
 
+@pytest.mark.integration
 def test_maximum_hold_cancels_target_before_reduce_only_close(tmp_path: Path) -> None:
     """The bounded hold exits from fresh venue state without leaving a target."""
     clock = [datetime(2026, 7, 31, 16, 5, tzinfo=UTC)]
@@ -829,6 +848,7 @@ def test_maximum_hold_cancels_target_before_reduce_only_close(tmp_path: Path) ->
     assert close["position_size_signed"] == pytest.approx(-0.02499)
 
 
+@pytest.mark.integration
 def test_target_fill_during_maximum_hold_cancel_avoids_stale_close(
     tmp_path: Path,
 ) -> None:

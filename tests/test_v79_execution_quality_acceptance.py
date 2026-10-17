@@ -17,6 +17,7 @@ from test_v79_poststart_acceptance import _epoch
 _NOW = datetime(2026, 9, 3, 1, 0, tzinfo=UTC)
 
 
+@pytest.mark.evidence
 @pytest.mark.parametrize(
     "field",
     ["expected_price", "slippage_bps", "acknowledgement_latency_ms"],
@@ -32,6 +33,7 @@ def test_v79_rejects_missing_entry_execution_quality(field: str) -> None:
     assert "execution_quality_incomplete" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_slippage_that_disagrees_with_exact_fill() -> None:
     """Reported slippage must reproduce from expected price, fill, and side."""
     config, checkpoint = _closed_checkpoint()
@@ -43,6 +45,7 @@ def test_v79_rejects_slippage_that_disagrees_with_exact_fill() -> None:
     assert "execution_quality_metric_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_entry_slippage_above_asset_ioc_cap() -> None:
     """A BTC entry beyond its configured 20-bps IOC cap must be visible."""
     config, checkpoint = _closed_checkpoint()
@@ -57,6 +60,7 @@ def test_v79_rejects_entry_slippage_above_asset_ioc_cap() -> None:
     assert "entry_slippage_cap_exceeded:BTC:10" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_entry_fee_above_declared_route_model() -> None:
     """Realized entry fees above the declared model must reject acceptance."""
     config, checkpoint = _closed_checkpoint()
@@ -69,6 +73,7 @@ def test_v79_rejects_entry_fee_above_declared_route_model() -> None:
     assert "entry_fee_model_exceeded:BTC:10" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_execution_quality_summary_drift() -> None:
     """Aggregate quality counters cannot disagree with exact fill evidence."""
     config, checkpoint = _closed_checkpoint()
@@ -80,6 +85,7 @@ def test_v79_rejects_execution_quality_summary_drift() -> None:
     assert "execution_quality_summary_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_accepts_explicit_no_fill_quality_state() -> None:
     """A fresh run with no fills reports zero quality coverage without invention."""
     config, checkpoint = _closed_checkpoint()

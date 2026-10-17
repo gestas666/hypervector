@@ -39,6 +39,7 @@ def _acceptance() -> ModuleType:
     return import_module(name)
 
 
+@pytest.mark.evidence
 def test_exact_v59_accepts_thirteen_directions_and_unchanged_risk(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -69,6 +70,7 @@ def test_exact_v59_accepts_thirteen_directions_and_unchanged_risk(
     assert report["checks"]["accounting_epoch_lineage"]["passed"] is True
 
 
+@pytest.mark.evidence
 def test_v59_rejects_reintroduced_sp500_long_authority(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -95,6 +97,7 @@ def test_v59_rejects_reintroduced_sp500_long_authority(
     assert "sp500_long_authority_present" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v59_rejects_sizing_exit_and_provider_coverage_drift(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -127,6 +130,7 @@ def test_v59_rejects_sizing_exit_and_provider_coverage_drift(
     assert "runtime_provider_exit_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v59_rejects_spcx_cash_open_source_unavailability(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -164,6 +168,7 @@ def test_v59_rejects_spcx_cash_open_source_unavailability(
     }
 
 
+@pytest.mark.evidence
 @pytest.mark.parametrize(
     "accounting_epoch",
     [
@@ -227,6 +232,7 @@ def test_v59_rejects_missing_reset_or_changed_accounting_lineage(
     assert "v59_accounting_epoch_lineage_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v59_rejects_foreign_stress_or_preflight_identity() -> None:
     """Every economic and transition input must bind the candidate fingerprint."""
     acceptance = _acceptance()

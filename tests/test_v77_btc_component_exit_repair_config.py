@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -70,6 +72,7 @@ def test_v77_changes_only_identity_approval_and_robust_v3_exit_policy() -> None:
     assert _normalized(candidate, baseline, old_robust) == baseline
 
 
+@pytest.mark.evidence
 def test_v77_transition_approval_matches_candidate_and_evidence() -> None:
     """V77 approval must bind the exact transition and evidence digest."""
     baseline = _load(_V76)

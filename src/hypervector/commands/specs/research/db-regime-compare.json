@@ -1,0 +1,18 @@
+{
+  "name": "research-db-regime-compare",
+  "action": "db-regime-compare",
+  "help": "Report backend versus strict/legacy regime annotations",
+  "handler": "hypervector.cli_oxa:cmd_research_db_regime_compare",
+  "arguments": [
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "default": null,
+        "type": "Path"
+      }
+    }
+  ]
+}

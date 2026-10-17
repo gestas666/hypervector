@@ -24,6 +24,7 @@ _HYPE_EXIT = _ROOT / (
 )
 
 
+@pytest.mark.evidence
 def test_design_keeps_only_focused_routes_and_unused_risk() -> None:
     """The design cannot silently refill removed routes or capital slots."""
     report = _build()
@@ -45,6 +46,7 @@ def test_design_keeps_only_focused_routes_and_unused_risk() -> None:
     assert report["assessment"]["transition_ready_now"] is False
 
 
+@pytest.mark.evidence
 def test_design_preserves_live_prefix_and_hype_exit_rejection() -> None:
     """Current losses and rejected HYPE exit changes remain visible blockers."""
     report = _build()
@@ -59,6 +61,7 @@ def test_design_preserves_live_prefix_and_hype_exit_rejection() -> None:
     assert report["contract"]["automatic_restart"] is False
 
 
+@pytest.mark.evidence
 def test_design_rejects_wrong_source_identity_or_hype_disposition() -> None:
     """Aliased risk or exit evidence cannot support the candidate."""
     inputs = _inputs()

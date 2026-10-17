@@ -1,0 +1,102 @@
+{
+  "name": "oxa-book-fetch",
+  "action": "book-fetch",
+  "help": "Fetch bounded Hyperliquid-native L2 history from 0xArchive",
+  "handler": "hypervector.cli_oxa:cmd_oxa_book_fetch",
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC",
+        "help": "Hyperliquid core asset"
+      }
+    },
+    {
+      "flags": [
+        "--start"
+      ],
+      "options": {
+        "dest": "start",
+        "required": true,
+        "default": null,
+        "type": "_parse_utc_datetime"
+      }
+    },
+    {
+      "flags": [
+        "--end"
+      ],
+      "options": {
+        "dest": "end",
+        "required": true,
+        "default": null,
+        "type": "_parse_utc_datetime"
+      }
+    },
+    {
+      "flags": [
+        "--limit"
+      ],
+      "options": {
+        "dest": "limit",
+        "default": 1000,
+        "type": "_bounded_page_limit"
+      }
+    },
+    {
+      "flags": [
+        "--max-pages"
+      ],
+      "options": {
+        "dest": "max_pages",
+        "default": 1,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--timeout"
+      ],
+      "options": {
+        "dest": "timeout",
+        "default": 30.0,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--depth"
+      ],
+      "options": {
+        "dest": "depth",
+        "default": 20,
+        "type": "int",
+        "choices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ]
+      }
+    }
+  ]
+}

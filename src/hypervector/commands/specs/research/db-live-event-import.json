@@ -1,0 +1,27 @@
+{
+  "name": "research-db-live-event-import",
+  "action": "db-live-event-import",
+  "help": "Import immutable live Hyperliquid event parts into DuckDB",
+  "handler": "hypervector.cli_oxa:cmd_research_db_live_event_import",
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC"
+      }
+    },
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "default": null,
+        "type": "Path"
+      }
+    }
+  ]
+}

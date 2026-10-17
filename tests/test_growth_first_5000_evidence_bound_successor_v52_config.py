@@ -88,6 +88,7 @@ def test_v52_preserves_exact_route_exit_contracts() -> None:
     assert hype.hard_maximum_hold_seconds == 86_400
 
 
+@pytest.mark.integration
 def test_v52_builds_the_exact_three_live_collectors() -> None:
     """Every configured route must resolve to its versioned implementation."""
     config = load_multi_asset_live_config(_PROFILE, mode="live")
@@ -108,6 +109,7 @@ def test_v52_builds_the_exact_three_live_collectors() -> None:
     )
 
 
+@pytest.mark.integration
 def test_v52_builds_the_complete_runtime_poller() -> None:
     """Every v52 provider must have its source clock before live startup."""
     config = load_multi_asset_live_config(_PROFILE, mode="live")

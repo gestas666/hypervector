@@ -21,7 +21,7 @@ from hypervector.live.multi_asset_route_contract_validation import (
 )
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
 from hypervector.live.multi_asset_strategy_evidence import strategy_research_evidence
-from hypervector.live.cohort_tui_commands import index_observer_dependency_command
+from hypervector.live.cohort_process_commands import index_observer_dependency_command
 
 _BASELINE = Path(
     "configs/multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86.toml"
@@ -90,7 +90,7 @@ def test_v4_identity_rejects_unversioned_execution_drift(
 def test_observer_rejects_execution_flags_without_starting() -> None:
     """The standalone source collector cannot be armed as an order client."""
     result = subprocess.run(
-        [sys.executable, "scripts/sndk_hip3_breakout_shadow_observe.py", "--enabled"],
+        [sys.executable, "src/hypervector/operations/sndk_hip3_breakout_shadow_observe.py", "--enabled"],
         capture_output=True,
         text=True,
         check=False,
@@ -116,7 +116,7 @@ def test_published_candidate_keeps_risk_and_requires_its_own_approval() -> None:
     assert not candidate.transition_approval.exists()
     command = index_observer_dependency_command(candidate)
     assert command is not None
-    assert command[1] == "scripts/hip3_pressure_dependency_group.py"
+    assert command[1:3] == ("-m", "hypervector.operations.hip3_pressure_dependency_group")
     assert command[-1] == str(candidate.source_path)
 
 

@@ -34,6 +34,7 @@ MEASURED_PROFILE = Path(
 )
 
 
+@pytest.mark.integration
 def test_source_follow_profile_is_distinct_and_exactly_pinned() -> None:
     """The measured candidate cannot silently mutate the faithful baseline."""
     profile = load_source_follow_profile(PROFILE)
@@ -60,6 +61,7 @@ def test_source_follow_profile_is_distinct_and_exactly_pinned() -> None:
     assert faithful.entry_ttl_seconds == pytest.approx(300.0)
 
 
+@pytest.mark.integration
 def test_source_follow_profile_reports_the_causal_regime_contract() -> None:
     """Telemetry exposes the source policy actually controlling entry."""
     policy = load_source_follow_profile(PROFILE).regime_policy()
@@ -76,6 +78,7 @@ def test_source_follow_profile_reports_the_causal_regime_contract() -> None:
     assert policy["side"] == "short"
 
 
+@pytest.mark.integration
 def test_minrange12_lead_is_a_distinct_shadow_profile() -> None:
     """The development lead must not mutate the frozen source-follow control."""
     lead = load_source_follow_profile(LEAD_PROFILE)
@@ -90,6 +93,7 @@ def test_minrange12_lead_is_a_distinct_shadow_profile() -> None:
     assert control.minimum_range_bps == 0.0
 
 
+@pytest.mark.integration
 def test_runtime_dispatch_loads_the_minrange12_profile() -> None:
     """CLI dispatch must retain the lead's validated source profile type."""
     profile = load_hypervelocity_runtime_profile(LEAD_PROFILE)
@@ -98,6 +102,7 @@ def test_runtime_dispatch_loads_the_minrange12_profile() -> None:
     assert profile.minimum_range_bps == pytest.approx(12.0)
 
 
+@pytest.mark.integration
 def test_alloc35_profile_changes_only_the_measured_risk_contract() -> None:
     """The promoted shadow candidate keeps the signal while reducing allocation."""
     candidate = load_hypervelocity_runtime_profile(ALLOC35_PROFILE)
@@ -117,6 +122,7 @@ def test_alloc35_profile_changes_only_the_measured_risk_contract() -> None:
     assert candidate.metalabel_mode == "observe"
 
 
+@pytest.mark.integration
 def test_session_alloc35_profile_changes_only_entry_hours() -> None:
     """The session candidate keeps risk and signal rules while limiting entries."""
     candidate = load_hypervelocity_runtime_profile(SESSION_ALLOC35_PROFILE)
@@ -136,6 +142,7 @@ def test_session_alloc35_profile_changes_only_entry_hours() -> None:
     assert candidate.metalabel_mode == "observe"
 
 
+@pytest.mark.integration
 def test_bidirectional_profile_routes_aligned_source_states_without_reversal() -> None:
     """The two-sided candidate names both executable sides and preserves one-way risk."""
     candidate = load_source_follow_profile(BIDIRECTIONAL_PROFILE)
@@ -153,6 +160,7 @@ def test_bidirectional_profile_routes_aligned_source_states_without_reversal() -
     )
 
 
+@pytest.mark.integration
 def test_runtime_dispatch_loads_bidirectional_profile() -> None:
     """CLI dispatch must not reinterpret a valid bidirectional source profile."""
     candidate = load_hypervelocity_runtime_profile(BIDIRECTIONAL_PROFILE)
@@ -161,6 +169,7 @@ def test_runtime_dispatch_loads_bidirectional_profile() -> None:
     assert candidate.direction_mode == "source_follow_bidirectional"
 
 
+@pytest.mark.evidence
 def test_measured_profile_preserves_signal_and_price_target_at_lower_risk() -> None:
     """Measured risk must change exposure without silently changing the signal."""
     candidate = load_hypervelocity_runtime_profile(MEASURED_PROFILE)
@@ -183,6 +192,7 @@ def test_measured_profile_preserves_signal_and_price_target_at_lower_risk() -> N
     assert candidate.research_evidence()["active_book_gap_windows"] == 2
 
 
+@pytest.mark.integration
 def test_source_profile_requires_fresh_hyperliquid_warmup() -> None:
     """Pinned source continuity cannot bridge a stale cache to the live tail."""
     candidate = load_hypervelocity_runtime_profile(ALLOC35_PROFILE)
@@ -192,6 +202,7 @@ def test_source_profile_requires_fresh_hyperliquid_warmup() -> None:
     assert _requires_fresh_warmup(faithful) is False
 
 
+@pytest.mark.integration
 def test_source_follow_replay_uses_runtime_event_freshness() -> None:
     """Forward replay must not silently tighten the shadow freshness contract."""
     lead = load_source_follow_profile(LEAD_PROFILE)
@@ -218,6 +229,7 @@ def test_source_follow_profile_rejects_changed_base_profile(tmp_path: Path) -> N
         load_source_follow_profile(candidate)
 
 
+@pytest.mark.integration
 def test_runtime_profile_dispatch_preserves_both_profile_families() -> None:
     """CLI profile dispatch selects source-follow without changing faithful load."""
     source = load_hypervelocity_runtime_profile(PROFILE)

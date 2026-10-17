@@ -2,14 +2,22 @@
 name = "hypervector"
 version = "0.1.0"
 description = "Hybrid quantitative pipeline: VectorBT (Phase 1) → NautilusTrader (Phase 2/3)"
-readme = "initial-spec.md"
+readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
-    "vectorbt[full,rust]==1.1.0",
+    "vectorbt[rust]==1.1.0",
+    "plotly>=5,<7",
+    "TA-Lib>=0.7",
     "nautilus_trader>=1.230.0",
-    "backtrader[plotting]>=1.9.78.123",
     "websockets>=16.0,<17",
     "duckdb>=1.5.5",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pyarrow>=18",
+    "requests>=2.32",
+    "eth-account>=0.13",
+    "scikit-learn>=1.5",
+    "joblib>=1.4",
     "hyperliquid-python-sdk==0.24.0",
 ]
 
@@ -17,10 +25,14 @@ dependencies = [
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
+    "pytest-xdist>=3.6",
 ]
 ml = [
     "lightgbm>=4.0",
 ]
+
+optuna = ["optuna"]
+integrations = ["vectorbt[full]==1.1.0"]
 
 [build-system]
 requires = ["hatchling"]
@@ -32,13 +44,20 @@ hypervector = "hypervector.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/hypervector"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"pyproject.toml" = "hypervector/_build/pyproject.toml"
+"uv.lock" = "hypervector/_build/uv.lock"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "scripts", "."]
 markers = [
-    "network: hits live Hyperliquid/Binance/Bybit APIs (skipped by default)",
+    "network: hits live Hyperliquid/Binance/Bybit APIs (explicit opt-in)",
+    "evidence: validates frozen historical operator artifacts (requires local evidence bundle)",
+    "integration: optional third-party service integrations (explicit opt-in)",
+    "performance: recorded native replay and profiling workloads (explicit opt-in)",
 ]
-addopts = "-m 'not network'"
+addopts = "-m 'not network and not evidence and not integration and not performance'"
 
 [tool.uv]
 package = true

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 import importlib.util
 import json
 from pathlib import Path
@@ -23,6 +25,7 @@ _MODULE = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_MODULE)
 
 
+@pytest.mark.evidence
 def test_command_publishes_source_bound_report_only_bundle(tmp_path: Path) -> None:
     """The fixed command publishes all 147 observations without authority."""
     output = tmp_path / "attribution"

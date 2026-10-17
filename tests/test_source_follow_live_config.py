@@ -16,6 +16,7 @@ BIDIRECTIONAL_CONFIG = Path(
 )
 
 
+@pytest.mark.integration
 def test_live_canary_inherits_the_selected_five_minute_contract() -> None:
     """The live wrapper cannot silently alter the measured strategy profile."""
     config = load_source_follow_live_config(CONFIG)
@@ -40,6 +41,7 @@ def test_live_canary_inherits_the_selected_five_minute_contract() -> None:
     assert policy["context_role"] == "not_classified"
 
 
+@pytest.mark.integration
 def test_live_canary_requires_two_flags_and_credentials() -> None:
     """No single CLI switch or configured secret can arm execution alone."""
     missing_enabled = load_source_follow_live_config(
@@ -61,6 +63,7 @@ def test_live_canary_requires_two_flags_and_credentials() -> None:
         missing_credentials.require_live_start(credentials_present=False)
 
 
+@pytest.mark.integration
 def test_live_canary_fingerprint_excludes_transient_arm_flags() -> None:
     """The same strategy/config identity survives disarmed and armed checks."""
     disarmed = load_source_follow_live_config(CONFIG)
@@ -75,6 +78,7 @@ def test_live_canary_fingerprint_excludes_transient_arm_flags() -> None:
     assert armed.effective_arm_state(credentials_present=True) == "LIVE ARMED"
 
 
+@pytest.mark.integration
 def test_live_canary_fingerprint_includes_the_resolved_strategy_contract() -> None:
     """A code-level policy change cannot retain the same profile identity."""
     baseline = load_source_follow_live_config(BIDIRECTIONAL_CONFIG)
@@ -101,6 +105,7 @@ def test_live_canary_rejects_unknown_or_changed_fields(tmp_path: Path) -> None:
         load_source_follow_live_config(changed)
 
 
+@pytest.mark.integration
 def test_bidirectional_live_wrapper_is_distinct_and_fail_closed() -> None:
     """Two-sided authority requires its own immutable config and both arm flags."""
     config = load_source_follow_live_config(BIDIRECTIONAL_CONFIG)

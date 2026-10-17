@@ -1,0 +1,19 @@
+{
+  "name": "hypervelocity-shadow-reset",
+  "action": "shadow-reset",
+  "help": "Back up and reset shadow portfolio/trade telemetry",
+  "handler": "hypervector.commands.shadow:cmd_hypervelocity_shadow_reset",
+  "arguments": [
+    {
+      "flags": [
+        "--yes"
+      ],
+      "options": {
+        "dest": "yes",
+        "default": false,
+        "help": "perform the reset; without this flag the command is a dry run",
+        "action": "store_true"
+      }
+    }
+  ]
+}

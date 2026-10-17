@@ -199,7 +199,7 @@ def observer_window_provenance() -> dict[str, object]:
         "implementation_continuity": {
             "single_implementation_window": False,
             "changed_sources": [
-                "scripts/multi_asset_bidirectional_observe.py",
+                "src/hypervector/operations/multi_asset_bidirectional_observe.py",
                 "src/hypervector/live/multi_asset_observer_runner.py",
             ],
         },

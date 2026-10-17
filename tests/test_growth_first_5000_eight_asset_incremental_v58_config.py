@@ -119,6 +119,7 @@ def test_v58_has_no_observe_only_route_or_uncovered_side() -> None:
     assert len(config.executable_provider_directions) == 14
 
 
+@pytest.mark.integration
 def test_v58_constructs_every_declared_runtime_collector() -> None:
     """A validated route must also resolve to a concrete runtime collector."""
     config = _config()

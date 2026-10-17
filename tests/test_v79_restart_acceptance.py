@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
     load_multi_asset_live_config,
@@ -17,6 +19,7 @@ from test_v79_poststart_acceptance import (
 )
 
 
+@pytest.mark.evidence
 def test_v79_accepts_complete_compatible_history_after_restart() -> None:
     """A process restart must retain exact prior V79 lifecycle monitoring."""
     config = load_multi_asset_live_config(_CONFIG, mode="observe")
@@ -40,6 +43,7 @@ def test_v79_accepts_complete_compatible_history_after_restart() -> None:
     assert report["reasons"] == []
 
 
+@pytest.mark.evidence
 def test_v79_rejects_fill_origin_outside_compatible_history() -> None:
     """A stale fill from another execution history cannot pass attribution."""
     checkpoint = _checkpoint(_config())
@@ -53,6 +57,7 @@ def test_v79_rejects_fill_origin_outside_compatible_history() -> None:
     assert "execution_fill_run_provenance_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_incorrect_current_run_fill_count() -> None:
     """The current-process counter must reconcile to exact fill provenance."""
     checkpoint = _checkpoint(_config())
@@ -64,6 +69,7 @@ def test_v79_rejects_incorrect_current_run_fill_count() -> None:
     assert "execution_fill_run_provenance_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_missing_fill_history_provenance() -> None:
     """Missing history identity must produce a visible rejection, not abort."""
     checkpoint = _checkpoint(_config())

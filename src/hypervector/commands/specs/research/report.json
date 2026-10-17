@@ -1,0 +1,17 @@
+{
+  "name": "report",
+  "action": "report",
+  "help": "Print ranked board from SQLite",
+  "handler": "hypervector.commands.sweep:cmd_report",
+  "arguments": [
+    {
+      "flags": [
+        "--track"
+      ],
+      "options": {
+        "dest": "track",
+        "default": null
+      }
+    }
+  ]
+}

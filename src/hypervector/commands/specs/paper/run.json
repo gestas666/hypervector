@@ -1,0 +1,179 @@
+{
+  "name": "paper-run",
+  "action": "run",
+  "help": "Paper/shadow daemon: mainnet HL bars + synthetic fills; no venue orders (default mode=shadow)",
+  "handler": "hypervector.commands.paper:cmd_paper_run",
+  "arguments": [
+    {
+      "flags": [
+        "--path"
+      ],
+      "options": {
+        "dest": "path",
+        "required": true,
+        "default": null,
+        "help": "path to strict Phase 1.5 export directory"
+      }
+    },
+    {
+      "flags": [
+        "--mode"
+      ],
+      "options": {
+        "dest": "mode",
+        "default": "shadow",
+        "help": "execution mode: shadow (default; mainnet-honest intents, no venue orders) or paper (offline-compat synthetic path)",
+        "choices": [
+          "paper",
+          "shadow"
+        ]
+      }
+    },
+    {
+      "flags": [
+        "--conviction"
+      ],
+      "options": {
+        "dest": "conviction",
+        "default": 0.5,
+        "help": "0-1 conviction for position sizing (default 0.5)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--fee-tier"
+      ],
+      "options": {
+        "dest": "fee_tier",
+        "default": 0,
+        "help": "HL fee tier for CostProvider (default 0)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--sandbox"
+      ],
+      "options": {
+        "dest": "sandbox",
+        "default": false,
+        "help": "enable optional sandbox shadow fields (non-authoritative; default off)",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--stop-file"
+      ],
+      "options": {
+        "dest": "stop_file",
+        "default": null,
+        "help": "if this path exists, daemon stops gracefully"
+      }
+    },
+    {
+      "flags": [
+        "--poll-interval"
+      ],
+      "options": {
+        "dest": "poll_interval",
+        "default": 5.0,
+        "help": "seconds between REST candle polls (default 5)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--max-live-bars"
+      ],
+      "options": {
+        "dest": "max_live_bars",
+        "default": null,
+        "help": "stop after N live bars (offline / smoke tests)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--lookback"
+      ],
+      "options": {
+        "dest": "lookback",
+        "default": null,
+        "help": "warm-up lookback days (default: export meta or 90)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--preferred-fill-model"
+      ],
+      "options": {
+        "dest": "preferred_fill_model",
+        "default": "l2_walk_v1",
+        "help": "preferred FillModel id when book is fresh (default: l2_walk_v1; falls back to bar_close without book)"
+      }
+    },
+    {
+      "flags": [
+        "--max-book-age-ms"
+      ],
+      "options": {
+        "dest": "max_book_age_ms",
+        "default": 3000.0,
+        "help": "stale book threshold in ms (default: 3000)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--metalabel"
+      ],
+      "options": {
+        "dest": "metalabel",
+        "default": null,
+        "help": "enable LightGBM metalabel: scale conviction by p and filter entries below --metalabel-min-p (default: off)",
+        "action": "boolean_optional"
+      }
+    },
+    {
+      "flags": [
+        "--metalabel-mode"
+      ],
+      "options": {
+        "dest": "metalabel_mode",
+        "default": null,
+        "help": "explicit model policy: off, observe (annotate only), scale (size by p), or filter (size and gate by p)",
+        "choices": [
+          "off",
+          "observe",
+          "scale",
+          "filter"
+        ]
+      }
+    },
+    {
+      "flags": [
+        "--metalabel-min-p"
+      ],
+      "options": {
+        "dest": "metalabel_min_p",
+        "default": 0.5,
+        "help": "min metalabel p to allow entry when filtering (default: 0.5)",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--metalabel-filter"
+      ],
+      "options": {
+        "dest": "metalabel_filter",
+        "default": true,
+        "help": "when metalabel is on, skip entries with p < min-p (default: on; use --no-metalabel-filter for scale-only)",
+        "action": "boolean_optional"
+      }
+    }
+  ]
+}

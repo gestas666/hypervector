@@ -660,6 +660,7 @@ def test_default_collectors_require_the_real_backtest_lab_root() -> None:
         raise AssertionError("missing Hulk dependency root was accepted")
 
 
+@pytest.mark.integration
 def test_default_collectors_support_the_staged_sol_aligned_provider() -> None:
     """The next-flat profile must have a concrete causal runtime collector."""
     config = load_multi_asset_live_config(

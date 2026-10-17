@@ -12,6 +12,7 @@ from hypervector.strategies.hypervelocity_profile import load_hypervelocity_prof
 PROFILE = Path("configs/hypervelocity_faithful.toml")
 
 
+@pytest.mark.evidence
 def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     profile = load_hypervelocity_profile(PROFILE)
 

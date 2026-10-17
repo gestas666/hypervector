@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
@@ -77,6 +79,7 @@ def _write_funding(path: Path) -> None:
     ).to_parquet(path, index=False)
 
 
+@pytest.mark.evidence
 def test_report_uses_current_cohort_execution_contract(tmp_path: Path) -> None:
     """The research replay must not inherit the old maker/no-stop profile."""
     module = _load_module()

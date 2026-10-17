@@ -1,5 +1,7 @@
 """Complete nine-asset portfolio and setup contract for cohort v25."""
 
+import pytest
+
 from pathlib import Path
 import tomllib
 
@@ -92,6 +94,7 @@ def test_v25_uses_one_position_slot_per_asset_and_exact_venue_limits() -> None:
     assert configured_perp_dexes(config.symbols) == ("", "xyz")
 
 
+@pytest.mark.integration
 def test_v25_constructs_all_default_collectors_and_fifteen_minute_sources() -> None:
     """Every declared setup must have a concrete runtime implementation."""
     config = load_multi_asset_live_config(PROFILE, mode="observe")
@@ -105,6 +108,7 @@ def test_v25_constructs_all_default_collectors_and_fifteen_minute_sources() -> N
     assert poller is not None
 
 
+@pytest.mark.integration
 def test_v25_initial_poll_publishes_all_twenty_four_setup_rows() -> None:
     """Startup must populate every setup with evidence or explicit blockers."""
     config = load_multi_asset_live_config(PROFILE, mode="observe")

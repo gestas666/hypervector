@@ -1,0 +1,7 @@
+{
+  "name": "paper-check",
+  "action": "check",
+  "help": "Paper/shadow identity: mode, mainnet network, no_submit (booleans/strings only; never secret values)",
+  "handler": "hypervector.commands.status:cmd_paper_check",
+  "arguments": []
+}

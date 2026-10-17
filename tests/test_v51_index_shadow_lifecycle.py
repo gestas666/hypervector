@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 import importlib
 from pathlib import Path
 
@@ -25,6 +27,7 @@ _STRESS = Path(
 )
 
 
+@pytest.mark.evidence
 def test_adapter_uses_exact_v51_entry_and_exit_identity() -> None:
     """Bind v3 SP500 entries to v51 stops, lock, hold, and $5K sizing."""
     module = importlib.import_module("hypervector.research.v51_index_shadow_lifecycle")

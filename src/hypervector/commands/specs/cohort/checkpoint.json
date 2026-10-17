@@ -1,0 +1,205 @@
+{
+  "name": "cohort-checkpoint",
+  "action": "checkpoint",
+  "help": "Continuously publish read-only checkpoints for one live cohort ledger set.",
+  "handler": "hypervector.commands.operations:run_operation",
+  "operation": "multi_asset_bidirectional_live_checkpoint",
+  "arguments": [
+    {
+      "flags": [
+        "--ledger-root"
+      ],
+      "options": {
+        "dest": "ledger_root",
+        "default": "data/live/bidirectional_cohort",
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "default": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "default": "configs/multi_asset_bidirectional_canary.toml",
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null
+      }
+    },
+    {
+      "flags": [
+        "--follow-latest-run"
+      ],
+      "options": {
+        "dest": "follow_latest_run",
+        "default": false,
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--interval-seconds"
+      ],
+      "options": {
+        "dest": "interval_seconds",
+        "default": 30.0,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--research-database"
+      ],
+      "options": {
+        "dest": "research_database",
+        "default": null,
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-bundle"
+      ],
+      "options": {
+        "dest": "accounting_epoch_bundle",
+        "default": null,
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--research-sync-interval-seconds"
+      ],
+      "options": {
+        "dest": "research_sync_interval_seconds",
+        "default": 600.0,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--research-sync-min-pending-bytes"
+      ],
+      "options": {
+        "dest": "research_sync_min_pending_bytes",
+        "default": 4194304,
+        "help": "defer a continuous research import until this many ledger bytes are pending, unless a fill is pending or the maximum age passed; 0 imports at every interval",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--research-sync-max-age-seconds"
+      ],
+      "options": {
+        "dest": "research_sync_max_age_seconds",
+        "default": 600.0,
+        "help": "import pending ledger evidence at least this often",
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--venue-portfolio"
+      ],
+      "options": {
+        "dest": "venue_portfolio",
+        "default": false,
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--opportunity-matrix"
+      ],
+      "options": {
+        "dest": "opportunity_matrix",
+        "default": "data/runtime/bidirectional_cohort/latest_opportunity_matrix.json",
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--supplemental-opportunity-matrix"
+      ],
+      "options": {
+        "dest": "supplemental_opportunity_matrix",
+        "default": [],
+        "type": "Path",
+        "action": "append"
+      }
+    },
+    {
+      "flags": [
+        "--eligible-policy-forward"
+      ],
+      "options": {
+        "dest": "eligible_policy_forward",
+        "default": false,
+        "help": "attach the report-only exact ETH stop/hold lifecycle journal",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--asymmetric-forward-journal"
+      ],
+      "options": {
+        "dest": "asymmetric_forward_journal",
+        "default": "docs/research-journal/cohort-asymmetric-shared-portfolio-v1.json",
+        "help": "attach the frozen report-only asymmetric portfolio observer",
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--disable-asymmetric-forward-observer"
+      ],
+      "options": {
+        "dest": "disable_asymmetric_forward_observer",
+        "default": false,
+        "help": "do not attach a profile-specific asymmetric portfolio observer",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--current-run-only"
+      ],
+      "options": {
+        "dest": "current_run_only",
+        "default": true,
+        "help": "bound publication to the explicitly selected live run",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--once"
+      ],
+      "options": {
+        "dest": "once",
+        "default": false,
+        "action": "store_true"
+      }
+    }
+  ]
+}

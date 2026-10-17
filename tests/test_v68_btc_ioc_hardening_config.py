@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -63,6 +65,7 @@ def test_v68_changes_only_identity_approval_and_btc_ioc_cap() -> None:
     assert normalized == baseline
 
 
+@pytest.mark.evidence
 def test_v68_approval_binds_the_ioc_only_profile_change() -> None:
     """The operator approval must authenticate V67, V68, evidence, and rollback."""
     assert _APPROVAL.is_file(), "V68 BTC IOC hardening approval is missing"

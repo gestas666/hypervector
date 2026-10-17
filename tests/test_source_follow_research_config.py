@@ -51,6 +51,7 @@ def test_source_follow_candidate_freezes_evidence_and_risk_contract() -> None:
     assert result["final_equity"] == 25_600.17224488378
 
 
+@pytest.mark.evidence
 def test_source_follow_candidate_artifact_hashes_are_current() -> None:
     path = Path("configs/research/hypervelocity_source_follow_short.toml")
     with path.open("rb") as handle:

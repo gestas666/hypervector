@@ -12,7 +12,7 @@ from types import ModuleType
 
 import pytest
 
-_SCRIPT = Path("scripts/multi_asset_bidirectional_live_audit.py")
+_SCRIPT = Path("src/hypervector/operations/multi_asset_bidirectional_live_audit.py")
 _RUN_ID = "run-current"
 
 

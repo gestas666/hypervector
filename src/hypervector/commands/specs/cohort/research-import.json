@@ -1,0 +1,77 @@
+{
+  "name": "cohort-research-import",
+  "action": "research-import",
+  "help": "Incrementally import append-only cohort journals into DuckDB",
+  "handler": "hypervector.cli_cohort:run_cohort_command",
+  "arguments": [
+    {
+      "flags": [
+        "--ledger-root"
+      ],
+      "options": {
+        "dest": "ledger_root",
+        "default": "data/live/bidirectional_cohort",
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "default": "data/research/market.duckdb",
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--cached-checkpoint"
+      ],
+      "options": {
+        "dest": "cached_checkpoint",
+        "default": null,
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-id"
+      ],
+      "options": {
+        "dest": "accounting_epoch_id",
+        "default": null
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-profile-fingerprint"
+      ],
+      "options": {
+        "dest": "accounting_epoch_profile_fingerprint",
+        "default": null
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-start-ms"
+      ],
+      "options": {
+        "dest": "accounting_epoch_start_ms",
+        "default": null,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-included-profile-fingerprint"
+      ],
+      "options": {
+        "dest": "accounting_epoch_included_profile_fingerprint",
+        "default": [],
+        "action": "append"
+      }
+    }
+  ],
+  "operation": "multi_asset_bidirectional_research_import"
+}

@@ -18,8 +18,7 @@ from hypervector.research.cohort_live_portfolio_archive import (
 
 SCRIPT = (
     Path(__file__).parents[1]
-    / "scripts"
-    / "multi_asset_bidirectional_live_checkpoint.py"
+    / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_live_checkpoint.py'
 )
 EPOCH = CohortAccountingEpoch("growth_5000_v49", "a" * 64, 1_786_579_200_000)
 

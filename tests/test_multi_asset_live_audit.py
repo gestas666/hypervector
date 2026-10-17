@@ -18,7 +18,7 @@ _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _RANGE = "range_onset_bidirectional_v1"
 _RUN_ID = "cohort-live-a"
-_SCRIPT = Path("scripts/multi_asset_bidirectional_live_audit.py")
+_SCRIPT = Path("src/hypervector/operations/multi_asset_bidirectional_live_audit.py")
 
 
 def test_exact_fill_placeholders_do_not_erase_projected_attribution() -> None:

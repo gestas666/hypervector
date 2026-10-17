@@ -1,0 +1,41 @@
+{
+  "name": "export-validate",
+  "action": "export-validate",
+  "help": "Validate a Phase 1 export bundle (meta/params/metrics schema)",
+  "handler": "hypervector.commands.export:cmd_export_validate",
+  "arguments": [
+    {
+      "flags": [
+        "--path"
+      ],
+      "options": {
+        "dest": "path",
+        "required": true,
+        "default": null,
+        "help": "path to export directory"
+      }
+    },
+    {
+      "flags": [
+        "--strict"
+      ],
+      "options": {
+        "dest": "strict",
+        "default": false,
+        "help": "require Phase 1.5 fields (init_cash, costs, risk, tp_sl_mode)",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--verbose"
+      ],
+      "options": {
+        "dest": "verbose",
+        "default": false,
+        "help": "include full meta/params/metrics in JSON output",
+        "action": "store_true"
+      }
+    }
+  ]
+}

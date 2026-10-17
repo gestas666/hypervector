@@ -70,6 +70,7 @@ def run_phase2_backtest(
     max_bars: int | None = None,
     log_level: str = "ERROR",
     venue: str = _VENUE,
+    allow_network: bool = True,
 ) -> Phase2Result:
     """Run HypervectorStrategy on research OHLCV via Nautilus BacktestEngine.
 
@@ -111,6 +112,7 @@ def run_phase2_backtest(
         data_root=paths.root,
         loadout=loadout,
         lookback_days=lookback_days,
+        allow_network=allow_network,
     )
     if max_bars is not None and len(df) > int(max_bars):
         df = df.iloc[: int(max_bars)].copy()
@@ -218,6 +220,7 @@ def _resolve_ohlcv(
     data_root: Path,
     loadout: StrategyLoadout,
     lookback_days: int | None,
+    allow_network: bool = True,
 ) -> pd.DataFrame:
     if ohlcv is not None:
         if len(ohlcv) == 0:
@@ -235,6 +238,7 @@ def _resolve_ohlcv(
         timeframe=loadout.timeframe,
         lookback_days=int(days),
         force_refresh=False,
+        allow_network=allow_network,
     )
     if df is None or len(df) == 0:
         raise ValueError(

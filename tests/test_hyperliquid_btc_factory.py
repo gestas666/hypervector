@@ -42,6 +42,7 @@ class _Builder:
         )
 
 
+@pytest.mark.integration
 def test_disarmed_config_refuses_before_authenticated_builder() -> None:
     """Configured secrets cannot bypass either operator arm flag."""
     config = load_source_follow_live_config(CONFIG)
@@ -57,6 +58,7 @@ def test_disarmed_config_refuses_before_authenticated_builder() -> None:
     assert builder.calls == 0
 
 
+@pytest.mark.integration
 def test_both_flags_construct_exactly_one_adapter() -> None:
     """Armed construction passes the account identity to one SDK builder call."""
     config = load_source_follow_live_config(

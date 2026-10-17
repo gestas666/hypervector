@@ -1,0 +1,80 @@
+{
+  "name": "cohort-live",
+  "action": "live",
+  "help": "Run the explicitly double-armed multi-asset live backend",
+  "handler": "hypervector.cli_cohort:run_cohort_command",
+  "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "default": null,
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--backtest-lab-root"
+      ],
+      "options": {
+        "dest": "backtest_lab_root",
+        "default": "../backtest-lab/backtest_lab",
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--enabled"
+      ],
+      "options": {
+        "dest": "enabled",
+        "default": false,
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--i-accept-live-risk"
+      ],
+      "options": {
+        "dest": "i_accept_live_risk",
+        "default": false,
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-bundle"
+      ],
+      "options": {
+        "dest": "accounting_epoch_bundle",
+        "default": null,
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--resume-transition-drain"
+      ],
+      "options": {
+        "dest": "resume_transition_drain",
+        "default": false,
+        "help": "resume only an active same-profile drain after a backend interruption",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--max-polls"
+      ],
+      "options": {
+        "dest": "max_polls",
+        "default": null,
+        "type": "int"
+      }
+    }
+  ],
+  "operation": "multi_asset_bidirectional_live"
+}

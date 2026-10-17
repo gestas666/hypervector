@@ -216,31 +216,12 @@ class CohortOperatorInbox:
             return CohortOperatorClaim(request_id, path, None, str(exc))
         return CohortOperatorClaim(request_id, path, command, None)
 
-    def _parse_command(
-        self,
-        request_id: str,
-        raw: object,
-    ) -> CohortOperatorCommand:
-        if not isinstance(raw, dict) or frozenset(raw) != _FIELDS:
-            raise ValueError("request fields do not match the command schema")
-        values: Mapping[str, object] = raw
-        if not _REQUEST_ID.fullmatch(request_id) or values["request_id"] != request_id:
-            raise ValueError("request id is invalid")
-        if values["schema_version"] != 1:
-            raise ValueError("request schema version is unsupported")
-        run_id = _text(values, "run_id")
-        profile = _text(values, "profile_fingerprint")
-        if run_id != self._run_id:
-            raise ValueError("request run_id does not match active backend")
-        if profile != self._profile_fingerprint:
-            raise ValueError("request profile does not match active backend")
-        created = _timestamp(_text(values, "created_at_utc"))
-        age = (self._now_utc() - created).total_seconds()
-        if age > self._maximum_age_seconds:
-            raise ValueError("request is stale")
-        if age < -5.0:
-            raise ValueError("request timestamp is in the future")
-        return _action_command(request_id, run_id, profile, created, values)
+    def _parse_command(self, request_id: str, raw: object) -> CohortOperatorCommand:
+        return validate_operator_request(
+            request_id, raw, run_id=self._run_id,
+            profile_fingerprint=self._profile_fingerprint, now=self._now_utc(),
+            maximum_age_seconds=self._maximum_age_seconds,
+        )
 
     def _write_outcome(self, request_id: str, payload: Mapping[str, object]) -> None:
         target = self._root / "outcomes" / f"{request_id}.json"
@@ -263,6 +244,38 @@ class CohortOperatorInbox:
                 "operator inbox clock must be timezone-aware"
             )
         return value.astimezone(timezone.utc)
+
+
+def validate_operator_request(
+    request_id: str,
+    raw: object,
+    *,
+    run_id: str,
+    profile_fingerprint: str,
+    now: datetime,
+    maximum_age_seconds: float,
+) -> CohortOperatorCommand:
+    """Validate a request without creating an inbox or acquiring execution authority."""
+    if not isinstance(raw, dict) or frozenset(raw) != _FIELDS:
+        raise ValueError("request fields do not match the command schema")
+    values: Mapping[str, object] = raw
+    if not _REQUEST_ID.fullmatch(request_id) or values["request_id"] != request_id:
+        raise ValueError("request id is invalid")
+    if values["schema_version"] != 1:
+        raise ValueError("request schema version is unsupported")
+    observed_run = _text(values, "run_id")
+    profile = _text(values, "profile_fingerprint")
+    if observed_run != run_id:
+        raise ValueError("request run_id does not match active backend")
+    if profile != profile_fingerprint:
+        raise ValueError("request profile does not match active backend")
+    created = _timestamp(_text(values, "created_at_utc"))
+    age = (now - created).total_seconds()
+    if age > maximum_age_seconds:
+        raise ValueError("request is stale")
+    if age < -5.0:
+        raise ValueError("request timestamp is in the future")
+    return _action_command(request_id, observed_run, profile, created, values)
 
 
 def _action_command(

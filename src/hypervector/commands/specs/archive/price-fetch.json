@@ -1,0 +1,70 @@
+{
+  "name": "oxa-price-fetch",
+  "action": "price-fetch",
+  "help": "Fetch bounded Hyperliquid mark/oracle prices from 0xArchive",
+  "handler": "hypervector.cli_oxa:cmd_oxa_price_fetch",
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC",
+        "help": "Hyperliquid core asset"
+      }
+    },
+    {
+      "flags": [
+        "--start"
+      ],
+      "options": {
+        "dest": "start",
+        "required": true,
+        "default": null,
+        "type": "_parse_utc_datetime"
+      }
+    },
+    {
+      "flags": [
+        "--end"
+      ],
+      "options": {
+        "dest": "end",
+        "required": true,
+        "default": null,
+        "type": "_parse_utc_datetime"
+      }
+    },
+    {
+      "flags": [
+        "--limit"
+      ],
+      "options": {
+        "dest": "limit",
+        "default": 1000,
+        "type": "_bounded_page_limit"
+      }
+    },
+    {
+      "flags": [
+        "--max-pages"
+      ],
+      "options": {
+        "dest": "max_pages",
+        "default": 1,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--timeout"
+      ],
+      "options": {
+        "dest": "timeout",
+        "default": 30.0,
+        "type": "float"
+      }
+    }
+  ]
+}

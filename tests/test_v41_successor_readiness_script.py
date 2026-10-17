@@ -85,6 +85,7 @@ def test_changed_input_aborts_before_publication(
     assert not output.exists()
 
 
+@pytest.mark.evidence
 def test_real_sources_survive_bound_config_temporary_cleanup(tmp_path: Path) -> None:
     """The exact config digest remains usable after its bound loader closes."""
     module = _module()

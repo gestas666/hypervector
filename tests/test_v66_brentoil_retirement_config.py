@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -66,6 +68,7 @@ def test_v66_has_no_reachable_brentoil_execution_scope() -> None:
     )
 
 
+@pytest.mark.evidence
 def test_v66_approval_records_two_terminal_retirements() -> None:
     """The exact V65-to-V66 approval must retire both Brent directions."""
     baseline = _load(_V65)

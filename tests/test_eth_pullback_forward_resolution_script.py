@@ -114,6 +114,7 @@ def test_rebinds_config_to_exact_observer_ledger_root(tmp_path: Path) -> None:
         return _report(None)
 
     module.build_eth_pullback_forward_resolution = _build
+    module._funding_reader = _FundingReader
 
     module.publish_report(args)
 

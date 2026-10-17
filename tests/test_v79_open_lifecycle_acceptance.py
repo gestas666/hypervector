@@ -21,6 +21,7 @@ _BTC_SWEEP = "liquidity_sweep_long_1h_stop60_target60_v2"
 _ETH_RANGE = "eth_range_onset_long_dual_mtf_v2"
 
 
+@pytest.mark.evidence
 def test_v79_accepts_an_exact_open_lifecycle_contract() -> None:
     """A correctly routed, protected, and timed BTC lifecycle remains accepted."""
     config = _config()
@@ -36,6 +37,7 @@ def test_v79_accepts_an_exact_open_lifecycle_contract() -> None:
     }
 
 
+@pytest.mark.evidence
 @pytest.mark.parametrize("stop_price", [100.4, 95.0])
 def test_v79_rejects_wrong_side_or_distance_for_an_open_stop(
     stop_price: float,
@@ -52,6 +54,7 @@ def test_v79_rejects_wrong_side_or_distance_for_an_open_stop(
     assert "open_stop_contract_invalid:BTC" in report["reasons"]
 
 
+@pytest.mark.evidence
 @pytest.mark.parametrize("target_price", [None, 99.0, 110.0])
 def test_v79_rejects_missing_wrong_side_or_distance_for_a_required_target(
     target_price: float | None,
@@ -68,6 +71,7 @@ def test_v79_rejects_missing_wrong_side_or_distance_for_a_required_target(
     assert "open_target_contract_invalid:BTC" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_an_unconfigured_target_on_a_no_target_route() -> None:
     """An ETH route configured without a target cannot silently add one."""
     config = _config()
@@ -79,6 +83,7 @@ def test_v79_rejects_an_unconfigured_target_on_a_no_target_route() -> None:
     assert "open_target_contract_invalid:ETH" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_exit_plan_drift_on_an_open_lifecycle() -> None:
     """The bound timer and controller plan must remain the configured plan."""
     config = _config()
@@ -92,6 +97,7 @@ def test_v79_rejects_exit_plan_drift_on_an_open_lifecycle() -> None:
     assert "open_exit_plan_contract_invalid:BTC" in report["reasons"]
 
 
+@pytest.mark.evidence
 @pytest.mark.parametrize(
     ("field", "value"),
     [
@@ -121,6 +127,7 @@ def test_v79_rejects_open_reflection_not_bound_to_exact_entry_fill(
     assert "open_entry_fill_invalid:BTC" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_open_position_projection_drift() -> None:
     """Execution, reflection, health, and marked position must describe one row."""
     config = _config()
@@ -134,6 +141,7 @@ def test_v79_rejects_open_position_projection_drift() -> None:
     assert "open_position_projection_invalid:BTC" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_accepts_partial_entry_fills_for_one_open_lifecycle() -> None:
     """Partial entry fills reconcile to the journal's aggregate entry leg."""
     config = _config()
@@ -160,6 +168,7 @@ def test_v79_accepts_partial_entry_fills_for_one_open_lifecycle() -> None:
     assert report["accepted"] is True
 
 
+@pytest.mark.evidence
 def test_v79_accepts_prior_run_entry_for_a_restarted_open_lifecycle() -> None:
     """A restart preserves an open lifecycle when entry provenance remains exact."""
     config = _config()
@@ -176,6 +185,7 @@ def test_v79_accepts_prior_run_entry_for_a_restarted_open_lifecycle() -> None:
     assert report["accepted"] is True
 
 
+@pytest.mark.evidence
 def test_v79_rejects_phantom_open_execution_position_under_flat_health() -> None:
     """A position row cannot disappear behind otherwise-flat lifecycle health."""
     config = _config()

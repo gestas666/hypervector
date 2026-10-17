@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -62,6 +64,7 @@ def test_v64_has_eight_assets_and_twenty_three_executable_directions() -> None:
     )
 
 
+@pytest.mark.evidence
 def test_v64_transition_approval_records_terminal_gold_removal() -> None:
     """The exact V63-to-V64 approval must retire both GOLD directions."""
     baseline = _load(_V63)

@@ -128,6 +128,7 @@ def test_resolves_eligible_opposite_signal_without_reversal() -> None:
     assert report["contract"]["same_cycle_reversal"] is False
 
 
+@pytest.mark.evidence
 def test_v14_journal_rejects_live_addition_and_reconciles_resolution() -> None:
     """The first exact forward loss must close the immediate ETH proposal."""
     payload = json.loads(_JOURNAL.read_text())

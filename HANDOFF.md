@@ -1,4 +1,20 @@
-# Current operation — V95 LIVE ARMED (review fixes), 2026-09-27 22:59 UTC
+# Development handoff — unified CLI review branch, 2026-10-17
+
+This isolated checkout is `codex/unified-cli-cleanup`, with its own venv.
+The terminal UI is retired; use `README.md` and
+`docs/reviews/2026-10-17-unified-cli-cleanup.md` for current software behavior,
+validation, outstanding evidence requirements and rollback. TA-Lib remains
+required alongside VectorBT/Rust, Nautilus and Karpathy tuning.
+
+No deployment was armed, restarted or merged during this work. The original
+checkout's uncommitted operational handoff remains authoritative for that
+checkout; preserve and reconcile it at any approved merge boundary. The
+historical deployment notes below describe their dated state, not the current
+state of this development checkout.
+
+---
+
+## Historical operation — V95 LIVE ARMED (review fixes), 2026-09-27 22:59 UTC
 
 **Status.**
 - V95 is live and armed.

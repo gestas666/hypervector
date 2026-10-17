@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -53,6 +55,7 @@ def test_v78_changes_only_identity_approval_and_sndk_sizing() -> None:
     assert _normalized(candidate, baseline, old_sndk) == baseline
 
 
+@pytest.mark.evidence
 def test_v78_transition_approval_matches_candidate_and_evidence() -> None:
     """V78 approval must bind the exact transition and evidence digest."""
     baseline = _load(_V77)

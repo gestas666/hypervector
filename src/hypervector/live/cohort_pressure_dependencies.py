@@ -11,7 +11,7 @@ from pathlib import Path
 import sys
 import time
 
-from hypervector.live.cohort_tui_dependency_supervision import (
+from hypervector.live.cohort_dependency_supervision import (
     start_owned_dependency,
     stop_owned_dependency,
 )
@@ -47,7 +47,7 @@ def pressure_dependency_commands(
     output = {
         symbol: (
             sys.executable,
-            "scripts/index_hip3_breakout_shadow_observe.py",
+            "-m", "hypervector.operations.index_hip3_breakout_shadow_observe",
             "--symbol",
             symbol,
         )
@@ -56,7 +56,7 @@ def pressure_dependency_commands(
     if HIP3_SNDK_FRESH15_V4_STRATEGY in strategies:
         output["xyz:SNDK"] = (
             sys.executable,
-            "scripts/sndk_hip3_breakout_shadow_observe.py",
+            "-m", "hypervector.operations.sndk_hip3_breakout_shadow_observe",
         )
         if _spcx_signal_only(config, strategies):
             output["xyz:SPCX"] += ("--signal-only",)

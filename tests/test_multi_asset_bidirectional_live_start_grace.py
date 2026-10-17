@@ -140,7 +140,7 @@ def test_an_unrefreshable_lock_is_reported_but_does_not_refuse_the_start(
 def test_run_live_hands_the_lock_it_holds_to_the_locked_start(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    module, _session = _boundary(monkeypatch)
+    module, _session = _boundary(monkeypatch, tmp_path)
     held = tmp_path / "process.lock"
     received: dict[str, object] = {}
 

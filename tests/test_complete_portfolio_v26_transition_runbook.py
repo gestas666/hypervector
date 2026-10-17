@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -22,6 +24,7 @@ _START = "<!-- cohort-transition-contract:start -->"
 _END = "<!-- cohort-transition-contract:end -->"
 
 
+@pytest.mark.evidence
 def test_v26_runbook_binds_profiles_routes_and_verified_source_baseline() -> None:
     """The transition must bind exact config and implementation identities."""
     contract = _contract(_RUNBOOK.read_text(encoding="utf-8"))
@@ -86,18 +89,13 @@ def test_v26_runbook_requires_flat_boundary_arm_and_exact_runtime_probes() -> No
 
 
 def test_cli_skill_does_not_route_transition_to_superseded_v26() -> None:
-    """Operator guidance must route through the newer source-bound candidate."""
-    text = _CLI_SKILL.read_text(encoding="utf-8")
-
-    assert "cohort-live-transition-and-rollback-v26.md" not in text
-    assert "multi_asset_bidirectional_complete_portfolio_canary_v26.toml" not in text
-    assert "cohort-live-transition-and-rollback-v29.md" in text
-    assert (
-        "multi_asset_bidirectional_evidence_selected_portfolio_canary_v29.toml" in text
-    )
-    assert "v25 remains active until" in text
+    """Current guidance requires explicit selection instead of promoting an old profile."""
+    text = Path("skills/hypervector-cli/SKILL.md").read_text(encoding="utf-8")
+    assert "Historical profiles do not establish the active deployment" in text
+    assert "exact `--config`" in text
 
 
+@pytest.mark.evidence
 def test_v26_superseded_source_baseline_remains_internally_verified() -> None:
     """The retired v26 bundle stays verifiable without matching newer source."""
     manifest = json.loads(

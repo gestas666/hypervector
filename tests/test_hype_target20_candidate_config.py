@@ -1,5 +1,7 @@
 """Live-contract tests for the prospective HYPE target-first candidate."""
 
+import pytest
+
 import json
 from pathlib import Path
 
@@ -35,6 +37,7 @@ def test_target20_profile_preserves_entry_risk_and_changes_exit_capture() -> Non
     assert asset.max_notional_usd == 25.0
 
 
+@pytest.mark.evidence
 def test_default_poller_builds_the_target20_collector(tmp_path: Path) -> None:
     """The live runner must have a concrete collector for the V3 provider."""
     dependency = tmp_path / "backtest_lab"
@@ -63,6 +66,7 @@ def test_target20_mapping_reports_the_frozen_forward_evidence() -> None:
     assert "not staged" in evidence.summary
 
 
+@pytest.mark.evidence
 def test_target20_static_card_matches_immutable_n3_artifact() -> None:
     """Static TUI evidence must remain bound to the exact frozen N3 report."""
     evidence = strategy_research_evidence(_STRATEGY, "HYPE")

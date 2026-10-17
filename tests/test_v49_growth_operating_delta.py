@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from datetime import datetime
 from hashlib import sha256
 import json
@@ -92,6 +94,7 @@ def _forward_counts(
     return evaluations, eligible, seconds / 3_600.0
 
 
+@pytest.mark.evidence
 def test_delta_is_report_only_and_binds_every_authoritative_source() -> None:
     """The operating decision must be immutable-source-bound and non-executable."""
     report = _load(_REPORT)
@@ -120,6 +123,7 @@ def test_delta_is_report_only_and_binds_every_authoritative_source() -> None:
         assert source["sha256"] == _digest(path)
 
 
+@pytest.mark.evidence
 def test_delta_reconciles_current_live_closed_and_open_economics() -> None:
     """The frozen v39 snapshot must support every stated live total."""
     report = _load(_REPORT)
@@ -141,6 +145,7 @@ def test_delta_reconciles_current_live_closed_and_open_economics() -> None:
     assert abs(float(live["provisional_combined_net_pnl_usd"]) - combined) < 1e-9
 
 
+@pytest.mark.evidence
 def test_delta_reconciles_cross_restart_frequency_without_backtest_promotion() -> None:
     """Forward frequency must come from the frozen observer prefix, not history."""
     report = _load(_REPORT)
@@ -159,6 +164,7 @@ def test_delta_reconciles_cross_restart_frequency_without_backtest_promotion() -
     assert window["frequency_claim"] == "forward_frequency_not_established"
 
 
+@pytest.mark.evidence
 def test_delta_keeps_sizing_and_regime_claims_empirically_bounded() -> None:
     """Meaningful sizing cannot be mislabeled as proven expectancy or leverage edge."""
     report = _load(_REPORT)
@@ -183,6 +189,7 @@ def test_delta_keeps_sizing_and_regime_claims_empirically_bounded() -> None:
     )
 
 
+@pytest.mark.evidence
 def test_delta_prioritizes_mu_but_makes_no_roster_or_exit_change() -> None:
     """Updated expansion/path evidence may rank research without mutating v49."""
     report = _load(_REPORT)

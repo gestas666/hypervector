@@ -61,6 +61,7 @@ def test_v48_preserves_each_retained_mechanism_and_fixed_leverage() -> None:
     assert compression.hard_maximum_hold_seconds == 86_400
 
 
+@pytest.mark.evidence
 def test_v48_stress_matches_four_slot_sixty_percent_growth_contract() -> None:
     """The exact candidate-size stress must bind the pruned route topology."""
     config = load_multi_asset_live_config(_PROFILE, mode="observe")

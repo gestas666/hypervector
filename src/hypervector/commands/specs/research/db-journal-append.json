@@ -1,0 +1,29 @@
+{
+  "name": "research-db-journal-append",
+  "action": "db-journal-append",
+  "help": "Append one source-backed portfolio research decision revision",
+  "handler": "hypervector.cli_research_journal:cmd_research_db_journal_append",
+  "arguments": [
+    {
+      "flags": [
+        "--record"
+      ],
+      "options": {
+        "dest": "record",
+        "required": true,
+        "default": null,
+        "type": "Path"
+      }
+    },
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "default": null,
+        "type": "Path"
+      }
+    }
+  ]
+}

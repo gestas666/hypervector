@@ -17,6 +17,7 @@ _NOW = datetime(2026, 9, 3, 1, 0, tzinfo=UTC)
 _STRATEGY = "hulk_expansion_short_tuned_v2"
 
 
+@pytest.mark.evidence
 def test_v79_accepts_a_reconciled_closed_lifecycle() -> None:
     """Exact entry, exit, cost, and terminal evidence remains accepted."""
     config, checkpoint = _closed_checkpoint()
@@ -31,6 +32,7 @@ def test_v79_accepts_a_reconciled_closed_lifecycle() -> None:
     }
 
 
+@pytest.mark.evidence
 def test_v79_rejects_an_exit_fill_without_a_closed_lifecycle() -> None:
     """A close fill cannot be accepted without its resolved lifecycle."""
     config, checkpoint = _closed_checkpoint()
@@ -42,6 +44,7 @@ def test_v79_rejects_an_exit_fill_without_a_closed_lifecycle() -> None:
     assert "closed_lifecycle_projection_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_declared_close_without_reflections_or_exit_fill() -> None:
     """A declared close cannot disappear when terminal fill projection is absent."""
     config, checkpoint = _closed_checkpoint()
@@ -65,6 +68,7 @@ def test_v79_rejects_declared_close_without_reflections_or_exit_fill() -> None:
     assert "closed_lifecycle_projection_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_missing_terminal_closed_pnl() -> None:
     """A terminal fill must carry explicit realized PnL even when it is zero."""
     config, checkpoint = _closed_checkpoint()
@@ -80,6 +84,7 @@ def test_v79_rejects_missing_terminal_closed_pnl() -> None:
     assert "closed_lifecycle_invalid:BTC:10" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_trade_source_that_differs_from_entry_origin() -> None:
     """A compatible run ID cannot impersonate the lifecycle's entry run."""
     config, checkpoint = _closed_checkpoint()
@@ -94,6 +99,7 @@ def test_v79_rejects_trade_source_that_differs_from_entry_origin() -> None:
     assert "closed_lifecycle_invalid:BTC:10" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_mixed_operations_for_one_exit_order() -> None:
     """Partial fills for one order cannot change terminal operation semantics."""
     config, checkpoint = _closed_checkpoint()
@@ -128,6 +134,7 @@ def test_v79_rejects_mixed_operations_for_one_exit_order() -> None:
     assert "closed_lifecycle_invalid:BTC:10" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_accepts_exact_partial_entry_and_exit_fills() -> None:
     """Valid partial fills aggregate without creating false lifecycle alarms."""
     config, checkpoint = _closed_checkpoint()
@@ -153,6 +160,7 @@ def test_v79_accepts_exact_partial_entry_and_exit_fills() -> None:
     assert report["accepted"] is True
 
 
+@pytest.mark.evidence
 @pytest.mark.parametrize(
     ("mutation",),
     [

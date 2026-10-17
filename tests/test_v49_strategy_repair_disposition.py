@@ -96,6 +96,7 @@ def _load(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.evidence
 def test_v49_disposition_matches_exact_profile_and_stress() -> None:
     """Disposition identity and $5K risk must match immutable evidence."""
     config = load_multi_asset_live_config(_CONFIG, mode="observe")
@@ -141,6 +142,7 @@ def test_v49_disposition_distinguishes_repair_from_weak_edge() -> None:
     assert report["execution_authority"] == "none"
 
 
+@pytest.mark.evidence
 def test_v49_swing_retirement_includes_literal_and_tuned_failures() -> None:
     """Swing must not be called a bug when both exact mechanisms failed validation."""
     report = _load(_REPORT)
@@ -156,6 +158,7 @@ def test_v49_swing_retirement_includes_literal_and_tuned_failures() -> None:
     assert "green-plus-buy/red-plus-sell" in retired["HIP-3 Swing"]["finding"]
 
 
+@pytest.mark.evidence
 def test_v49_observer_status_is_source_bound_and_technically_complete() -> None:
     """Observer claims must reconcile to the live read-only checkpoint."""
     report = _load(_REPORT)
@@ -183,6 +186,7 @@ def test_v49_observer_status_is_source_bound_and_technically_complete() -> None:
     assert checkpoint["checkpoint_contract"]["execution_authority"] == "none"
 
 
+@pytest.mark.evidence
 def test_v49_exit_and_sizing_decisions_reconcile_to_frozen_evidence() -> None:
     """Exit and sizing recommendations must remain arithmetic, not intuition."""
     report = _load(_REPORT)
@@ -198,6 +202,7 @@ def test_v49_exit_and_sizing_decisions_reconcile_to_frozen_evidence() -> None:
     assert decision["risk_balanced_automatic_change"] is False
 
 
+@pytest.mark.evidence
 def test_v49_disposition_reconciles_current_live_execution_drag() -> None:
     """Retired-route friction claims must bind exact resolved live trades."""
     report = _load(_REPORT)
@@ -214,6 +219,7 @@ def test_v49_disposition_reconciles_current_live_execution_drag() -> None:
     assert decision["automatic_strategy_change"] is False
 
 
+@pytest.mark.evidence
 def test_v49_disposition_preserves_current_lifecycle_root_causes() -> None:
     """Frozen exit causes must reconcile to the frozen route-review totals."""
     report = _load(_REPORT)
@@ -239,6 +245,7 @@ def test_v49_disposition_preserves_current_lifecycle_root_causes() -> None:
     assert str(_ROUTE_REVIEW) in report["evidence_paths"]
 
 
+@pytest.mark.evidence
 def test_v49_regime_disposition_uses_episode_onsets_not_repeated_rows() -> None:
     """Regime use must bind sparse causal onsets instead of autocorrelated rows."""
     report = _load(_REPORT)
@@ -258,6 +265,7 @@ def test_v49_regime_disposition_uses_episode_onsets_not_repeated_rows() -> None:
     assert str(_REGIME) in report["evidence_paths"]
 
 
+@pytest.mark.evidence
 def test_v49_regime_disposition_binds_compatible_observer_epochs() -> None:
     """Current regime claims must span exact compatible observer restarts."""
     report = _load(_REPORT)
@@ -279,6 +287,7 @@ def test_v49_regime_disposition_binds_compatible_observer_epochs() -> None:
     assert str(_V49_REGIME) in report["evidence_paths"]
 
 
+@pytest.mark.evidence
 def test_v49_expansion_disposition_reconciles_development_and_parity() -> None:
     """Expansion candidates must retain path failures and signal parity."""
     report = _load(_REPORT)
@@ -350,6 +359,7 @@ def test_v49_expansion_disposition_reconciles_development_and_parity() -> None:
     assert all(row["automatic_roster_change"] is False for row in candidates.values())
 
 
+@pytest.mark.evidence
 def test_v49_exact_observer_execution_disposition_reconciles_sources() -> None:
     """Near-miss claims must bind exact depth, fee, funding, and observer identity."""
     report = _load(_REPORT)
@@ -381,6 +391,7 @@ def test_v49_exact_observer_execution_disposition_reconciles_sources() -> None:
     assert decision["automatic_strategy_change"] is False
 
 
+@pytest.mark.evidence
 def test_v49_observer_regime_interactions_are_route_specific() -> None:
     """Exact entry states must support diagnosis without creating a regime gate."""
     report = _load(_REPORT)
@@ -413,6 +424,7 @@ def test_v49_observer_regime_interactions_are_route_specific() -> None:
     assert diagnostic["execution_authority"] == "none"
 
 
+@pytest.mark.evidence
 def test_v49_disposition_records_first_repaired_range_eligible_lifecycle() -> None:
     """The repaired Range route must no longer be described as never eligible."""
     report = _load(_REPORT)
@@ -434,6 +446,7 @@ def test_v49_disposition_records_first_repaired_range_eligible_lifecycle() -> No
     assert str(_SOL_ELIGIBLE_FORWARD) in report["evidence_paths"]
 
 
+@pytest.mark.evidence
 def test_v49_disposition_hash_binds_the_pending_sol_profit_lock_snapshot() -> None:
     """The newer path must augment rather than rewrite the first frozen snapshot."""
     report = _load(_REPORT)
@@ -462,6 +475,7 @@ def test_v49_disposition_hash_binds_the_pending_sol_profit_lock_snapshot() -> No
     )
 
 
+@pytest.mark.evidence
 def test_v49_disposition_hash_binds_cross_restart_profit_lock_evidence() -> None:
     """Latest evidence must extend compatible epochs without rewriting v1."""
     report = _load(_REPORT)

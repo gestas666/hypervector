@@ -38,6 +38,7 @@ def _total_net(source: dict[str, object]) -> float:
     return sum(float(side["total_net_return_bps"]) for side in by_side.values())
 
 
+@pytest.mark.evidence
 def test_filter_disposition_is_report_only_and_source_bound() -> None:
     """Every conclusion must bind exact compatible-run evidence."""
     report = _load(_REPORT)

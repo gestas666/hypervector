@@ -1,0 +1,118 @@
+{
+  "name": "hypervelocity-regime-challengers",
+  "action": "challengers",
+  "help": "Evaluate annotation-only point-in-time regime challengers",
+  "handler": "hypervector.commands.regime:cmd_hypervelocity_regime_challengers",
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC"
+      }
+    },
+    {
+      "flags": [
+        "--timeframe"
+      ],
+      "options": {
+        "dest": "timeframe",
+        "default": "1m"
+      }
+    },
+    {
+      "flags": [
+        "--lookback"
+      ],
+      "options": {
+        "dest": "lookback",
+        "default": 90,
+        "help": "calendar days (floor=30, default=90, promo=180)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--strict-hl-only"
+      ],
+      "options": {
+        "dest": "strict_hl_only",
+        "default": false,
+        "help": "do not backfill from Binance/Bybit",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--force"
+      ],
+      "options": {
+        "dest": "force",
+        "default": false,
+        "help": "ignore Parquet cache and re-fetch",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--forward-horizon"
+      ],
+      "options": {
+        "dest": "forward_horizon",
+        "default": 30,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--seed"
+      ],
+      "options": {
+        "dest": "seed",
+        "default": 42,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--n-splits"
+      ],
+      "options": {
+        "dest": "n_splits",
+        "default": 3,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--wasserstein-window"
+      ],
+      "options": {
+        "dest": "wasserstein_window",
+        "default": 60,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--wasserstein-sample-cap"
+      ],
+      "options": {
+        "dest": "wasserstein_sample_cap",
+        "default": 1000,
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "default": null
+      }
+    }
+  ]
+}

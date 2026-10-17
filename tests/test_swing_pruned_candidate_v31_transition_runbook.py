@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -34,6 +36,7 @@ _START = "<!-- cohort-transition-contract:start -->"
 _END = "<!-- cohort-transition-contract:end -->"
 
 
+@pytest.mark.evidence
 def test_v31_runbook_binds_exact_authority_delta_and_evidence() -> None:
     contract = _contract(_RUNBOOK.read_text(encoding="utf-8"))
     current = load_multi_asset_live_config(_CURRENT, mode="observe")

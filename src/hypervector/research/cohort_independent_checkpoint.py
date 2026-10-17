@@ -12,7 +12,7 @@ from hypervector.live.cohort_monitor_identity import (
     checkpoint_identity,
     fresh_checkpoint_document,
 )
-from hypervector.live.cohort_tui_commands import require_checkpoint_accounting_epoch
+from hypervector.live.cohort_checkpoint_identity import require_checkpoint_accounting_epoch
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.research.checkpoint_storage import write_atomic_json
 from hypervector.research.cohort_live_audit_values import mapping, text

@@ -1,0 +1,165 @@
+{
+  "name": "hypervelocity-archive-compare",
+  "action": "archive-compare",
+  "help": "Compare original, BBWP, and hybrid Hypervelocity candidates",
+  "handler": "hypervector.commands.replay:cmd_hypervelocity_archive_compare",
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC"
+      }
+    },
+    {
+      "flags": [
+        "--timeframe"
+      ],
+      "options": {
+        "dest": "timeframe",
+        "default": "1m"
+      }
+    },
+    {
+      "flags": [
+        "--lookback"
+      ],
+      "options": {
+        "dest": "lookback",
+        "default": 90,
+        "help": "calendar days (floor=30, default=90, promo=180)",
+        "type": "int"
+      }
+    },
+    {
+      "flags": [
+        "--strict-hl-only"
+      ],
+      "options": {
+        "dest": "strict_hl_only",
+        "default": false,
+        "help": "do not backfill from Binance/Bybit",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--force"
+      ],
+      "options": {
+        "dest": "force",
+        "default": false,
+        "help": "ignore Parquet cache and re-fetch",
+        "action": "store_true"
+      }
+    },
+    {
+      "flags": [
+        "--archive-start"
+      ],
+      "options": {
+        "dest": "archive_start",
+        "default": null,
+        "type": "_parse_utc_datetime"
+      }
+    },
+    {
+      "flags": [
+        "--archive-end"
+      ],
+      "options": {
+        "dest": "archive_end",
+        "default": null,
+        "type": "_parse_utc_datetime"
+      }
+    },
+    {
+      "flags": [
+        "--fill-rule"
+      ],
+      "options": {
+        "dest": "fill_rule",
+        "default": "all",
+        "choices": [
+          "both",
+          "all",
+          "touch",
+          "through",
+          "trade-through"
+        ]
+      }
+    },
+    {
+      "flags": [
+        "--initial-equity"
+      ],
+      "options": {
+        "dest": "initial_equity",
+        "default": 10000.0,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--maker-fee-rate"
+      ],
+      "options": {
+        "dest": "maker_fee_rate",
+        "default": 0.00015,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--taker-fee-rate"
+      ],
+      "options": {
+        "dest": "taker_fee_rate",
+        "default": 0.00045,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--tick-size"
+      ],
+      "options": {
+        "dest": "tick_size",
+        "default": 1.0,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--entry-ttl-seconds"
+      ],
+      "options": {
+        "dest": "entry_ttl_seconds",
+        "default": 300.0,
+        "type": "float"
+      }
+    },
+    {
+      "flags": [
+        "--positions"
+      ],
+      "options": {
+        "dest": "positions",
+        "required": true,
+        "default": null
+      }
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "required": true,
+        "default": null
+      }
+    }
+  ]
+}

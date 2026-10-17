@@ -39,6 +39,7 @@ _V39_REVIEW = _ROOT / (
 )
 
 
+@pytest.mark.evidence
 def test_readiness_separates_technical_sizing_from_profit_optimality() -> None:
     """Risk-normalized sizing must not be mislabeled as proven route edge."""
     report = _build()
@@ -61,6 +62,7 @@ def test_readiness_separates_technical_sizing_from_profit_optimality() -> None:
     assert report["contract"]["execution_authority"] == "none"
 
 
+@pytest.mark.evidence
 def test_readiness_reconciles_notional_and_cluster_risk() -> None:
     """Every configured asset and concentration cluster must reconcile exactly."""
     report = _build()
@@ -83,6 +85,7 @@ def test_readiness_reconciles_notional_and_cluster_risk() -> None:
     )
 
 
+@pytest.mark.evidence
 def test_readiness_rejects_identity_and_notional_drift() -> None:
     """Aliased profile evidence or changed sizing cannot support the report."""
     inputs = _inputs()
@@ -102,6 +105,7 @@ def test_readiness_rejects_identity_and_notional_drift() -> None:
         _call(changed_config_hash)
 
 
+@pytest.mark.evidence
 def test_readiness_requires_report_only_source_contracts() -> None:
     """No source with execution or hidden performance authority is accepted."""
     inputs = _inputs()

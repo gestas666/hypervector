@@ -181,6 +181,7 @@ def test_approval_is_signed_and_bound_to_this_exact_candidate() -> None:
     }
 
 
+@pytest.mark.evidence
 def test_sndk_evidence_quotes_its_own_screen_cell_exactly() -> None:
     """Published route evidence must match the cell it cites, metric for metric.
 

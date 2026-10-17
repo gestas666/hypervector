@@ -61,6 +61,7 @@ def test_v17_replaces_only_eth_generic_breakout_execution() -> None:
     )
 
 
+@pytest.mark.integration
 def test_v17_preserves_bidirectional_risk_and_constructs_collectors() -> None:
     """The candidate retains audited risk and has every declared collector."""
     config = load_multi_asset_live_config(_V17, mode="observe")

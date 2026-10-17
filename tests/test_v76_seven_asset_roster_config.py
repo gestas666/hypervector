@@ -199,6 +199,7 @@ def test_v76_sndk_identity_retains_its_source_bound_execution_model() -> None:
     )
 
 
+@pytest.mark.evidence
 def test_v76_operator_approval_binds_retirement_and_sndk_replacement() -> None:
     """The exact profile change must authenticate both removed execution scopes."""
     previous = load_multi_asset_live_config(_V68, mode="observe")

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -52,6 +54,7 @@ def test_v13_replaces_only_hype_execution_authority_and_profile_identity() -> No
     assert all(after[strategy] == before[strategy] for strategy in unchanged)
 
 
+@pytest.mark.integration
 def test_v13_keeps_v1_control_and_builds_v2_runtime_collector() -> None:
     """Both providers evaluate the same feed while only retest v2 may execute."""
     config = load_multi_asset_live_config(_V13, mode="observe")

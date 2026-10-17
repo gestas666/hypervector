@@ -1,5 +1,7 @@
 """Machine-bound contract for the inactive v25-to-v30 transition candidate."""
 
+import pytest
+
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -17,6 +19,7 @@ START = "<!-- cohort-transition-contract:start -->"
 END = "<!-- cohort-transition-contract:end -->"
 
 
+@pytest.mark.evidence
 def test_v30_runbook_binds_candidate_routes_and_research_identity() -> None:
     """The inactive candidate must be reconstructable without staging it."""
     contract = _contract(RUNBOOK.read_text(encoding="utf-8"))

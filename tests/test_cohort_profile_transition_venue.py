@@ -16,7 +16,7 @@ from hypervector.live.cohort_profile_transition_venue import (
 )
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
-_SCRIPT = Path(__file__).parents[1] / "scripts/multi_asset_bidirectional_live.py"
+_SCRIPT = Path(__file__).parents[1] / "src/hypervector/operations/multi_asset_bidirectional_live.py"
 _V63 = Path(
     "configs/multi_asset_growth_first_5000_nine_asset_bankroll_builder_candidate_v63.toml"
 )

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -74,6 +76,7 @@ def test_v10_live_identity_keeps_exact_two_mapping_authority() -> None:
     }
 
 
+@pytest.mark.integration
 def test_v10_builds_all_transfer_collectors_with_reviewed_evidence() -> None:
     """All four visible HYPE mappings have collectors and explicit provenance."""
     config = load_multi_asset_live_config(_V10, mode="observe")
@@ -97,6 +100,7 @@ def test_v10_builds_all_transfer_collectors_with_reviewed_evidence() -> None:
     assert all(row["execution_effect"] == "report_only" for row in evidence.values())
 
 
+@pytest.mark.integration
 def test_v11_adds_the_frozen_eth_transfer_as_observation_only() -> None:
     """The selected ETH contract is visible but cannot place an order."""
     prior = load_multi_asset_live_config(_V10, mode="observe")

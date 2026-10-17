@@ -53,10 +53,18 @@ class _Session:
         self.closes += 1
 
 
-def _boundary(monkeypatch: pytest.MonkeyPatch) -> tuple[ModuleType, _Session]:
+def _boundary(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> tuple[ModuleType, _Session]:
     """Mock account/execution boundaries while preserving actual command validation."""
     module = _load_module()
     session = _Session()
+    load_config = module.load_multi_asset_live_config
+
+    def isolated_config(path: Path, **kwargs: object) -> MultiAssetLiveConfig:
+        return replace(load_config(path, **kwargs), stop_file=tmp_path / "STOP",
+                       cohort_ledger=tmp_path / "decisions.jsonl")
+
+    monkeypatch.setattr(module, "load_multi_asset_live_config", isolated_config)
+
 
     def construct() -> _Session:
         """Observe session creation separately from entering its context."""
@@ -93,10 +101,11 @@ def _retain_fetcher(
 
 
 def test_one_candle_session_survives_multiple_assets_and_cycles_then_closes(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Every public fetch uses one owned session and preserves its request values."""
-    module, session = _boundary(monkeypatch)
+    module, session = _boundary(monkeypatch, tmp_path)
     observed: list[tuple[str, str, float, int | None, object]] = []
     timeouts: list[object] = []
 
@@ -148,11 +157,12 @@ def test_one_candle_session_survives_multiple_assets_and_cycles_then_closes(
 
 @pytest.mark.parametrize("stage", ["collector", "runtime"])
 def test_candle_session_closes_when_startup_or_runtime_fails(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     stage: str,
 ) -> None:
     """The owning context closes the session and preserves the original error."""
-    module, session = _boundary(monkeypatch)
+    module, session = _boundary(monkeypatch, tmp_path)
 
     def fail(*args: object, **kwargs: object) -> None:
         """Represent a collector or runtime failure without any remote operation."""
@@ -169,10 +179,11 @@ def test_candle_session_closes_when_startup_or_runtime_fails(
 
 
 def test_disarmed_command_does_not_construct_a_candle_session(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Resource creation remains after the existing explicit live authority checks."""
-    module, session = _boundary(monkeypatch)
+    module, session = _boundary(monkeypatch, tmp_path)
     with pytest.raises(MultiAssetLiveConfigError, match="--enabled"):
         module.run_live(_args(config=PROFILE, i_accept_live_risk=True))
     assert session.constructions == session.enters == session.closes == 0
@@ -183,7 +194,7 @@ def test_stop_marker_refuses_before_public_session_construction(
     tmp_path: Path,
 ) -> None:
     """A user stop marker cannot cause even the public transport to start."""
-    module, session = _boundary(monkeypatch)
+    module, session = _boundary(monkeypatch, tmp_path)
     config = module.load_multi_asset_live_config(
         PROFILE, mode="live", enabled=True, accepts_live_risk=True
     )

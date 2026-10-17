@@ -225,12 +225,18 @@ def run_autotune(
     n_trials: int = 100,
     fee_model: str = "hl_taker_default",
     book_data_path: str | Path | None = None,
-    sampler: str = "hybrid",
+    sampler: str = "karpathy",
+    strict_hl_only: bool = False,
+    force_refresh: bool = False,
     no_export: bool = False,
     export_best: bool = True,
     apply_penalties: bool = False,
 ) -> AutotuneResult:
     """Run parameter autotuning using Karpathy random-adaptive mutation or Optuna TPE."""
+    if sampler not in {"karpathy", "optuna", "hybrid"}:
+        raise ValueError(f"unsupported autotune sampler: {sampler}")
+    if sampler in {"optuna", "hybrid"} and not HAVE_OPTUNA:
+        raise RuntimeError("Optuna sampler requested: install hypervector[optuna] or select --sampler karpathy")
     root = Path(root or data_root or Path.cwd())
     no_export = no_export or (not export_best)
     register_all_strategies()
@@ -241,6 +247,8 @@ def run_autotune(
         symbol=symbol,
         timeframe=timeframe,
         lookback_days=lookback_days,
+        strict_hl_only=strict_hl_only,
+        force_refresh=force_refresh,
     )
     if df.empty:
         raise RuntimeError(f"No research history found for {symbol} {timeframe}")

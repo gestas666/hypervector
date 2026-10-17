@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 import importlib.util
 import json
 from pathlib import Path
@@ -17,6 +19,7 @@ def _script() -> ModuleType:
     return module
 
 
+@pytest.mark.integration
 def test_quiet_live_run_publishes_zero_event_evidence(tmp_path: Path) -> None:
     """No-event windows must remain publishable and explicitly non-executable."""
     decisions = tmp_path / "decisions.jsonl"

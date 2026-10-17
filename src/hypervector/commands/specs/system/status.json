@@ -1,0 +1,19 @@
+{
+  "name": "status",
+  "action": "status",
+  "help": "Pipeline + command inventory + paper/live honesty flags (no secret values; no place)",
+  "handler": "hypervector.commands.status:cmd_status",
+  "arguments": [
+    {
+      "flags": [
+        "--probe-model"
+      ],
+      "options": {
+        "dest": "probe_model",
+        "action": "store_true",
+        "default": false,
+        "help": "Load and validate the explicitly scoped metalabel bundle"
+      }
+    }
+  ]
+}

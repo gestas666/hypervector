@@ -62,6 +62,7 @@ def test_hype_identity_was_reused_across_incompatible_route_scopes() -> None:
     assert transfer.execution.maximum_hold_policy == "extend_while_regime_supported"
 
 
+@pytest.mark.evidence
 def test_eth_range_wins_same_clock_head_to_head_and_source_remains_negative() -> None:
     """Reconsideration must preserve exact comparative and deployed-shape evidence."""
     report = _load(_REPORT)

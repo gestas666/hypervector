@@ -50,6 +50,7 @@ _NOW = datetime(2026, 9, 3, 1, 0, tzinfo=UTC)
 _RUN_ID = "bidirectional-live-v79-test"
 
 
+@pytest.mark.evidence
 def test_v79_accepts_fresh_exact_route_and_execution_monitoring() -> None:
     """All seven assets and nine routes must be attributable and protected."""
     config = load_multi_asset_live_config(_CONFIG, mode="observe")
@@ -72,6 +73,7 @@ def test_v79_accepts_fresh_exact_route_and_execution_monitoring() -> None:
     assert report["checks"]["execution_attribution"]["fills"] == 2
 
 
+@pytest.mark.evidence
 def test_v79_checkpoint_attachment_publishes_monitoring_verdict() -> None:
     """The rolling checkpoint must carry V79 acceptance without another command."""
     config = load_multi_asset_live_config(_CONFIG, mode="observe")
@@ -84,6 +86,7 @@ def test_v79_checkpoint_attachment_publishes_monitoring_verdict() -> None:
     assert acceptance["contract"]["execution_authority"] == "none"
 
 
+@pytest.mark.evidence
 def test_v80_accepts_exact_split_caps_and_rejects_generation_drift() -> None:
     config = load_multi_asset_live_config(_V80_CONFIG, mode="observe")
     checkpoint = _checkpoint(config, _V80_CONFIG)
@@ -115,6 +118,7 @@ def test_v80_accepts_exact_split_caps_and_rejects_generation_drift() -> None:
     assert "runtime_execution_contract_drift" in rejected["reasons"]
 
 
+@pytest.mark.evidence
 def test_v80_checkpoint_attachment_uses_the_bound_epoch() -> None:
     config = load_multi_asset_live_config(_V80_CONFIG, mode="observe")
     checkpoint = _checkpoint(config, _V80_CONFIG)
@@ -132,6 +136,7 @@ def test_v80_checkpoint_attachment_uses_the_bound_epoch() -> None:
     assert checkpoint["poststart_acceptance"]["accepted"] is True
 
 
+@pytest.mark.evidence
 def test_v85_accepts_nine_monitored_routes_with_one_observe_only() -> None:
     """V85 must monitor the retired route while excluding it from execution."""
     config = load_multi_asset_live_config(_V85_CONFIG, mode="observe")
@@ -159,6 +164,7 @@ def test_v85_accepts_nine_monitored_routes_with_one_observe_only() -> None:
     assert len(checkpoint["audit"]["run"]["executable_provider_symbols"]) == 8
 
 
+@pytest.mark.evidence
 def test_v85_rejects_missing_observe_only_identity() -> None:
     """Retirement cannot silently disappear from runtime identity telemetry."""
     config = load_multi_asset_live_config(_V85_CONFIG, mode="observe")
@@ -182,6 +188,7 @@ def test_v85_rejects_missing_observe_only_identity() -> None:
     assert "runtime_identity_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v86_accepts_nine_monitored_routes_with_three_observe_only() -> None:
     """V86 must keep failed routes visible while exposing only six executions."""
     config = load_multi_asset_live_config(_V86_CONFIG, mode="observe")
@@ -228,6 +235,7 @@ def test_v86_accepts_nine_monitored_routes_with_three_observe_only() -> None:
     assert len(checkpoint["audit"]["run"]["executable_provider_symbols"]) == 6
 
 
+@pytest.mark.evidence
 def test_v79_rejects_one_missing_provider_evaluation() -> None:
     """A nominally running asset cannot hide an unevaluated strategy route."""
     config = load_multi_asset_live_config(_CONFIG, mode="observe")
@@ -246,6 +254,7 @@ def test_v79_rejects_one_missing_provider_evaluation() -> None:
     assert "provider_monitoring_incomplete" in report["reasons"]
 
 
+@pytest.mark.evidence
 @pytest.mark.parametrize(
     "field,value", [("strategy_id", "unattributed"), ("operation", "unknown")]
 )
@@ -266,6 +275,7 @@ def test_v79_rejects_placeholder_fill_attribution(field: str, value: str) -> Non
     assert "execution_fill_attribution_incomplete" in report["reasons"]
 
 
+@pytest.mark.evidence
 @pytest.mark.parametrize(
     "operation,direction,side",
     [
@@ -296,6 +306,7 @@ def test_v79_rejects_fill_direction_outside_the_route_contract(
     assert "execution_fill_direction_invalid" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_rejects_an_unprotected_open_position() -> None:
     """A live position without an acknowledged stop must fail acceptance."""
     config = load_multi_asset_live_config(_CONFIG, mode="observe")
@@ -315,6 +326,7 @@ def test_v79_rejects_an_unprotected_open_position() -> None:
     assert "open_position_unprotected:ETH" in report["reasons"]
 
 
+@pytest.mark.evidence
 def test_v79_accepts_a_concretely_attributed_profit_target_fill() -> None:
     """Target fills are valid exits when route and controller remain concrete."""
     config = load_multi_asset_live_config(_CONFIG, mode="observe")
@@ -335,6 +347,7 @@ def test_v79_accepts_a_concretely_attributed_profit_target_fill() -> None:
     assert report["accepted"] is True
 
 
+@pytest.mark.evidence
 def test_v79_rejects_exit_policy_or_epoch_drift() -> None:
     """Runtime exits and displayed accounting must remain bound to V79."""
     config = load_multi_asset_live_config(_CONFIG, mode="observe")
@@ -357,6 +370,7 @@ def test_v79_rejects_exit_policy_or_epoch_drift() -> None:
     assert "accounting_epoch_mismatch" in report["reasons"]
 
 
+@pytest.mark.evidence
 @pytest.mark.parametrize(
     "route,field,value",
     [

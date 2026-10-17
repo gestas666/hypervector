@@ -40,9 +40,9 @@ def test_all_cli_commands_registered():
     # Every inventory command must be in the live parser (no orphans the other way optional)
     assert "status" in choices
     assert "live-report" in choices
-    assert "hypervelocity-tui" in choices
+    assert "hypervelocity-tui" not in choices
     assert "hypervelocity-shadow-reset" in choices
-    assert "cohort-tui" in choices
+    assert "cohort-tui" not in choices
     assert "cohort-live" in choices
     assert "cohort-live-audit" in choices
     assert "cohort-research-import" in choices

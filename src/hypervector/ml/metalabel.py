@@ -34,18 +34,7 @@ REL_BUNDLE_UNDER_DATA = Path("models") / "metalabel"
 
 # Discovery defaults only — not identity. Prefer env / data-root in production.
 # Order after env + data_root: cwd data layout, then known sibling checkouts.
-_DEFAULT_DISCOVERY: tuple[Path, ...] = (
-    Path("data") / "models" / "metalabel",
-    Path(
-        "/Users/gestas/Prototypes/hypertrader/backend/app/backtest/"
-        "impulse_metalabel/models"
-    ),
-    Path("/Users/gestas/dev/hyper-pi/services/ml-service/models/impulse-mr"),
-    Path(
-        "/Users/gestas/dev/hyper-pi/services/ml-service/"
-        "external-strategies/impulse_1m_btc"
-    ),
-)
+_DEFAULT_DISCOVERY: tuple[Path, ...] = (Path("data") / "models" / "metalabel",)
 
 _MODEL_NAME = "metalabel_lgbm.txt"
 _CALIBRATOR_NAME = "metalabel_calibrator.joblib"
@@ -67,7 +56,8 @@ def _is_usable_model_file(path: Path) -> bool:
     if size < 256:
         return False
     try:
-        head = path.read_text(encoding="utf-8", errors="ignore")[:80]
+        with path.open(encoding="utf-8", errors="ignore") as stream:
+            head = stream.read(80)
     except OSError:
         return False
     if head.startswith("version https://git-lfs.github.com"):
@@ -116,6 +106,7 @@ def resolve_metalabel_root(
         under = _normalize_bundle_root(Path(data_root) / REL_BUNDLE_UNDER_DATA)
         if under is not None:
             return under
+        raise MetalabelError(f"metalabel bundle not found under selected data root: {data_root}")
 
     for candidate in _DEFAULT_DISCOVERY:
         root = _normalize_bundle_root(candidate)

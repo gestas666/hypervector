@@ -1,5 +1,7 @@
 """Staged-profile tests for the HYPE exact-one-blocker strategy tweak."""
 
+import pytest
+
 from pathlib import Path
 
 import pandas as pd
@@ -118,6 +120,7 @@ def test_candidate_cannot_close_an_existing_hype_position() -> None:
     assert report.withheld[0].reason == "provider_flat_entry_only"
 
 
+@pytest.mark.evidence
 def test_default_poller_constructs_every_candidate_provider(tmp_path: Path) -> None:
     """The staged profile has a concrete collector for every declared provider."""
     dependency = tmp_path / "backtest_lab"

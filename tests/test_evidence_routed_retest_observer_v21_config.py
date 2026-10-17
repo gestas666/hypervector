@@ -53,6 +53,7 @@ def test_v21_adds_only_retest_observation_and_new_identity() -> None:
     assert retest.timeframe == "1m"
 
 
+@pytest.mark.integration
 def test_v21_builds_prospective_retest_collector_without_execution() -> None:
     """The report-only challenger must construct in the real poller graph."""
     config = load_multi_asset_live_config(_V21, mode="observe")

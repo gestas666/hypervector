@@ -1,0 +1,29 @@
+{
+  "name": "paper-report",
+  "action": "report",
+  "help": "Summarize paper/shadow decisions.jsonl (fill models, modes, intents, honesty counters; read-only)",
+  "handler": "hypervector.commands.paper:cmd_paper_report",
+  "arguments": [
+    {
+      "flags": [
+        "--path"
+      ],
+      "options": {
+        "dest": "path",
+        "default": null,
+        "help": "optional decisions JSONL path (default: <data-root>/paper/decisions/decisions.jsonl)"
+      }
+    },
+    {
+      "flags": [
+        "--last"
+      ],
+      "options": {
+        "dest": "last",
+        "default": 5,
+        "help": "include last N market fills in sample (default 5)",
+        "type": "int"
+      }
+    }
+  ]
+}

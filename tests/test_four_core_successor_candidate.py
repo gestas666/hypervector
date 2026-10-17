@@ -1,5 +1,7 @@
 """The reviewable core successor preserves each retained production contract."""
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -15,6 +17,7 @@ _CANDIDATE = Path(
 )
 
 
+@pytest.mark.evidence
 def test_candidate_retains_only_fully_executable_core_routes() -> None:
     """Every retained asset has exactly its existing executable provider and side."""
     baseline = load_multi_asset_live_config(_BASELINE, mode="observe")
@@ -62,6 +65,7 @@ def test_asset_without_any_declared_provider_still_fails() -> None:
         validate_multi_asset_live_config(missing)
 
 
+@pytest.mark.evidence
 def test_improvement_plan_is_source_bound_and_matches_exact_executable_sides() -> None:
     """The pending monitor must neither inherit old profiles nor widen scope."""
     from test_cohort_improvement_monitor_script import _load

@@ -38,30 +38,28 @@ class AcceptedEntryClock:
             )
         with self._path.open("rb") as handle:
             handle.seek(self._offset)
-            encoded = handle.read()
-        if not encoded:
-            return
-        if not encoded.endswith(b"\n"):
-            raise CandidateEntryClockStateError(
-                "candidate recovery ledger has an incomplete final row"
-            )
-        try:
-            rows = encoded.decode("utf-8").splitlines()
-        except UnicodeDecodeError as exc:
-            raise CandidateEntryClockStateError(
-                "candidate recovery ledger is not valid UTF-8"
-            ) from exc
-        for raw in rows:
-            self._line_number += 1
-            row = _ledger_row(raw, self._line_number)
-            if _contains_entry(
-                row,
-                strategy_id=self._strategy_id,
-                symbol=self._symbol,
-            ):
-                observed_ms = _observed_time_ms(row, self._line_number)
-                self.latest_ms = max(observed_ms, self.latest_ms or 0)
-        self._offset += len(encoded)
+            remaining = size - self._offset
+            line_number, latest = self._line_number, self.latest_ms
+            while remaining:
+                encoded = handle.readline(remaining)
+                if not encoded:
+                    raise CandidateEntryClockStateError("candidate recovery ledger was truncated")
+                raw = _complete_utf8_row(encoded)
+                line_number += 1
+                row = _ledger_row(raw, line_number)
+                if _contains_entry(row, strategy_id=self._strategy_id, symbol=self._symbol):
+                    latest = max(_observed_time_ms(row, line_number), latest or 0)
+                remaining -= len(encoded)
+        self._offset, self._line_number, self.latest_ms = size, line_number, latest
+
+
+def _complete_utf8_row(encoded: bytes) -> str:
+    if not encoded.endswith(b"\n"):
+        raise CandidateEntryClockStateError("candidate recovery ledger has an incomplete final row")
+    try:
+        return encoded.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise CandidateEntryClockStateError("candidate recovery ledger is not valid UTF-8") from exc
 
 
 def _ledger_row(raw: str, line_number: int) -> Mapping[str, object]:

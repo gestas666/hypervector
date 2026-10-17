@@ -1,5 +1,7 @@
 """Validate the exact pending V90 package without granting execution authority."""
 
+import pytest
+
 import json
 from pathlib import Path
 import plistlib
@@ -22,6 +24,7 @@ PROFILE = Path(
 BASELINE = Path("configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml")
 
 
+@pytest.mark.evidence
 def test_signed_approval_binds_the_armed_candidate_and_records_the_operator() -> None:
     """The approval was signed 2026-09-22 with the operator's verbatim words."""
     previous = load_multi_asset_live_config(BASELINE, mode="observe")

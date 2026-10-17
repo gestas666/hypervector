@@ -69,6 +69,7 @@ def test_inverse_p99_sizing_preserves_exposure_and_equalizes_loss() -> None:
     assert rows["ETH"]["candidate_p99_loss_usd"] == pytest.approx(100.0)
 
 
+@pytest.mark.evidence
 def test_real_v49_comparison_remains_report_only_and_capital_neutral() -> None:
     """The frozen v49 evidence produces a bounded four-asset comparison."""
     report = build_v49_risk_balanced_sizing(json.loads(_SOURCE.read_text()))

@@ -12,7 +12,7 @@ import pytest
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
 
-SCRIPT = Path(__file__).parents[1] / "scripts/multi_asset_bidirectional_live.py"
+SCRIPT = Path(__file__).parents[1] / "src/hypervector/operations/multi_asset_bidirectional_live.py"
 V39 = Path(
     "configs/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml"
 )
@@ -64,8 +64,10 @@ def test_backend_validates_the_bundle_against_its_loaded_config(
         ["--config", str(V49), "--accounting-epoch-bundle", "epoch-v49"]
     )
     expected = CohortAccountingEpoch("growth_5000_v49", "a" * 64, 1)
+    from hypervector.operations import cohort_live_construction
+
     monkeypatch.setattr(
-        module,
+        cohort_live_construction,
         "load_required_accounting_epoch",
         lambda bundle, successor: expected
         if (bundle, successor) == (Path("epoch-v49"), config)

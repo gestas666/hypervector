@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
@@ -38,6 +40,7 @@ def test_v55_override_is_exact_report_only_and_requires_new_approval() -> None:
     }
 
 
+@pytest.mark.evidence
 def test_v55_override_evidence_is_immutable_and_loadable() -> None:
     """Every v55 decision source must reconcile before digest publication."""
     spec = spec_from_file_location("v55_improvement_monitor", _SCRIPT)

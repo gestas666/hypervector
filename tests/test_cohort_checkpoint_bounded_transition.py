@@ -11,17 +11,13 @@ from types import ModuleType, SimpleNamespace
 import pytest
 
 from hypervector.live import canary_supervisor
-from hypervector.live.cohort_tui_commands import audit_command, checkpoint_command
+from hypervector.live.cohort_process_commands import audit_command, checkpoint_command
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.research import cohort_rolling_checkpoint
 
 CHECKPOINT_SCRIPT = (
     Path(__file__).parents[1]
-    / "scripts"
-    / "multi_asset_bidirectional_live_checkpoint.py"
-)
-TUI_SCRIPT = (
-    Path(__file__).parents[1] / "scripts" / "multi_asset_bidirectional_canary_tui.py"
+    / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_live_checkpoint.py'
 )
 V66_CONFIG = Path(
     "configs/multi_asset_growth_first_5000_four_asset_brentoil_retired_candidate_v66.toml"
@@ -38,14 +34,6 @@ def _load_checkpoint_script() -> ModuleType:
     return module
 
 
-def _load_tui_script() -> ModuleType:
-    """Load the TUI supervisor without executing its CLI."""
-    spec = spec_from_file_location("bounded_transition_tui", TUI_SCRIPT)
-    assert spec is not None and spec.loader is not None
-    module = module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
 def _complete_checkpoint(path: Path, profile_fingerprint: str) -> None:
@@ -140,8 +128,8 @@ def test_once_flag_can_force_a_bounded_current_run_checkpoint(tmp_path: Path) ->
     assert forwarded[0]["current_run_only"] is True
 
 
-def test_live_tui_checkpoint_command_is_always_current_run_bounded() -> None:
-    """Continuous live TUI publication must not replay the multi-gigabyte ledger."""
+def test_live_checkpoint_command_is_always_current_run_bounded() -> None:
+    """Continuous live checkpoint publication must not replay the multi-gigabyte ledger."""
     config = load_multi_asset_live_config(V66_CONFIG, mode="observe")
 
     command = checkpoint_command(config)
@@ -149,8 +137,8 @@ def test_live_tui_checkpoint_command_is_always_current_run_bounded() -> None:
     assert "--current-run-only" in command
 
 
-def test_live_tui_audit_command_is_current_run_bounded() -> None:
-    """Normal TUI shutdown must not replay all historical cohort ledgers."""
+def test_live_audit_command_is_current_run_bounded() -> None:
+    """Stopped backend audit must not replay all historical cohort ledgers."""
     config = load_multi_asset_live_config(V66_CONFIG, mode="observe")
 
     command = audit_command(config)
@@ -159,34 +147,6 @@ def test_live_tui_audit_command_is_current_run_bounded() -> None:
     assert command[scope + 1] == "current-run"
 
 
-def test_final_tui_checkpoint_uses_bounded_current_run(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """TUI shutdown must not materialize the full multi-gigabyte ledger."""
-    module = _load_tui_script()
-    commands: list[tuple[str, ...]] = []
-
-    def run(command: tuple[str, ...], *, check: bool) -> SimpleNamespace:
-        assert check is False
-        commands.append(command)
-        return SimpleNamespace(returncode=0)
-
-    monkeypatch.setattr(module.subprocess, "run", run)
-
-    assert (
-        module._publish_final_checkpoint(
-            ("python", "scripts/multi_asset_bidirectional_live_checkpoint.py")
-        )
-        is None
-    )
-    assert commands == [
-        (
-            "python",
-            "scripts/multi_asset_bidirectional_live_checkpoint.py",
-            "--once",
-            "--current-run-only",
-        )
-    ]
 
 
 def test_startup_capture_streams_without_materializing_the_ledger(

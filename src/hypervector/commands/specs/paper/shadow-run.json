@@ -1,0 +1,29 @@
+{
+  "name": "hypervelocity-shadow-run",
+  "action": "shadow-run",
+  "help": "Run validated one-way bidirectional Hypervelocity shadow backend",
+  "handler": "hypervector.commands.shadow:cmd_hypervelocity_shadow_run",
+  "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "default": "configs/hypervelocity_faithful.toml",
+        "help": "validated Hypervelocity TOML profile"
+      }
+    },
+    {
+      "flags": [
+        "--max-live-bars"
+      ],
+      "options": {
+        "dest": "max_live_bars",
+        "default": null,
+        "help": "optional bounded smoke-run bar count",
+        "type": "int"
+      }
+    }
+  ]
+}

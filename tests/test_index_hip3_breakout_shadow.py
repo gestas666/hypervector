@@ -29,7 +29,7 @@ from hypervector.research.hip3_breakout_pressure_signals import (
 
 _OPEN_MS = 1_786_565_700_000
 _CLOSE_MS = _OPEN_MS + 900_000
-_SCRIPT = Path("scripts/index_hip3_breakout_shadow_observe.py")
+_SCRIPT = Path("src/hypervector/operations/index_hip3_breakout_shadow_observe.py")
 
 
 def _script_module() -> ModuleType:

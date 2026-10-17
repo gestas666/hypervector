@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -111,6 +113,7 @@ def test_v67_preserves_the_five_retained_provider_contracts() -> None:
     )
 
 
+@pytest.mark.evidence
 def test_v67_approval_records_every_removed_execution_scope() -> None:
     """The transition approval must exactly bind all five removed directions."""
     baseline = _load(_V66)

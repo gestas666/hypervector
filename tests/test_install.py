@@ -1,4 +1,4 @@
-"""Verify VectorBT rust-full install: engine + all [full] integrations."""
+"""Verify required VectorBT/Rust/TA-Lib and explicit optional integrations."""
 
 from __future__ import annotations
 
@@ -70,6 +70,15 @@ def test_global_rust_engine_setting():
         vbt.settings["engine"] = previous
 
 
+def test_required_talib_indicators_execute_through_vectorbt() -> None:
+    """TA-Lib remains a required indicator implementation for research workflows."""
+    import vectorbt as vbt
+
+    prices = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0])
+    actual = vbt.talib("SMA").run(prices, 2).real.values
+    np.testing.assert_allclose(actual, [np.nan, 1.5, 2.5, 3.5, 4.5], equal_nan=True)
+
+
 FULL_INTEGRATIONS = [
     "talib",
     "yfinance",
@@ -98,16 +107,19 @@ FULL_DISTRIBUTIONS = {
 
 
 @pytest.mark.parametrize("module_name", FULL_INTEGRATIONS)
+@pytest.mark.integration
 def test_full_integration_import(module_name: str):
     importlib.import_module(module_name)
 
 
 @pytest.mark.parametrize(("module_name", "distribution"), FULL_DISTRIBUTIONS.items())
+@pytest.mark.integration
 def test_full_integration_distribution(module_name: str, distribution: str):
     assert distribution in packages_distributions()[module_name]
     assert version(distribution)
 
 
+@pytest.mark.integration
 def test_indicator_integrations_execute_through_vectorbt():
     import vectorbt as vbt
 
@@ -121,6 +133,7 @@ def test_indicator_integrations_execute_through_vectorbt():
     np.testing.assert_allclose(talib_values, expected, equal_nan=True)
 
 
+@pytest.mark.integration
 def test_quantstats_adapter_executes_through_vectorbt():
     import vectorbt as vbt  # noqa: F401
 
@@ -128,6 +141,7 @@ def test_quantstats_adapter_executes_through_vectorbt():
     assert np.isfinite(returns.vbt.returns.qs.sharpe(periods=252))
 
 
+@pytest.mark.integration
 def test_data_provider_adapters_are_exposed():
     import vectorbt as vbt
 
@@ -136,6 +150,7 @@ def test_data_provider_adapters_are_exposed():
         assert callable(adapter.download_symbol)
 
 
+@pytest.mark.integration
 def test_telegram_adapter_builds_without_network():
     import vectorbt as vbt
 
@@ -145,6 +160,7 @@ def test_telegram_adapter_builds_without_network():
     assert bot.running is False
 
 
+@pytest.mark.integration
 def test_ray_adapter_executes_through_vectorbt():
     import vectorbt as vbt  # noqa: F401
 

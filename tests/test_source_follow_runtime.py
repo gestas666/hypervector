@@ -507,6 +507,7 @@ def test_pinned_classifier_fails_closed_without_verified_source(
         PinnedHypertraderClassifier(tmp_path / "missing-backend")
 
 
+@pytest.mark.integration
 def test_pinned_classifier_reuses_the_same_verified_namespace() -> None:
     """Independent classifiers may share one checksum-pinned module tree."""
     backend = Path("data/cache/vendor/hypertrader_ad15/backend")
@@ -518,6 +519,7 @@ def test_pinned_classifier_reuses_the_same_verified_namespace() -> None:
     assert first.classify(_bar(0)) == second.classify(_bar(0))
 
 
+@pytest.mark.integration
 def test_pinned_namespace_rejects_a_different_backend_root() -> None:
     """Namespace reuse must remain fail-closed across backend identities."""
     backend = Path("data/cache/vendor/hypertrader_ad15/backend")

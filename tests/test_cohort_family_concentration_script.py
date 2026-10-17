@@ -20,6 +20,7 @@ CONFIG = Path(
 )
 
 
+@pytest.mark.evidence
 def test_exact_v41_topology_is_source_bound_and_report_only() -> None:
     """The command must reconcile the exact v41 roster and provider graph."""
     spec = spec_from_file_location("cohort_family_concentration_script", SCRIPT)

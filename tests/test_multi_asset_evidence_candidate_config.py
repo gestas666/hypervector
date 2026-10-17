@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from pathlib import Path
 
 import pandas as pd
@@ -69,6 +71,7 @@ def test_candidates_use_fixed_horizon_flat_entry_contracts() -> None:
         assert provider.execution.maximum_hold_policy == "fixed"
 
 
+@pytest.mark.evidence
 def test_candidate_profile_constructs_every_default_collector(tmp_path: Path) -> None:
     """A declared candidate cannot survive config parsing without an engine."""
     dependency = tmp_path / "backtest_lab"

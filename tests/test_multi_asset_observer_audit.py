@@ -19,7 +19,7 @@ _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _RANGE = "range_onset_bidirectional_v1"
 _RUN_ID = "observer-a"
-_SCRIPT = Path("scripts/multi_asset_bidirectional_observer_audit.py")
+_SCRIPT = Path("src/hypervector/operations/multi_asset_bidirectional_observer_audit.py")
 
 
 def test_report_separates_setup_progression_from_unobserved_edge() -> None:

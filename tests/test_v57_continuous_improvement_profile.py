@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
@@ -276,6 +278,7 @@ def test_v57_spcx_cadence_evidence_uses_active_short_scope() -> None:
     assert payload["runtime_strategy_changed"] is False
 
 
+@pytest.mark.evidence
 def test_v57_override_evidence_reconciles_and_retains_short_hypothesis() -> None:
     """Every research input must reconcile before the monitor can publish."""
     spec = spec_from_file_location("v57_improvement_monitor", _SCRIPT)

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from hashlib import sha256
 from importlib.util import module_from_spec, spec_from_file_location
 import json
@@ -66,6 +68,7 @@ def test_v52_override_binds_only_the_live_successor_routes() -> None:
     assert payload["contract"]["runtime_strategy_changed"] is False
 
 
+@pytest.mark.evidence
 def test_v52_override_evidence_hashes_reconcile() -> None:
     """Every frozen v52 research source must match its declared bytes and hash."""
     spec = spec_from_file_location("v52_improvement_monitor", _SCRIPT)
@@ -235,6 +238,7 @@ def test_v52_override_rejects_noncompression_alignment_reopen() -> None:
     assert "predeclared independent same-blocker sample" in decision["reopen_condition"]
 
 
+@pytest.mark.evidence
 def test_v52_alignment_decision_starts_a_distinct_research_chain(
     tmp_path: Path,
 ) -> None:
@@ -268,6 +272,7 @@ def test_v52_override_rejects_breakout_side_alignment_relaxation() -> None:
     assert "20 independent exact one-blocker episodes" in decision["reopen_condition"]
 
 
+@pytest.mark.evidence
 def test_v52_side_alignment_decision_is_appendable(tmp_path: Path) -> None:
     """The exact v52 alignment decision must form a valid report-only chain."""
     database = ResearchDatabase(tmp_path / "research.duckdb")
@@ -322,6 +327,7 @@ def test_v52_direction_and_sweep_journal_is_report_only() -> None:
     assert near_miss["decision"] == "defer_trigger_relaxation"
 
 
+@pytest.mark.evidence
 def test_v52_override_tracks_first_eligible_lifecycle_audit() -> None:
     """The moving research loop must retain its immutable pre-event baseline."""
     payload = json.loads(_OVERRIDES.read_text())

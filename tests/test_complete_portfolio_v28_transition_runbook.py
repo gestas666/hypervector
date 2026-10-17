@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -23,6 +25,7 @@ _START = "<!-- cohort-transition-contract:start -->"
 _END = "<!-- cohort-transition-contract:end -->"
 
 
+@pytest.mark.evidence
 def test_v28_runbook_binds_profile_route_evidence_and_backup() -> None:
     """The transition must bind the exact one-route removal and its evidence."""
     contract = _contract(_RUNBOOK.read_text(encoding="utf-8"))
@@ -87,16 +90,10 @@ def test_v28_runbook_preserves_live_and_bidirectional_invariants() -> None:
 
 
 def test_cli_skill_routes_next_flat_transition_to_v29() -> None:
-    """Operator guidance must name the latest inactive evidence-routed profile."""
-    text = _SKILL.read_text(encoding="utf-8")
-
-    assert "cohort-live-transition-and-rollback-v29.md" in text
-    assert (
-        "multi_asset_bidirectional_evidence_selected_portfolio_canary_v29.toml" in text
-    )
-    assert "six executable routes" in text
-    assert "v28 is retained as a" in text
-    assert "v25 remains active until" in text
+    """Current guidance requires explicit selection instead of promoting an old profile."""
+    text = Path("skills/hypervector-cli/SKILL.md").read_text(encoding="utf-8")
+    assert "Historical profiles do not establish the active deployment" in text
+    assert "exact `--config`" in text
 
 
 def _contract(text: str) -> dict[str, object]:

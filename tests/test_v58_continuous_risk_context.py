@@ -20,6 +20,7 @@ _STRESS = Path(
 )
 
 
+@pytest.mark.evidence
 def test_loader_reconciles_current_config_and_stacked_loss() -> None:
     """Current exposure must reconcile to the exact frozen V58 stress bytes."""
     context = load_v58_risk_context(_CONFIG, _STRESS)
@@ -43,6 +44,7 @@ def test_loader_reconciles_current_config_and_stacked_loss() -> None:
     assert payload["execution_authority"] == "none"
 
 
+@pytest.mark.evidence
 def test_loader_rejects_slot_margin_that_disagrees_with_routes(
     tmp_path: Path,
 ) -> None:
@@ -58,6 +60,7 @@ def test_loader_rejects_slot_margin_that_disagrees_with_routes(
         load_v58_risk_context(_CONFIG, path)
 
 
+@pytest.mark.evidence
 def test_loader_rejects_position_capacity_that_disagrees_with_config(
     tmp_path: Path,
 ) -> None:
@@ -71,6 +74,7 @@ def test_loader_rejects_position_capacity_that_disagrees_with_config(
         load_v58_risk_context(_CONFIG, path)
 
 
+@pytest.mark.evidence
 def test_loader_rejects_duplicated_route_identity(tmp_path: Path) -> None:
     """A duplicated stress row cannot masquerade as complete route coverage."""
     stress = json.loads(_STRESS.read_text(encoding="utf-8"))
@@ -83,6 +87,7 @@ def test_loader_rejects_duplicated_route_identity(tmp_path: Path) -> None:
         load_v58_risk_context(_CONFIG, path)
 
 
+@pytest.mark.evidence
 def test_current_equity_payload_retains_both_denominators() -> None:
     """Current account risk must not overwrite the frozen sizing reference."""
     context = load_v58_risk_context(_CONFIG, _STRESS)
@@ -103,6 +108,7 @@ def test_current_equity_payload_retains_both_denominators() -> None:
     assert payload["sizing_input"] is False
 
 
+@pytest.mark.evidence
 def test_current_equity_payload_rejects_changed_sizing_reference() -> None:
     """Point-in-time venue data cannot relabel the frozen model denominator."""
     context = load_v58_risk_context(_CONFIG, _STRESS)

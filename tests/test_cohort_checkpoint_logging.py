@@ -12,8 +12,7 @@ import pytest
 
 SCRIPT = (
     Path(__file__).parents[1]
-    / "scripts"
-    / "multi_asset_bidirectional_live_checkpoint.py"
+    / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_live_checkpoint.py'
 )
 
 

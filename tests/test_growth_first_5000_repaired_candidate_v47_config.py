@@ -96,6 +96,7 @@ def test_v47_corrected_hip3_route_is_executable_by_the_default_factory() -> None
     assert collector.config.minimum_abs_imbalance == pytest.approx(0.1)
 
 
+@pytest.mark.evidence
 def test_v47_stress_scales_funding_to_each_provider_maximum_hold() -> None:
     """Forty-eight-hour Range routes must not be charged only 24h funding."""
     friction = json.loads(_FRICTION.read_text())["execution_friction_evidence"]

@@ -40,6 +40,14 @@ def load_wallet_env_if_present(
     )
 
 
+def load_selected_env_if_present(
+    allowed_keys: frozenset[str], *, candidates: Sequence[Path] | None = None,
+    environ: MutableMapping[str, str] | None = None,
+) -> tuple[Path, ...]:
+    """Load only the environment names required by one non-execution workflow."""
+    return _load_dotenv(candidates=candidates, environ=environ, allowed_keys=allowed_keys)
+
+
 def _load_dotenv(
     *,
     candidates: Sequence[Path] | None,

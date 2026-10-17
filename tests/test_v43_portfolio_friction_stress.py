@@ -42,6 +42,7 @@ def _execution_friction() -> dict[str, dict[str, object]]:
     }
 
 
+@pytest.mark.evidence
 def test_v43_stress_covers_every_asset_and_mutually_exclusive_btc_side() -> None:
     """One BTC side plus HYPE and SP500 form the exact worst stop wave."""
     report = build_v43_portfolio_friction_stress(
@@ -63,6 +64,7 @@ def test_v43_stress_covers_every_asset_and_mutually_exclusive_btc_side() -> None
     assert growth["maximum_simultaneous_positions"] == 3
 
 
+@pytest.mark.evidence
 def test_v43_long_payoff_reports_friction_adjusted_breakeven_fragility() -> None:
     """The low-target BTC long cannot be mistaken for the 3R short route."""
     report = build_v43_portfolio_friction_stress(
@@ -86,6 +88,7 @@ def test_v43_long_payoff_reports_friction_adjusted_breakeven_fragility() -> None
     assert report["contract"]["performance_gate"] is False
 
 
+@pytest.mark.evidence
 def test_v43_stress_rejects_missing_or_success_shaped_friction() -> None:
     """Sparse evidence remains explicit, while absent evidence fails closed."""
     friction = _execution_friction()
@@ -108,6 +111,7 @@ def test_v43_stress_rejects_missing_or_success_shaped_friction() -> None:
         )
 
 
+@pytest.mark.evidence
 def test_corrected_successor_can_freeze_a_distinct_schema_identity() -> None:
     """A v44 artifact cannot masquerade as the superseded v43 contract."""
     report = build_v43_portfolio_friction_stress(
@@ -127,6 +131,7 @@ def test_corrected_successor_can_freeze_a_distinct_schema_identity() -> None:
     )
 
 
+@pytest.mark.evidence
 def test_candidate_notional_depth_overrides_old_uniform_slot_depth() -> None:
     """Exact candidate-size depth replaces the superseded $750 curve."""
     depths = {"BTC": 0.637741, "HYPE": 1.476004, "xyz:SP500": 1.411915}
@@ -151,6 +156,7 @@ def test_candidate_notional_depth_overrides_old_uniform_slot_depth() -> None:
     }
 
 
+@pytest.mark.evidence
 def test_candidate_depth_override_requires_every_exact_asset() -> None:
     """A partial or aliased depth map cannot produce a success-shaped report."""
     with pytest.raises(ValueError, match="exactly match profile symbols"):

@@ -1,5 +1,7 @@
 """Machine-bound contract for the inactive v25-to-v29 transition."""
 
+import pytest
+
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -29,6 +31,7 @@ START = "<!-- cohort-transition-contract:start -->"
 END = "<!-- cohort-transition-contract:end -->"
 
 
+@pytest.mark.evidence
 def test_v29_runbook_binds_exact_profile_routes_evidence_and_backup() -> None:
     """The transition must be reconstructable from immutable identities."""
     contract = _contract(RUNBOOK.read_text(encoding="utf-8"))
@@ -131,14 +134,13 @@ def test_v29_runbook_preserves_current_protection_and_explicit_authority() -> No
         assert required in text
 
 
-def test_cli_skill_names_v29_as_the_latest_inactive_candidate() -> None:
-    """Operator guidance must stop pointing at the rejected v28 profile."""
+def test_cli_skill_requires_an_explicit_current_profile() -> None:
+    """Historical transitions cannot establish the current deployment profile."""
     text = SKILL.read_text(encoding="utf-8")
 
-    assert "cohort-live-transition-and-rollback-v29.md" in text
-    assert CANDIDATE.name in text
-    assert "six executable routes" in text
-    assert "v25 remains active until" in text
+    assert "Historical profiles do not establish the active deployment" in text
+    assert "exact `--config`" in text
+    assert "signed approvals and journals are immutable evidence" in text
 
 
 def _contract(text: str) -> dict[str, object]:

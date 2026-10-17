@@ -1,0 +1,7 @@
+{
+  "name": "infra-init",
+  "action": "init",
+  "help": "Create I2 data layout (cache/runs/exports/logs/paper/live/nautilus)",
+  "handler": "hypervector.commands.status:cmd_infra_init",
+  "arguments": []
+}

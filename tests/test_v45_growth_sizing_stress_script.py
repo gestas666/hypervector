@@ -38,6 +38,7 @@ def test_candidate_notionals_use_largest_route_per_asset() -> None:
     )
 
 
+@pytest.mark.evidence
 def test_report_freezes_candidate_depth_and_never_grants_authority(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -63,6 +64,7 @@ def test_report_freezes_candidate_depth_and_never_grants_authority(
     )
 
 
+@pytest.mark.evidence
 def test_report_supports_explicit_v46_identity_and_leverage(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

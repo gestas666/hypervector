@@ -53,3 +53,14 @@ def test_wallet_only_loader_does_not_import_signing_key(tmp_path: Path) -> None:
 
     assert loaded == (dotenv.resolve(),)
     assert environment == {"HYPERVECTOR_HL_WALLET_ADDRESS": "0xfromfile"}
+
+
+def test_selected_loader_preserves_archive_credentials_without_signing_keys(tmp_path: Path) -> None:
+    """An archive request needs its own token, without loading trading authority."""
+    from hypervector.runtime_env import load_selected_env_if_present
+
+    dotenv = tmp_path / ".env"
+    dotenv.write_text("OXA_API_KEY=fixture-token\nHYPERVECTOR_HL_API_PRIVATE_KEY=fixture-key\n")
+    environ: dict[str, str] = {}
+    load_selected_env_if_present(frozenset({"OXA_API_KEY"}), candidates=[dotenv], environ=environ)
+    assert environ == {"OXA_API_KEY": "fixture-token"}

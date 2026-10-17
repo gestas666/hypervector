@@ -505,6 +505,7 @@ def test_hypervelocity_identity_stamps_fixed_contract_and_observe_only(
     assert row["execution"]["expired_entry_rearm_policy"] == "regime_reset"
 
 
+@pytest.mark.usefixtures("annotation_models")
 def test_fresh_profile_session_uses_configured_initial_cash(tmp_path: Path) -> None:
     export = _write_strict_export(
         tmp_path,
@@ -665,6 +666,7 @@ def test_live_hypervelocity_bar_records_report_only_regime_observation(
     assert observation["equity"] == pytest.approx(10_000.0)
 
 
+@pytest.mark.usefixtures("annotation_models")
 def test_live_book_refresh_records_authoritative_microstructure(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -971,6 +973,7 @@ def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
     assert liquidation["order_intent"]["limit_px"] is None
 
 
+@pytest.mark.usefixtures("annotation_models")
 def test_profile_activates_event_runtime_and_stamps_authority(tmp_path: Path) -> None:
     export = _write_strict_export(
         tmp_path,
@@ -1056,6 +1059,7 @@ def test_profile_activates_event_runtime_and_stamps_authority(tmp_path: Path) ->
     assert identity["execution"]["legacy_comparator"] == "legacy_bar_through_v1"
 
 
+@pytest.mark.usefixtures("annotation_models")
 def test_peak_observer_is_outside_portfolio_fingerprint(tmp_path: Path) -> None:
     """Report-only observer mode cannot change execution portfolio identity."""
     export = _write_strict_export(
@@ -1231,6 +1235,7 @@ def test_event_shadow_backstop_transfer_preserves_ledger_parity(
     assert row["order_intent"]["order_type"] == "backstop_transfer"
 
 
+@pytest.mark.usefixtures("annotation_models")
 def test_asset_context_updates_funding_and_continuous_mark_without_fill(
     tmp_path: Path,
 ) -> None:
@@ -1298,6 +1303,7 @@ def test_event_runtime_applies_boundary_funding_before_liquidation_mark(
     assert calls == ["funding", "mark"]
 
 
+@pytest.mark.usefixtures("annotation_models")
 def test_event_restart_reconciles_funding_without_candle_fills(tmp_path: Path) -> None:
     export = _write_strict_export(
         tmp_path,
@@ -1806,6 +1812,7 @@ def test_downtime_reconciliation_fills_restored_pending_entry(
     assert entries[-1]["metalabel_p"] == 0.62
 
 
+@pytest.mark.usefixtures("annotation_models")
 def test_bidirectional_profile_holds_then_switches_only_after_exit(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -2105,3 +2112,18 @@ def test_session_inject_book_offline_no_poll(tmp_path: Path):
     # l2_walk_v1 uses pure VWAP (slippage_bps unused; impact is in the walk)
     assert abs(rec["fill_px"] - 101.0) < 1e-9
     assert rec.get("skipped") is not True
+
+
+@pytest.fixture
+def annotation_models(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Use a declared constant annotation model when testing portfolio lifecycle."""
+    class AnnotationModel:
+        feature_names = ["close"]
+
+        def __init__(self, root: Path) -> None:
+            self.root = root
+
+        def predict_probability(self, _features: dict[str, float]) -> float:
+            return 0.73
+
+    monkeypatch.setattr("hypervector.ml.metalabel.Metalabeler.from_root", AnnotationModel)

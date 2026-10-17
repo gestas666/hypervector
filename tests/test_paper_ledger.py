@@ -110,8 +110,9 @@ def test_cli_paper_check_prints_layout_and_live_feed_loop(tmp_path: Path, capsys
     assert main(["--data-root", str(data), "paper-check"]) == 0
     captured = capsys.readouterr()
     report = json.loads(captured.out)
-    assert report["dirs"]["paper_decisions"]["exists"] is True
-    assert report["dirs"]["paper_ledger"]["exists"] is True
+    assert report["dirs"]["paper_decisions"]["exists"] is False
+    assert report["dirs"]["paper_ledger"]["exists"] is False
+    assert not data.exists()
     assert report["rules"]["paper_live_separated"] is True
     assert report["paper"]["live_feed_loop"] is True
     assert report["paper"]["execution_mode"] == "shadow"  # 4b default

@@ -1,0 +1,36 @@
+{
+  "name": "export",
+  "action": "export",
+  "help": "Export best trial for a track",
+  "handler": "hypervector.commands.export:cmd_export",
+  "arguments": [
+    {
+      "flags": [
+        "--track"
+      ],
+      "options": {
+        "dest": "track",
+        "required": true,
+        "default": null
+      }
+    },
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC"
+      }
+    },
+    {
+      "flags": [
+        "--timeframe"
+      ],
+      "options": {
+        "dest": "timeframe",
+        "default": "1m"
+      }
+    }
+  ]
+}

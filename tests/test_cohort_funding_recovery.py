@@ -36,6 +36,7 @@ def test_long_downtime_restores_last_committed_funding_boundary(
             PROFILE, mode="live", enabled=True, accepts_live_risk=True
         ),
         cohort_ledger=tmp_path / "live/bidirectional_cohort/decisions.jsonl",
+        stop_file=tmp_path / "STOP",
     )
     ledger = SolLiveLedger(
         path=config.cohort_ledger,

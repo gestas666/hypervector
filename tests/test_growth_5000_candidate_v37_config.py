@@ -72,11 +72,10 @@ def test_v37_freezes_three_percent_isolated_slot_sizing(
 
 
 def test_v37_remains_a_distinct_non_runtime_candidate() -> None:
-    """No launcher or staged profile may silently point at the growth candidate."""
-    launcher = Path("scripts/multi_asset_bidirectional_canary_tui.py").read_text()
-    checkpoint = Path(
-        "data/runtime/bidirectional_cohort/latest_checkpoint.json"
-    ).read_text()
+    """The unified live CLI requires selection rather than promoting a research candidate."""
+    from hypervector.cli import build_parser
 
+    args = build_parser().parse_args(["cohort", "live"])
+    assert args.config is None
+    launcher = Path("src/hypervector/operations/multi_asset_bidirectional_live.py").read_text()
     assert _CANDIDATE.name not in launcher
-    assert _CANDIDATE.name not in checkpoint

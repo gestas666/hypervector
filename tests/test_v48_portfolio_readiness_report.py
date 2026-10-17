@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
@@ -12,6 +14,7 @@ ROOT = Path(__file__).parents[1]
 SCRIPT = ROOT / "scripts" / "v48_portfolio_readiness_report.py"
 
 
+@pytest.mark.evidence
 def test_report_is_answer_first_and_exact_v48_bound() -> None:
     """The report must lead with the decision and exact successor identity."""
     module = _module()
@@ -43,6 +46,7 @@ def test_report_is_answer_first_and_exact_v48_bound() -> None:
     ]
 
 
+@pytest.mark.evidence
 def test_report_reconciles_checkpoint_sources_and_visual_context() -> None:
     """Every visual and exact metric must remain source-auditable."""
     module = _module()
