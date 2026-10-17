@@ -2,12 +2,26 @@
 
 Recomputes alpha from OHLCV buffer + registry (never signals.parquet).
 Order placement is minimal one-position netting for Phase 2 historical sim.
+
+Two intent sources share one decision path:
+
+* windowed (default for a bare actor): rebuild signals from the trailing
+  ``max_lookback`` bars on every bar (live-parity semantics);
+* precomputed: the runner attaches :class:`PrecomputedIntents` built once over
+  the replay and probed against the windowed computation; ``on_bar`` then
+  reads the intent by bar label instead of rebuilding indicators.
+
+A strategy error is a technical failure: it is recorded on
+``intent_error`` and raised (:class:`Phase2IntentError`) out of
+``engine.run()`` instead of being logged and skipped.
 """
 
 from __future__ import annotations
 
-from typing import Any, Literal
+import math
+from typing import TYPE_CHECKING, Any, Literal
 
+import numpy as np
 import pandas as pd
 from nautilus_trader.common.enums import LogColor
 from nautilus_trader.model.data import Bar, BarType
@@ -17,11 +31,21 @@ from nautilus_trader.model.objects import Quantity
 from nautilus_trader.trading.config import StrategyConfig
 from nautilus_trader.trading.strategy import Strategy
 
+from hypervector.nautilus.errors import Phase2IntentError
 from hypervector.nautilus.load_export import StrategyLoadout
 from hypervector.nautilus.signals import SignalIntent, last_bar_intent
-from hypervector.nautilus.sizing import exit_config_from_loadout, position_size_frac
+from hypervector.nautilus.sizing import (
+    exit_config_from_dict,
+    exit_config_from_loadout,
+    position_size_frac,
+)
+from hypervector.nautilus.trail import TrailState, trail_start, trail_step
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
+from hypervector.strategies.indicators import atr as atr_indicator
 from hypervector.sweep.exits import stop_distance_frac, tp_distance_frac
+
+if TYPE_CHECKING:
+    from hypervector.nautilus.precompute import PrecomputedIntents
 
 DEFAULT_MAX_LOOKBACK = 2000
 EXECUTION_MODE = "phase2_historical"
@@ -49,6 +73,10 @@ class HypervectorStrategyConfig(StrategyConfig, frozen=True):
     conviction: float = 0.5
     max_lookback: int = DEFAULT_MAX_LOOKBACK
     execution_mode: str = EXECUTION_MODE
+    # "close": Bar.ts_event is the bar close (dataframe_to_bars default);
+    # research frames are labelled by bar open, so the actor subtracts one
+    # bar interval to rebuild the research label.
+    bar_timestamps: str = "close"
 
 
 def config_from_loadout(
@@ -129,10 +157,16 @@ def _instrument_id_from_bar_type(bar_type: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _bar_ohlcv_record(bar: Bar) -> dict[str, Any]:
-    """Extract one OHLCV row dict from a Nautilus ``Bar``."""
+def _bar_ohlcv_record(bar: Bar, *, label_offset_ns: int = 0) -> dict[str, Any]:
+    """Extract one OHLCV row dict from a Nautilus ``Bar``.
+
+    ``label_offset_ns`` converts a close-stamped ``ts_event`` back to the
+    research bar-open label (pass the bar interval for close-stamped bars).
+    """
     return {
-        "timestamp": pd.Timestamp(int(bar.ts_event), unit="ns", tz="UTC"),
+        "timestamp": pd.Timestamp(
+            int(bar.ts_event) - int(label_offset_ns), unit="ns", tz="UTC"
+        ),
         "open": float(bar.open.as_double()),
         "high": float(bar.high.as_double()),
         "low": float(bar.low.as_double()),
@@ -156,13 +190,23 @@ def _append_bar_record(
 
 
 def _bars_to_ohlcv_df(buffer: list[dict[str, Any]]) -> pd.DataFrame:
-    """Convert buffer records to a research-style OHLCV DataFrame."""
+    """Convert buffer records to a research-style OHLCV DataFrame.
+
+    Column-wise construction (same frame as ``pd.DataFrame(buffer)
+    .set_index("timestamp")[cols].astype(float)``, without the per-row dict
+    parsing that dominated the windowed replay).
+    """
     if not buffer:
         return pd.DataFrame(columns=list(_OHLCV_COLS))
-    df = pd.DataFrame(buffer)
-    if "timestamp" in df.columns:
-        df = df.set_index("timestamp")
-    return df.loc[:, list(_OHLCV_COLS)].astype(float)
+    n = len(buffer)
+    data = {
+        c: np.fromiter((r[c] for r in buffer), dtype=np.float64, count=n)
+        for c in _OHLCV_COLS
+    }
+    if "timestamp" in buffer[0]:
+        index = pd.DatetimeIndex([r["timestamp"] for r in buffer], name="timestamp")
+        return pd.DataFrame(data, index=index)
+    return pd.DataFrame(data)
 
 
 def _action_from_intent(
@@ -195,18 +239,7 @@ def _stop_tp_fracs(
     exits: dict[str, Any] | None,
 ) -> tuple[float, float | None]:
     """Last-bar stop / TP distances as fractions of price from exit dict."""
-    from hypervector.sweep.exits import ExitConfig
-
-    raw = dict(exits or {})
-    defaults = ExitConfig()
-    cfg = ExitConfig(
-        mode=str(raw.get("mode", defaults.mode)),  # type: ignore[arg-type]
-        sl_pct=float(raw.get("sl_pct", defaults.sl_pct)),
-        rr=float(raw.get("rr", defaults.rr)),
-        atr_length=int(raw.get("atr_length", defaults.atr_length)),
-        sl_atr_mult=float(raw.get("sl_atr_mult", defaults.sl_atr_mult)),
-        trail_atr_mult=float(raw.get("trail_atr_mult", defaults.trail_atr_mult)),
-    )
+    cfg = exit_config_from_dict(exits)
     stop = stop_distance_frac(df, cfg)
     tp = tp_distance_frac(stop, cfg)
     stop_frac = float(stop.iloc[-1])
@@ -214,6 +247,21 @@ def _stop_tp_fracs(
     if cfg.mode == "trail" or tp_last != tp_last:  # NaN
         return stop_frac, None
     return stop_frac, tp_last
+
+
+def _trail_distance(df: pd.DataFrame, exits: dict[str, Any] | None) -> float:
+    """Last-bar ``trail_atr_mult x ATR`` (the research trail distance)."""
+    cfg = exit_config_from_dict(exits)
+    value = (
+        cfg.trail_atr_mult
+        * atr_indicator(
+            df["high"].astype(float),
+            df["low"].astype(float),
+            df["close"].astype(float),
+            cfg.atr_length,
+        ).iloc[-1]
+    )
+    return float(value)
 
 
 # ---------------------------------------------------------------------------
@@ -238,6 +286,27 @@ class HypervectorStrategy(Strategy):
         self._bar_type: BarType | None = None
         self._instrument_id: InstrumentId | None = None
         self._pending_entry = False
+        self._bars_seen = 0
+        self._label_offset_ns = _label_offset_ns(config)
+        self._precomputed: PrecomputedIntents | None = None
+        mode = str((config.exits or {}).get("mode", "atr"))
+        self._trail_enabled = mode == "trail" and not _uses_strategy_exits_only(
+            config.strategy_name
+        )
+        self._trail: TrailState | None = None
+        # Run telemetry read by the runner after engine.run().
+        self.intent_error: dict[str, Any] | None = None
+        self.positions_opened = 0
+        self.position_records: list[dict[str, Any]] = []
+        self.trail_exits = 0
+
+    def attach_precomputed(self, intents: PrecomputedIntents) -> None:
+        """Read intents/exit distances by bar label instead of rebuilding windows."""
+        self._precomputed = intents
+
+    @property
+    def signal_source(self) -> str:
+        return "precomputed" if self._precomputed is not None else "windowed"
 
     def on_start(self) -> None:
         """Subscribe to bars and log Phase 2 historical mode."""
@@ -251,33 +320,49 @@ class HypervectorStrategy(Strategy):
         self.log.info(
             f"HypervectorStrategy start execution_mode={self.execution_mode} "
             f"strategy={self.config.strategy_name} bar_type={self.config.bar_type} "
-            f"instrument_id={self._instrument_id} conviction={self.config.conviction}",
+            f"instrument_id={self._instrument_id} conviction={self.config.conviction} "
+            f"signals={self.signal_source}",
             color=LogColor.BLUE,
         )
 
     def on_bar(self, bar: Bar) -> None:
-        """Append bar, recompute intent, enter/exit with one netting position."""
-        self._append_bar(bar)
-        if len(self._bar_buffer) < 2:
+        """Append bar, read/recompute intent, enter/exit with one netting position."""
+        self._bars_seen += 1
+        if self._precomputed is None:
+            self._append_bar(bar)
+        if self._bars_seen < 2:
             return
 
         instrument_id = self._instrument_id or bar.bar_type.instrument_id
         is_flat = self._is_flat(instrument_id)
         position_side = None if is_flat else self._position_side(instrument_id)
 
+        row: int | None = None
+        frame: pd.DataFrame | None = None
         try:
-            intent = self._intent_from_buffer()
+            if self._precomputed is not None:
+                row = self._precomputed.row(self._bar_label_ns(bar))
+                intent = self._precomputed.intent(row)
+            else:
+                frame = _bars_to_ohlcv_df(self._bar_buffer)
+                intent = last_bar_intent(
+                    frame, self.config.strategy_name, dict(self.config.params)
+                )
         except Exception as exc:
-            self.log.warning(
-                f"execution_mode={self.execution_mode} intent failed: {exc}"
-            )
-            return
+            self._fail_intent(bar, exc)
 
         action = _action_from_intent(
             intent, is_flat=is_flat, position_side=position_side
         )
+        if self._trail is not None:
+            if is_flat and not self._pending_entry:
+                self._trail = None
+            elif not is_flat and self._step_trail(bar, row=row, frame=frame):
+                if action == "hold":
+                    action = "close"
+                self.trail_exits += 1
         self.log.info(
-            f"execution_mode={self.execution_mode} bar={len(self._bar_buffer)} "
+            f"execution_mode={self.execution_mode} bar={self._bars_seen} "
             f"flat={is_flat} side={position_side} "
             f"intent(enter={intent.enter},exit={intent.exit},dir={intent.direction}) "
             f"action={action}",
@@ -291,20 +376,72 @@ class HypervectorStrategy(Strategy):
             return
         if action in ("enter_long", "enter_short") and not self._pending_entry:
             direction = "long" if action == "enter_long" else "short"
-            self._enter(bar, instrument_id, direction)
+            self._enter(bar, instrument_id, direction, row=row, frame=frame)
 
     # -- buffer / intent (public-ish for offline tests) --------------------
 
     def _append_bar(self, bar: Bar) -> None:
         _append_bar_record(
             self._bar_buffer,
-            _bar_ohlcv_record(bar),
+            _bar_ohlcv_record(bar, label_offset_ns=self._label_offset_ns),
             max_lookback=self.max_lookback,
         )
+
+    def _bar_label_ns(self, bar: Bar) -> int:
+        return int(bar.ts_event) - self._label_offset_ns
 
     def _intent_from_buffer(self) -> SignalIntent:
         df = _bars_to_ohlcv_df(self._bar_buffer)
         return last_bar_intent(df, self.config.strategy_name, dict(self.config.params))
+
+    def _fail_intent(self, bar: Bar, exc: Exception) -> None:
+        """Record the first strategy error and abort the run (technical failure)."""
+        label = pd.Timestamp(self._bar_label_ns(bar), unit="ns", tz="UTC")
+        self.intent_error = {
+            "bar": int(self._bars_seen),
+            "bar_open": label.isoformat(),
+            "signal_source": self.signal_source,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+        self.log.error(
+            f"execution_mode={self.execution_mode} intent failed "
+            f"bar={self._bars_seen}: {type(exc).__name__}: {exc}"
+        )
+        raise Phase2IntentError(
+            f"strategy {self.config.strategy_name!r} failed at bar "
+            f"{self._bars_seen} ({label.isoformat()}): {type(exc).__name__}: {exc}",
+            strategy=str(self.config.strategy_name),
+            first_error=self.intent_error,
+        ) from exc
+
+    # -- trailing stop -------------------------------------------------------
+
+    def _trail_distance_at(
+        self, *, row: int | None, frame: pd.DataFrame | None
+    ) -> float:
+        if self._precomputed is not None and row is not None:
+            return float(self._precomputed.trail_dist[row])
+        df = frame if frame is not None else _bars_to_ohlcv_df(self._bar_buffer)
+        return _trail_distance(df, self.config.exits)
+
+    def _step_trail(
+        self, bar: Bar, *, row: int | None, frame: pd.DataFrame | None
+    ) -> bool:
+        assert self._trail is not None
+        self._trail, hit = trail_step(
+            self._trail,
+            high=float(bar.high.as_double()),
+            low=float(bar.low.as_double()),
+            close=float(bar.close.as_double()),
+            trail_dist=self._trail_distance_at(row=row, frame=frame),
+        )
+        if hit:
+            self.log.info(
+                f"execution_mode={self.execution_mode} trail stop hit "
+                f"close={bar.close} stop={self._trail.stop_level:.8g}",
+                color=LogColor.YELLOW,
+            )
+        return hit
 
     # -- portfolio helpers -------------------------------------------------
 
@@ -357,9 +494,15 @@ class HypervectorStrategy(Strategy):
         bar: Bar,
         instrument_id: InstrumentId,
         direction: str,
+        *,
+        row: int | None = None,
+        frame: pd.DataFrame | None = None,
     ) -> None:
-        df = _bars_to_ohlcv_df(self._bar_buffer)
-        stop_frac, tp_frac = _stop_tp_fracs(df, self.config.exits)
+        if self._precomputed is not None and row is not None:
+            stop_frac, tp_frac = self._precomputed.stop_tp(row)
+        else:
+            df = frame if frame is not None else _bars_to_ohlcv_df(self._bar_buffer)
+            stop_frac, tp_frac = _stop_tp_fracs(df, self.config.exits)
         equity = self._equity_estimate()
 
         # Build a minimal loadout-shaped object for sizing (fields only).
@@ -411,6 +554,22 @@ class HypervectorStrategy(Strategy):
             self.log.info(
                 f"execution_mode={self.execution_mode} market {direction} qty={qty} "
                 f"size_frac={size_frac:.4f} stop_frac={stop_frac:.4f}",
+                color=LogColor.GREEN,
+            )
+        if self._trail_enabled:
+            # Trail mode has no bracket: protect the position with the
+            # close-evaluated trailing stop anchored at this entry bar.
+            self._trail = trail_start(
+                direction,
+                high=float(bar.high.as_double()),
+                low=float(bar.low.as_double()),
+                close=price,
+                trail_dist=self._trail_distance_at(row=row, frame=frame),
+                sl_frac=float(stop_frac),
+            )
+            self.log.info(
+                f"execution_mode={self.execution_mode} trail stop placed "
+                f"{direction} stop={self._trail.stop_level:.8g}",
                 color=LogColor.GREEN,
             )
         self._pending_entry = True
@@ -465,6 +624,7 @@ class HypervectorStrategy(Strategy):
         )
 
     def _close_position(self, instrument_id: InstrumentId) -> None:
+        self._trail = None
         try:
             self.close_all_positions(instrument_id)
             self.log.info(
@@ -521,9 +681,12 @@ class HypervectorStrategy(Strategy):
 
     def on_position_opened(self, event: Any) -> None:
         self._pending_entry = False
+        self.positions_opened += 1
 
     def on_position_closed(self, event: Any) -> None:
         self._pending_entry = False
+        self._trail = None
+        self.position_records.append(_position_record(event))
 
     def on_event(self, event: Any) -> None:
         """Fallback clear for terminal order/position events (typed hooks preferred)."""
@@ -536,6 +699,40 @@ class HypervectorStrategy(Strategy):
             "OrderCanceled",
         ):
             self._pending_entry = False
+
+
+def _label_offset_ns(config: HypervectorStrategyConfig) -> int:
+    """Bar interval (ns) when bars are close-stamped, else 0."""
+    if str(getattr(config, "bar_timestamps", "close")) != "close":
+        return 0
+    try:
+        return int(pd.Timedelta(BarType.from_str(config.bar_type).spec.timedelta).value)
+    except Exception:
+        return 0
+
+
+def _position_record(event: Any) -> dict[str, Any]:
+    """Serializable record of one closed position cycle (NETTING)."""
+
+    def _f(value: Any) -> float:
+        try:
+            return (
+                float(value.as_double())
+                if hasattr(value, "as_double")
+                else float(value)
+            )
+        except (TypeError, ValueError):
+            return math.nan
+
+    return {
+        "side": str(getattr(event, "side", "")).split(".")[-1],
+        "ts_opened": int(getattr(event, "ts_opened", 0) or 0),
+        "ts_closed": int(getattr(event, "ts_closed", 0) or 0),
+        "peak_qty": _f(getattr(event, "peak_qty", math.nan)),
+        "avg_px_open": _f(getattr(event, "avg_px_open", math.nan)),
+        "avg_px_close": _f(getattr(event, "avg_px_close", math.nan)),
+        "realized_pnl": _f(getattr(event, "realized_pnl", math.nan)),
+    }
 
 
 def _sizing_loadout_view(config: HypervectorStrategyConfig) -> StrategyLoadout:

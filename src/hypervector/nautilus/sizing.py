@@ -38,6 +38,20 @@ def exit_config_from_loadout(loadout: StrategyLoadout) -> ExitConfig:
     )
 
 
+def exit_config_from_dict(exits: dict[str, Any] | None) -> ExitConfig:
+    """Build :class:`ExitConfig` from a (normalized) strategy-config exits dict."""
+    raw = dict(exits or {})
+    defaults = ExitConfig()
+    return ExitConfig(
+        mode=str(raw.get("mode", defaults.mode)),  # type: ignore[arg-type]
+        sl_pct=float(raw.get("sl_pct", defaults.sl_pct)),
+        rr=float(raw.get("rr", defaults.rr)),
+        atr_length=int(raw.get("atr_length", defaults.atr_length)),
+        sl_atr_mult=float(raw.get("sl_atr_mult", defaults.sl_atr_mult)),
+        trail_atr_mult=float(raw.get("trail_atr_mult", defaults.trail_atr_mult)),
+    )
+
+
 def _risk_config_from_loadout(loadout: StrategyLoadout) -> RiskConfig:
     """Build :class:`RiskConfig` from loadout.risk with dataclass defaults."""
     raw: dict[str, Any] = dict(loadout.risk or {})

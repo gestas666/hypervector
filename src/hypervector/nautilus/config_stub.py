@@ -7,12 +7,20 @@ importable, so Phase 2 can wire a real engine later without inventing paths.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from hypervector.infra import paths_for
+from hypervector.nautilus.errors import UnknownStrategyError, UnsupportedNautilusSymbol
 from hypervector.nautilus.load_export import StrategyLoadout, load_strategy_loadout
+from hypervector.nautilus.venue_spec import (
+    research_symbol_to_instrument,
+    resolve_venue_spec,
+)
+
+_SIGNAL_PROBE_BARS = 600
 
 
 @dataclass(frozen=True)
@@ -69,12 +77,60 @@ def build_phase2_stub_config(
     root = Path(data_root)
     paths = paths_for(root)
     loadout = load_strategy_loadout(export_dir, strict=strict)
+    venue = "HYPERLIQUID"
     return Phase2StubConfig(
         loadout=loadout,
         data_root=root.resolve(),
         catalog_path=paths.nautilus_backtest.resolve(),
         log_path=paths.logs_nautilus.resolve(),
+        venue=venue,
+        instrument_id_hint=f"{research_symbol_to_instrument(loadout.symbol)}.{venue}",
     )
+
+
+def _timeframe_to_pandas_freq(timeframe: str) -> str:
+    m = re.fullmatch(r"\s*(\d+)\s*([mhd])\s*", str(timeframe).lower())
+    if not m:
+        raise ValueError(f"unsupported timeframe for signal probe: {timeframe!r}")
+    units = {"m": "min", "h": "h", "d": "D"}
+    return f"{m.group(1)}{units[m.group(2)]}"
+
+
+def signal_probe(
+    loadout: StrategyLoadout, *, bars: int = _SIGNAL_PROBE_BARS
+) -> dict[str, Any]:
+    """Dry-run the strategy builder with the export params on synthetic OHLCV.
+
+    Catches exports whose params the builder rejects (they would fail
+    ``nautilus run`` as a technical failure) at check time. Offline only.
+    """
+    from hypervector.data.sources import fixture_ohlcv
+    from hypervector.nautilus.signals import signals_from_ohlcv
+
+    try:
+        freq = _timeframe_to_pandas_freq(loadout.timeframe)
+        df = fixture_ohlcv(n_bars=int(bars), freq=freq, drift=5.0, wave_period=40)
+        frame = df.set_index("timestamp")[["open", "high", "low", "close", "volume"]]
+        entries, exits, direction = signals_from_ohlcv(
+            frame, loadout.strategy_name, dict(loadout.params)
+        )
+        if len(entries) != len(frame) or len(exits) != len(frame):
+            raise ValueError(
+                f"builder returned {len(entries)}/{len(exits)} rows for {len(frame)} bars"
+            )
+    except Exception as exc:
+        return {
+            "ok": False,
+            "bars": int(bars),
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+    return {
+        "ok": True,
+        "bars": int(bars),
+        "direction": str(direction),
+        "entries": int(entries.astype(bool).sum()),
+        "exits": int(exits.astype(bool).sum()),
+    }
 
 
 def try_import_nautilus_backtest_types() -> dict[str, Any]:
@@ -113,11 +169,47 @@ def phase2_check_report(
     data_root: Path | str = "data",
     strict: bool = True,
     probe_nautilus: bool = True,
+    probe_signals: bool = True,
 ) -> dict[str, Any]:
-    """Full CLI-oriented Phase 2 readiness report (offline)."""
+    """Full CLI-oriented Phase 2 readiness report (offline).
+
+    ``ok`` predicts ``nautilus run``: it is false when the symbol has no
+    known venue geometry or the strategy builder rejects the export params.
+    An unregistered strategy raises :class:`UnknownStrategyError` (an invalid
+    bundle, reported like a schema error).
+    """
+    from hypervector.nautilus.costs import (
+        resolve_phase2_conviction,
+        resolve_phase2_costs,
+    )
+    from hypervector.nautilus.signals import resolve_strategy_spec
+
     stub = build_phase2_stub_config(export_dir, data_root=data_root, strict=strict)
+    loadout = stub.loadout
+    try:
+        resolve_strategy_spec(loadout.strategy_name)
+    except KeyError:
+        raise UnknownStrategyError(loadout.export_dir, loadout.strategy_name) from None
+
+    try:
+        venue_spec: dict[str, Any] | None = resolve_venue_spec(
+            loadout.symbol, loadout.meta
+        ).to_dict()
+        unsupported_reason = None
+    except UnsupportedNautilusSymbol as exc:
+        venue_spec = None
+        unsupported_reason = str(exc)
+    conviction, conviction_source = resolve_phase2_conviction(loadout, None)
+
     report: dict[str, Any] = {
-        "ok": True,
+        "ok": unsupported_reason is None,
+        "strategy_registered": True,
+        "nautilus_run_supported": unsupported_reason is None,
+        "unsupported_reason": unsupported_reason,
+        "instrument": venue_spec,
+        "cost_model": resolve_phase2_costs(loadout).to_dict(),
+        "conviction": conviction,
+        "conviction_source": conviction_source,
         "phase2_stub": stub.to_dict(),
         # Honesty: paper/shadow dry-run is 'paper run' (not 'nautilus run').
         # Live execution is 'live start' with both authority flags.
@@ -145,6 +237,10 @@ def phase2_check_report(
             ),
         },
     }
+    if probe_signals:
+        report["signal_probe"] = signal_probe(loadout)
+        if not report["signal_probe"]["ok"]:
+            report["ok"] = False
     if probe_nautilus:
         try:
             report["nautilus_probe"] = try_import_nautilus_backtest_types()
