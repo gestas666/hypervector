@@ -54,7 +54,7 @@
       "options": {
         "dest": "instrument_id",
         "default": null,
-        "help": "Nautilus instrument id (default: <SYMBOL>-PERP.HYPERLIQUID)"
+        "help": "Nautilus instrument id (default: the id 'nautilus run' uses, <COIN>-PERP.HYPERLIQUID upper-cased, e.g. KPEPE-PERP.HYPERLIQUID)"
       }
     },
     {

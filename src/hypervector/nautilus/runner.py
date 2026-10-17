@@ -11,6 +11,16 @@ What the run models (all recorded in ``summary.json``):
 * costs: the export cost model (taker fee + slippage per side, post-run
   funding estimate) — :mod:`hypervector.nautilus.costs`;
 * conviction: explicit argument, else the export's conviction;
+* sizing: entry notional = size fraction x ``init_cash`` (``sizing_basis``),
+  VectorBT's non-compounding basis, so the ``parity`` block compares like
+  sizing;
+* fills: a bar offers a quarter of its volume per price level, so a large
+  order fills in pieces and the remainder one tick worse; those orders and
+  their extra cost are reported (``volume_capped_fills``);
+* brackets (``fixed_rr``/``atr``): Nautilus walks each bar open, high, low,
+  close, so a long whose SL and TP both lie inside one bar takes the TP where
+  VectorBT takes the SL; listed in ``event_venue_model_gaps`` and counted
+  (``bracket_same_bar_tp_fills``);
 * margin: ``StandardMarginModel`` with ``margin_init = 1 / sim leverage`` and
   the venue maintenance rate (Nautilus 1.230 neither denies nor liquidates
   margin-account orders in this bar sim; nothing here adds such a gate);
@@ -29,6 +39,7 @@ from __future__ import annotations
 import json
 import math
 import uuid
+from bisect import bisect_left
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -43,7 +54,14 @@ from nautilus_trader.core.uuid import UUID4
 from nautilus_trader.model import TraderId
 from nautilus_trader.model.currencies import USDT
 from nautilus_trader.model.data import BarType
-from nautilus_trader.model.enums import AccountType, OmsType
+from nautilus_trader.model.enums import (
+    AccountType,
+    OmsType,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+)
+from nautilus_trader.model.events import OrderFilled
 from nautilus_trader.model.identifiers import Venue
 from nautilus_trader.model.objects import Money
 
@@ -52,6 +70,7 @@ from hypervector.data.pipeline import load_research_history
 from hypervector.infra import ensure_data_layout
 from hypervector.nautilus.actor import (
     EXECUTION_MODE,
+    SIZING_BASIS,
     HypervectorStrategy,
     config_from_loadout,
 )
@@ -246,6 +265,10 @@ def run_phase2_backtest(
         conviction=float(conviction_value),
     )
     strategy = HypervectorStrategy(config=strategy_config)
+    # Same rule as the actor: SL/TP brackets unless the strategy owns exits.
+    brackets = not hypervelocity and str(
+        (strategy_config.exits or {}).get("mode")
+    ) in ("fixed_rr", "atr")
     signal_info = _prepare_signals(
         strategy,
         bars=bars,
@@ -318,6 +341,13 @@ def run_phase2_backtest(
             costs=costs,
             last_bar_close_ns=int(bars[-1].ts_event) if bars else 0,
         )
+        orders = list(engine.cache.orders())
+        volume_capped = _volume_capped_fills(orders)
+        same_bar_tp = (
+            _bracket_same_bar_tp_fills(orders, engine.cache, bars)
+            if brackets
+            else None
+        )
         engine_run_id = str(getattr(result, "run_id", "") or "")
     finally:
         engine.dispose()
@@ -331,6 +361,8 @@ def run_phase2_backtest(
     gaps = ["native_liquidation"]
     if hypervelocity:
         gaps.append("proportional_target_resize")
+    if brackets:
+        gaps.append("bracket_same_bar_sl_tp_ohlc_order")
     payload: dict[str, Any] = {
         "run_id": run_id,
         "engine_run_id": engine_run_id,
@@ -365,6 +397,9 @@ def run_phase2_backtest(
         "exit_mode": str((strategy_config.exits or {}).get("mode")),
         "trail_exit_model": TRAIL_EXIT_MODEL if strategy._trail_enabled else None,
         "trail_exits": int(strategy.trail_exits),
+        "bracket_same_bar_tp_fills": same_bar_tp,
+        "volume_capped_fills": volume_capped,
+        "sizing_basis": SIZING_BASIS,
         **signal_info,
         "bars": len(bars),
         "conviction": float(conviction_value),
@@ -545,8 +580,69 @@ def _parity_block(loadout: StrategyLoadout, outcome: dict[str, Any]) -> dict[str
         "export_net_pnl": export_pnl,
         "nautilus_pnl": outcome["pnl"],
         "pnl_delta": outcome["pnl"] - export_pnl if export_pnl is not None else None,
+        "sizing_basis": SIZING_BASIS,
         "note": "export metrics cover the research window; compare only like windows",
     }
+
+
+def _order_fills(order: Any) -> list[Any]:
+    return [event for event in order.events if isinstance(event, OrderFilled)]
+
+
+def _volume_capped_fills(orders: list[Any]) -> dict[str, Any]:
+    """Orders filled in more than one piece and the cost of the later pieces.
+
+    Bar execution offers a quarter of the bar volume per price level, so an
+    order larger than that fills its remainder one tick worse. ``extra_cost``
+    is that remainder's cost against the first fill price (report only).
+    """
+    count = 0
+    extra = 0.0
+    for order in orders:
+        fills = _order_fills(order)
+        if len(fills) < 2:
+            continue
+        count += 1
+        first = float(fills[0].last_px)
+        sign = 1.0 if order.side == OrderSide.BUY else -1.0
+        extra += sum(
+            sign * (float(f.last_px) - first) * float(f.last_qty) for f in fills[1:]
+        )
+    return {
+        "orders": count,
+        "extra_cost": extra,
+        "note": "remainder of a volume-capped bar fill, one tick worse per piece",
+    }
+
+
+def _bracket_same_bar_tp_fills(orders: list[Any], cache: Any, bars: list[Any]) -> int:
+    """TP fills on a bar whose range also reached the bracket's SL.
+
+    Nautilus walks a bar open, high, low, close and fills whichever level that
+    path meets first; VectorBT always takes the SL. Each count is a trade
+    that VectorBT would have exited at the stop (report only, never a gate).
+    """
+    closes = [int(bar.ts_event) for bar in bars]
+    count = 0
+    for order in orders:
+        if order.order_type != OrderType.LIMIT or order.status != OrderStatus.FILLED:
+            continue
+        linked = (cache.order(cid) for cid in (order.linked_order_ids or ()))
+        stop = next(
+            (o for o in linked if o is not None and o.order_type == OrderType.STOP_MARKET),
+            None,
+        )
+        if stop is None:
+            continue
+        i = bisect_left(closes, int(order.ts_last))
+        if i >= len(bars):
+            continue
+        bar, trigger = bars[i], float(stop.trigger_price)
+        if order.side == OrderSide.SELL:  # TP of a long; its SL sits below
+            count += float(bar.low) <= trigger
+        else:
+            count += float(bar.high) >= trigger
+    return count
 
 
 def _resolve_ohlcv(

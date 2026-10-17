@@ -53,6 +53,8 @@ if TYPE_CHECKING:
 
 DEFAULT_MAX_LOOKBACK = 2000
 EXECUTION_MODE = "phase2_historical"
+# Entry notional = size_frac x init_cash, as in the VectorBT research engine.
+SIZING_BASIS = "init_cash"
 
 Action = Literal["enter_long", "enter_short", "close", "hold"]
 
@@ -431,6 +433,10 @@ class HypervectorStrategy(Strategy):
         A level already at/through the last close cannot rest (the venue
         rejects a stop in the market); the exit is scheduled for the next bar's
         open instead, where VectorBT fills it.
+
+        The stop always covers the whole net position: a bar offers only part
+        of its volume per price level, so an entry can fill in pieces, and each
+        later piece resizes the resting stop (``on_position_changed``).
         """
         trail = self._trail
         if trail is None or self._trail_open_exit_ns is not None:
@@ -474,8 +480,20 @@ class HypervectorStrategy(Strategy):
                 f"{trail.direction} trigger={trigger} level={trail.stop_level:.8g}",
                 color=LogColor.GREEN,
             )
-        elif order.trigger_price != trigger and not order.is_pending_cancel:
-            self.modify_order(order, trigger_price=trigger)
+        elif not order.is_pending_cancel:
+            quantity = self._trail_quantity(order, instrument_id)
+            if quantity is not None or order.trigger_price != trigger:
+                self.modify_order(order, quantity=quantity, trigger_price=trigger)
+
+    def _trail_quantity(self, order: Any, instrument_id: InstrumentId) -> Quantity | None:
+        """New total quantity when the stop's open size differs from the position."""
+        net = self._open_quantity(instrument_id)
+        if net is None or order.leaves_qty == net:
+            return None
+        # Keep any part of the stop already filled in its total.
+        return self._make_qty(
+            instrument_id, float(order.filled_qty.as_double()) + float(net.as_double())
+        )
 
     def _schedule_trail_open_exit(self, trigger: Any) -> None:
         now = int(self.clock.timestamp_ns())
@@ -552,19 +570,12 @@ class HypervectorStrategy(Strategy):
         except Exception:
             return None
 
-    def _equity_estimate(self) -> float:
-        """Prefer portfolio mark equity when the engine is attached; else init_cash."""
-        try:
-            venue = None
-            if self._instrument_id is not None:
-                venue = self._instrument_id.venue
-            equity_map = self.portfolio.equity(venue)
-            if equity_map:
-                total = sum(float(m.as_double()) for m in equity_map.values())
-                if total > 0:
-                    return total
-        except Exception:
-            pass
+    def _sizing_cash(self) -> float:
+        """Notional basis of every entry: ``init_cash`` (:data:`SIZING_BASIS`).
+
+        VectorBT sizes each trade as ``size x init_cash`` (non-compounding), so
+        the replay does too; current equity never scales an entry.
+        """
         summary = self.config.loadout_summary or {}
         init = summary.get("init_cash")
         if init is not None:
@@ -590,12 +601,12 @@ class HypervectorStrategy(Strategy):
         else:
             df = frame if frame is not None else _bars_to_ohlcv_df(self._bar_buffer)
             stop_frac, tp_frac = _stop_tp_fracs(df, self.config.exits)
-        equity = self._equity_estimate()
+        cash = self._sizing_cash()
 
         # Build a minimal loadout-shaped object for sizing (fields only).
         loadout = _sizing_loadout_view(self.config)
         size_frac = position_size_frac(
-            equity,
+            cash,
             stop_frac=max(stop_frac, 1e-6),
             loadout=loadout,
             conviction=float(self.config.conviction),
@@ -608,7 +619,7 @@ class HypervectorStrategy(Strategy):
             )
             return
 
-        notional = equity * float(size_frac)
+        notional = cash * float(size_frac)
         qty_raw = notional / price
         qty = self._make_qty(instrument_id, qty_raw)
         if qty is None:
@@ -788,12 +799,30 @@ class HypervectorStrategy(Strategy):
             f"px={event.last_px}",
             color=LogColor.YELLOW,
         )
+        # The cache already holds the post-fill position (portfolio net
+        # positions update later, on the position event). A stop that covered
+        # less than the position must not leave an unprotected remainder:
+        # VectorBT exits the whole position on the stop bar, so flatten it now.
+        position = self.cache.position(event.position_id)
+        if position is not None and position.is_open:
+            self.log.warning(
+                f"execution_mode={self.execution_mode} trail stop left "
+                f"{position.quantity} open: closing the remainder"
+            )
+            self._close_position(event.instrument_id)
 
     def on_position_opened(self, event: Any) -> None:
         self._pending_entry = False
         self.positions_opened += 1
         if self._trail is not None:
             self._sync_trail_order(event.instrument_id)
+
+    def on_position_changed(self, event: Any) -> None:
+        """Resize the resting trail stop when a later fill changes the position."""
+        order = self._trail_order
+        if self._trail is None or order is None or order.is_closed:
+            return
+        self._sync_trail_order(event.instrument_id)
 
     def on_position_closed(self, event: Any) -> None:
         self._pending_entry = False

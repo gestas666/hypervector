@@ -35,21 +35,27 @@ _MAX_PRICE_DECIMALS = 9
 
 
 def venue_coin(symbol: str) -> str | None:
-    """Hyperliquid venue name for a research symbol (``kPEPE-PERP`` -> ``kPEPE``)."""
-    from hypervector.data.hl import hl_coin
+    """Hyperliquid venue name for a research symbol (``kPEPE-PERP`` -> ``kPEPE``).
 
-    try:
-        coin = hl_coin(str(symbol))
-    except ValueError:
-        return None
-    return coin or None
+    The same key ``nautilus run`` resolves (``venue_spec.venue_coin_name``),
+    so the ``meta.instrument.name`` written here always matches it.
+    """
+    from hypervector.nautilus.venue_spec import venue_coin_name
+
+    raw = str(symbol).strip()
+    if ":" in raw:
+        from hypervector.data.oxa_api import validate_hip3_symbol
+
+        try:
+            validate_hip3_symbol(raw)
+        except ValueError:
+            return None
+    return venue_coin_name(raw) or None
 
 
 def _candidate_coins(symbol: str) -> list[str]:
-    # The symbol as written wins (venue names are exact), then its HL alias.
-    raw = str(symbol).strip()
-    alias = venue_coin(raw)
-    return [name for name in dict.fromkeys((raw, alias)) if name]
+    coin = venue_coin(symbol)
+    return [coin] if coin else []
 
 
 def needs_instrument_meta(symbol: str) -> bool:

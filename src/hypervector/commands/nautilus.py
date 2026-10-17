@@ -162,10 +162,16 @@ def cmd_catalog(args: argparse.Namespace) -> int:
         if args.out_dir is not None
         else root / "nautilus" / "catalog" / symbol
     )
-    instrument_id = args.instrument_id or f"{symbol}-PERP.HYPERLIQUID"
-
     from hypervector.data.event_archive import EventArchive
     from hypervector.nautilus.hl_catalog import write_hyperliquid_catalog
+    from hypervector.nautilus.venue_spec import research_symbol_to_instrument
+
+    # Default to the id 'nautilus run' builds for this coin (upper-cased), so
+    # catalog data attaches to the run's instrument; the archive path below
+    # keeps the venue's exact case.
+    instrument_id = (
+        args.instrument_id or f"{research_symbol_to_instrument(symbol)}.HYPERLIQUID"
+    )
 
     result = write_hyperliquid_catalog(
         archive=EventArchive(

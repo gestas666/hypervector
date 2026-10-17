@@ -21,6 +21,7 @@ metadata claims more.
 
 from __future__ import annotations
 
+import re
 from dataclasses import asdict, dataclass
 from typing import Any, Mapping
 
@@ -46,7 +47,12 @@ _BUILTIN_VENUE: dict[str, tuple[int, float]] = {
 _BTC_STUB_PRICE_DECIMALS = 1
 _BTC_STUB_SIZE_DECIMALS = 3
 
-_BTC_ALIASES = frozenset({"BTC", "BTCUSD", "BTCUSDT", "BTC-USD", "BTC-PERP", "BTCPERP"})
+# Research aliases carry a trailing perp marker and/or quote currency
+# (``ETHUSDT``, ``BTC-USD``, ``kPEPE-PERP``); only these suffixes are stripped.
+_PERP_SUFFIXES = ("-PERP", "PERP")
+_QUOTE_SUFFIXES = ("-USDT", "USDT", "-USD", "USD")
+# Hyperliquid 1000x contracts keep a lowercase ``k`` (``kPEPE``).
+_THOUSAND_COIN = re.compile(r"^k[A-Z0-9]+$")
 
 
 @dataclass(frozen=True)
@@ -72,21 +78,41 @@ class VenueInstrumentSpec:
         return out
 
 
+def _strip_suffix(value: str, suffixes: tuple[str, ...]) -> str:
+    for suffix in suffixes:
+        if value.endswith(suffix) and len(value) > len(suffix):
+            return value[: -len(suffix)]
+    return value
+
+
+def venue_coin_name(symbol: str) -> str:
+    """Hyperliquid venue coin for a research symbol (one key for export and run).
+
+    ``ETHUSDT`` / ``ETH-USD`` / ``ETH-PERP`` -> ``ETH``; ``kPEPE-PERP`` ->
+    ``kPEPE`` (1000x contracts keep their lowercase ``k``); HIP-3
+    ``dex:ASSET`` names are returned as written (less a ``-PERP`` suffix).
+    Only a trailing perp marker and a trailing quote currency are removed, so
+    a coin that merely contains ``USD`` (``SUSDE``) is never altered.
+    """
+    raw = str(symbol).strip()
+    if ":" in raw:
+        return _strip_suffix(raw, ("-PERP", "-perp"))
+    coin = _strip_suffix(_strip_suffix(raw.upper(), _PERP_SUFFIXES), _QUOTE_SUFFIXES)
+    if raw[:1] == "k" and raw[1 : len(coin)] == coin[1:]:
+        thousand = "k" + coin[1:]
+        if _THOUSAND_COIN.fullmatch(thousand):
+            return thousand
+    return coin
+
+
 def research_symbol_to_instrument(symbol: str) -> str:
-    """Research symbol -> Nautilus instrument symbol (``BTC`` -> ``BTC-PERP``)."""
-    s = str(symbol).strip().upper()
-    if s in {"BTC", "BTCUSD", "BTCUSDT", "BTC-USD"}:
-        return "BTC-PERP"
-    if s.endswith("-PERP"):
-        return s
-    if s.endswith("PERP") and "-" not in s:
-        return f"{s[:-4]}-PERP"
-    return f"{s}-PERP"
+    """Research symbol -> Nautilus instrument symbol (``BTCUSDT`` -> ``BTC-PERP``)."""
+    return f"{coin_for_symbol(symbol)}-PERP"
 
 
 def coin_for_symbol(symbol: str) -> str:
     """Upper-case venue coin key used for metadata lookup."""
-    return research_symbol_to_instrument(symbol).removesuffix("-PERP")
+    return venue_coin_name(symbol).upper()
 
 
 def charter_max_leverage(coin: str) -> float:
@@ -113,7 +139,7 @@ def resolve_venue_spec(
     if cached is not None:
         return _spec_from_cached(raw_symbol, coin, instrument_symbol, cached, cap)
 
-    if coin == "BTC" or raw_symbol.upper() in _BTC_ALIASES:
+    if coin == "BTC":
         return VenueInstrumentSpec(
             coin="BTC",
             instrument_symbol="BTC-PERP",
