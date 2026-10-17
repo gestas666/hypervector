@@ -1,0 +1,76 @@
+{
+  "schema": 2,
+  "help": "Public-wallet transition and sizing preflight for a candidate profile",
+  "description": "Compare a candidate profile with the active one against the active checkpoint and public venue state. Report-only; reads only the public wallet. Exit 0 ready, 3 not ready, 2 refused.",
+  "section": "transition",
+  "kind": "operation",
+  "operation": "hypervector.operations.multi_asset_bidirectional_preflight",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "type": "Path",
+        "default": null,
+        "help": "candidate cohort profile TOML"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--active-config"
+      ],
+      "options": {
+        "dest": "active_config",
+        "type": "Path",
+        "default": null,
+        "help": "cohort profile TOML the active run uses"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--checkpoint"
+      ],
+      "options": {
+        "dest": "checkpoint",
+        "type": "Path",
+        "default": null,
+        "help": "active run's report-only checkpoint JSON"
+      },
+      "data_default": "runtime/bidirectional_cohort/latest_checkpoint.json"
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "also write the preflight report JSON here"
+      },
+      "transport": "--output"
+    },
+    {
+      "flags": [
+        "--sizing-equity-usd"
+      ],
+      "options": {
+        "dest": "sizing_equity_usd",
+        "type": "float",
+        "default": null,
+        "help": "walk candidate sizing at this report-only equity in USD"
+      }
+    }
+  ]
+}

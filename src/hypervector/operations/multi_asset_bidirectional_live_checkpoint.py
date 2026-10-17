@@ -387,9 +387,12 @@ def _publish_real_snapshot(
         funding_evidence_fn=funding_fn,
         portfolio_archive=portfolio_archive,
         current_run_only=current_run_only,
+        # No journal (the default) means no asymmetric observer, exactly like
+        # --disable-asymmetric-forward-observer.
         asymmetric_forward_journal_path=(
             None
             if args.disable_asymmetric_forward_observer
+            or args.asymmetric_forward_journal is None
             else args.asymmetric_forward_journal
         ),
         accounting_epoch=_loaded_accounting_epoch(args),

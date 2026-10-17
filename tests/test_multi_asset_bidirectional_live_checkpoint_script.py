@@ -28,6 +28,9 @@ SCRIPT = (
 )
 
 
+_CHECKPOINT_CONFIG = ["--config", "configs/multi_asset_bidirectional_canary.toml"]
+
+
 def _load_module() -> ModuleType:
     spec = spec_from_file_location("multi_asset_live_checkpoint_script", SCRIPT)
     assert spec is not None and spec.loader is not None
@@ -56,8 +59,7 @@ def test_once_publishes_one_read_only_checkpoint(tmp_path: Path) -> None:
         out.write_text('{"status":"ready"}\n', encoding="utf-8")
         return {"status": "ready"}
 
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--ledger-root",
             str(tmp_path / "ledgers"),
             "--out",
@@ -89,7 +91,7 @@ def test_checkpoint_loop_refuses_a_second_writer_for_the_same_output(
     """A stale-looking artifact cannot acquire two concurrent publishers."""
     module = _load_module()
     output = tmp_path / "latest.json"
-    args = module.build_parser().parse_args(["--out", str(output), "--once"])
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--out", str(output), "--once"])
     lock_fn = getattr(runtime_lock, "cohort_checkpoint_runtime_lock", None)
     assert lock_fn is not None
 
@@ -105,8 +107,7 @@ def test_parser_accepts_repeated_supplemental_observer_paths() -> None:
     """Each explicitly configured report-only observer remains addressable."""
     module = _load_module()
 
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--supplemental-opportunity-matrix",
             "btc.json",
             "--supplemental-opportunity-matrix",
@@ -124,7 +125,7 @@ def test_parser_can_enable_exact_eligible_policy_forward_journal() -> None:
     """The report-only ETH lifecycle observer is an explicit sidecar option."""
     module = _load_module()
 
-    args = module.build_parser().parse_args(["--eligible-policy-forward"])
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--eligible-policy-forward"])
 
     assert args.eligible_policy_forward is True
 
@@ -133,7 +134,7 @@ def test_parser_can_disable_profile_specific_asymmetric_observer() -> None:
     """A successor sidecar can refuse inheritance of the frozen v25 observer."""
     module = _load_module()
 
-    args = module.build_parser().parse_args(["--disable-asymmetric-forward-observer"])
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--disable-asymmetric-forward-observer"])
 
     assert args.disable_asymmetric_forward_observer is True
 
@@ -163,19 +164,42 @@ def test_real_publisher_receives_exact_policy_observer_flag(
         return {"status": "ready"}
 
     module.publish_live_checkpoint = publish
-    args = module.build_parser().parse_args(
-        ["--eligible-policy-forward", "--once", "--out", str(tmp_path / "out.json")]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--eligible-policy-forward", "--once", "--out", str(tmp_path / "out.json")]
     )
 
     module._publish_snapshot(args, publish, None, funding_fn)
 
-    assert forwarded == [
-        (
-            True,
-            funding_fn,
-            Path("docs/research-journal/cohort-asymmetric-shared-portfolio-v1.json"),
-        )
-    ]
+    # No journal is given, so the asymmetric observer stays off (the default).
+    assert forwarded == [(True, funding_fn, None)]
+
+
+def test_real_publisher_forwards_an_explicit_asymmetric_journal(
+    tmp_path: Path,
+) -> None:
+    """The asymmetric observer runs only when its journal is named explicitly."""
+    module = _load_module()
+    forwarded: list[object] = []
+
+    def publish(_root: Path, _out: Path, **kwargs: object) -> dict[str, object]:
+        forwarded.append(kwargs.get("asymmetric_forward_journal_path"))
+        return {"status": "ready"}
+
+    module.publish_live_checkpoint = publish
+    journal = tmp_path / "asymmetric.json"
+    args = module.build_parser().parse_args(
+        _CHECKPOINT_CONFIG
+        + ["--asymmetric-forward-journal", str(journal), "--out", str(tmp_path / "o")]
+    )
+    module._publish_snapshot(args, publish, None, None)
+    assert forwarded == [journal]
+
+
+def test_checkpoint_requires_an_explicit_profile() -> None:
+    """The deleted canary default is gone: a checkpoint names its exact profile."""
+    module = _load_module()
+    with pytest.raises(SystemExit) as exc:
+        module.build_parser().parse_args(["--once"])
+    assert exc.value.code == 2
 
 
 def test_real_publisher_omits_disabled_asymmetric_observer(tmp_path: Path) -> None:
@@ -192,8 +216,7 @@ def test_real_publisher_omits_disabled_asymmetric_observer(tmp_path: Path) -> No
         return {"status": "ready"}
 
     module.publish_live_checkpoint = publish
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--disable-asymmetric-forward-observer",
             "--once",
             "--out",
@@ -248,8 +271,7 @@ def test_once_syncs_cohort_evidence_when_database_is_explicit(tmp_path: Path) ->
         sync_calls.append((database, root))
         return {"imported_events": 3}
 
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--ledger-root",
             str(ledger_root),
             "--out",
@@ -285,8 +307,7 @@ def test_research_sync_precedes_archive_checkpoint_publication(tmp_path: Path) -
         order.append("sync")
         return {"imported_events": 1}
 
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--research-database",
             str(tmp_path / "market.duckdb"),
             "--out",
@@ -319,8 +340,7 @@ def test_research_sync_forwards_worker_archive_without_in_process_database_read(
         return {"imported_events": 3, "portfolio_archive": archive}
 
     module.publish_live_checkpoint = publish
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--research-database",
             str(tmp_path / "market.duckdb"),
             "--out",
@@ -411,8 +431,7 @@ def test_background_research_sync_does_not_block_checkpoint_publication(
         assert release.wait(timeout=2.0)
         return {"imported_events": 4, "portfolio_archive": archive}
 
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--research-database",
             str(tmp_path / "market.duckdb"),
             "--research-sync-interval-seconds",
@@ -454,8 +473,7 @@ def test_real_publisher_receives_durable_portfolio_archive(tmp_path: Path) -> No
         return {"status": "ready"}
 
     module.publish_live_checkpoint = publish
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--research-database",
             str(tmp_path / "market.duckdb"),
             "--once",
@@ -495,7 +513,7 @@ def test_continuous_real_publisher_uses_cached_complete_history(
         return {"status": "ready"}
 
     module.publish_live_checkpoint = publish
-    args = module.build_parser().parse_args(["--out", str(output)])
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--out", str(output)])
 
     module._publish_snapshot(args, publish, None, None, None)
 
@@ -536,7 +554,7 @@ def test_continuous_publisher_refreshes_full_history_after_new_fill(
         return {"status": "ready"}
 
     module.publish_live_checkpoint = publish
-    args = module.build_parser().parse_args(["--out", str(output)])
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--out", str(output)])
 
     module._publish_snapshot(args, publish, None, None, None)
 
@@ -567,8 +585,7 @@ def test_venue_portfolio_flag_adds_read_only_value_to_each_checkpoint(
         forwarded.append(venue_portfolio)
         return {"status": "ready"}
 
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--venue-portfolio",
             "--out",
             str(tmp_path / "latest.json"),
@@ -610,8 +627,7 @@ def test_once_reports_research_sync_failure_without_masking_it(
     def fail(_database: Path, _root: Path) -> dict[str, int]:
         raise module.ResearchSyncError("database locked")
 
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--ledger-root",
             str(tmp_path / "ledgers"),
             "--out",
@@ -642,8 +658,7 @@ def test_once_publishes_explicit_unavailable_status(tmp_path: Path) -> None:
         del run_id, config_path, venue_portfolio
         raise FileNotFoundError("asset ledgers not ready")
 
-    args = module.build_parser().parse_args(
-        ["--ledger-root", str(tmp_path / "ledgers"), "--out", str(output), "--once"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--ledger-root", str(tmp_path / "ledgers"), "--out", str(output), "--once"]
     )
 
     assert module.run_checkpoint_loop(args, publish_fn=missing) == 2
@@ -685,8 +700,7 @@ def test_once_retries_a_transient_cross_ledger_snapshot(
         out.write_text('{"status":"ready"}\n', encoding="utf-8")
         return {"status": "ready"}
 
-    args = module.build_parser().parse_args(
-        ["--ledger-root", str(ledgers), "--out", str(output), "--once"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--ledger-root", str(ledgers), "--out", str(output), "--once"]
     )
 
     assert (
@@ -729,8 +743,7 @@ def test_failed_refresh_retains_last_complete_live_checkpoint(
         del run_id, config_path, venue_portfolio
         raise ValueError("HYPE open lifecycle lacks a current position")
 
-    args = module.build_parser().parse_args(
-        ["--ledger-root", str(tmp_path / "ledgers"), "--out", str(output), "--once"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--ledger-root", str(tmp_path / "ledgers"), "--out", str(output), "--once"]
     )
 
     assert module.run_checkpoint_loop(args, publish_fn=inconsistent) == 2
@@ -794,8 +807,7 @@ def test_deterministic_refresh_failure_is_not_retried_over_unchanged_ledgers(
     publish = _scripted_publisher(
         [ValueError("routing cycle is missing funding boundary")], calls
     )
-    args = module.build_parser().parse_args(
-        ["--ledger-root", str(_single_ledger(tmp_path)), "--out", str(output), "--once"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--ledger-root", str(_single_ledger(tmp_path)), "--out", str(output), "--once"]
     )
 
     assert (
@@ -824,8 +836,7 @@ def test_repeated_value_error_is_not_retried_while_ledgers_append(
         calls,
         append_to=ledgers / "decisions.jsonl",
     )
-    args = module.build_parser().parse_args(
-        ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out"), "--once"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out"), "--once"]
     )
 
     assert (
@@ -847,8 +858,7 @@ def test_changing_value_errors_during_appends_stay_bounded(tmp_path: Path) -> No
         calls,
         append_to=ledgers / "decisions.jsonl",
     )
-    args = module.build_parser().parse_args(
-        ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out"), "--once"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out"), "--once"]
     )
 
     assert (
@@ -877,8 +887,7 @@ def test_failure_repeating_previous_cycle_is_attempted_once(tmp_path: Path) -> N
         if sleeps.count(30.0) == 4:
             raise RuntimeError("bounded test stop")
 
-    args = module.build_parser().parse_args(
-        ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out")]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out")]
     )
 
     with pytest.raises(RuntimeError, match="bounded test stop"):
@@ -900,8 +909,7 @@ def test_unstatable_ledger_keeps_bounded_value_error_retries(tmp_path: Path) -> 
     publish = _scripted_publisher(
         [ValueError(f"checkpoint race {index}") for index in range(5)], calls
     )
-    args = module.build_parser().parse_args(
-        ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out"), "--once"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out"), "--once"]
     )
 
     assert (
@@ -919,8 +927,7 @@ def test_missing_startup_ledger_is_still_retried(tmp_path: Path) -> None:
     calls: list[int] = []
     delays: list[float] = []
     publish = _scripted_publisher([FileNotFoundError("asset ledgers not ready")], calls)
-    args = module.build_parser().parse_args(
-        ["--ledger-root", str(_single_ledger(tmp_path)), "--out", str(output), "--once"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--ledger-root", str(_single_ledger(tmp_path)), "--out", str(output), "--once"]
     )
 
     assert (
@@ -938,7 +945,7 @@ def test_missing_startup_ledger_is_still_retried(tmp_path: Path) -> None:
 def test_parser_throttles_research_import_without_changing_checkpoint_cadence() -> None:
     """The 120 s import check and 30 s checkpoint stay; only the import waits."""
     module = _load_module()
-    args = module.build_parser().parse_args(["--research-sync-interval-seconds", "120"])
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--research-sync-interval-seconds", "120"])
 
     assert args.interval_seconds == 30.0
     assert args.research_sync_interval_seconds == 120.0
@@ -972,7 +979,8 @@ def test_invalid_research_import_thresholds_fail_before_publication(
     module = _load_module()
     output = tmp_path / "latest.json"
 
-    assert module.main(["--out", str(output), "--once", flag, value]) == 2
+    argv = [*_CHECKPOINT_CONFIG, "--out", str(output), "--once", flag, value]
+    assert module.main(argv) == 2
     assert f"cohort checkpoint failed: {error}" in capsys.readouterr().err
     assert not output.exists()
 
@@ -989,8 +997,7 @@ def test_continuous_research_import_uses_cli_thresholds(
     )
     ledgers = _single_ledger(tmp_path)
     calls: list[int] = []
-    args = module.build_parser().parse_args(
-        [
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
             "--ledger-root",
             str(ledgers),
             "--out",

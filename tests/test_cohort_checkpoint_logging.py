@@ -16,6 +16,9 @@ SCRIPT = (
 )
 
 
+_CHECKPOINT_CONFIG = ["--config", "configs/multi_asset_bidirectional_canary.toml"]
+
+
 def _load_module() -> ModuleType:
     spec = spec_from_file_location("cohort_checkpoint_logging_script", SCRIPT)
     assert spec is not None and spec.loader is not None
@@ -58,7 +61,7 @@ def test_historical_refresh_is_a_structured_stderr_event(
     monkeypatch.setattr(
         module, "publish_rolling_checkpoint", lambda *args, **kwargs: True
     )
-    args = module.build_parser().parse_args([])
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [])
 
     module._publish_real_snapshot(args, lambda *args, **kwargs: {}, None, None, None)
 

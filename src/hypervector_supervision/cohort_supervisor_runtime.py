@@ -55,7 +55,8 @@ from hypervector_supervision.cohort_supervisor_observation import (
 HELD_AT_START_TITLE = "HYPERVECTOR SUPERVISOR HELD AT START"
 HELD_TITLE = "HYPERVECTOR SUPERVISOR HELD"
 RELAUNCHING_AFTER_HOST_RESTART_TITLE = "HYPERVECTOR RELAUNCHING AFTER HOST RESTART"
-RESUME_HELPER = "scripts/cohort_resume_after_reboot.py"
+RESUME_HELPER = "python -m hypervector live supervisor resume"
+RESUME_AUTHORITY = "--yes --enabled --i-accept-live-risk"
 
 
 def supervise(
@@ -281,7 +282,10 @@ class _Session:
                 "restart journal, then restart the supervisor"
             )
         elif resumable:
-            body = f"{reason}; after checks run {RESUME_HELPER}"
+            body = (
+                f"{reason}; run {RESUME_HELPER} as a dry run first, then "
+                f"with {RESUME_AUTHORITY}"
+            )
         else:
             body = f"{reason}; archive the restart journal to resume"
         record = {

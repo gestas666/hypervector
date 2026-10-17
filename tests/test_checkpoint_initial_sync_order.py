@@ -16,6 +16,9 @@ SCRIPT = (
 )
 
 
+_CHECKPOINT_CONFIG = ["--config", "configs/multi_asset_bidirectional_canary.toml"]
+
+
 def _load_module() -> ModuleType:
     spec = spec_from_file_location("checkpoint_initial_sync_order", SCRIPT)
     assert spec is not None and spec.loader is not None
@@ -57,8 +60,7 @@ def test_initial_sync_publishes_bounded_current_run_without_archive(
         "_publish_once",
         lambda *_args, **kwargs: published.append(kwargs),
     )
-    args = module.build_parser().parse_args(
-        ["--research-database", str(tmp_path / "market.duckdb")]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--research-database", str(tmp_path / "market.duckdb")]
     )
 
     with pytest.raises(RuntimeError, match="bounded test stop"):

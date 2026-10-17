@@ -1,0 +1,41 @@
+{
+  "schema": 2,
+  "help": "Verified pre-change implementation and profile backup (observe mode)",
+  "description": "Capture and independently verify the implementation sources and the profile's ledgers before a change. Credential-free; claims no live run identity. Exit 0 verified, 2 refused.",
+  "section": "transition",
+  "kind": "operation",
+  "operation": "hypervector.operations.cohort_prechange_backup",
+  "authority": "none",
+  "environment": [],
+  "data_root": "refused",
+  "data_root_reason": "the backup reads the profile's own ledgers and the repository",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "type": "Path",
+        "default": null,
+        "help": "cohort profile TOML to back up"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--backtest-lab-root"
+      ],
+      "options": {
+        "dest": "backtest_lab_root",
+        "type": "Path",
+        "default": "../backtest-lab/backtest_lab",
+        "help": "backtest-lab provider package directory"
+      }
+    }
+  ]
+}

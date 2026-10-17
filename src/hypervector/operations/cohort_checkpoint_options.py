@@ -7,12 +7,8 @@ from pathlib import Path
 
 _DEFAULT_LEDGER_ROOT = Path("data/live/bidirectional_cohort")
 _DEFAULT_OUTPUT = Path("data/runtime/bidirectional_cohort/latest_checkpoint.json")
-_DEFAULT_CONFIG = Path("configs/multi_asset_bidirectional_canary.toml")
 _DEFAULT_OPPORTUNITY_MATRIX = Path(
     "data/runtime/bidirectional_cohort/latest_opportunity_matrix.json"
-)
-_DEFAULT_ASYMMETRIC_FORWARD_JOURNAL = Path(
-    "docs/research-journal/cohort-asymmetric-shared-portfolio-v1.json"
 )
 _RESEARCH_SYNC_MIN_PENDING_BYTES = 4 * 1024 * 1024
 _RESEARCH_SYNC_MAX_AGE_SECONDS = 600.0
@@ -23,7 +19,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ledger-root", type=Path, default=_DEFAULT_LEDGER_ROOT)
     parser.add_argument("--out", type=Path, default=_DEFAULT_OUTPUT)
-    parser.add_argument("--config", type=Path, default=_DEFAULT_CONFIG)
+    parser.add_argument(
+        "--config",
+        type=Path,
+        required=True,
+        help="exact cohort profile the observed run uses",
+    )
     parser.add_argument("--run-id")
     parser.add_argument("--follow-latest-run", action="store_true")
     parser.add_argument("--interval-seconds", type=float, default=30.0)
@@ -48,8 +49,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--asymmetric-forward-journal",
         type=Path,
-        default=_DEFAULT_ASYMMETRIC_FORWARD_JOURNAL,
-        help="attach the frozen report-only asymmetric portfolio observer",
+        default=None,
+        help="attach the frozen report-only asymmetric portfolio observer "
+        "(default: none, observer off)",
     )
     parser.add_argument(
         "--disable-asymmetric-forward-observer",

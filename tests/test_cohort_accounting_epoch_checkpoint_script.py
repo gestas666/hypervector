@@ -23,6 +23,9 @@ SCRIPT = (
 EPOCH = CohortAccountingEpoch("growth_5000_v49", "a" * 64, 1_786_579_200_000)
 
 
+_CHECKPOINT_CONFIG = ["--config", "configs/multi_asset_bidirectional_canary.toml"]
+
+
 def _load() -> ModuleType:
     spec = spec_from_file_location("accounting_epoch_checkpoint_script", SCRIPT)
     assert spec is not None and spec.loader is not None
@@ -35,8 +38,7 @@ def _load() -> ModuleType:
 def test_parser_accepts_one_explicit_accounting_epoch_bundle() -> None:
     module = _load()
 
-    args = module.build_parser().parse_args(
-        ["--accounting-epoch-bundle", "data/backups/epoch-v49"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--accounting-epoch-bundle", "data/backups/epoch-v49"]
     )
 
     assert args.accounting_epoch_bundle == Path("data/backups/epoch-v49")
@@ -44,8 +46,7 @@ def test_parser_accepts_one_explicit_accounting_epoch_bundle() -> None:
 
 def test_accounting_epoch_requires_the_research_archive_worker() -> None:
     module = _load()
-    args = module.build_parser().parse_args(
-        ["--accounting-epoch-bundle", "data/backups/epoch-v49"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--accounting-epoch-bundle", "data/backups/epoch-v49"]
     )
 
     with pytest.raises(ValueError, match="requires --research-database"):

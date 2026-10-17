@@ -12,8 +12,8 @@ import subprocess
 
 import pytest
 
-import cohort_resume_after_reboot as helper
-from cohort_supervisor_host import BootIdentity
+import hypervector_supervision.cohort_resume_after_reboot as helper
+from hypervector_supervision.cohort_supervisor_host import BootIdentity
 from test_cohort_backend_supervisor import _paths
 
 OLD_SESSION = "11111111-2222-4333-8444-555555555555"
@@ -373,9 +373,62 @@ def test_ps_output_is_parsed_for_the_backend_entry_point() -> None:
     assert helper.backend_pids_from_ps(output, own_pid=505) == [101, 404]
 
 
+def test_ps_scan_sees_the_packaged_module_form_backend() -> None:
+    """'live start' execs 'python -m <module>'; the scan must count it (ALL-133)."""
+    module = "hypervector.operations.multi_asset_bidirectional_live"
+    output = "\n".join(
+        [
+            f"  111 /repo/.venv/bin/python -m {module} --config v.toml --enabled",
+            f"  222 /repo/.venv/bin/python -u -m {module}",
+            "  333 /repo/.venv/bin/python -m hypervector live start --config v.toml",
+            "  444 /repo/.venv/bin/python -c 'import multi_asset_bidirectional_live'",
+            # The held supervisor names the backend only after its '--' separator.
+            "  555 python scripts/cohort_backend_supervisor.py supervise --interval 30"
+            " -- python -u scripts/multi_asset_bidirectional_live.py --config v.toml",
+        ]
+    )
+    assert helper.backend_pids_from_ps(output, own_pid=1) == [111, 222]
+
+
 def test_the_default_is_a_dry_run() -> None:
     assert helper.build_parser().parse_args([]).yes is False
     assert helper.build_parser().parse_args(["--yes"]).yes is True
+
+
+@pytest.mark.parametrize(
+    "flags",
+    [["--yes"], ["--yes", "--enabled"], ["--yes", "--i-accept-live-risk"]],
+)
+def test_yes_without_both_authority_flags_is_refused_before_any_check(
+    flags: list[str],
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The kickstart starts the armed backend, so --yes needs live authority."""
+    calls: list[object] = []
+    monkeypatch.setattr(helper, "resume", lambda *a, **k: calls.append((a, k)) or 0)
+    assert helper.main(flags) == 2
+    assert calls == []
+    err = capsys.readouterr().err
+    assert "--enabled" in err and "--i-accept-live-risk" in err
+
+
+@pytest.mark.parametrize(
+    ("flags", "yes"),
+    [([], False), (["--yes", "--enabled", "--i-accept-live-risk"], True)],
+)
+def test_dry_run_and_authorized_yes_reach_the_checks(
+    flags: list[str], yes: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[bool] = []
+
+    def fake_resume(_paths: object, _host: object, *, yes: bool) -> int:
+        seen.append(yes)
+        return helper.EXIT_READY
+
+    monkeypatch.setattr(helper, "resume", fake_resume)
+    assert helper.main(flags) == helper.EXIT_READY
+    assert seen == [yes]
 
 
 # --------------------------------------------------------------------------- #

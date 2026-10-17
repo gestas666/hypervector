@@ -1,0 +1,29 @@
+{
+  "schema": 2,
+  "help": "Verify an immutable cohort backup bundle without restoring anything",
+  "section": "transition",
+  "kind": "operation",
+  "operation": "hypervector.operations.cohort_prestart_backup_verify",
+  "authority": "none",
+  "environment": [],
+  "data_root": "refused",
+  "data_root_reason": "the bundle is an explicit path",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--bundle"
+      ],
+      "options": {
+        "dest": "bundle",
+        "type": "Path",
+        "default": null,
+        "help": "backup bundle directory to verify"
+      },
+      "required": true
+    }
+  ]
+}

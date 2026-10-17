@@ -12,7 +12,9 @@ from hypervector.data.oxa_storage import write_immutable_json
 from hypervector.research.cohort_observer_audit import audit_cohort_observer_run
 from hypervector.research.live_ledger_snapshot import snapshot_decision_ledger
 
-_DEFAULT_DECISIONS = Path("data/live/bidirectional_cohort/decisions.jsonl")
+# The paper observer ledger (paper observe's default ledger root), never the
+# live cohort ledger.
+_DEFAULT_DECISIONS = Path("data/paper/cohort/decisions.jsonl")
 
 
 def build_parser() -> argparse.ArgumentParser:

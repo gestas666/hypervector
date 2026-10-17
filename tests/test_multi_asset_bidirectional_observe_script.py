@@ -36,9 +36,11 @@ def test_observer_command_exposes_no_live_authority_flags() -> None:
     assert "--resume-run-id" in options
     assert "--enabled" not in options
     assert "--i-accept-live-risk" not in options
-    assert parser.parse_args([]).config == Path(
-        "configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml"
-    )
+    # The deleted-profile default is gone: the observed profile is explicit.
+    with pytest.raises(SystemExit) as exc:
+        parser.parse_args([])
+    assert exc.value.code == 2
+    assert parser.parse_args(["--config", "p.toml"]).config == Path("p.toml")
 
 
 def test_observer_requires_explicit_resume_for_existing_ledger(

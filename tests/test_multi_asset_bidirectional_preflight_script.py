@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import ast
-from importlib.util import module_from_spec, spec_from_file_location
+from importlib import import_module
 import json
 from pathlib import Path
-import sys
 from types import ModuleType
 
 import pytest
@@ -18,8 +17,10 @@ from hypervector.live.multi_asset_live_config import (
 )
 from hypervector.live.multi_asset_read_only_preflight import AssetLedgerExpectation
 
+_MODULE = "hypervector.operations.multi_asset_bidirectional_preflight"
 _SCRIPT = (
-    Path(__file__).parents[1] / "scripts" / "multi_asset_bidirectional_preflight.py"
+    Path(__file__).parents[1]
+    / "src/hypervector/operations/multi_asset_bidirectional_preflight.py"
 )
 _V95 = Path("configs/multi_asset_growth_first_5000_review_fixes_v95.toml")
 _V94 = Path("configs/multi_asset_growth_first_5000_review_actions_v94.toml")
@@ -33,12 +34,7 @@ _V51 = Path(
 
 
 def _load_module() -> ModuleType:
-    spec = spec_from_file_location("multi_asset_bidirectional_preflight", _SCRIPT)
-    assert spec is not None and spec.loader is not None
-    module = module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+    return import_module(_MODULE)
 
 
 @pytest.mark.parametrize("path", (_SCRIPT, Path(__file__)))
@@ -441,9 +437,7 @@ def test_main_reports_missing_public_wallet_without_traceback(
         "run_preflight",
         lambda args: (_ for _ in ()).throw(SolSdkFactoryError("wallet missing")),
     )
-    monkeypatch.setattr(sys, "argv", [str(_SCRIPT)])
-
-    result = module.main()
+    result = module.main(["--config", str(_V95), "--active-config", str(_V94)])
 
     captured = capsys.readouterr()
     assert result == 2

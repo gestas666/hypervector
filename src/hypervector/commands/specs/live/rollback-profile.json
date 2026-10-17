@@ -1,0 +1,137 @@
+{
+  "schema": 2,
+  "help": "Author or verify an approved rollback profile; starts nothing",
+  "description": "Author mode (--target --name --operator-approval) writes a rollback profile and its approval, then dry-runs the start offline; --verify re-runs the dry run for an existing pair. Exit 0 accepted, 2 refused.",
+  "section": "transition",
+  "kind": "operation",
+  "operation": "hypervector.operations.cohort_rollback_profile",
+  "authority": "none",
+  "environment": [],
+  "data_root": "refused",
+  "data_root_reason": "profiles and approvals are repository files",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--current"
+      ],
+      "options": {
+        "dest": "current",
+        "type": "Path",
+        "default": null,
+        "help": "profile TOML the live cohort runs now"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--target"
+      ],
+      "options": {
+        "dest": "target",
+        "type": "Path",
+        "default": null,
+        "help": "author mode: profile TOML to roll back to"
+      }
+    },
+    {
+      "flags": [
+        "--name"
+      ],
+      "options": {
+        "dest": "name",
+        "default": null,
+        "help": "author mode: base filename for the profile and approval"
+      }
+    },
+    {
+      "flags": [
+        "--operator-approval"
+      ],
+      "options": {
+        "dest": "operator_approval",
+        "default": null,
+        "help": "author mode: the operator's exact approving words"
+      }
+    },
+    {
+      "flags": [
+        "--approved-by"
+      ],
+      "options": {
+        "dest": "approved_by",
+        "default": "operator_in_conversation",
+        "help": "author mode: who approved the rollback"
+      }
+    },
+    {
+      "flags": [
+        "--approved-at"
+      ],
+      "options": {
+        "dest": "approved_at",
+        "default": null,
+        "help": "author mode: ISO-8601 approval time with offset (default: now)"
+      }
+    },
+    {
+      "flags": [
+        "--evidence"
+      ],
+      "options": {
+        "dest": "evidence",
+        "type": "Path",
+        "action": "append",
+        "default": [],
+        "help": "author mode: extra recommendation evidence file (repeatable)"
+      }
+    },
+    {
+      "flags": [
+        "--verify"
+      ],
+      "options": {
+        "dest": "verify",
+        "type": "Path",
+        "default": null,
+        "help": "verify mode: existing rollback profile TOML to dry-run"
+      }
+    },
+    {
+      "flags": [
+        "--config-dir"
+      ],
+      "options": {
+        "dest": "config_dir",
+        "type": "Path",
+        "default": "configs",
+        "help": "directory for the authored rollback profile"
+      }
+    },
+    {
+      "flags": [
+        "--approval-dir"
+      ],
+      "options": {
+        "dest": "approval_dir",
+        "type": "Path",
+        "default": "docs/live-approvals",
+        "help": "directory for the authored approval JSON"
+      }
+    },
+    {
+      "flags": [
+        "--root"
+      ],
+      "options": {
+        "dest": "root",
+        "type": "Path",
+        "default": null,
+        "help": "checkout the profile paths are relative to (default: the repository root)"
+      }
+    }
+  ]
+}

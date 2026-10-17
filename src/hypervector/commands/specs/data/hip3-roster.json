@@ -1,0 +1,64 @@
+{
+  "schema": 2,
+  "help": "Publish the report-only HIP-3 roster checkpoint (public wallet only)",
+  "description": "Poll the qualified HIP-3 roster and publish a durable report-only checkpoint, streaming one JSON line per poll. It loads only the public wallet address and never builds an execution client. Exit 0 when any poll succeeded (or none ran), otherwise 1.",
+  "kind": "operation",
+  "operation": "hypervector.operations.hip3_roster_observer",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "roster checkpoint JSON to publish atomically"
+      },
+      "data_default": "runtime/research/hip3_roster_latest.json",
+      "transport": "--output"
+    },
+    {
+      "flags": [
+        "--interval-seconds"
+      ],
+      "options": {
+        "dest": "interval_seconds",
+        "type": "float",
+        "default": 120.0,
+        "help": "seconds between roster polls"
+      },
+      "transport": "--poll-seconds"
+    },
+    {
+      "flags": [
+        "--max-polls"
+      ],
+      "options": {
+        "dest": "max_polls",
+        "type": "int",
+        "default": null,
+        "help": "stop after this many polls (default: run until stopped)"
+      }
+    },
+    {
+      "flags": [
+        "--context-history"
+      ],
+      "options": {
+        "dest": "context_history",
+        "type": "Path",
+        "default": null,
+        "help": "directory for the rolling HIP-3 asset-context archive"
+      },
+      "data_default": "research/hip3_asset_context"
+    }
+  ]
+}

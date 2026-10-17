@@ -4,23 +4,18 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import UTC, datetime
-from importlib.util import module_from_spec, spec_from_file_location
+from importlib import import_module
 from pathlib import Path
 from types import ModuleType
 from collections.abc import Iterator
 
 from hypervector.live.cohort_transition_drain import CohortTransitionDrain
 
-SCRIPT = Path(__file__).parents[1] / "scripts/cohort_transition_drain_archive.py"
 _RUN = "bidirectional-live-1785934800000"
 
 
 def _load() -> ModuleType:
-    spec = spec_from_file_location("cohort_transition_drain_archive", SCRIPT)
-    assert spec is not None and spec.loader is not None
-    module = module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    return import_module("hypervector.operations.cohort_transition_drain_archive")
 
 
 def _completed(path: Path) -> None:

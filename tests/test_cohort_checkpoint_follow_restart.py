@@ -15,6 +15,9 @@ from test_multi_asset_bidirectional_live_checkpoint_script import _load_module
 _CONFIG = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml")
 
 
+_CHECKPOINT_CONFIG = ["--config", "configs/multi_asset_bidirectional_canary.toml"]
+
+
 def _snapshot(run_id: str) -> dict[str, object]:
     config = load_multi_asset_live_config(_CONFIG, mode="observe")
     return {
@@ -123,8 +126,7 @@ def test_cli_forwards_explicit_follow_mode(
         return False
 
     monkeypatch.setattr(module, "publish_rolling_checkpoint", rolling)
-    args = module.build_parser().parse_args(
-        ["--follow-latest-run", "--out", str(tmp_path / "latest.json")]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--follow-latest-run", "--out", str(tmp_path / "latest.json")]
     )
     module._publish_real_snapshot(
         args, module.publish_live_checkpoint, None, None, None
