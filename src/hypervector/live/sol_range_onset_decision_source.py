@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
+import hashlib
 import math
 
 import numpy as np
@@ -33,33 +38,209 @@ def build_completed_live_decisions(
         if after >= int((positions[-1] + _MINUTE).timestamp() * 1_000):
             return ()
         positions = positions[positions + _MINUTE > pd.Timestamp(after, unit="ms", tz="UTC")]
-    signals = build_range_onset_signals(bars)
+    # The unseen bars are a suffix of the completed window: a bad index is
+    # refused by the frame alignment check before any decision is made.
+    first = len(bars) - len(positions)
+    shared = _SHARED_DECISIONS.get()
+    key = _window_key(bars) if shared is not None else None
+    if shared is None or key is None:
+        return _decisions(_completed_frames(bars), first)
+    cached = shared.get(key)
+    if cached is not None and cached[0] <= first:
+        shared.move_to_end(key)
+        return cached[1][first - cached[0] :]
+    frames = _completed_frames(bars)
+    decisions = _decisions(frames, first)
+    shared[key] = _retained_suffix(frames, first, decisions)
+    while len(shared) > _SHARED_WINDOW_LIMIT:
+        shared.popitem(last=False)
+    return decisions
+
+
+_CompletedFrames = tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
+# Per poll: distinct windows remembered, and decisions kept for each. The
+# retained suffix covers every steady-state lookback (at most 61 bars), so one
+# frame build serves every consumer of a window; seed queries beyond it rebuild.
+_SHARED_WINDOW_LIMIT = 64
+_SHARED_DECISION_LIMIT = 128
+_SHARED_DECISIONS: ContextVar[
+    OrderedDict[tuple[object, ...], tuple[int, tuple[SolLiveDecision, ...]]] | None
+] = ContextVar("completed_decision_cycle", default=None)
+
+
+@contextmanager
+def shared_completed_decisions() -> Iterator[None]:
+    """Let consumers in one poll share decisions for bit-identical windows.
+
+    A decision depends only on the completed window and its bar position, so a
+    window already decided in this cycle answers later requests from the same
+    immutable decisions instead of rebuilding every indicator frame. Nothing is
+    shared outside the ``with`` block.
+    """
+    token = _SHARED_DECISIONS.set(OrderedDict())
+    try:
+        yield
+    finally:
+        _SHARED_DECISIONS.reset(token)
+
+
+def _completed_frames(bars: pd.DataFrame) -> _CompletedFrames:
+    """Build every indicator frame for one completed window, classifying once."""
     regimes = classify_multitimeframe(bars)
+    signals = build_range_onset_signals(bars, regimes=regimes)
     _validate_alignment(bars, signals, regimes)
     components = build_regime_component_frame(bars)
     _validate_alignment(bars, components, regimes)
+    return bars, signals, regimes, components
+
+
+def _decisions(frames: _CompletedFrames, first: int) -> tuple[SolLiveDecision, ...]:
+    """Decide every bar from ``first`` on, in order, raising at the first failure."""
+    readers = tuple(_RowReader(frame) for frame in frames)
+    index = frames[0].index
     decisions: list[SolLiveDecision] = []
-    for timestamp in positions:
-        decision_time = pd.Timestamp(timestamp) + _MINUTE
-        decision_ms = int(decision_time.timestamp() * 1_000)
-        decisions.append(
-            _decision_from_rows(
-                decision_ms,
-                bars.loc[timestamp],
-                signals.loc[timestamp],
-                regimes.loc[timestamp],
-                components.loc[timestamp],
-            )
-        )
+    for start in range(first, len(index), _ROW_CHUNK):
+        locations = np.arange(start, min(start + _ROW_CHUNK, len(index)))
+        rows = zip(*(reader.rows(locations) for reader in readers), strict=True)
+        for location, row in zip(locations, rows, strict=True):
+            decisions.append(_decision_at(index, int(location), row))
     return tuple(decisions)
+
+
+def _decision_at(
+    index: pd.Index, location: int, row: tuple[Mapping[str, object], ...]
+) -> SolLiveDecision:
+    decision_time = pd.Timestamp(index[location]) + _MINUTE
+    decision_ms = int(decision_time.timestamp() * 1_000)
+    return _decision_from_rows(decision_ms, *row)
+
+
+def _retained_suffix(
+    frames: _CompletedFrames,
+    first: int,
+    decisions: tuple[SolLiveDecision, ...],
+) -> tuple[int, tuple[SolLiveDecision, ...]]:
+    """Keep a bounded decided suffix, extended over older bars that decide cleanly.
+
+    Older bars were not requested, so a bar that cannot be decided only ends the
+    extension; its error is raised when a later request includes that bar.
+    """
+    length = len(frames[0])
+    if len(decisions) >= _SHARED_DECISION_LIMIT or first == 0:
+        kept = decisions[-_SHARED_DECISION_LIMIT:]
+        return length - len(kept), kept
+    lowest = max(0, first - (_SHARED_DECISION_LIMIT - len(decisions)))
+    locations = np.arange(lowest, first)
+    rows = list(zip(*(_RowReader(frame).rows(locations) for frame in frames), strict=True))
+    older: list[SolLiveDecision] = []
+    for location, row in zip(reversed(locations), reversed(rows), strict=True):
+        try:
+            older.append(_decision_at(frames[0].index, int(location), row))
+        except Exception:  # noqa: BLE001 - an unrequested bar only ends the extension
+            break
+    return first - len(older), (*reversed(older), *decisions)
+
+
+def _window_key(bars: pd.DataFrame) -> tuple[object, ...] | None:
+    """Return a SHA-256 content key for an all-float64 window, or None.
+
+    The key covers the exact bytes of every value and index timestamp, the
+    column names, the index dtype, name and frequency, so equal keys mean
+    bit-identical windows (NaN payloads and signed zeros included).
+    """
+    if not isinstance(bars.index, pd.DatetimeIndex):
+        return None
+    if not all(dtype == np.float64 for dtype in bars.dtypes):
+        return None
+    digest = hashlib.sha256(bars.index.asi8.tobytes())
+    digest.update(np.ascontiguousarray(bars.to_numpy(dtype=np.float64)).tobytes())
+    return (
+        tuple(bars.columns),
+        str(bars.index.dtype),
+        bars.index.name,
+        bars.index.freqstr,
+        bars.shape,
+        digest.digest(),
+    )
+
+
+# Rows extracted at once; bounds transient memory on long seed queries.
+_ROW_CHUNK = 512
+
+
+class _RowReader:
+    """Read rows with exactly the values ``frame.iloc[location]`` would hold.
+
+    A row Series keeps numpy scalars from numpy columns, extension scalars from
+    extension columns and the stored objects from object columns, or casts all
+    of them to one numpy dtype; the columns are sliced the same way here. The
+    first and last row of every chunk are compared with ``iloc`` element by
+    element, and any difference falls back to the row Series themselves.
+    """
+
+    def __init__(self, frame: pd.DataFrame) -> None:
+        self._frame = frame
+        self._columns = list(frame.columns)
+        self._arrays: list[object] | None = None
+        self._matrix: np.ndarray | None = None
+        if len(frame) == 0 or len(self._columns) == 0 or frame.columns.has_duplicates:
+            return
+        if not all(isinstance(name, str) for name in self._columns):
+            return
+        row_dtype = frame.iloc[0].dtype
+        if row_dtype == np.dtype(object):
+            self._arrays = [
+                frame.iloc[:, position]._values for position in range(len(self._columns))
+            ]
+        elif isinstance(row_dtype, np.dtype):
+            self._matrix = frame.to_numpy(dtype=row_dtype)
+
+    def rows(self, locations: np.ndarray) -> list[Mapping[str, object]] | list[pd.Series]:
+        if len(locations) == 0:
+            return []
+        if self._arrays is not None:
+            column_values = [list(values[locations]) for values in self._arrays]  # type: ignore[index]
+        elif self._matrix is not None:
+            block = self._matrix[locations]
+            column_values = [list(block[:, position]) for position in range(block.shape[1])]
+        else:
+            return self._series(locations)
+        rows = [
+            dict(zip(self._columns, values, strict=True))
+            for values in zip(*column_values, strict=True)
+        ]
+        for index in {0, len(rows) - 1}:
+            expected = self._frame.iloc[int(locations[index])]._values
+            if len(expected) != len(self._columns) or not all(
+                _same_element(left, right)
+                for left, right in zip(expected, rows[index].values(), strict=True)
+            ):
+                return self._series(locations)
+        return rows
+
+    def _series(self, locations: np.ndarray) -> list[pd.Series]:
+        return [self._frame.iloc[int(location)] for location in locations]
+
+
+def _same_element(left: object, right: object) -> bool:
+    if type(left) is not type(right):
+        return False
+    if left is right:
+        return True
+    try:
+        if bool(left == right):
+            return True
+    except (TypeError, ValueError):
+        return False
+    return bool(pd.isna(left)) and bool(pd.isna(right))
 
 
 def _decision_from_rows(
     decision_time_ms: int,
-    bar: pd.Series,
-    signal: pd.Series,
-    regime: pd.Series,
-    components: pd.Series,
+    bar: Mapping[str, object],
+    signal: Mapping[str, object],
+    regime: Mapping[str, object],
+    components: Mapping[str, object],
 ) -> SolLiveDecision:
     return SolLiveDecision(
         decision_time_ms=decision_time_ms,
@@ -87,7 +268,7 @@ def _decision_from_rows(
     )
 
 
-def _regime_breakout_side(regime: pd.Series) -> str | None:
+def _regime_breakout_side(regime: Mapping[str, object]) -> str | None:
     if regime.get("state_5m") != "BREAKOUT":
         return None
     value = regime.get("structural_direction")
@@ -99,15 +280,16 @@ def _regime_breakout_side(regime: pd.Series) -> str | None:
 
 
 def _range_readiness(
-    signal: pd.Series,
-    regime: pd.Series,
-    components: pd.Series,
+    signal: Mapping[str, object],
+    regime: Mapping[str, object],
+    components: Mapping[str, object],
 ) -> SignalReadiness:
-    if not _RANGE_READINESS_FIELDS.issubset(signal.index):
+    fields = signal.index if isinstance(signal, pd.Series) else signal.keys()
+    if not _RANGE_READINESS_FIELDS.issubset(fields):
         return _unavailable_readiness()
-    fast = float(signal["sma_fast"])
-    slow = float(signal["sma_slow"])
-    gap = float(signal["sma_gap_bps"])
+    fast = float(signal["sma_fast"])  # type: ignore[arg-type]
+    slow = float(signal["sma_slow"])  # type: ignore[arg-type]
+    gap = float(signal["sma_gap_bps"])  # type: ignore[arg-type]
     history_ready = all(math.isfinite(value) for value in (fast, slow, gap))
     long_cross = bool(signal["raw_long_cross"])
     short_cross = bool(signal["raw_short_cross"])
@@ -233,7 +415,7 @@ def _range_metrics(
     }
 
 
-def _regime_metrics(values: pd.Series) -> dict[str, ReadinessMetric]:
+def _regime_metrics(values: Mapping[str, object]) -> dict[str, ReadinessMetric]:
     """Copy typed canonical diagnostic values into report-only readiness."""
     output: dict[str, ReadinessMetric] = {}
     for name in CANONICAL_REGIME_METRIC_FIELDS:
@@ -247,7 +429,7 @@ def _regime_metrics(values: pd.Series) -> dict[str, ReadinessMetric]:
     return output
 
 
-def _regime_indicators(values: pd.Series) -> tuple[str, ...]:
+def _regime_indicators(values: Mapping[str, object]) -> tuple[str, ...]:
     bbwp = _ratio_indicator(
         values.get("regime_5m_bbwp_percentile"),
         values.get("regime_bbwp_threshold_pct"),
@@ -260,7 +442,7 @@ def _regime_indicators(values: pd.Series) -> tuple[str, ...]:
     return (f"5M BBWP {bbwp}", f"5M EMA GAP {gap}bps", causes)
 
 
-def _range_cause_indicator(values: pd.Series) -> str:
+def _range_cause_indicator(values: Mapping[str, object]) -> str:
     names = ("FILTER", "COILING", "WEAK", "GAP")
     fields = (
         "regime_5m_range_cause_filter",
@@ -280,7 +462,7 @@ def _ratio_indicator(value: object, threshold: object) -> str:
     return f"{left:.1f}/{right:.1f}"
 
 
-def _component_metrics(values: pd.Series) -> dict[str, ReadinessMetric]:
+def _component_metrics(values: Mapping[str, object]) -> dict[str, ReadinessMetric]:
     metrics: dict[str, ReadinessMetric] = {
         "component_authority": "observe_only",
         "component_provenance": "causal_completed_1m_v1",
@@ -349,7 +531,7 @@ def _optional_text_metric(value: object) -> str | None:
     return value.strip() if isinstance(value, str) and value.strip() else None
 
 
-def _component_indicators(values: pd.Series) -> tuple[str, ...]:
+def _component_indicators(values: Mapping[str, object]) -> tuple[str, ...]:
     return (
         _indicator("EMA21/55", values.get("ema_21_55_gap_bps"), "bps"),
         _indicator("SMA100/200", values.get("sma_100_200_gap_bps"), "bps"),
@@ -375,7 +557,7 @@ def _direction_indicator(label: str, value: object) -> str:
     return f"{label} {state}"
 
 
-def _bias_indicator(values: pd.Series) -> str:
+def _bias_indicator(values: Mapping[str, object]) -> str:
     five = _optional_metric(values.get("mtf_5m_bias"))
     fifteen = _optional_metric(values.get("mtf_15m_bias"))
     left = "N/A" if five is None else f"{five:+.0f}"
@@ -385,7 +567,7 @@ def _bias_indicator(values: pd.Series) -> str:
 
 def _dual_mtf_challenger(
     side: str | None,
-    values: pd.Series,
+    values: Mapping[str, object],
 ) -> tuple[str, bool | None]:
     five = _optional_metric(values.get("mtf_5m_bias"))
     fifteen = _optional_metric(values.get("mtf_15m_bias"))

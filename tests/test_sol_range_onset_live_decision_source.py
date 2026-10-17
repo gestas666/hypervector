@@ -23,7 +23,9 @@ def _bars() -> pd.DataFrame:
     )
 
 
-def _signals(bars: pd.DataFrame) -> pd.DataFrame:
+def _signals(bars: pd.DataFrame, *, regimes: pd.DataFrame | None = None) -> pd.DataFrame:
+    # The live builder classifies once and hands the same regimes to signals.
+    assert regimes is None or regimes.index.equals(bars.index)
     result = pd.DataFrame(
         False,
         index=bars.index,

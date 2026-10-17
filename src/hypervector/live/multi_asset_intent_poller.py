@@ -54,6 +54,9 @@ from hypervector.live.multi_asset_readiness_seed import (
     latest_startup_telemetry_evaluation,
     preferred_startup_runtime_evaluation,
 )
+from hypervector.live.sol_range_onset_decision_source import (
+    shared_completed_decisions,
+)
 from hypervector.live.transient_transport import transient_read_failure_reason
 
 _INCREMENTAL_LOOKBACK_MINUTES = 5
@@ -217,14 +220,19 @@ class ConfiguredMultiAssetIntentPoller:
                 source="hyperliquid_public_candles",
                 reason=reason,
             ) from exc
-        intents, source_withheld, evaluations, telemetry_evaluations = (
-            self._collect_cycle(
-                bars,
-                observed,
-                observed_ms,
+        # Collectors reading the same completed window in this cycle share its
+        # range decisions; nothing is retained after the cycle.
+        with shared_completed_decisions():
+            intents, source_withheld, evaluations, telemetry_evaluations = (
+                self._collect_cycle(
+                    bars,
+                    observed,
+                    observed_ms,
+                )
             )
-        )
-        regime_evaluations = self._canonical_regime_collector.collect(bars, observed)
+            regime_evaluations = self._canonical_regime_collector.collect(
+                bars, observed
+            )
         result = self._build_poll(
             bars,
             observed,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import hashlib
+import os
 from pathlib import Path
 
 from hypervector.live.cohort_backup_identity import build_implementation_identity
@@ -120,12 +121,24 @@ def _digest(path: Path) -> tuple[str, int]:
 
 
 def _python_sources(root: Path) -> list[Path]:
-    candidates = sorted(root.rglob("*.py"))
-    selected = [
-        _required_file(path, "implementation source")
-        for path in candidates
-        if not _excluded(path.relative_to(root))
-    ]
+    """Select ``root.rglob("*.py")`` minus excluded parts, without listing them.
+
+    Excluded directories (dot-directories and ``__pycache__``) are pruned rather
+    than walked and filtered afterwards. Like ``rglob``, the walk does not follow
+    directory symlinks and also offers directories and symlinks named ``*.py``,
+    so ``_required_file`` refuses exactly the entries it refused before, in the
+    same sorted order.
+    """
+    candidates: list[Path] = []
+    for directory, dirs, files in os.walk(root):
+        dirs[:] = [name for name in dirs if not _excluded(Path(name))]
+        candidates.extend(
+            Path(directory) / name
+            for name in (*files, *dirs)
+            if name.endswith(".py") and not _excluded(Path(name))
+        )
+    candidates.sort()
+    selected = [_required_file(path, "implementation source") for path in candidates]
     if len(selected) > _MAX_SOURCE_FILES:
         raise ValueError(
             f"implementation source count exceeds {_MAX_SOURCE_FILES}: {root}"
