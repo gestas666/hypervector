@@ -15,7 +15,11 @@ from typing import Any
 import pandas as pd
 
 from hypervector.strategies import get_strategy, register_all_strategies
-from hypervector.strategies.registry import SignalBuilder, StrategySpec
+from hypervector.strategies.registry import (
+    SignalBuilder,
+    StrategySpec,
+    normalize_direction,
+)
 
 # Loadout / export metadata keys that never belong on a signal builder.
 _META_PARAM_KEYS = frozenset({"strategy", "role", "exit_mode"})
@@ -80,11 +84,15 @@ def signals_from_ohlcv(
 ) -> tuple[pd.Series, pd.Series, str]:
     """Build entry/exit series for ``df`` via the registered strategy builder.
 
-    Returns ``(entries, exits, direction)`` aligned to ``df`` index.
+    Returns ``(entries, exits, direction)`` aligned to ``df`` index, with the
+    builder's tag normalised to ``long``/``short`` (``impulse_1m_short`` ->
+    ``short``) so actors, paper and live sessions can act on it. A tag that is
+    neither is a ValueError (a strategy error), never a silent no-trade.
     """
     spec = resolve_strategy_spec(strategy_name)
     clean = _filter_builder_params(spec.build_signals, params)
-    return spec.build_signals(df, **clean)
+    entries, exits, tag = spec.build_signals(df, **clean)
+    return entries, exits, normalize_direction(tag)
 
 
 def last_bar_intent(

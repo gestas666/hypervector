@@ -9,15 +9,17 @@ import math
 from pathlib import Path
 import sys
 
-from hypervector.commands.common import CommandRefused
+from hypervector.commands.common import CommandRefused, cache_age_options
 
 
 def cmd_autotune(args: argparse.Namespace) -> int:
     """Run Karpathy (or optional Optuna TPE) autotuning for one strategy.
 
     An unavailable sampler, an unknown strategy or objective, a train fraction
-    outside (0, 1] or a missing book file is refused (exit 2) before any data
-    load; an all-failed search is a technical failure (exit 1). The search
+    outside (0, 1], a missing book file or contradictory cache flags
+    (``--pin-cache`` with ``--max-cache-age-hours`` or ``--refresh``) is
+    refused (exit 2) before any data load; an all-failed search is a
+    technical failure (exit 1). The search
     covers the first ``--train-fraction`` of bars and the selected trial is
     measured once on the remaining holdout (report-only, never a gate).
     """
@@ -34,6 +36,9 @@ def cmd_autotune(args: argparse.Namespace) -> int:
     train_fraction = float(getattr(args, "train_fraction", 0.7))
     if not (math.isfinite(train_fraction) and 0.0 < train_fraction <= 1.0):
         raise CommandRefused("--train-fraction must be in (0, 1]")
+    cache_age_options(args)  # refuses contradictory cache flags (exit 2)
+    pin_cache = getattr(args, "pin_cache", False) is True
+    max_cache_age_hours = getattr(args, "max_cache_age_hours", None)
     _require_registered_strategy(args.strategy)
 
     from hypervector.sweep.autotune import run_optuna_autotune
@@ -58,6 +63,8 @@ def cmd_autotune(args: argparse.Namespace) -> int:
         force_refresh=args.force,
         objective=objective,
         train_fraction=train_fraction,
+        pin_cache=pin_cache,
+        max_cache_age_hours=max_cache_age_hours,
     )
     export_dir = str(res.export_dir) if res.export_dir else None
     warnings = list(getattr(res, "warnings", []) or [])
@@ -73,6 +80,8 @@ def cmd_autotune(args: argparse.Namespace) -> int:
         "n_trials_requested": getattr(res, "n_trials_requested", None),
         "space_exhausted": getattr(res, "space_exhausted", None),
         "sampler_used": res.sampler_used,
+        "fee_model_requested": getattr(res, "fee_model_requested", None) or args.fee_model,
+        "fee_model_used": getattr(res, "fee_model_used", None) or args.fee_model,
         "objective": getattr(res, "objective", objective),
         "train_fraction": train_fraction,
         "selection_basis": getattr(res, "selection_basis", None),

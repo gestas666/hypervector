@@ -1,34 +1,60 @@
 # Cohort backend health and market clocks
 
-Interpret health from backend-authored run-bound heartbeat and lifecycle evidence.
-Copying or touching a ledger, or appending an operator acknowledgement, does not
-renew the backend heartbeat. Monitor attachment has an explicit maximum evidence
-age (`cohort monitor --help`); source candles and book timestamps have their own
-clocks. File modification time cannot substitute for either source clock.
+Judge health from the heartbeat and lifecycle events the backend writes for its
+own run.
 
-`runtime_fault` is terminal for its run. Normal observer return records
-`runtime_stopped` with `operator_stop` or `bounded_run_complete`. A new run needs
-its own health evidence. Abrupt process death without a terminal event is only
-observable after inactivity or another independent process check.
+- **Heartbeat.** Copying or touching a ledger does not renew it, and neither
+  does appending an operator acknowledgement.
+- **Monitor age limit.** `live monitor` attaches only to a checkpoint younger
+  than `--maximum-age-seconds` (default 90).
+- **Separate clocks.** Source candles and book timestamps each have their own
+  clock. File modification time cannot stand in for either.
 
-A stopped checkpoint remains a dated snapshot. Refreshing its report does not
-produce strategy decisions or prove that a backend is running. Missing, malformed,
-unsupported or future timestamps must remain unavailable or fail validation.
-Inspect the selected run/profile, backend heartbeat, source one-minute candle
-close and book venue timestamp separately from the configured strategy timeframe.
+## Lifecycle
 
-Monitoring owns no execution process. Operator request publication and backend
-acceptance are separate events; neither proves venue execution without receipts.
-The current JSON monitor replaces former terminal health labels and screenshots.
-Historical native display captures remain dated evidence rather than current
-software acceptance.
+- **`runtime_fault`** is terminal for its run.
+- **Normal return.** An observer that returns normally records
+  `runtime_stopped`, with `operator_stop` or `bounded_run_complete`.
+- **New runs.** A new run needs its own health evidence.
+- **Abrupt death.** If the process dies without a terminal event, that is
+  visible only after inactivity, or through an independent process check.
 
-Validation:
+## Reading a checkpoint
+
+- **Stopped runs.** A stopped run's checkpoint is a snapshot of when it stopped.
+  Refreshing its report produces no strategy decisions and does not show that a
+  backend is running.
+- **Bad timestamps.** Missing, malformed, unsupported or future timestamps stay
+  unavailable, or fail validation.
+- **Separate readings.** Inspect each of these on its own, apart from the
+  configured strategy timeframe:
+  - the selected run and profile;
+  - the backend heartbeat;
+  - the source one-minute candle close;
+  - the book venue timestamp.
+
+## Supervision
+
+The supervisor watches the heartbeat, checkpoint freshness, roster freshness and
+free disk; it alerts below about 14 GiB free and treats less than 10 GiB as a
+problem. Inspect it with:
+
+```sh
+.venv/bin/python -m hypervector live supervisor status
+```
+
+Monitoring owns no execution process. Publishing an operator request and the
+backend accepting it are separate events. Neither proves venue execution
+without venue receipts.
+
+## Validation
 
 ```sh
 .venv/bin/python -m pytest tests/test_multi_asset_observer_lifecycle.py tests/test_cohort_monitor_stale_attachment.py tests/test_monitor_validation_edges.py tests/test_cohort_supervisor_degraded_freshness.py -q
 ```
 
-Confidence is bounded by those controlled lifecycle/freshness cases. An unrelated
-write renewing backend health, or a stale snapshot represented as live authority,
-would require a correction and additional regression coverage.
+Confidence is bounded by those lifecycle and freshness cases. Either of these
+would need a fix and new regression coverage:
+
+- an unrelated write renewing backend health;
+- a stale snapshot presented as live authority.

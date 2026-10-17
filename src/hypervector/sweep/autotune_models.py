@@ -41,6 +41,10 @@ class AutotuneResult:
     n_trials_requested: int = 0
     space_exhausted: bool = False
     warnings: list[str] = field(default_factory=list)
+    #: Fee model the trials were measured with, and the one the caller asked
+    #: for; they differ only when a strategy contract overrides it.
+    fee_model_used: str = ""
+    fee_model_requested: str = ""
 
 
 @dataclass(frozen=True)
@@ -62,3 +66,15 @@ class SearchSettings:
     objective: str = DEFAULT_OBJECTIVE
     train_fraction: float = 1.0
     sampler_requested: str | None = None
+    #: The caller's fee model when a strategy contract replaced it
+    #: (``fee_model`` is always the one used); ``None`` means no override.
+    fee_model_requested: str | None = None
+    #: History freshness, as ``--pin-cache`` / ``--max-cache-age-hours``:
+    #: pinning serves the cached window as is (``max_cache_age=None``), hours
+    #: refresh only windows older than that; neither keeps the loader default.
+    pin_cache: bool = False
+    max_cache_age_hours: float | None = None
+
+    @property
+    def requested_fee_model(self) -> str:
+        return self.fee_model_requested or self.fee_model

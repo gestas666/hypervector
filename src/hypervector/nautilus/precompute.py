@@ -2,8 +2,9 @@
 
 The windowed actor path rebuilds every indicator over the trailing
 ``max_lookback`` bars on every bar (O(n x window)). Precomputing the strategy
-signals, stop/take-profit fractions and trail distances once over the whole
-replay (O(n)) gives the same decisions for causal builders.
+signals and stop/take-profit fractions once over the whole replay (O(n))
+gives the same decisions for causal builders. (Trail mode needs nothing
+more: its distance is the entry bar's stop fraction, see ``nautilus.trail``.)
 
 Precompute is only trusted after :func:`probe_precomputed` recomputes the
 windowed (live-parity) intent on a deterministic sample of bars — every
@@ -29,7 +30,6 @@ from hypervector.nautilus.signals import (
     signals_from_ohlcv,
 )
 from hypervector.nautilus.sizing import exit_config_from_dict
-from hypervector.strategies.indicators import atr as atr_indicator
 from hypervector.sweep.exits import stop_distance_frac, tp_distance_frac
 
 _OHLCV_COLS = ("open", "high", "low", "close", "volume")
@@ -47,7 +47,6 @@ class PrecomputedIntents:
     direction: str
     stop_frac: np.ndarray
     tp_frac: np.ndarray
-    trail_dist: np.ndarray
     exit_mode: str
     row_by_ns: dict[int, int] = field(repr=False)
 
@@ -140,15 +139,6 @@ def precompute_intents(
     tp_arr = np.asarray(tp.to_numpy(dtype=np.float64)).copy()
     if cfg.mode == "trail":
         tp_arr[:] = np.nan
-        trail = cfg.trail_atr_mult * atr_indicator(
-            frame["high"].astype(float),
-            frame["low"].astype(float),
-            frame["close"].astype(float),
-            cfg.atr_length,
-        )
-        trail_arr = np.asarray(trail.to_numpy(dtype=np.float64))
-    else:
-        trail_arr = np.full(n, np.nan)
     index_ns = np.asarray(frame.index.as_unit("ns").asi8, dtype=np.int64)
     row_by_ns = {int(ts): i for i, ts in enumerate(index_ns)}
     if len(row_by_ns) != n:
@@ -160,7 +150,6 @@ def precompute_intents(
         direction=str(direction),
         stop_frac=stop_arr,
         tp_frac=tp_arr,
-        trail_dist=trail_arr,
         exit_mode=str(cfg.mode),
         row_by_ns=row_by_ns,
     )
@@ -224,7 +213,6 @@ def probe_precomputed(
     """
     from hypervector.nautilus.actor import _stop_tp_fracs
 
-    cfg = exit_config_from_dict(exits)
     rows = _sample_rows(
         intents,
         max_lookback=max_lookback,
@@ -258,17 +246,6 @@ def probe_precomputed(
             problems.append(
                 f"stop/tp windowed=({w_stop},{w_tp}) precomputed=({p_stop},{p_tp})"
             )
-        if cfg.mode == "trail":
-            w_trail = float(
-                cfg.trail_atr_mult
-                * atr_indicator(
-                    window["high"], window["low"], window["close"], cfg.atr_length
-                ).iloc[-1]
-            )
-            if not _close(w_trail, float(intents.trail_dist[i])):
-                problems.append(
-                    f"trail_dist windowed={w_trail} precomputed={intents.trail_dist[i]}"
-                )
         if problems:
             mismatches.append(
                 {

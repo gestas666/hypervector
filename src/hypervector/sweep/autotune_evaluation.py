@@ -10,7 +10,7 @@ import math
 import pandas as pd
 
 from hypervector.strategies.hypervelocity_contract import HypervelocityContract
-from hypervector.strategies.registry import StrategySpec
+from hypervector.strategies.registry import StrategySpec, normalize_direction
 from hypervector.sweep.autotune_models import DEFAULT_OBJECTIVE, OBJECTIVES
 from hypervector.sweep.autotune_sampling import (
     _hypervelocity_exit_dict,
@@ -105,7 +105,11 @@ class TrialEvaluator:
 
     bars: pd.DataFrame
     strategy: StrategySpec
-    direction: str
+    #: Expected trade direction, or ``None`` to take the builder's tag. The tag
+    #: is always normalised (``impulse_1m_short`` -> ``short``); a tag that is
+    #: not long/short, or one disagreeing with an expected direction, is a
+    #: technical failure of that trial.
+    direction: str | None
     cost: CostModel
     hypervelocity: bool
     calculate: Callable[..., dict[str, object]]
@@ -118,6 +122,8 @@ class TrialEvaluator:
     _measured: dict[object, dict[str, object]] = field(
         default_factory=dict, repr=False
     )
+    #: Normalised direction of the latest measurement (board provenance).
+    observed_direction: str | None = field(default=None, init=False)
 
     def config_key(
         self, params: dict[str, object], exits: dict[str, object]
@@ -199,7 +205,8 @@ class TrialEvaluator:
         Signals are always built on every bar (earlier bars act as causal
         warmup); only the evaluation window is scored.
         """
-        entries, exit_signals, _ = self.strategy.build_signals(self.bars, **params)
+        entries, exit_signals, tag = self.strategy.build_signals(self.bars, **params)
+        direction = self._direction(tag)
         window = self.bars.iloc[evaluation_start:]
         if evaluation_start:
             entries = entries.iloc[evaluation_start:]
@@ -211,7 +218,7 @@ class TrialEvaluator:
             window["close"].astype(float),
             entries,
             exit_signals,
-            direction=self.direction,
+            direction=direction,
             init_cash=_INITIAL_CASH,
             df=window,
             cost=self.cost,
@@ -231,6 +238,16 @@ class TrialEvaluator:
         else:
             reported = {**exit_config.to_dict(), "leverage": leverage}
         return metrics, reported
+
+    def _direction(self, tag: object) -> str:
+        direction = normalize_direction(tag)  # type: ignore[arg-type]
+        if self.direction is not None and normalize_direction(self.direction) != direction:
+            raise ValueError(
+                f"strategy {self.strategy.name} reported direction {tag!r}, "
+                f"expected {self.direction!r}"
+            )
+        self.observed_direction = direction
+        return direction
 
     def _exits(
         self, exits: dict[str, object], contract: HypervelocityContract | None

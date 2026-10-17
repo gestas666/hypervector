@@ -116,7 +116,7 @@ def test_cli_skill_documents_prefix_delta_evidence_boundaries() -> None:
     """Operator guidance must separate resolved, provisional, and technical deltas."""
     text = _CLI_SKILL.read_text(encoding="utf-8")
 
-    assert "cohort-live-audit-delta" in text
+    assert "live audit-delta" in text
     assert "resolved execution" in text
     assert "provisional open-lifecycle" in text
     assert "known technical-gap growth" in text

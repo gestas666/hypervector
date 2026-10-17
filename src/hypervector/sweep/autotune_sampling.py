@@ -9,10 +9,12 @@ from typing import Any
 from hypervector.strategies.hypervelocity_contract import HypervelocityContract
 from hypervector.sweep.exits import EXIT_MODES, ExitConfig
 
+# The single research venue-cap table (SRS_HV1_VENUE_SPEC) lives in sizing;
+# re-exported here for callers of the historical sampling name.
+from hypervector.sweep.sizing import venue_leverage_cap as venue_leverage_cap
+
 _EXIT_SL_ATR_MIN = 1.0
 _EXIT_SL_ATR_MAX = 3.5
-_VENUE_LEVERAGE_CAPS = {"BTC": 40.0, "ETH": 25.0, "SOL": 20.0}
-_DEFAULT_ALT_LEVERAGE_CAP = 10.0
 #: Sizing caps (equity fraction) sampled for generic exits.
 EXIT_LEVERAGE_LEVELS: tuple[float, ...] = (1.0, 2.0, 3.0, 5.0)
 #: Karpathy exit bounds: (low, high, rounding digits); mutation stays inside.
@@ -36,11 +38,6 @@ _EFFECTIVE_EXIT_FIELDS: dict[str, tuple[str, ...]] = {
 }
 _INT_STEP_PROBABILITY = 0.5
 _CATEGORICAL_SWITCH_PROBABILITY = 0.3
-
-
-def venue_leverage_cap(symbol: str) -> float:
-    """Return the configured Hyperliquid venue leverage cap for ``symbol``."""
-    return _VENUE_LEVERAGE_CAPS.get(symbol.upper(), _DEFAULT_ALT_LEVERAGE_CAP)
 
 
 def _sample_grid_params(rng: Any, param_grid: dict[str, list[Any]]) -> dict[str, Any]:

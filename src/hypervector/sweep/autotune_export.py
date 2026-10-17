@@ -56,8 +56,15 @@ def _export_autotune_candidate(
     best_exit_dict: dict[str, Any],
     best_metrics: dict[str, Any],
     evaluation: dict[str, Any] | None = None,
+    fee_model_requested: str | None = None,
 ) -> Path:
-    """Write a strict Phase-2 bundle through the canonical exporter."""
+    """Write a strict Phase-2 bundle through the canonical exporter.
+
+    ``meta.conviction`` is the conviction the trials were sized with (the
+    risk contract's default; autotune does not search conviction), so
+    ``nautilus run`` replays the measured sizing. ``meta.instrument`` comes
+    from cached venue metadata under ``root`` (see ``export.venue_meta``).
+    """
     exits, mode, risk_cfg = _export_settings(strategy_name, best_exit_dict)
     candidate_id = f"exp_{strategy_name}_{timeframe}_{stamp}"
     return export_candidate(
@@ -76,6 +83,8 @@ def _export_autotune_candidate(
             "apply_costs": True,
             "data_provenance": provenance,
             "fee_model": fee_model,
+            "fee_model_requested": fee_model_requested or fee_model,
+            "conviction": risk_cfg.default_conviction,
             "hypervelocity_contract": (
                 _hypervelocity_exit_dict()
                 if is_hypervelocity_strategy(strategy_name)
@@ -92,4 +101,5 @@ def _export_autotune_candidate(
         metrics=best_metrics,
         candidate_id=candidate_id,
         strict=True,
+        data_root=root,
     )

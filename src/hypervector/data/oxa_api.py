@@ -24,10 +24,21 @@ _RETRYABLE_TRANSPORT_ERRORS = (
     requests.exceptions.ChunkedEncodingError,
 )
 MarketFamily = Literal["core", "hip3"]
-_SYMBOL_PATTERN = re.compile(r"^[A-Z0-9][A-Z0-9._-]{0,63}$")
-_HIP3_SYMBOL_PATTERN = re.compile(
-    r"^(?P<dex>[a-z0-9][a-z0-9._-]{0,31}):"
-    r"(?P<asset>[A-Z0-9][A-Z0-9._-]{0,63})$"
+# Core perps are uppercase venue names, except HL's case-sensitive 1000x
+# contracts: one lowercase "k" then an uppercase asset (kPEPE, kSHIB, kBONK).
+_CORE_SYMBOL = r"k?[A-Z0-9][A-Z0-9._-]{0,63}"
+# HIP-3 builder perps: exact lowercase dex, colon, uppercase asset (xyz:TSLA).
+_HIP3_SYMBOL = (
+    r"(?P<dex>[a-z0-9][a-z0-9._-]{0,31}):"
+    r"(?P<asset>[A-Z0-9][A-Z0-9._-]{0,63})"
+)
+_CORE_SYMBOL_PATTERN = re.compile(rf"^{_CORE_SYMBOL}$")
+_HIP3_SYMBOL_PATTERN = re.compile(rf"^{_HIP3_SYMBOL}$")
+#: Any exact Hyperliquid perp identity: core (incl. k-prefixed) or HIP-3.
+_SYMBOL_PATTERN = re.compile(rf"^(?:{_CORE_SYMBOL}|{_HIP3_SYMBOL})$")
+_CORE_SYMBOL_ERROR = (
+    "symbol must be an uppercase Hyperliquid asset identifier "
+    "(or a k-prefixed 1000x coin such as kPEPE)"
 )
 
 
@@ -176,9 +187,23 @@ def _retry_after_seconds(response: object) -> float | None:
 
 
 def validate_symbol(symbol: str) -> None:
-    """Reject identifiers that are unsafe or outside core venue syntax."""
-    if not _SYMBOL_PATTERN.fullmatch(symbol):
-        raise ValueError("symbol must be an uppercase Hyperliquid asset identifier")
+    """Reject identifiers that are unsafe or not an exact Hyperliquid perp name.
+
+    Accepts uppercase core names, HL's case-sensitive k-prefixed 1000x coins
+    (``kPEPE``) and HIP-3 ``dex:ASSET`` identities (``xyz:TSLA``). Lowercase or
+    mixed-case core names, a capitalised dex or a lowercase asset are refused.
+    """
+    if not isinstance(symbol, str) or not _SYMBOL_PATTERN.fullmatch(symbol):
+        raise ValueError(
+            "symbol must be an uppercase Hyperliquid asset identifier, a "
+            "k-prefixed 1000x coin (kPEPE) or a HIP-3 lower-dex:UPPER-ASSET"
+        )
+
+
+def validate_core_symbol(symbol: str) -> None:
+    """Require a core-perp identity (uppercase, or k-prefixed); never ``dex:ASSET``."""
+    if not isinstance(symbol, str) or not _CORE_SYMBOL_PATTERN.fullmatch(symbol):
+        raise ValueError(_CORE_SYMBOL_ERROR)
 
 
 def validate_hip3_symbol(symbol: str) -> tuple[str, str]:
@@ -192,7 +217,7 @@ def validate_hip3_symbol(symbol: str) -> tuple[str, str]:
 def validate_market_symbol(symbol: str, market_family: MarketFamily) -> None:
     """Require a symbol whose syntax matches its explicit venue family."""
     if market_family == "core":
-        validate_symbol(symbol)
+        validate_core_symbol(symbol)
         return
     if market_family == "hip3":
         validate_hip3_symbol(symbol)

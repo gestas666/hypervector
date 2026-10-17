@@ -47,8 +47,8 @@ from hypervector.sweep.autotune_sampling import (
     _random_exit_dict as _random_exit_dict,
     _optuna_exit_dict as _optuna_exit_dict,
     exit_space,
-    venue_leverage_cap,
 )
+from hypervector.sweep.sizing import venue_leverage_cap
 
 try:
     import optuna
@@ -57,6 +57,8 @@ except ImportError:
 HAVE_OPTUNA = optuna is not None
 _SQLITE_BOOK_SUFFIXES = frozenset({".sqlite", ".sqlite3", ".db", ".zst"})
 _HYBRID_NOTE = "sampler 'hybrid' is a deprecated alias of optuna TPE"
+#: Hypervelocity's contract is measured with maker fees whatever was requested.
+_HYPERVELOCITY_FEE_MODEL = "hl_maker"
 
 
 def run_autotune(
@@ -77,6 +79,8 @@ def run_autotune(
     export_best: bool = True,
     objective: str = DEFAULT_OBJECTIVE,
     train_fraction: float = DEFAULT_TRAIN_FRACTION,
+    pin_cache: bool = False,
+    max_cache_age_hours: float | None = None,
 ) -> AutotuneResult:
     """Run a measured search; abort technical failures without rejecting weak trials.
 
@@ -85,6 +89,16 @@ def run_autotune(
     Trials are searched on the first ``train_fraction`` of bars; the chosen
     configuration is then measured once on the remaining chronological
     holdout (``train_fraction=1.0`` keeps the labelled in-sample mode).
+
+    History freshness follows ``load_research_history``: ``pin_cache`` serves
+    an existing cached window as is (``max_cache_age=None``),
+    ``max_cache_age_hours`` refreshes only windows older than that, and
+    neither keeps the loader's default. Pinning excludes both the hours and
+    ``force_refresh``.
+
+    A strategy contract may replace ``fee_model`` (Hypervelocity is measured
+    with ``hl_maker``); the board and result record both the requested and
+    the used fee model.
     """
     if type(n_trials) is not int or n_trials <= 0:
         raise ValueError("n_trials must be a positive integer")
@@ -104,12 +118,14 @@ def run_autotune(
         and 0.0 < train_fraction <= 1.0
     ):
         raise ValueError("train_fraction must be in (0, 1]")
+    _check_cache_policy(pin_cache, max_cache_age_hours, force_refresh)
     selected_root = _resolve_root(root, data_root)
     if book_data_path not in (None, "") and not Path(book_data_path).is_file():  # type: ignore[arg-type]
         raise FileNotFoundError(f"book data path is not a file: {book_data_path}")
     hypervelocity = is_hypervelocity_strategy(strategy_name)
     if hypervelocity:
         _check_hypervelocity_leverage(symbol)
+    fee_model_used = _HYPERVELOCITY_FEE_MODEL if hypervelocity else fee_model
     settings = SearchSettings(
         root=selected_root,
         strategy_name=strategy_name,
@@ -117,7 +133,7 @@ def run_autotune(
         timeframe=timeframe,
         lookback_days=lookback_days,
         n_trials=n_trials,
-        fee_model="hl_maker" if hypervelocity else fee_model,
+        fee_model=fee_model_used,
         book_data_path=book_data_path or None,
         sampler="optuna" if sampler == "hybrid" else sampler,
         no_export=no_export or not export_best,
@@ -126,8 +142,43 @@ def run_autotune(
         objective=objective,
         train_fraction=float(train_fraction),
         sampler_requested=sampler,
+        fee_model_requested=fee_model if fee_model != fee_model_used else None,
+        pin_cache=bool(pin_cache),
+        max_cache_age_hours=(
+            None if max_cache_age_hours is None else float(max_cache_age_hours)
+        ),
     )
     return _run_search(settings)
+
+
+def _check_cache_policy(
+    pin_cache: bool, max_cache_age_hours: float | None, force_refresh: bool
+) -> None:
+    """Refuse contradictory freshness requests before any data load."""
+    if pin_cache and max_cache_age_hours is not None:
+        raise ValueError("pin_cache and max_cache_age_hours are exclusive")
+    if pin_cache and force_refresh:
+        raise ValueError("pin_cache and force_refresh are exclusive")
+    if max_cache_age_hours is not None:
+        try:
+            hours = float(max_cache_age_hours)
+        except (TypeError, ValueError):
+            hours = float("nan")
+        if isinstance(max_cache_age_hours, bool) or not (
+            math.isfinite(hours) and hours > 0.0
+        ):
+            raise ValueError(
+                f"max_cache_age_hours must be a positive finite number, got {max_cache_age_hours!r}"
+            )
+
+
+def _cache_age_kwargs(settings: SearchSettings) -> dict[str, object]:
+    """``max_cache_age`` for the loader, only when the caller chose a policy."""
+    if settings.pin_cache:
+        return {"max_cache_age": None}
+    if settings.max_cache_age_hours is not None:
+        return {"max_cache_age": pd.Timedelta(hours=settings.max_cache_age_hours)}
+    return {}
 
 
 def _resolve_root(root: Path | None, data_root: Path | None) -> Path:
@@ -158,6 +209,7 @@ def _load_inputs(settings: SearchSettings) -> tuple[pd.DataFrame, dict[str, obje
         lookback_days=settings.lookback_days,
         strict_hl_only=settings.strict_hl_only,
         force_refresh=settings.force_refresh,
+        **_cache_age_kwargs(settings),
     )
     if bars.empty:
         raise RuntimeError(
@@ -194,14 +246,15 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
     strategy = get_strategy(settings.strategy_name)
     hypervelocity = is_hypervelocity_strategy(settings.strategy_name)
     cut = _train_cut(bars, settings.train_fraction)
-    direction = "short" if "short" in settings.strategy_name.lower() else "long"
     cost = resolve_cost_model(settings.fee_model)
 
     def evaluator_for(frame: pd.DataFrame) -> TrialEvaluator:
         return TrialEvaluator(
             frame,
             strategy,
-            direction,
+            # The builder's own tag decides, through normalize_direction
+            # (impulse_1m_short -> short); never a substring of the name.
+            None,
             cost,
             hypervelocity,
             compute_trial_metrics,
@@ -225,6 +278,12 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
     notes: list[str] = []
     if settings.sampler_requested == "hybrid":
         notes.append(_HYBRID_NOTE)
+    if settings.fee_model_requested is not None:
+        notes.append(
+            f"fee model {settings.fee_model_requested!r} was requested but "
+            f"{settings.strategy_name} is measured with {settings.fee_model!r} "
+            "(strategy contract override)"
+        )
     if book_requested and not book_loaded:
         notes.append(
             "book data path given but alignment produced no spread_bps/obi_5 "
@@ -274,6 +333,7 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
         space_exhausted=stats.space_exhausted,
         duplicate_resamples=stats.duplicate_resamples,
         warnings=tuple(notes),
+        direction=evaluator.observed_direction,
     )
     return finish_search(
         settings,

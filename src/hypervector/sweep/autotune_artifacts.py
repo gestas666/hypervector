@@ -38,6 +38,8 @@ class BoardContext:
     space_exhausted: bool = False
     duplicate_resamples: int = 0
     warnings: tuple[str, ...] = ()
+    #: Normalised trade direction the builder reported (None if no trial ran).
+    direction: str | None = None
 
 
 @dataclass(frozen=True)
@@ -116,6 +118,7 @@ def finish_search(
             timeframe=settings.timeframe,
             lookback_days=settings.lookback_days,
             fee_model=settings.fee_model,
+            fee_model_requested=settings.requested_fee_model,
             provenance=provenance,
             best_params=best["params"],
             best_exit_dict=best["exit_cfg"],
@@ -144,7 +147,25 @@ def finish_search(
         n_trials_requested=settings.n_trials,
         space_exhausted=context.space_exhausted,
         warnings=warnings,
+        fee_model_used=settings.fee_model,
+        fee_model_requested=settings.requested_fee_model,
     )
+
+
+def cache_policy(settings: SearchSettings) -> dict[str, object]:
+    """The history freshness the search loaded under (board provenance)."""
+    if settings.pin_cache:
+        mode = "pinned"
+    elif settings.max_cache_age_hours is not None:
+        mode = "max_age"
+    else:
+        mode = "loader_default"
+    return {
+        "mode": mode,
+        "pin_cache": settings.pin_cache,
+        "max_cache_age_hours": settings.max_cache_age_hours,
+        "force_refresh": settings.force_refresh,
+    }
 
 
 def _select(
@@ -288,6 +309,10 @@ def _publish_board(
         "evaluation_window": selection.evaluation_window,
         "train_fraction": settings.train_fraction,
         "fee_model": settings.fee_model,
+        "fee_model_used": settings.fee_model,
+        "fee_model_requested": settings.requested_fee_model,
+        "fee_model_overridden": settings.fee_model_requested is not None,
+        "direction": context.direction,
         "costs": context.costs,
         "n_trials": len(trials),
         "n_trials_requested": settings.n_trials,
@@ -300,6 +325,7 @@ def _publish_board(
         ),
         "strict_hl_only": settings.strict_hl_only,
         "force_refresh": settings.force_refresh,
+        "cache_policy": cache_policy(settings),
         "book_data_path": (
             None if settings.book_data_path is None else str(settings.book_data_path)
         ),

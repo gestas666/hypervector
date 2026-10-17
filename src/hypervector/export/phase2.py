@@ -18,6 +18,7 @@ from hypervector.export.schema import (
     ExportSchemaError,
     validate_export_dir,
 )
+from hypervector.export.venue_meta import with_instrument_meta
 
 
 def export_candidate(
@@ -32,11 +33,16 @@ def export_candidate(
     candidate_id: str | None = None,
     validate: bool = True,
     strict: bool = False,
+    data_root: Path | str | None = None,
 ) -> Path:
     """Write minimum bundle: meta.json, params.json, metrics.json (+ optional series).
 
     Always stamps ``schema_version`` and ``package_version``. Strategy is mirrored
-    onto meta when present in params (Phase 2 loadout convenience). The bundle is
+    onto meta when present in params (Phase 2 loadout convenience). For a
+    symbol ``nautilus run`` has no built-in geometry for, ``meta.instrument``
+    is copied from cached Hyperliquid venue metadata under ``data_root``
+    (default: the parent of an ``exports`` directory) — never fetched; when
+    none is cached, ``meta.instrument_note`` says how to supply it. The bundle is
     written to a staging directory beside the target and schema-checked there
     when ``validate`` is True (default); only a valid bundle is moved into
     ``export_root/<candidate_id>``. A failed validation leaves no partial bundle
@@ -62,6 +68,9 @@ def export_candidate(
     strategy = params.get("strategy") if isinstance(params, dict) else None
     if strategy and "strategy" not in full_meta:
         full_meta["strategy"] = strategy
+    if data_root is None and root.name == "exports":
+        data_root = root.parent
+    full_meta = with_instrument_meta(full_meta, data_root)
 
     staging = Path(tempfile.mkdtemp(prefix=".staging-", dir=root))
     try:
