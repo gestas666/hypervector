@@ -188,3 +188,37 @@ def test_endpoint_probe_transport_failure_stays_a_runtime_error() -> None:
     with pytest.raises(RuntimeError) as caught:
         backfill._pick_binance_endpoint(session, "BTCUSDT", "1m", 0)  # type: ignore[arg-type]
     assert not isinstance(caught.value, backfill.BackfillUnavailable)
+
+
+@pytest.mark.parametrize(
+    ("symbol", "pair"),
+    [
+        ("BTC-Perp", "BTCUSDT"),  # suffixes are case-insensitive, as before
+        ("kPEPE-Perp", "1000PEPEUSDT"),
+        ("kPEPEusdt", "1000PEPEUSDT"),  # same coin hl_coin resolves to kPEPE
+        ("kpepe", "KPEPEUSDT"),  # lowercase input is not a 1000x contract
+    ],
+)
+def test_cex_symbol_suffixes_are_case_insensitive(symbol: str, pair: str) -> None:
+    assert backfill.binance_symbol(symbol) == pair
+
+
+def test_failure_keeping_hl_history_never_masks_the_backfill_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    hl = _hl_tail()
+
+    def binance_down(*_a: Any) -> pd.DataFrame:
+        raise requests.ConnectionError("binance reset")
+
+    def broken_save(*_a: Any, **_k: Any) -> Path:
+        raise ValueError("parquet writer rejected the frame")
+
+    monkeypatch.setattr("hypervector.data.pipeline.live_hl_fetcher", lambda *_a: hl)
+    monkeypatch.setattr("hypervector.data.pipeline.live_binance_fetcher", binance_down)
+    monkeypatch.setattr(ParquetCache, "save", broken_save)
+
+    with pytest.raises(requests.ConnectionError) as caught:
+        load_research_history(tmp_path, symbol="BTC", timeframe="1m", lookback_days=30, now=_NOW)
+
+    assert any("could not keep" in note for note in getattr(caught.value, "__notes__", []))

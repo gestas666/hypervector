@@ -132,6 +132,7 @@ def run_book_recorder(
     """
     if max_consecutive_errors < 1:
         raise ValueError("max_consecutive_errors must be at least 1")
+    owned_session = session is None
     sess = session or requests.Session()
     n = 0
     errors = 0
@@ -140,32 +141,36 @@ def run_book_recorder(
     last_path: str | None = None
     stop = Path(stop_file) if stop_file else None
     pause = max(0.2, float(interval_secs))
-    while True:
-        if stop is not None and stop.exists():
-            break
-        if max_snapshots is not None and n >= int(max_snapshots):
-            break
-        try:
-            snap = fetch_hl_l2_book(symbol, session=sess)
-        except RuntimeError as exc:
-            errors += 1
-            consecutive += 1
-            last_error = str(exc)
-            if consecutive >= max_consecutive_errors:
-                raise RuntimeError(
-                    f"book recorder stopped after {consecutive} consecutive failed "
-                    f"snapshots ({n} recorded); last error: {exc}"
-                ) from exc
-            logger.warning(
-                "book snapshot failed (%d in a row); continuing: %s", consecutive, exc
-            )
+    try:
+        while True:
+            if stop is not None and stop.exists():
+                break
+            if max_snapshots is not None and n >= int(max_snapshots):
+                break
+            try:
+                snap = fetch_hl_l2_book(symbol, session=sess)
+            except RuntimeError as exc:
+                errors += 1
+                consecutive += 1
+                last_error = str(exc)
+                if consecutive >= max_consecutive_errors:
+                    raise RuntimeError(
+                        f"book recorder stopped after {consecutive} consecutive failed "
+                        f"snapshots ({n} recorded); last error: {exc}"
+                    ) from exc
+                logger.warning(
+                    "book snapshot failed (%d in a row); continuing: %s", consecutive, exc
+                )
+                time.sleep(pause)
+                continue
+            consecutive = 0
+            row = append_book_snapshot(data_root, snap)
+            last_path = row.get("_path")
+            n += 1
             time.sleep(pause)
-            continue
-        consecutive = 0
-        row = append_book_snapshot(data_root, snap)
-        last_path = row.get("_path")
-        n += 1
-        time.sleep(pause)
+    finally:
+        if owned_session:
+            sess.close()
     return {
         "ok": True,
         "snapshots": n,

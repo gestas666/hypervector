@@ -261,3 +261,32 @@ def test_load_reports_gaps_in_its_own_timeframe(tmp_path: Path, monkeypatch: pyt
     assert prov["gaps"] == {"count": 0, "max_gap_bars": 0}
     assert prov["timeframe"] == "15m"
     assert prov["expected_bars"] == 60 * 96
+
+
+def test_concurrent_refresh_that_already_moved_the_legacy_file_is_tolerated(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import hypervector.data.pipeline as pipeline
+
+    cache = ParquetCache(tmp_path / "cache")
+    cache.save(cache_key("BTC", "1m", 2), _bars(pd.Timestamp("2026-07-26T23:59:00Z"), 2))
+    fresh = _bars(_NOW, 2)
+    _count_calls(monkeypatch, hl=fresh, binance=fresh.assign(source="binance"))
+    real_replace = pipeline.os.replace
+    raced_once: list[bool] = []
+
+    def raced(src: Any, dst: Any) -> None:
+        if raced_once or "__preserved_" not in str(dst):
+            return real_replace(src, dst)  # the cache's own atomic write
+        # Another process renamed the legacy file between our check and rename.
+        raced_once.append(True)
+        real_replace(src, Path(str(dst) + ".other"))
+        raise FileNotFoundError(src)
+
+    monkeypatch.setattr(pipeline.os, "replace", raced)
+    frame, prov = load_research_history(tmp_path, lookback_days=2, now=_NOW)
+    monkeypatch.undo()
+
+    assert frame["timestamp"].max() == _NOW
+    assert prov["preserved_previous"] is None
+    assert cache.load_metadata(cache_key("BTC", "1m", 2))["origin"] == "research_history"

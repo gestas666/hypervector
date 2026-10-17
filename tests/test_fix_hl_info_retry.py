@@ -172,3 +172,32 @@ def test_recorder_stops_after_bounded_consecutive_failures(
             max_snapshots=5,
             max_consecutive_errors=3,
         )
+
+
+def test_recorder_closes_the_session_it_created(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    created: list[Any] = []
+
+    class _OwnedSession:
+        closed = False
+
+        def __init__(self) -> None:
+            created.append(self)
+
+        def close(self) -> None:
+            self.closed = True
+
+    def always_fail(symbol: str, **_kw: Any) -> BookSnapshot:
+        raise RuntimeError(f"HL l2Book fetch failed for {symbol}: 503")
+
+    monkeypatch.setattr(book_record.requests, "Session", _OwnedSession)
+    monkeypatch.setattr(book_record, "fetch_hl_l2_book", always_fail)
+    monkeypatch.setattr(book_record.time, "sleep", lambda _s: None)
+
+    with pytest.raises(RuntimeError, match="consecutive"):
+        book_record.run_book_recorder(
+            tmp_path, symbol="BTC", interval_secs=0.0, max_consecutive_errors=2
+        )
+
+    assert len(created) == 1 and created[0].closed

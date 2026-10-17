@@ -44,6 +44,7 @@ class BackfillUnavailable(RuntimeError):
 # HL 1000x contracts (kPEPE, kSHIB, kBONK, ...) quote 1000 units, like the
 # venues' 1000PEPEUSDT perps; the 1-unit spot pairs would be 1000x off in price.
 _THOUSAND_COIN = re.compile(r"^k([A-Z0-9]+)$")
+_PERP_SUFFIX = re.compile(r"-PERP", re.IGNORECASE)
 # Endpoint answers that mean "this endpoint is unusable here", not "no symbol".
 _ENDPOINT_BLOCKED_STATUSES = frozenset({401, 403, 451})
 _BYBIT_INVALID_SYMBOL_CODES = frozenset({10001})
@@ -53,8 +54,11 @@ def binance_symbol(symbol: str) -> str:
     raw = symbol.strip()
     if ":" in raw:
         raise BackfillUnavailable(f"HIP-3 symbol {raw} has no Binance/Bybit equivalent")
-    base = raw.replace("-PERP", "").replace("-perp", "")
-    thousand = _THOUSAND_COIN.fullmatch(base.removesuffix("USDT"))
+    # Suffixes are case-insensitive (as hl_coin treats them); only the k prefix
+    # is case-sensitive.
+    base = _PERP_SUFFIX.sub("", raw)
+    stem = base[:-4] if base.upper().endswith("USDT") else base
+    thousand = _THOUSAND_COIN.fullmatch(stem)
     if thousand is not None:
         return f"1000{thousand.group(1)}USDT"
     s = base.upper()

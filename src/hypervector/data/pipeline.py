@@ -429,7 +429,7 @@ def _keep_hl_only(
     try:
         _preserve_unmanaged(cache, key)
         cache.save(key, hl_df, metadata=_metadata(request, strict_hl_only=True, backfill=status))
-    except OSError as save_exc:
+    except Exception as save_exc:  # noqa: BLE001 — the backfill failure stays the raised error
         exc.add_note(f"could not keep the fetched HL history: {save_exc}")
         return
     exc.add_note(
@@ -469,7 +469,11 @@ def _preserve_unmanaged(cache: ParquetCache, key: str) -> str | None:
     while target.exists():
         target = path.with_name(f"{path.stem}__preserved_{label}_{counter}.parquet")
         counter += 1
-    os.replace(path, target)
+    try:
+        os.replace(path, target)
+    except FileNotFoundError:
+        # A concurrent refresh of the same key already moved it aside.
+        return None
     logger.warning(
         "kept unmanaged cache %s as %s before refreshing it", path.name, target.name
     )
