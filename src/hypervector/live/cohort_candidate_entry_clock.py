@@ -308,4 +308,11 @@ def _observed_time_ms(row: Mapping[str, object], line_number: int) -> int:
         raise CandidateEntryClockStateError(
             f"candidate recovery ledger line {line_number} time must be timezone-aware"
         )
-    return int(observed.astimezone(timezone.utc).timestamp() * 1_000)
+    try:
+        return int(observed.astimezone(timezone.utc).timestamp() * 1_000)
+    except (OverflowError, ValueError) as exc:
+        # An offset time beyond the representable UTC range is refused for the
+        # matched pairs only; it must not become a row-wide shared-scan error.
+        raise CandidateEntryClockStateError(
+            f"candidate recovery ledger line {line_number} has invalid observed_at_utc"
+        ) from exc

@@ -313,6 +313,31 @@ def test_same_size_rewrite_is_not_mistaken_for_the_consumed_prefix(
     assert second.latest_ms == 1_785_830_400_000
 
 
+@pytest.mark.parametrize(
+    "observed", ["0001-01-01T00:00:00+05:00", "9999-12-31T23:59:00-05:00"]
+)
+def test_unrepresentable_entry_time_fails_only_its_own_pair(
+    tmp_path: Path, observed: str
+) -> None:
+    """An entry time outside the UTC range never blocks clocks of other pairs."""
+    ledger = tmp_path / "decisions.jsonl"
+    broken, other = _PAIRS[0], _PAIRS[1]
+    _write(
+        ledger,
+        [
+            _routing([_enter(other)], "2026-08-04T20:00:00Z"),
+            _routing([_enter(broken)], observed),
+            _routing([_enter(other)], "2026-08-04T21:00:00Z"),
+        ],
+    )
+    with pytest.raises(CandidateEntryClockStateError, match="line 2 has invalid observed_at_utc"):
+        AcceptedEntryClock(ledger, strategy_id=broken[0], symbol=broken[1])
+    clock = AcceptedEntryClock(ledger, strategy_id=other[0], symbol=other[1])
+    assert clock.latest_ms == _reference_latest(ledger, *other) == 1_785_877_200_000
+    unrelated = AcceptedEntryClock(ledger, strategy_id=_PAIRS[2][0], symbol=_PAIRS[2][1])
+    assert unrelated.latest_ms is None
+
+
 def test_middle_rewrite_is_refused_by_a_later_clock(tmp_path: Path) -> None:
     """A later clock joins only a byte-identical prefix, not just matching ends."""
     ledger = tmp_path / "decisions.jsonl"

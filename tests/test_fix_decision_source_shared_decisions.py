@@ -270,6 +270,8 @@ def test_row_reader_falls_back_to_row_series_when_it_cannot_vouch() -> None:
     duplicated = pd.concat([signals, signals[["long_entry"]]], axis=1)
     rows = ranges._RowReader(duplicated).rows(np.array([5, 6]))
     assert all(isinstance(row, pd.Series) for row in rows)
+    empty = ranges._RowReader(signals[[]]).rows(np.array([5, 6]))
+    assert len(empty) == 2 and all(row.empty for row in empty)
     reader = ranges._RowReader(regimes)
     reader._arrays = [np.asarray(values, dtype=object) for values in reader._arrays]  # type: ignore[union-attr]
     rows = reader.rows(np.array([10, 11]))

@@ -183,7 +183,7 @@ class _RowReader:
         self._columns = list(frame.columns)
         self._arrays: list[object] | None = None
         self._matrix: np.ndarray | None = None
-        if len(frame) == 0 or frame.columns.has_duplicates:
+        if len(frame) == 0 or len(self._columns) == 0 or frame.columns.has_duplicates:
             return
         if not all(isinstance(name, str) for name in self._columns):
             return
