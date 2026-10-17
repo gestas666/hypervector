@@ -541,6 +541,8 @@ def test_profile_fingerprint_is_stable_across_python_hash_seeds() -> None:
             if process.poll() is None:
                 process.kill()
                 process.wait()
+            if process.stdout is not None:
+                process.stdout.close()
 
     assert [process.returncode for process in processes] == [0, 0, 0, 0]
     fingerprints = {output.strip() for output in outputs}

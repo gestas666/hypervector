@@ -6,6 +6,11 @@ import socket
 
 import pytest
 
+# These helpers hold the split native runner test bodies; keep pytest's assertion detail.
+pytest.register_assert_rewrite(
+    "native_runner_partial_case_fixture", "native_runner_protective_case_fixture"
+)
+
 
 @pytest.fixture(autouse=True)
 def forbid_cli_process_replacement(monkeypatch: pytest.MonkeyPatch) -> None:
