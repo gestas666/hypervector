@@ -19,6 +19,10 @@ class StrategySpec:
     param_grid: dict[str, list[Any]]
     build_signals: SignalBuilder
     description: str = ""
+    #: True only where the builder applies ``gate_signals_by_orderbook`` to the
+    #: ``book_gate``/``max_spread_bps``/``min_obi`` keywords; searches add book
+    #: dimensions only for such strategies.
+    supports_book_gate: bool = False
 
 
 _REGISTRY: dict[str, StrategySpec] = {}

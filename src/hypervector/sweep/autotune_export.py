@@ -19,26 +19,26 @@ from hypervector.sweep.autotune_sampling import _hypervelocity_exit_dict
 
 def _export_settings(
     strategy_name: str, best_exit_dict: dict[str, object]
-) -> tuple[ExitConfig, RiskConfig]:
-    """Preserve strategy-managed exits and the exported sizing contract."""
+) -> tuple[dict[str, Any], str, RiskConfig]:
+    """Return the measured exit lifecycle, its mode and the sizing contract.
+
+    Hypervelocity is measured with strategy-managed exits and no stop, so it
+    exports ``strategy_target_only`` rather than a symmetric stop at the target.
+    """
     if is_hypervelocity_strategy(strategy_name):
         contract = HypervelocityContract()
-        exit_cfg = ExitConfig(
-            mode="fixed_rr",
-            sl_pct=contract.target_price_fraction,
-            rr=1.0,
-        )
+        exits = _hypervelocity_exit_dict()
         risk_cfg = RiskConfig(
             risk_pct_min=contract.margin_fraction,
             risk_pct_max=contract.margin_fraction,
             max_size_frac=contract.notional_fraction,
         )
-    else:
-        exit_cfg = ExitConfig(
-            **{k: v for k, v in best_exit_dict.items() if k != "leverage"}
-        )
-        risk_cfg = RiskConfig(max_size_frac=float(best_exit_dict.get("leverage", 1.0)))
-    return exit_cfg, risk_cfg
+        return exits, str(exits["mode"]), risk_cfg
+    exit_cfg = ExitConfig(
+        **{k: v for k, v in best_exit_dict.items() if k != "leverage"}  # type: ignore[arg-type]
+    )
+    risk_cfg = RiskConfig(max_size_frac=float(best_exit_dict.get("leverage", 1.0)))  # type: ignore[arg-type]
+    return exit_cfg.to_dict(), exit_cfg.mode, risk_cfg
 
 
 def _export_autotune_candidate(
@@ -55,9 +55,10 @@ def _export_autotune_candidate(
     best_params: dict[str, Any],
     best_exit_dict: dict[str, Any],
     best_metrics: dict[str, Any],
+    evaluation: dict[str, Any] | None = None,
 ) -> Path:
     """Write a strict Phase-2 bundle through the canonical exporter."""
-    exit_cfg, risk_cfg = _export_settings(strategy_name, best_exit_dict)
+    exits, mode, risk_cfg = _export_settings(strategy_name, best_exit_dict)
     candidate_id = f"exp_{strategy_name}_{timeframe}_{stamp}"
     return export_candidate(
         root / "exports",
@@ -68,8 +69,8 @@ def _export_autotune_candidate(
             "timeframe": timeframe,
             "lookback_days": lookback_days,
             "init_cash": 10_000.0,
-            "tp_sl_mode": exit_cfg.mode,
-            "exits": exit_cfg.to_dict(),
+            "tp_sl_mode": mode,
+            "exits": exits,
             "risk": risk_cfg.to_dict(),
             "costs": resolve_cost_model(fee_model).to_dict(),
             "apply_costs": True,
@@ -80,11 +81,12 @@ def _export_autotune_candidate(
                 if is_hypervelocity_strategy(strategy_name)
                 else None
             ),
+            "evaluation": evaluation,
         },
         params={
             "strategy": strategy_name,
             "role": role,
-            "exit_mode": exit_cfg.mode,
+            "exit_mode": mode,
             **best_params,
         },
         metrics=best_metrics,

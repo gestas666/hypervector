@@ -273,6 +273,7 @@ def register_crown_stack() -> None:
             },
             build_signals=crown_stack_long,
             description="1m EMA21/55 bias + Crown 9/21/55 + BBWP + RSI + PMARP (long)",
+            supports_book_gate=True,
         )
     )
     register(
@@ -286,5 +287,6 @@ def register_crown_stack() -> None:
             },
             build_signals=crown_stack_short,
             description="1m EMA21/55 bias + Crown 9/21/55 + BBWP + RSI + PMARP (short)",
+            supports_book_gate=True,
         )
     )

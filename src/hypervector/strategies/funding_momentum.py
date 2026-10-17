@@ -125,6 +125,7 @@ def register_funding_momentum() -> None:
             param_grid={"lookback": [24, 48, 96], "zscore_entry": [1.2, 1.5, 2.0]},
             build_signals=build_funding_momentum_long_signals,
             description="Funding Rate Z-Score Carry & Mean Reversion Long Strategy",
+            supports_book_gate=True,
         )
     )
     register(
@@ -134,5 +135,6 @@ def register_funding_momentum() -> None:
             param_grid={"lookback": [24, 48, 96], "zscore_entry": [1.2, 1.5, 2.0]},
             build_signals=build_funding_momentum_short_signals,
             description="Funding Rate Z-Score Carry & Mean Reversion Short Strategy",
+            supports_book_gate=True,
         )
     )
