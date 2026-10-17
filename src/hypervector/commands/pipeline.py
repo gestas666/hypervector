@@ -739,8 +739,6 @@ class PipelineRun:
             sampler=args.sampler,
             strict_hl_only=bool(args.strict_hl_only),
             force_refresh=False,
-            # The data stage pinned the window; serve it as is (never refetch).
-            pin_cache=True,
             export_best=True,
             # The data stage pinned the window: serve that cache as is, offline.
             pin_cache=True,
