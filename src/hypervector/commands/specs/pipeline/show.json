@@ -1,0 +1,26 @@
+{
+  "schema": 2,
+  "help": "Print one pipeline manifest (default: the newest run)",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.pipeline:cmd_show",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "ref"
+      ],
+      "options": {
+        "nargs": "?",
+        "default": "latest",
+        "metavar": "REF",
+        "help": "a pipeline id under runs/pipeline/, a run directory, or latest (default: latest)"
+      }
+    }
+  ]
+}

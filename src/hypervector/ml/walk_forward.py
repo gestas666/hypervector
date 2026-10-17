@@ -22,6 +22,24 @@ from hypervector.strategies.registry import get_strategy
 from hypervector.sweep.exits import ExitConfig
 
 
+MIN_LABELS = 25
+
+
+class InsufficientLabelsError(RuntimeError):
+    """The strategy fired too rarely on the window to fit a walk-forward model.
+
+    A measured result (trade count), not an engine fault: a caller that must not
+    gate on results can tell it apart from technical failures.
+    """
+
+    def __init__(self, n_labels: int) -> None:
+        super().__init__(
+            f"too few labeled samples for walk-forward: {n_labels} "
+            f"(need ≥{MIN_LABELS}; strategy may not fire enough on this window)"
+        )
+        self.n_labels = n_labels
+
+
 @dataclass
 class FoldScore:
     fold: int
@@ -146,11 +164,8 @@ def run_walk_forward_metalabel(
         max_hold_bars=int(max_hold_bars),
         feature_matrix=feats,
     )
-    if len(labels) < 25:
-        raise RuntimeError(
-            f"too few labeled samples for walk-forward: {len(labels)} "
-            f"(need ≥25; strategy may not fire enough on this window)"
-        )
+    if len(labels) < MIN_LABELS:
+        raise InsufficientLabelsError(len(labels))
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out = (

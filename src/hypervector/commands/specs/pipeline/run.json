@@ -1,0 +1,175 @@
+{
+  "schema": 2,
+  "help": "Run data, search, export, Nautilus, optional model and the paper hand-off in one process",
+  "description": "One foreground process that calls the stage libraries in-process: pin the data window, search (tune or sweep), validate the exported bundle strictly, replay it in NautilusTrader with a report-only parity block, optionally train a metalabel model, then hand off to paper (shadow, no venue orders). It never starts a daemon or anything live. A manifest is written atomically after every stage to <out-dir>/pipeline.json, and every stage records the equivalent single command. The evidence traps are not computed. Exit 0 when every requested stage completed, 1 on the first technical failure (partial manifest), 2 when refused before any work.",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.pipeline:cmd_run",
+  "authority": "none",
+  "environment": [
+    "models"
+  ],
+  "data_root": "honored",
+  "include": [
+    "market",
+    "fees"
+  ],
+  "fragment_overrides": {
+    "--symbol": {
+      "default": null,
+      "help": "Hyperliquid coin, e.g. BTC, kPEPE or xyz:TSLA (default: BTC, or the bundle's with --export)"
+    },
+    "--timeframe": {
+      "default": null,
+      "help": "bar size (default: 1m, or the bundle's with --export)"
+    },
+    "--lookback-days": {
+      "default": null,
+      "help": "calendar days of history, minimum 30 (default: 90, or the bundle's with --export)"
+    },
+    "--refresh": {
+      "help": "ignore the cache and re-fetch in the data stage; later stages never refresh"
+    }
+  },
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--strategy"
+      ],
+      "options": {
+        "dest": "strategy",
+        "default": null,
+        "help": "registered strategy name, e.g. crown_stack_long"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--no-network"
+      ],
+      "options": {
+        "dest": "no_network",
+        "action": "store_true",
+        "default": false,
+        "help": "read history only from the local cache; a cache miss exits 1"
+      }
+    },
+    {
+      "flags": [
+        "--search"
+      ],
+      "options": {
+        "dest": "search",
+        "choices": [
+          "tune",
+          "sweep"
+        ],
+        "default": "tune",
+        "help": "search stage: tune (Karpathy or Optuna autotuning) or sweep (grid over the strategy's track)"
+      }
+    },
+    {
+      "flags": [
+        "--sampler"
+      ],
+      "options": {
+        "dest": "sampler",
+        "type": "sampler",
+        "choices": [
+          "karpathy",
+          "optuna"
+        ],
+        "default": "karpathy",
+        "help": "tune sampler: karpathy (random-adaptive with elite zoom) or optuna (TPE)"
+      }
+    },
+    {
+      "flags": [
+        "--n-trials"
+      ],
+      "options": {
+        "dest": "n_trials",
+        "type": "int",
+        "default": 100,
+        "help": "number of tuning trials (tune search)"
+      }
+    },
+    {
+      "flags": [
+        "--export"
+      ],
+      "options": {
+        "dest": "export",
+        "default": null,
+        "help": "start from this strategy bundle (a directory, a candidate id under exports/, or latest); skips data and search"
+      }
+    },
+    {
+      "flags": [
+        "--no-nautilus"
+      ],
+      "options": {
+        "dest": "no_nautilus",
+        "action": "store_true",
+        "default": false,
+        "help": "skip the NautilusTrader replay and its parity block"
+      }
+    },
+    {
+      "flags": [
+        "--conviction"
+      ],
+      "options": {
+        "dest": "conviction",
+        "type": "float",
+        "default": 0.5,
+        "help": "position-sizing conviction (0..1) for the sweep, Nautilus and paper"
+      }
+    },
+    {
+      "flags": [
+        "--train-model"
+      ],
+      "options": {
+        "dest": "train_model",
+        "action": "store_true",
+        "default": false,
+        "help": "train a walk-forward metalabel model into <out-dir>/model (never installed)"
+      }
+    },
+    {
+      "flags": [
+        "--paper-bars"
+      ],
+      "options": {
+        "dest": "paper_bars",
+        "type": "int",
+        "default": null,
+        "help": "run a foreground shadow paper session for this many live bars, 1..1440 (default: hand-off only)"
+      }
+    },
+    {
+      "flags": [
+        "--out-dir"
+      ],
+      "options": {
+        "dest": "out_dir",
+        "type": "Path",
+        "default": null,
+        "help": "run directory, which must not exist (default: runs/pipeline/<pipeline id> under the data root)"
+      }
+    },
+    {
+      "flags": [
+        "--dry-run"
+      ],
+      "options": {
+        "dest": "dry_run",
+        "action": "store_true",
+        "default": false,
+        "help": "print the resolved plan (stages and their commands) and exit without writing"
+      }
+    }
+  ]
+}
