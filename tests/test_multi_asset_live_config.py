@@ -523,16 +523,29 @@ def test_profile_fingerprint_is_stable_across_python_hash_seeds() -> None:
         "print(load('configs/multi_asset_bidirectional_canary.toml', "
         "mode='observe').profile_fingerprint)"
     )
-    fingerprints = {
-        subprocess.check_output(
+    # The seeded interpreters are independent, so run them concurrently rather than in turn.
+    processes = [
+        subprocess.Popen(
             [sys.executable, "-c", program],
             cwd=_PROFILE.parents[1],
             env={**os.environ, "PYTHONHASHSEED": seed},
+            stdout=subprocess.PIPE,
             text=True,
-        ).strip()
+        )
         for seed in ("1", "2", "3", "4")
-    }
+    ]
+    try:
+        outputs = [process.communicate(timeout=120)[0] for process in processes]
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            if process.stdout is not None:
+                process.stdout.close()
 
+    assert [process.returncode for process in processes] == [0, 0, 0, 0]
+    fingerprints = {output.strip() for output in outputs}
     assert len(fingerprints) == 1
 
 

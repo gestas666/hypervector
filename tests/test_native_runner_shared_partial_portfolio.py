@@ -10,14 +10,14 @@ import pytest
 from native_replay_partial_protective_fixture import PartialProtectiveFixture
 from native_replay_portfolio_oracle import INITIAL_CASH, portfolio_receipt_oracle
 from native_replay_runner_fixture import configured_recorded_runner
-from test_native_replay_adapter import deny_external_ports
-from test_native_runner_partial_protection import (
+from native_runner_partial_case_fixture import (
     ENTRY_LEAD_MS,
     FOLLOWUP_CLOSE_OBSERVATION_MS,
     PARTIAL_EXECUTION_ADVANCE_MS,
     PARTIAL_OBSERVATION_MS,
     SIBLING_CANCEL_OBSERVATION_MS,
 )
+from test_native_replay_adapter import deny_external_ports
 from test_native_runner_recorded_control import INPUTS
 
 from hypervector.live.sol_live_snapshot import SolLiveSnapshot

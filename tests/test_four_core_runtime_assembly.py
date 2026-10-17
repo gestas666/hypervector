@@ -1,5 +1,6 @@
 """Exercise approved V88 runtime assembly without execution clients or networks."""
 
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -48,11 +49,14 @@ def test_approved_four_core_router_routes_each_configured_direction() -> None:
 
 
 def test_approved_four_core_runtime_constructs_without_execution(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Exercise runtime controllers with inert dependencies and the real profile."""
     script = _load_module()
-    config = script.load_multi_asset_live_config(_CONFIG, mode="observe")
+    loaded = script.load_multi_asset_live_config(_CONFIG, mode="observe")
+    # Keep the operator inbox and STOP file out of the checkout's real data/live.
+    ledger = tmp_path / "live/bidirectional_cohort/cohort.jsonl"
+    config = replace(loaded, cohort_ledger=ledger, stop_file=ledger.parent / "STOP")
     monkeypatch.setattr(
         script,
         "install_process_signal_stop",
