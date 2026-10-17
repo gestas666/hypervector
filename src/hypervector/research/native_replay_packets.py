@@ -12,7 +12,11 @@ from hashlib import sha256
 import json
 from pathlib import Path
 
-from hypervector.data.oxa_history import OxaBookRequest, output_directory
+from hypervector.data.oxa_history import (
+    DEFAULT_BOOK_MAX_PAGES,
+    OxaBookRequest,
+    output_directory,
+)
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.research.native_replay_book_source import (
     AuthenticatedBookBundle,
@@ -140,7 +144,7 @@ def _execution_source(
             symbol,
             datetime.fromisoformat(_text(row["start"])),
             datetime.fromisoformat(_text(row["end"])),
-            max_pages=20,
+            max_pages=DEFAULT_BOOK_MAX_PAGES,
             market_family="hip3" if ":" in symbol else "core",
         )
         root = Path(_text(row["data_root"]))

@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict, dataclass
-from datetime import datetime
 from pathlib import Path
 
 import duckdb
@@ -13,11 +12,9 @@ import duckdb
 from hypervector.data.oxa_archive_audit import (
     OxaArchiveAuditConfig,
     OxaArchiveBundle,
-    verified_archive_bundles,
+    OxaArchiveBundleEvidence,
+    iter_archive_bundle_evidence,
 )
-from hypervector.data.oxa_history import OxaBookRequest, output_directory
-from hypervector.data.oxa_storage import file_evidence
-from hypervector.data.oxa_trades import OxaTradeRequest, trade_output_directory
 from hypervector.data.research_archive_provenance import (
     ARCHIVE_PROVENANCE_SCHEMA_SQL,
     LEGACY_ARCHIVE_PROVENANCE_SQL,
@@ -98,11 +95,22 @@ class ResearchDatabase:
         with self._connect() as connection:
             _create_schema(connection)
 
-    def ingest_archive(self, config: OxaArchiveAuditConfig) -> ResearchIngestReport:
-        """Verify and atomically ingest every bundle in an archive window."""
-        bundles = verified_archive_bundles(config)
+    def ingest_archive(
+        self,
+        config: OxaArchiveAuditConfig,
+        *,
+        verify_all: bool = False,
+    ) -> ResearchIngestReport:
+        """Verify and atomically ingest every new bundle in an archive window.
+
+        Every manifest is identity-checked, but per-file checksums run only for
+        bundles that will be imported, unless ``verify_all`` re-audits the
+        already-ingested ones too. All verification precedes any write.
+        """
         with self._connect() as connection:
-            pending, skipped = _pending_bundles(connection, config, bundles)
+            pending, skipped = _pending_bundles(
+                connection, config, verify_all=verify_all
+            )
             for batch in _partition(pending, DEFAULT_BUNDLE_BATCH_SIZE):
                 _ingest_bundle_batch(connection, config, batch)
         return ResearchIngestReport(
@@ -115,11 +123,14 @@ class ResearchDatabase:
     def replace_changed_archive(
         self,
         config: OxaArchiveAuditConfig,
+        *,
+        verify_all: bool = False,
     ) -> ResearchIngestReport:
         """Atomically replace changed bundles after explicit source repair."""
-        bundles = verified_archive_bundles(config)
         with self._connect() as connection:
-            pending, skipped = _replacement_bundles(connection, config, bundles)
+            pending, skipped = _replacement_bundles(
+                connection, config, verify_all=verify_all
+            )
             for batch in _partition(pending, DEFAULT_BUNDLE_BATCH_SIZE):
                 _ingest_bundle_batch(connection, config, batch)
         return ResearchIngestReport(
@@ -258,33 +269,42 @@ def _migrate_hip3_paired_provenance(
 def _pending_bundles(
     connection: duckdb.DuckDBPyConnection,
     config: OxaArchiveAuditConfig,
-    bundles: tuple[OxaArchiveBundle, ...],
+    *,
+    verify_all: bool = False,
 ) -> tuple[tuple[_PendingBundle, ...], int]:
     pending: list[_PendingBundle] = []
     skipped = 0
-    for bundle in bundles:
-        identity = _bundle_identity(config, bundle)
-        if _is_ingested(connection, identity):
+    for evidence in iter_archive_bundle_evidence(config):
+        identity = _bundle_identity(config, evidence)
+        if _is_ingested(connection, config, evidence, identity):
             skipped += 1
+            if verify_all:
+                evidence.verify_files()
         else:
-            pending.append(_PendingBundle(bundle, identity))
+            evidence.verify_files()
+            pending.append(_PendingBundle(evidence.bundle, identity))
     return tuple(pending), skipped
 
 
 def _replacement_bundles(
     connection: duckdb.DuckDBPyConnection,
     config: OxaArchiveAuditConfig,
-    bundles: tuple[OxaArchiveBundle, ...],
+    *,
+    verify_all: bool = False,
 ) -> tuple[tuple[_PendingBundle, ...], int]:
     pending: list[_PendingBundle] = []
     skipped = 0
-    for bundle in bundles:
-        identity = _bundle_identity(config, bundle)
+    for evidence in iter_archive_bundle_evidence(config):
+        identity = _bundle_identity(config, evidence)
         stored = _stored_fingerprint(connection, identity.bundle_id)
         if stored == identity.fingerprint:
             skipped += 1
+            if verify_all:
+                evidence.verify_files()
         else:
-            pending.append(_PendingBundle(bundle, identity, stored is not None))
+            evidence.verify_files()
+            replaces = stored is not None
+            pending.append(_PendingBundle(evidence.bundle, identity, replaces))
     return tuple(pending), skipped
 
 
@@ -299,15 +319,11 @@ def _partition(
 
 def _bundle_identity(
     config: OxaArchiveAuditConfig,
-    bundle: OxaArchiveBundle,
+    loaded: OxaArchiveBundleEvidence,
 ) -> _BundleIdentity:
-    book_dir, trade_dir = _bundle_directories(config, bundle.start, bundle.end)
-    book_sha = _manifest_sha256(book_dir / "manifest.json")
-    trade_sha = (
-        NO_TRADE_MANIFEST_SHA256
-        if trade_dir is None
-        else _manifest_sha256(trade_dir / "manifest.json")
-    )
+    bundle = loaded.bundle
+    book_sha = loaded.book_manifest_sha256
+    trade_sha = loaded.trade_manifest_sha256 or NO_TRADE_MANIFEST_SHA256
     key = _bundle_key(config, bundle)
     bundle_id = hashlib.sha256(key.encode("utf-8")).hexdigest()
     evidence = {
@@ -334,56 +350,25 @@ def _bundle_key(config: OxaArchiveAuditConfig, bundle: OxaArchiveBundle) -> str:
     return f"{config.market_family}|book_only={config.book_only}|{base}"
 
 
-def _bundle_directories(
-    config: OxaArchiveAuditConfig,
-    start: datetime,
-    end: datetime,
-) -> tuple[Path, Path | None]:
-    book = OxaBookRequest(
-        config.symbol,
-        start,
-        end,
-        config.depth,
-        1000,
-        20,
-        30.0,
-        market_family=config.market_family,
-    )
-    if config.book_only:
-        return output_directory(config.data_root, book), None
-    trade = OxaTradeRequest(
-        config.symbol,
-        start,
-        end,
-        1000,
-        500,
-        30.0,
-        market_family=config.market_family,
-    )
-    return (
-        output_directory(config.data_root, book),
-        trade_output_directory(config.data_root, trade),
-    )
-
-
-def _manifest_sha256(path: Path) -> str:
-    value = file_evidence(path).get("sha256")
-    if not isinstance(value, str):
-        raise ValueError(f"manifest digest is invalid: {path}")
-    return value
-
-
 def _is_ingested(
     connection: duckdb.DuckDBPyConnection,
+    config: OxaArchiveAuditConfig,
+    evidence: OxaArchiveBundleEvidence,
     identity: _BundleIdentity,
 ) -> bool:
     stored = _stored_fingerprint(connection, identity.bundle_id)
     if stored is None:
         return False
     if stored != identity.fingerprint:
+        directories = [str(evidence.book_directory)]
+        if evidence.trade_directory is not None:
+            directories.append(str(evidence.trade_directory))
         raise ValueError(
             "archive bundle identity already exists with different evidence: "
-            f"{identity.bundle_id}"
+            f"{config.symbol} {evidence.bundle.start.isoformat()} to "
+            f"{evidence.bundle.end.isoformat()} (bundle {identity.bundle_id}; "
+            f"manifests in {', '.join(directories)}); if the source was repaired "
+            "on purpose, rebuild with --replace-changed"
         )
     return True
 

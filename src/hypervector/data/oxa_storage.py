@@ -105,11 +105,23 @@ def open_text_reader(path: Path) -> IO[str]:
     return path.open("r", encoding="utf-8")
 
 
+RAW_JSON_GZIP_LEVEL = 6
+
+
 def write_gzip_json(path: Path, payload: object) -> None:
-    """Write deterministic formatted JSON to a new gzip bundle file."""
-    with gzip_text_writer(path) as handle:
-        json.dump(payload, handle, indent=2, sort_keys=True)
-        handle.write("\n")
+    """Write deterministic compact JSON to a new gzip bundle file.
+
+    The one-shot C encoder with compact separators and gzip level 6 is several
+    times faster than streaming indented JSON at level 9 through a text wrapper,
+    and the files are slightly smaller. Readers parse JSON, so whitespace is not
+    evidence; every file is still verified against its own recorded SHA-256.
+    """
+    text = json.dumps(payload, separators=(",", ":"), sort_keys=True) + "\n"
+    with path.open("xb") as raw:
+        with gzip.GzipFile(
+            fileobj=raw, mode="wb", mtime=0, compresslevel=RAW_JSON_GZIP_LEVEL
+        ) as compressed:
+            compressed.write(text.encode("utf-8"))
 
 
 def file_evidence(path: Path) -> dict[str, object]:

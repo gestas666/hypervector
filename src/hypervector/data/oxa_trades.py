@@ -21,18 +21,28 @@ from hypervector.data.oxa_api import (
     validate_market_symbol,
     validate_window,
 )
+from hypervector.data.oxa_acquisition import (
+    bundle_report,
+    incomplete_fetch_error,
+    partial_directory,
+    reject_existing_partial,
+    reusable_bundle_manifest,
+)
+from hypervector.data.oxa_pagination import paginate, write_raw_pages
 from hypervector.data.oxa_storage import (
     file_evidence,
     gzip_text_writer,
     open_text_reader,
     publish_immutable_directory,
-    write_gzip_json,
     write_json,
 )
 
 AggressorSide = Literal["buy", "sell"]
 TradeIdSource = Literal["vendor", "derived_null_id_v1"]
 TRADE_NORMALIZATION_VERSION = "taker_only_v2"
+DEFAULT_TRADE_MAX_PAGES = 500
+"""Shared resumable-backfill trade page bound per window (not part of identity)."""
+_SOURCE = "0xarchive_hyperliquid_public_trades"
 _SURROGATE_NAMESPACE = 1 << 62
 _SURROGATE_MASK = _SURROGATE_NAMESPACE - 1
 
@@ -196,15 +206,12 @@ def fetch_trade_history(
     request: OxaTradeRequest,
 ) -> OxaTradeFetch:
     """Fetch bounded pages and normalize one public print per match."""
-    pages: list[OxaTradePage] = []
-    cursor: str | None = None
-    for _ in range(request.max_pages):
-        page = client.fetch_page(request, cursor=cursor)
-        pages.append(page)
-        cursor = page.next_cursor
-        if cursor is None:
-            break
-    return normalize_trade_pages(tuple(pages))
+    pages, _cursor = paginate(
+        lambda next_cursor: client.fetch_page(request, cursor=next_cursor),
+        request.max_pages,
+        label="trade",
+    )
+    return normalize_trade_pages(pages)
 
 
 def normalize_trade_pages(
@@ -248,12 +255,18 @@ def store_trade_history(
     result: OxaTradeFetch,
 ) -> OxaStoredTrades:
     """Atomically publish raw fills, normalized trades, and their manifest."""
-    final = trade_output_directory(data_root, request)
+    return _publish_trades(trade_output_directory(data_root, request), request, result)
 
+
+def _publish_trades(
+    final: Path,
+    request: OxaTradeRequest,
+    result: OxaTradeFetch,
+) -> OxaStoredTrades:
     def write_bundle(staging: Path) -> None:
         raw_dir = staging / "raw"
         raw_dir.mkdir()
-        files = _write_raw_pages(raw_dir, result.pages)
+        files = write_raw_pages(raw_dir, result.pages)
         trades_path = staging / "trades.jsonl.gz"
         write_trade_jsonl(trades_path, result.trades)
         files["trades.jsonl.gz"] = file_evidence(trades_path)
@@ -268,32 +281,86 @@ def acquire_and_store_trades(
     data_root: Path | str,
     api_key: str,
     request: OxaTradeRequest,
+    session: HttpSession | None = None,
+    allow_partial: bool = False,
 ) -> dict[str, object]:
-    """Acquire bounded participant fills and return a secret-free report."""
-    result = fetch_trade_history(OxaTradeClient(api_key=api_key), request)
-    stored = store_trade_history(data_root, request, result)
-    first = result.trades[0].timestamp if result.trades else None
-    last = result.trades[-1].timestamp if result.trades else None
-    return {
-        "ok": True,
-        "source": "0xarchive_hyperliquid_public_trades",
-        "venue": "hyperliquid",
+    """Acquire one complete participant-fill window and a secret-free report.
+
+    An existing complete bundle is verified and reused with no vendor call; an
+    unfinished cursor chain is never published at the canonical path.
+    """
+    directory = trade_output_directory(data_root, request)
+    if reusable_bundle_manifest(
+        directory, kind="trade", expected=_reuse_identity(request)
+    ):
+        return _report(request, directory, reused=True)
+    if allow_partial:
+        reject_existing_partial(directory, kind="trade")
+    result = fetch_trade_history(
+        OxaTradeClient(api_key=api_key, session=session), request
+    )
+    partial = not result.complete
+    if partial and not allow_partial:
+        raise incomplete_fetch_error(
+            "trade",
+            page_count=len(result.pages),
+            continuation_cursor=result.continuation_cursor,
+        )
+    if not partial and result.unresolved_fill_groups:
+        raise ValueError(
+            f"trade participant groups unresolved ({result.unresolved_fill_groups}); "
+            "nothing was stored"
+        )
+    if partial:
+        directory = partial_directory(directory)
+    stored = _publish_trades(directory, request, result)
+    return _report(request, stored.directory, reused=False, partial=partial)
+
+
+def _reuse_identity(request: OxaTradeRequest) -> dict[str, object]:
+    identity: dict[str, object] = {
+        "source": _SOURCE,
         "symbol": request.symbol,
-        "directory": str(stored.directory.resolve()),
-        "trades_path": str(stored.trades_path.resolve()),
-        "manifest_path": str(stored.manifest_path.resolve()),
-        "request_ids": list(result.request_ids),
-        "page_count": len(result.pages),
-        "raw_fill_count": sum(len(page.fills) for page in result.pages),
-        "trade_count": len(result.trades),
+        "requested_start": request.start.isoformat(),
+        "requested_end": request.end.isoformat(),
         "normalization_version": TRADE_NORMALIZATION_VERSION,
-        "surrogate_trade_id_count": _surrogate_count(result.trades),
-        "unresolved_fill_groups": result.unresolved_fill_groups,
-        "observed_start": first,
-        "observed_end": last,
-        "complete": result.complete,
-        "continuation_cursor": result.continuation_cursor,
     }
+    if request.market_family == "hip3":
+        identity["market_family"] = "hip3"
+    return identity
+
+
+def _report(
+    request: OxaTradeRequest,
+    directory: Path,
+    *,
+    reused: bool,
+    partial: bool = False,
+) -> dict[str, object]:
+    return bundle_report(
+        directory,
+        identity={
+            "source": _SOURCE,
+            "venue": "hyperliquid",
+            "market_family": request.market_family,
+            "symbol": request.symbol,
+        },
+        path_key="trades_path",
+        normalized_names=("trades.jsonl.gz", "trades.jsonl"),
+        counts=(
+            "request_ids",
+            "page_count",
+            "raw_fill_count",
+            "trade_count",
+            "normalization_version",
+            "surrogate_trade_id_count",
+            "unresolved_fill_groups",
+            "observed_start",
+            "observed_end",
+        ),
+        reused=reused,
+        partial=partial,
+    )
 
 
 def load_trade_jsonl(path: Path | str) -> pd.DataFrame:
@@ -314,18 +381,6 @@ def load_trade_jsonl(path: Path | str) -> pd.DataFrame:
     if not frame["aggressor_side"].isin(("buy", "sell")).all():
         raise ValueError("trade JSONL aggressor_side must be buy|sell")
     return frame.sort_values(["ts_ms", "trade_id"]).reset_index(drop=True)
-
-
-def _write_raw_pages(
-    raw_dir: Path,
-    pages: tuple[OxaTradePage, ...],
-) -> dict[str, dict[str, object]]:
-    evidence: dict[str, dict[str, object]] = {}
-    for index, page in enumerate(pages, start=1):
-        path = raw_dir / f"page-{index:04d}.json.gz"
-        write_gzip_json(path, page.raw_payload)
-        evidence[f"raw/{path.name}"] = file_evidence(path)
-    return evidence
 
 
 def write_trade_jsonl(path: Path, trades: tuple[OxaPublicTrade, ...]) -> None:

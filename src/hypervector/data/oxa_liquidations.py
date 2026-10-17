@@ -16,11 +16,18 @@ from hypervector.data.oxa_api import (
     validate_symbol,
     validate_window,
 )
+from hypervector.data.oxa_acquisition import (
+    bundle_report,
+    incomplete_fetch_error,
+    partial_directory,
+    reject_existing_partial,
+    reusable_bundle_manifest,
+)
+from hypervector.data.oxa_pagination import paginate, write_raw_pages
 from hypervector.data.oxa_storage import (
     file_evidence,
     gzip_text_writer,
     publish_immutable_directory,
-    write_gzip_json,
     write_json,
 )
 
@@ -31,6 +38,7 @@ _DIRECTION_SIDE = {
     "Close Short": ("short", "B"),
     "Liquidated Cross Long": ("long", "A"),
     "Liquidated Cross Short": ("short", "B"),
+    "Liquidated Isolated Long": ("long", "A"),
     "Liquidated Isolated Short": ("short", "B"),
 }
 
@@ -223,21 +231,15 @@ def fetch_liquidation_history(
     request: OxaLiquidationRequest,
 ) -> OxaLiquidationFetch:
     """Fetch bounded cursor pages and retain every validated event."""
-    pages: list[OxaLiquidationPage] = []
-    cursor: str | None = None
-    for _ in range(request.max_pages):
-        requested_cursor = cursor
-        page = client.fetch_page(request, cursor=cursor)
-        pages.append(page)
-        cursor = page.next_cursor
-        if cursor is not None and cursor == requested_cursor:
-            raise ValueError("0xArchive liquidation cursor did not advance")
-        if cursor is None:
-            break
+    pages, cursor = paginate(
+        lambda next_cursor: client.fetch_page(request, cursor=next_cursor),
+        request.max_pages,
+        label="liquidation",
+    )
     events = _deduplicate_events(
         tuple(event for page in pages for event in page.events)
     )
-    return OxaLiquidationFetch(tuple(pages), events, cursor is None, cursor)
+    return OxaLiquidationFetch(pages, events, cursor is None, cursor)
 
 
 def liquidation_output_directory(
@@ -264,12 +266,20 @@ def store_liquidation_history(
     result: OxaLiquidationFetch,
 ) -> OxaStoredLiquidations:
     """Atomically publish raw pages, normalized labels, and provenance."""
-    final = liquidation_output_directory(data_root, request)
+    return _publish_liquidations(
+        liquidation_output_directory(data_root, request), request, result
+    )
 
+
+def _publish_liquidations(
+    final: Path,
+    request: OxaLiquidationRequest,
+    result: OxaLiquidationFetch,
+) -> OxaStoredLiquidations:
     def write_bundle(staging: Path) -> None:
         raw_dir = staging / "raw"
         raw_dir.mkdir()
-        files = _write_raw_pages(raw_dir, result.pages)
+        files = write_raw_pages(raw_dir, result.pages)
         events_path = staging / "liquidations.jsonl.gz"
         _write_event_rows(events_path, result.events)
         files[events_path.name] = file_evidence(events_path)
@@ -288,39 +298,64 @@ def acquire_and_store_liquidations(
     data_root: Path | str,
     api_key: str,
     request: OxaLiquidationRequest,
+    session: HttpSession | None = None,
+    allow_partial: bool = False,
 ) -> dict[str, object]:
-    """Acquire bounded liquidation labels and return a secret-free report."""
-    result = fetch_liquidation_history(OxaLiquidationClient(api_key=api_key), request)
-    stored = store_liquidation_history(data_root, request, result)
-    first = result.events[0].timestamp if result.events else None
-    last = result.events[-1].timestamp if result.events else None
-    return {
-        "ok": True,
+    """Acquire one complete liquidation window and a secret-free report.
+
+    An existing complete bundle is verified and reused with no vendor call; an
+    unfinished cursor chain is never published at the canonical path.
+    """
+    directory = liquidation_output_directory(data_root, request)
+    expected = {
         "source": _SOURCE,
+        "normalization_version": LIQUIDATION_NORMALIZATION_VERSION,
         "symbol": request.symbol,
-        "directory": str(stored.directory.resolve()),
-        "liquidations_path": str(stored.events_path.resolve()),
-        "manifest_path": str(stored.manifest_path.resolve()),
-        "request_ids": list(result.request_ids),
-        "page_count": len(result.pages),
-        "event_count": len(result.events),
-        "observed_start": first,
-        "observed_end": last,
-        "complete": result.complete,
-        "continuation_cursor": result.continuation_cursor,
+        "requested_start": request.start.isoformat(),
+        "requested_end": request.end.isoformat(),
     }
+    if reusable_bundle_manifest(directory, kind="liquidation", expected=expected):
+        return _report(request, directory, reused=True)
+    if allow_partial:
+        reject_existing_partial(directory, kind="liquidation")
+    result = fetch_liquidation_history(
+        OxaLiquidationClient(api_key=api_key, session=session), request
+    )
+    partial = not result.complete
+    if partial and not allow_partial:
+        raise incomplete_fetch_error(
+            "liquidation",
+            page_count=len(result.pages),
+            continuation_cursor=result.continuation_cursor,
+        )
+    if partial:
+        directory = partial_directory(directory)
+    stored = _publish_liquidations(directory, request, result)
+    return _report(request, stored.directory, reused=False, partial=partial)
 
 
-def _write_raw_pages(
-    raw_dir: Path,
-    pages: tuple[OxaLiquidationPage, ...],
-) -> dict[str, dict[str, object]]:
-    evidence: dict[str, dict[str, object]] = {}
-    for index, page in enumerate(pages, start=1):
-        path = raw_dir / f"page-{index:04d}.json.gz"
-        write_gzip_json(path, page.raw_payload)
-        evidence[f"raw/{path.name}"] = file_evidence(path)
-    return evidence
+def _report(
+    request: OxaLiquidationRequest,
+    directory: Path,
+    *,
+    reused: bool,
+    partial: bool = False,
+) -> dict[str, object]:
+    return bundle_report(
+        directory,
+        identity={"source": _SOURCE, "venue": "hyperliquid", "symbol": request.symbol},
+        path_key="liquidations_path",
+        normalized_names=("liquidations.jsonl.gz",),
+        counts=(
+            "request_ids",
+            "page_count",
+            "event_count",
+            "observed_start",
+            "observed_end",
+        ),
+        reused=reused,
+        partial=partial,
+    )
 
 
 def _write_event_rows(

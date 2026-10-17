@@ -1,4 +1,8 @@
-"""Secret-safe bounded 0xArchive acquisition commands."""
+"""Secret-safe bounded 0xArchive acquisition commands.
+
+Argument parsing lives in the declarative command specs under
+``hypervector/commands/specs``; this module only holds their handlers.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +10,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import UTC, datetime
+from dataclasses import replace
 from pathlib import Path
 
 from hypervector.data.oxa_api import OxaHistoryError
@@ -16,161 +20,16 @@ from hypervector.cli_oxa_candle_cache import (
 )
 
 
-def add_oxa_parsers(subparsers: argparse._SubParsersAction) -> None:
-    """Register bounded venue evidence acquisition commands."""
-    from hypervector.cli_hip3_research import add_hip3_research_parsers
-    from hypervector.cli_research_journal import add_research_journal_parsers
+def acquisition_options(args: argparse.Namespace) -> dict[str, object]:
+    """Return opt-in acquisition keywords present on the parsed command.
 
-    _add_archive_fetch_parsers(subparsers)
-    _add_context_fetch_parsers(subparsers)
-    _add_research_database_parsers(subparsers)
-    add_hip3_research_parsers(subparsers)
-    add_research_journal_parsers(subparsers)
-
-
-def _add_archive_fetch_parsers(subparsers: argparse._SubParsersAction) -> None:
-    """Register L2, trade, liquidation, and price acquisition commands."""
-    from hypervector.cli_oxa_liquidations import cmd_oxa_liquidation_fetch
-
-    book = subparsers.add_parser(
-        "oxa-book-fetch",
-        help="Fetch bounded Hyperliquid-native L2 history from 0xArchive",
-    )
-    _add_window_args(book)
-    book.add_argument("--depth", type=int, default=20, choices=range(1, 21))
-    book.set_defaults(func=cmd_oxa_book_fetch)
-
-    trades = subparsers.add_parser(
-        "oxa-trade-fetch",
-        help="Fetch bounded Hyperliquid public trades from 0xArchive",
-    )
-    _add_window_args(trades)
-    trades.set_defaults(func=cmd_oxa_trade_fetch)
-
-    liquidations = subparsers.add_parser(
-        "oxa-liquidation-fetch",
-        help="Fetch bounded Hyperliquid liquidation labels from 0xArchive",
-    )
-    _add_window_args(liquidations)
-    liquidations.set_defaults(func=cmd_oxa_liquidation_fetch)
-
-    prices = subparsers.add_parser(
-        "oxa-price-fetch",
-        help="Fetch bounded Hyperliquid mark/oracle prices from 0xArchive",
-    )
-    _add_window_args(prices)
-    prices.set_defaults(func=cmd_oxa_price_fetch)
-
-
-def _add_context_fetch_parsers(subparsers: argparse._SubParsersAction) -> None:
-    """Register funding and candle acquisition commands."""
-    funding = subparsers.add_parser(
-        "hl-funding-fetch",
-        help="Fetch complete official Hyperliquid hourly funding history",
-    )
-    funding.add_argument("--symbol", default="BTC")
-    funding.add_argument("--start", required=True, type=_parse_utc_datetime)
-    funding.add_argument("--end", required=True, type=_parse_utc_datetime)
-    funding.set_defaults(func=cmd_hl_funding_fetch)
-
-    candles = subparsers.add_parser(
-        "oxa-candle-fetch",
-        help="Fetch bounded Hyperliquid-native OHLCV candles from 0xArchive",
-    )
-    candles.add_argument("--symbol", default="BTC")
-    candles.add_argument("--market-family", choices=("core", "hip3"), default="core")
-    candles.add_argument("--start", required=True, type=_parse_utc_datetime)
-    candles.add_argument("--end", required=True, type=_parse_utc_datetime)
-    candles.add_argument(
-        "--interval",
-        default="1m",
-        choices=("1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"),
-    )
-    candles.add_argument("--limit", type=int, default=10_000)
-    candles.add_argument("--max-pages", type=int, default=20)
-    candles.add_argument("--timeout", type=float, default=30.0)
-    candles.add_argument("--install-research-cache", action="store_true")
-    candles.set_defaults(func=cmd_oxa_candle_fetch)
-
-
-def _add_research_database_parsers(subparsers: argparse._SubParsersAction) -> None:
-    """Register DuckDB ingestion and comparison commands."""
-    _add_research_ingest_parsers(subparsers)
-    _add_research_report_parsers(subparsers)
-
-
-def _add_research_ingest_parsers(subparsers: argparse._SubParsersAction) -> None:
-    """Register DuckDB data-ingestion commands."""
-    database = subparsers.add_parser(
-        "research-db-build",
-        help="Verify and incrementally load 0xArchive evidence into DuckDB",
-    )
-    database.add_argument("--symbol", default="BTC")
-    database.add_argument("--start", required=True, type=_parse_utc_datetime)
-    database.add_argument("--end", required=True, type=_parse_utc_datetime)
-    database.add_argument("--depth", type=int, default=20, choices=range(1, 21))
-    database.add_argument("--market-family", choices=("core", "hip3"), default="core")
-    database.add_argument("--books-only", action="store_true")
-    database.add_argument("--database", type=Path)
-    database.set_defaults(func=cmd_research_db_build)
-
-    live_events = subparsers.add_parser(
-        "research-db-live-event-import",
-        help="Import immutable live Hyperliquid event parts into DuckDB",
-    )
-    live_events.add_argument("--symbol", default="BTC")
-    live_events.add_argument("--database", type=Path)
-    live_events.set_defaults(func=cmd_research_db_live_event_import)
-
-    shadow = subparsers.add_parser(
-        "research-db-shadow-import",
-        help="Import paper/shadow ledger evidence into DuckDB for analysis",
-    )
-    shadow.add_argument(
-        "--ledger",
-        type=Path,
-        help="ledger path (default: <data-root>/paper/decisions/decisions.jsonl)",
-    )
-    shadow.add_argument("--database", type=Path)
-    shadow.set_defaults(func=cmd_research_db_shadow_import)
-
-    labels = subparsers.add_parser(
-        "research-db-regime-label-import",
-        help="Import source-pinned Hypertrader labels into DuckDB",
-    )
-    labels.add_argument("--labels", type=Path, required=True)
-    labels.add_argument("--metadata", type=Path, required=True)
-    labels.add_argument("--database", type=Path)
-    labels.set_defaults(func=cmd_research_db_regime_label_import)
-
-
-def _add_research_report_parsers(subparsers: argparse._SubParsersAction) -> None:
-    """Register DuckDB read-only reporting commands."""
-    from hypervector.cli_research_reports import (
-        cmd_research_db_shadow_trades,
-        cmd_research_db_status,
-    )
-
-    trades = subparsers.add_parser(
-        "research-db-shadow-trades",
-        help="Report completed shadow trades with causal entry regimes",
-    )
-    trades.add_argument("--database", type=Path)
-    trades.set_defaults(func=cmd_research_db_shadow_trades)
-
-    comparison = subparsers.add_parser(
-        "research-db-regime-compare",
-        help="Report backend versus strict/legacy regime annotations",
-    )
-    comparison.add_argument("--database", type=Path)
-    comparison.set_defaults(func=cmd_research_db_regime_compare)
-
-    status = subparsers.add_parser(
-        "research-db-status",
-        help="Report durable DuckDB research-market row counts",
-    )
-    status.add_argument("--database", type=Path)
-    status.set_defaults(func=cmd_research_db_status)
+    ``allow_partial`` is forwarded only when explicitly requested, so a fetch
+    never publishes an incomplete window unless the operator asked for the
+    non-canonical ``_partial`` output.
+    """
+    if getattr(args, "allow_partial", False) is True:
+        return {"allow_partial": True}
+    return {}
 
 
 def cmd_oxa_book_fetch(args: argparse.Namespace) -> int:
@@ -195,6 +54,7 @@ def cmd_oxa_book_fetch(args: argparse.Namespace) -> int:
             data_root=args.data_root,
             api_key=os.environ.get("OXA_API_KEY", ""),
             request=request,
+            **acquisition_options(args),
         )
     except (OxaHistoryError, ValueError, OSError) as exc:
         return _print_failure(exc)
@@ -222,6 +82,7 @@ def cmd_oxa_trade_fetch(args: argparse.Namespace) -> int:
             data_root=args.data_root,
             api_key=os.environ.get("OXA_API_KEY", ""),
             request=request,
+            **acquisition_options(args),
         )
     except (OxaHistoryError, ValueError, OSError) as exc:
         return _print_failure(exc)
@@ -274,10 +135,17 @@ def cmd_hl_funding_fetch(args: argparse.Namespace) -> int:
 
 
 def cmd_oxa_candle_fetch(args: argparse.Namespace) -> int:
-    """Acquire venue candles and optionally install an exact research cache."""
+    """Acquire venue candles and optionally install an exact research cache.
+
+    Cache-install preconditions are checked before any vendor call. An omitted
+    ``max_pages`` (``None``) is derived from the window. When installation
+    fails after a successful acquisition, the failure still reports the stored
+    bundle so the operator can install offline on the next run.
+    """
     from hypervector.data.oxa_candles import (
         OxaCandleRequest,
         acquire_and_store_candles,
+        estimated_candle_pages,
     )
 
     try:
@@ -289,32 +157,48 @@ def cmd_oxa_candle_fetch(args: argparse.Namespace) -> int:
             args.end,
             args.timeframe,
             args.limit,
-            args.max_pages,
+            1 if args.max_pages is None else args.max_pages,
             args.timeout,
             market_family=args.market_family,
         )
+        if args.max_pages is None:
+            request = replace(request, max_pages=estimated_candle_pages(request))
         report = acquire_and_store_candles(
             data_root=args.data_root,
             api_key=os.environ.get("OXA_API_KEY", ""),
             request=request,
         )
-        if args.install_research_cache:
-            cache_path, gap_fills = _install_candle_cache(args, report)
-            report["research_cache_path"] = cache_path
-            report["research_cache_gap_fills"] = gap_fills
     except (OxaHistoryError, ValueError, OSError) as exc:
         return _print_failure(exc)
+    if args.install_research_cache:
+        try:
+            cache_path, gap_fills = _install_candle_cache(args, report)
+        except (ValueError, OSError) as exc:
+            return _print_failure(
+                exc,
+                research_cache_error=str(exc),
+                acquisition={**report, "venue": "hyperliquid"},
+            )
+        report["research_cache_path"] = cache_path
+        report["research_cache_gap_fills"] = gap_fills
     return _print_success(report)
 
 
 def cmd_research_db_build(args: argparse.Namespace) -> int:
-    """Verify and incrementally materialize an archive window in DuckDB."""
+    """Verify and incrementally materialize an archive window in DuckDB.
+
+    ``replace_changed`` applies bundles whose manifests changed after an
+    explicit source repair (atomic per batch); ``verify_all`` re-checksums
+    already-ingested bundles instead of trusting their manifest fingerprint.
+    """
     import duckdb
 
     from hypervector.data.oxa_archive_audit import OxaArchiveAuditConfig
     from hypervector.data.research_database import ResearchDatabase
 
     path = _research_database_path(args)
+    replace_changed = getattr(args, "replace_changed", False) is True
+    verify_all = getattr(args, "verify_all", False) is True
     try:
         config = OxaArchiveAuditConfig(
             args.symbol,
@@ -326,9 +210,14 @@ def cmd_research_db_build(args: argparse.Namespace) -> int:
             book_only=args.books_only,
         )
         database = ResearchDatabase(path)
-        ingest = database.ingest_archive(config)
+        if replace_changed:
+            ingest = database.replace_changed_archive(config, verify_all=verify_all)
+        else:
+            ingest = database.ingest_archive(config, verify_all=verify_all)
         report: dict[str, object] = {
             "ok": True,
+            "mode": "replace_changed" if replace_changed else "incremental",
+            "verify_all": verify_all,
             "database_path": str(path.resolve()),
             "ingest": ingest.to_dict(),
             "summary": database.summary(),
@@ -445,36 +334,8 @@ def _research_database_path(args: argparse.Namespace) -> Path:
     return paths_for(args.data_root).research_db
 
 
-def _add_window_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--symbol", default="BTC", help="Hyperliquid core asset")
-    parser.add_argument("--start", required=True, type=_parse_utc_datetime)
-    parser.add_argument("--end", required=True, type=_parse_utc_datetime)
-    parser.add_argument("--limit", type=_bounded_page_limit, default=1000)
-    parser.add_argument("--max-pages", type=int, default=1)
-    parser.add_argument("--timeout", type=float, default=30.0)
-
-
-def _bounded_page_limit(value: str) -> int:
-    limit = int(value)
-    if not 1 <= limit <= 1000:
-        raise argparse.ArgumentTypeError("limit must be between 1 and 1000")
-    return limit
-
-
-def _parse_utc_datetime(value: str) -> datetime:
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise argparse.ArgumentTypeError(
-            f"invalid ISO-8601 timestamp: {value}"
-        ) from exc
-    if parsed.utcoffset() is None:
-        raise argparse.ArgumentTypeError("timestamp must include a UTC offset or Z")
-    return parsed.astimezone(UTC)
-
-
-def _print_failure(exc: Exception) -> int:
-    print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
+def _print_failure(exc: Exception, **context: object) -> int:
+    print(json.dumps({"ok": False, "error": str(exc), **context}), file=sys.stderr)
     return 1
 
 

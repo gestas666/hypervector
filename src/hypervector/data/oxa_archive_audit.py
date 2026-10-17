@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+from collections.abc import Iterator
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -12,9 +14,14 @@ from hypervector.data.oxa_api import (
     validate_market_symbol,
     validate_window,
 )
-from hypervector.data.oxa_history import OxaBookRequest, output_directory
+from hypervector.data.oxa_history import (
+    DEFAULT_BOOK_MAX_PAGES,
+    OxaBookRequest,
+    output_directory,
+)
 from hypervector.data.oxa_storage import verify_file_evidence
 from hypervector.data.oxa_trades import (
+    DEFAULT_TRADE_MAX_PAGES,
     OxaTradeRequest,
     TRADE_NORMALIZATION_VERSION,
     trade_output_directory,
@@ -53,6 +60,32 @@ class OxaArchiveBundle:
     trade_path: Path | None
     book_rows: int
     trade_rows: int
+
+
+@dataclass(frozen=True)
+class OxaArchiveBundleEvidence:
+    """Identity-validated manifests for one window, before file checksums.
+
+    Each manifest digest is computed from the exact bytes that were parsed, so
+    a caller can compare it with a stored fingerprint and only then decide
+    whether the per-file checksum work is needed.
+    """
+
+    bundle: OxaArchiveBundle
+    book_directory: Path
+    trade_directory: Path | None
+    book_manifest: dict[str, object]
+    trade_manifest: dict[str, object] | None
+    book_manifest_sha256: str
+    trade_manifest_sha256: str | None
+
+    def verify_files(self) -> None:
+        """Checksum every evidence file declared by both manifests."""
+        verify_file_evidence(self.book_directory, self.book_manifest.get("files"))
+        if self.trade_directory is not None and self.trade_manifest is not None:
+            verify_file_evidence(
+                self.trade_directory, self.trade_manifest.get("files")
+            )
 
 
 @dataclass(frozen=True)
@@ -158,24 +191,46 @@ def verified_archive_bundles(
 ) -> tuple[OxaArchiveBundle, ...]:
     """Return chronological replay paths after identity and checksum validation."""
     bundles: list[OxaArchiveBundle] = []
+    for evidence in iter_archive_bundle_evidence(config):
+        evidence.verify_files()
+        bundles.append(evidence.bundle)
+    return tuple(bundles)
+
+
+def iter_archive_bundle_evidence(
+    config: OxaArchiveAuditConfig,
+) -> Iterator[OxaArchiveBundleEvidence]:
+    """Yield identity-validated windows in order without hashing evidence files.
+
+    Every manifest is still read, digested and checked for completeness,
+    source, symbol, window, normalization, family, counts and normalized-path
+    resolution. Callers must call ``verify_files`` before trusting file bytes.
+    """
     for start, end in _iter_windows(config):
         book_dir, trade_dir = _bundle_paths(config, start, end)
-        book = _verified_manifest(book_dir, "book", config, start, end)
+        book, book_sha = _identified_manifest(book_dir, "book", config, start, end)
         book_stats = _bundle_stats(book, "book", book_dir)
-        trade, trade_stats = _optional_trade_bundle(trade_dir, config, start, end)
-        bundles.append(
-            OxaArchiveBundle(
-                start=start,
-                end=end,
-                book_path=_normalized_path(book_dir, book, "books", book_stats.rows),
-                trade_path=_normalized_path(
-                    trade_dir, trade, "trades", trade_stats.rows
-                ),
-                book_rows=book_stats.rows,
-                trade_rows=trade_stats.rows,
+        trade: dict[str, object] | None = None
+        trade_sha: str | None = None
+        trade_stats = _BundleStats(0, 0, 0, 0, 0)
+        if trade_dir is not None:
+            trade, trade_sha = _identified_manifest(
+                trade_dir, "trade", config, start, end
             )
+            trade_stats = _bundle_stats(trade, "trade", trade_dir)
+        bundle = OxaArchiveBundle(
+            start=start,
+            end=end,
+            book_path=_normalized_path(book_dir, book, "books", book_stats.rows),
+            trade_path=_normalized_path(
+                trade_dir, trade or {}, "trades", trade_stats.rows
+            ),
+            book_rows=book_stats.rows,
+            trade_rows=trade_stats.rows,
         )
-    return tuple(bundles)
+        yield OxaArchiveBundleEvidence(
+            bundle, book_dir, trade_dir, book, trade, book_sha, trade_sha
+        )
 
 
 def _iter_windows(
@@ -201,7 +256,7 @@ def _bundle_paths(
         end,
         config.depth,
         1000,
-        20,
+        DEFAULT_BOOK_MAX_PAGES,
         30.0,
         market_family=config.market_family,
     )
@@ -212,7 +267,7 @@ def _bundle_paths(
         start,
         end,
         1000,
-        500,
+        DEFAULT_TRADE_MAX_PAGES,
         30.0,
         market_family=config.market_family,
     )
@@ -220,18 +275,6 @@ def _bundle_paths(
         output_directory(config.data_root, book),
         trade_output_directory(config.data_root, trade),
     )
-
-
-def _optional_trade_bundle(
-    directory: Path | None,
-    config: OxaArchiveAuditConfig,
-    start: datetime,
-    end: datetime,
-) -> tuple[dict[str, object], _BundleStats]:
-    if directory is None:
-        return {}, _BundleStats(0, 0, 0, 0, 0)
-    manifest = _verified_manifest(directory, "trade", config, start, end)
-    return manifest, _bundle_stats(manifest, "trade", directory)
 
 
 def _collect_bundle(
@@ -257,15 +300,28 @@ def _verified_manifest(
     start: datetime,
     end: datetime,
 ) -> dict[str, object]:
+    manifest, _digest = _identified_manifest(directory, kind, config, start, end)
+    verify_file_evidence(directory, manifest.get("files"))
+    return manifest
+
+
+def _identified_manifest(
+    directory: Path,
+    kind: str,
+    config: OxaArchiveAuditConfig,
+    start: datetime,
+    end: datetime,
+) -> tuple[dict[str, object], str]:
+    """Read one manifest once, digest those bytes, and validate its identity."""
     if not directory.is_dir():
         raise FileNotFoundError(f"archive bundle directory is missing: {directory}")
     manifest_path = directory / "manifest.json"
     if not manifest_path.is_file():
         raise ValueError(f"archive bundle has no manifest: {directory}")
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    raw = manifest_path.read_bytes()
+    manifest = json.loads(raw.decode("utf-8"))
     _validate_identity(manifest, kind, config, start, end, directory)
-    verify_file_evidence(directory, manifest.get("files"))
-    return manifest
+    return manifest, hashlib.sha256(raw).hexdigest()
 
 
 def _normalized_path(
@@ -302,6 +358,13 @@ def _validate_identity(
 ) -> None:
     if not isinstance(manifest, dict):
         raise ValueError(f"archive manifest must be an object: {directory}")
+    if manifest.get("complete") is not True:
+        raise ValueError(
+            f"archive {kind} bundle is incomplete "
+            f"(max_pages={manifest.get('max_pages')!r}, "
+            f"continuation_cursor={manifest.get('continuation_cursor')!r}): "
+            f"{directory}; move it aside and refetch the window"
+        )
     expected_source = _expected_source(kind, config.market_family)
     expected = {
         "complete": True,
