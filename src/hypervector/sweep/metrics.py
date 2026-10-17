@@ -325,7 +325,12 @@ def _bar_times_ns(index: pd.Index, work: pd.DataFrame) -> np.ndarray | None:
         column = work["timestamp"]
         if column.isna().any() or pd.api.types.is_numeric_dtype(column):
             return None  # never reinterpret integers as nanoseconds
-        times = pd.DatetimeIndex(pd.to_datetime(column, utc=True))
+        if pd.api.types.is_datetime64_any_dtype(column.dtype):
+            # Already datetime (the cached frames): no per-trial re-parse.
+            # A naive column is read as UTC, exactly as to_datetime(utc=True).
+            times = pd.DatetimeIndex(column)
+        else:
+            times = pd.DatetimeIndex(pd.to_datetime(column, utc=True))
     else:
         return None
     if times.tz is not None:

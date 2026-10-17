@@ -252,7 +252,11 @@ class _PaperSummary:
         self.recent = deque(maxlen=self.last_n)
 
     def count(self, field_name: str, value: object) -> None:
-        self.counts.setdefault(field_name, Counter())["" if value is None else str(value)] += 1
+        # get-then-create: setdefault(name, Counter()) built a Counter per row.
+        counter = self.counts.get(field_name)
+        if counter is None:
+            counter = self.counts[field_name] = Counter()
+        counter["" if value is None else str(value)] += 1
 
     def add(self, row: dict[str, object]) -> None:
         self.rows += 1
