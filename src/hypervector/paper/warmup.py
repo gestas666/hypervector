@@ -1,9 +1,13 @@
 """Fresh, contiguous warm-up history for the paper/shadow daemon.
 
-The research cache (``SYMBOL_TF_<lb>d``) is returned as-is by
-:func:`hypervector.data.pipeline.load_research_history`, however old it is.
-Before live decisions run on it, the daemon tops up the missing tail from
-public Hyperliquid candles, in memory only (the shared cache is not written):
+The daemon loads the research window (``SYMBOL_TF_<lb>d``) through
+:func:`hypervector.data.pipeline.load_research_history`, which refreshes a
+window older than a day when it can (and writes the refreshed cache). When that
+refresh fails, for example during a Binance or Bybit outage, the runner warms
+up from the cached window as is (or the HL-only window the failed load kept).
+Either way, before live decisions run on it, the daemon tops up the missing
+tail from public Hyperliquid candles here, in memory only (this top-up never
+writes the shared cache):
 
 * the last cached candle is always re-fetched, because the cache usually ends
   with the candle that was still forming when it was saved;

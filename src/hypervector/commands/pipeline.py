@@ -73,7 +73,15 @@ NO_ORDERS_NOTE = (
 EXPORT_START_NOTE = (
     "started from an existing bundle: data and search skipped, window not pinned"
 )
-WINDOW_FIELDS: tuple[str, ...] = ("symbol", "timeframe", "lookback_days", "bars")
+WINDOW_FIELDS: tuple[str, ...] = (
+    "symbol",
+    "timeframe",
+    "lookback_days",
+    "bars",
+    "start",
+    "end",
+)
+SEARCH_WINDOW_FIELDS: tuple[str, ...] = ("start", "end", "bars", "cache_key")
 MODEL_METRICS: tuple[str, ...] = (
     "n_labels",
     "class_balance",
@@ -528,6 +536,8 @@ class PipelineRun:
         self.export_report: dict[str, Any] = {}
         self.loadout: Any = None
         self.model_dir: Path | None = None
+        # The window the data stage pinned; later stages use it, never reload it.
+        self.pinned_frame: Any = None
 
     def run(self) -> int:
         """0 when every requested stage completed; 1 on the first technical failure."""
@@ -652,10 +662,22 @@ class PipelineRun:
                 f"no history bars for {plan.symbol} {plan.timeframe} "
                 f"lookback={plan.lookback}d"
             )
+        self.pinned_frame = frame
         start, end = _bar_window(frame)
-        key = cache_key(plan.symbol, plan.timeframe, plan.lookback)
-        cache_path = _cache_path(self.root, key)
         prov = provenance if isinstance(provenance, dict) else {}
+        # The key that actually served the bars (a strict load uses _hlonly,
+        # or an all-HL default entry), not one recomputed from the request.
+        key = str(prov.get("cache_key") or "") or cache_key(
+            plan.symbol,
+            plan.timeframe,
+            plan.lookback,
+            strict_hl_only=bool(args.strict_hl_only),
+        )
+        cache_path = (
+            Path(str(prov["cache_path"]))
+            if prov.get("cache_path")
+            else _cache_path(self.root, key)
+        )
         window = {
             "symbol": plan.symbol,
             "timeframe": plan.timeframe,
@@ -701,6 +723,8 @@ class PipelineRun:
             sampler=args.sampler,
             strict_hl_only=bool(args.strict_hl_only),
             force_refresh=False,
+            # Only the data stage may refresh: serve the window it pinned as is.
+            pin_cache=True,
             export_best=True,
         )
         if result.export_dir is None:
@@ -710,12 +734,16 @@ class PipelineRun:
             "board": str(result.board_path),
             "export": str(self.export_dir),
         }
+        board = _read_object(Path(result.board_path))
         entry["metrics"] = {
             "sampler_used": result.sampler_used,
             "trials": result.n_trials,
             "best": result.best_metrics,
             "best_params": result.best_params,
             "best_exit_cfg": result.best_exit_cfg,
+            "window": search_window_check(
+                self.manifest.get("window"), board.get("data_provenance")
+            ),
         }
 
     def _sweep(self, entry: dict[str, Any]) -> None:
@@ -741,6 +769,9 @@ class PipelineRun:
             for key in ("run_id", "track", "trials", "ok_trials", "failed_trials")
         }
         entry["metrics"]["best"] = result.get("best")
+        entry["metrics"]["window"] = search_window_check(
+            self.manifest.get("window"), result.get("data_provenance")
+        )
 
     # --- stage 3: export --------------------------------------------------------
 
@@ -782,13 +813,18 @@ class PipelineRun:
         check = phase2_check_report(
             path, data_root=self.root, strict=True, probe_nautilus=False
         )
+        pinned = self.pinned_frame
+        # With a pinned window, replay exactly those bars; from a bundle, read
+        # the cache offline (strict HL-only when the bundle was searched so).
         result = run_phase2_backtest(
             export_dir=path,
             data_root=self.root,
+            ohlcv=pinned.copy() if pinned is not None else None,
             conviction=float(self.args.conviction),
             lookback_days=self.plan.lookback,
             allow_network=False,
         )
+        start, end = _frame_window(pinned)
         payload = _read_object(Path(result.report_path))
         entry["artifacts"] = {
             "export": str(path),
@@ -817,6 +853,8 @@ class PipelineRun:
                     ),
                     "lookback_days": self.plan.lookback,
                     "bars": payload.get("bars"),
+                    "start": start,
+                    "end": end,
                 },
             },
         )
@@ -826,27 +864,24 @@ class PipelineRun:
     def _model(self, entry: dict[str, Any]) -> None:
         """Walk-forward metalabel training into ``<out-dir>/model``; never installed."""
         from hypervector.commands.model import train_metalabel_bundle
-        from hypervector.data.pipeline import cache_key
         from hypervector.ml.walk_forward import InsufficientLabelsError
 
         path = self._require_export()
-        if self.args.no_network:
-            # Training loads history cache-first but fetches on a miss; with
-            # --no-network a miss must fail here instead of reaching the network.
-            key = cache_key(
-                self.loadout.symbol, self.loadout.timeframe, self.plan.lookback
-            )
-            cached = _cache_path(self.root, key)
-            if not cached.is_file():
-                raise FileNotFoundError(
-                    f"offline history cache missing for model training: {cached}"
-                )
+        history: dict[str, Any]
+        if self.pinned_frame is not None:
+            # Train on the window the data stage pinned; nothing is reloaded.
+            history = {"ohlcv": self.pinned_frame.copy()}
+        else:
+            # From a bundle the data stage is skipped, so training loads the
+            # cache itself; --no-network keeps it offline (a miss is exit 1).
+            history = {"allow_network": not self.args.no_network}
         try:
             report = train_metalabel_bundle(
                 export_dir=path,
                 data_root=self.root,
                 out_dir=self.plan.out_dir / "model",
                 lookback_days=self.plan.lookback,
+                **history,
             )
         except InsufficientLabelsError as exc:
             # Too few entries is a measured result (trade count), not a technical
@@ -1038,9 +1073,51 @@ def parity_block(
     }
 
 
+def search_window_check(
+    pinned: Mapping[str, Any] | None, provenance: Mapping[str, Any] | None
+) -> dict[str, Any]:
+    """The window the search stage was served against the pinned one (report-only).
+
+    ``matches_pinned`` is None when no field is reported on both sides.
+    """
+    prov = provenance if isinstance(provenance, Mapping) else {}
+    observed = {
+        "start": prov.get("start"),
+        "end": prov.get("end"),
+        "bars": prov.get("bar_count"),
+        "cache_key": prov.get("cache_key"),
+    }
+    reference = dict(pinned) if isinstance(pinned, Mapping) else {}
+    compared = [
+        field
+        for field in SEARCH_WINDOW_FIELDS
+        if observed.get(field) is not None and reference.get(field) is not None
+    ]
+    mismatched = [
+        field
+        for field in compared
+        if _window_value(field, observed[field])
+        != _window_value(field, reference[field])
+    ]
+    return {
+        "report_only": True,
+        "observed": observed,
+        "matches_pinned": (not mismatched) if compared else None,
+        "mismatched_fields": mismatched,
+    }
+
+
 def _window_value(field: str, value: object) -> object:
     if field == "symbol":
         return str(value).strip().upper()
+    if field in ("start", "end"):
+        try:
+            moment = datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
+        except ValueError:
+            return str(value)
+        if moment.tzinfo is None:
+            moment = moment.replace(tzinfo=UTC)
+        return moment.astimezone(UTC)
     if field in ("lookback_days", "bars"):
         try:
             return int(value)  # type: ignore[call-overload]
@@ -1216,6 +1293,15 @@ def _recency(path: Path, manifest: Mapping[str, Any]) -> float:
 
 
 # --- helpers ------------------------------------------------------------------------
+
+
+def _frame_window(frame: Any) -> tuple[str | None, str | None]:
+    """First and last bar of a pinned frame (None, None when there is none)."""
+    if frame is None:
+        return None, None
+    from hypervector.commands.market import _bar_window
+
+    return _bar_window(frame)
 
 
 def _cache_path(root: Path, key: str) -> Path:

@@ -70,8 +70,19 @@ def cmd_history(args: argparse.Namespace) -> int:
         df, prov = _load_bars(args)
     except (RuntimeError, OSError) as exc:
         return history_failure(args, exc)
-    key = cache_key(args.symbol, args.timeframe, args.lookback)
-    cache_path = Path(args.data_root) / "cache" / f"{key}.parquet"
+    served = prov.get("cache_path") if isinstance(prov, dict) else None
+    if served:
+        # The entry the loader actually read or wrote (a strict load may be
+        # served by the _hlonly key or by an all-HL default entry).
+        cache_path = Path(str(served))
+    else:
+        key = cache_key(
+            args.symbol,
+            args.timeframe,
+            args.lookback,
+            strict_hl_only=bool(getattr(args, "strict_hl_only", False)),
+        )
+        cache_path = Path(args.data_root) / "cache" / f"{key}.parquet"
     start, end = _bar_window(df)
     dataset = {
         "symbol": args.symbol,

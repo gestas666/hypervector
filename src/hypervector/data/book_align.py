@@ -41,11 +41,23 @@ BOOK_FEATURE_COLUMNS = (
 
 
 def load_l2_jsonl(path: Path | str) -> pd.DataFrame:
-    """Load raw L2 orderbook snapshot JSONL into a clean DataFrame."""
+    """Load raw L2 orderbook snapshot JSONL into a clean DataFrame.
+
+    Unobserved microstructure is NaN, never a neutral value: a snapshot with
+    no levels and no best price is skipped (its bars stay unmatched or use an
+    earlier real snapshot); a missing or non-positive best price on either
+    side leaves ``mid``/``spread_bps``/``micro_price``/``micro_price_delta_bps``
+    NaN (the micro-price also needs both top-of-book sizes);
+    ``book_depth_ratio`` is NaN when the ask side is empty; ``obi_*`` is
+    NaN when both sides are empty (±1 for a one-sided book is observed).
+    ``best_bid``/``best_ask`` keep the recorded price (0.0 for an empty side),
+    so maker-replay validation still refuses a one-sided book.
+    """
     p = Path(path)
     if not p.is_file():
         raise FileNotFoundError(f"L2 JSONL file not found: {p}")
 
+    nan = float("nan")
     rows: list[dict[str, Any]] = []
     with open_text_reader(p) as f:
         for line in f:
@@ -58,6 +70,8 @@ def load_l2_jsonl(path: Path | str) -> pd.DataFrame:
 
             bids = row.get("bids") or []
             asks = row.get("asks") or []
+            if not bids and not asks and best_bid <= 0 and best_ask <= 0:
+                continue  # an empty book carries no observation
 
             bid_vol_5 = sum(float(b.get("sz", 0.0)) for b in bids[:5])
             ask_vol_5 = sum(float(a.get("sz", 0.0)) for a in asks[:5])
@@ -65,28 +79,27 @@ def load_l2_jsonl(path: Path | str) -> pd.DataFrame:
             ask_vol_10 = sum(float(a.get("sz", 0.0)) for a in asks[:10])
 
             denom_5 = bid_vol_5 + ask_vol_5
-            obi_5 = (bid_vol_5 - ask_vol_5) / denom_5 if denom_5 > 0 else 0.0
+            obi_5 = (bid_vol_5 - ask_vol_5) / denom_5 if denom_5 > 0 else nan
 
             denom_10 = bid_vol_10 + ask_vol_10
-            obi_10 = (bid_vol_10 - ask_vol_10) / denom_10 if denom_10 > 0 else 0.0
+            obi_10 = (bid_vol_10 - ask_vol_10) / denom_10 if denom_10 > 0 else nan
 
-            mid = (
-                (best_bid + best_ask) / 2.0 if (best_bid > 0 and best_ask > 0) else 0.0
-            )
-            spread_bps = ((best_ask - best_bid) / mid * 10_000.0) if mid > 0 else 0.0
+            two_sided = best_bid > 0 and best_ask > 0
+            mid = (best_bid + best_ask) / 2.0 if two_sided else nan
+            spread_bps = ((best_ask - best_bid) / mid * 10_000.0) if two_sided else nan
 
             # Microprice = (ask_vol_1 * best_bid + bid_vol_1 * best_ask) / (bid_vol_1 + ask_vol_1)
             b1_sz = float(bids[0]["sz"]) if bids else 0.0
             a1_sz = float(asks[0]["sz"]) if asks else 0.0
             micro_denom = b1_sz + a1_sz
-            if micro_denom > 0 and best_bid > 0 and best_ask > 0:
+            if two_sided and micro_denom > 0:
                 micro_price = (a1_sz * best_bid + b1_sz * best_ask) / micro_denom
                 micro_price_delta_bps = (micro_price - mid) / mid * 10_000.0
-            else:
-                micro_price = mid
-                micro_price_delta_bps = 0.0
+            else:  # no top-of-book sizes on both sides: unobserved
+                micro_price = nan
+                micro_price_delta_bps = nan
 
-            depth_ratio = (bid_vol_10 / ask_vol_10) if ask_vol_10 > 0 else 1.0
+            depth_ratio = (bid_vol_10 / ask_vol_10) if ask_vol_10 > 0 else nan
 
             rows.append(
                 {

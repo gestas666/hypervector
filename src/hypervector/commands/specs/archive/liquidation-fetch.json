@@ -24,7 +24,7 @@
       "options": {
         "dest": "symbol",
         "default": "BTC",
-        "help": "Hyperliquid coin (core) or deployer:asset (HIP-3)"
+        "help": "Hyperliquid core coin (BTC, kPEPE); HIP-3 deployer:asset markets are not supported"
       }
     },
     {

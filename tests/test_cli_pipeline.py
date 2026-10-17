@@ -575,28 +575,43 @@ def test_a_stage_calling_sys_exit_is_a_technical_failure(
 def test_no_network_model_training_never_fetches_a_missing_window(
     tmp_path: Path, fakes: Fakes, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """From a bundle the data stage is skipped, so only the cache may feed training."""
+    """From a bundle the data stage is skipped, so only the cache may feed training.
+
+    The real loader's miss (FileNotFoundError, exit 1) is covered end to end in
+    ``test_final_data_paper_oxa``; here the stage must ask for an offline load.
+    """
     data = tmp_path / "data"
     strict_bundle(data / "exports", "cand", lookback_days=30)
     flags = ["--strategy", "crown_stack_long", "--export", "cand", "--no-network"]
     flags += ["--train-model", "--no-nautilus"]
 
-    missing = tmp_path / "missing"
-    assert main([*_run(data, *flags), "--out-dir", str(missing)]) == 1
-    manifest = json.loads((missing / pipeline.MANIFEST).read_text(encoding="utf-8"))
-    model = _stages(manifest)["model"]
-    assert (model["status"], model["error_type"]) == ("failed", "FileNotFoundError")
-    assert "BTC_1m_30d.parquet" in model["reason"]
-    assert fakes.calls["model"] == []
-    assert _stages(manifest)["paper"]["status"] == "not_started"
-    capsys.readouterr()
-
-    (data / "cache").mkdir(parents=True, exist_ok=True)
-    (data / "cache" / "BTC_1m_30d.parquet").write_bytes(b"")
-    cached = tmp_path / "cached"
-    assert main([*_run(data, *flags), "--out-dir", str(cached)]) == 0
+    offline = tmp_path / "offline"
+    assert main([*_run(data, *flags), "--out-dir", str(offline)]) == 0
     assert _stages(json.loads(capsys.readouterr().out))["model"]["status"] == "ok"
-    assert len(fakes.calls["model"]) == 1
+    [call] = fakes.calls["model"]
+    assert call["allow_network"] is False and "ohlcv" not in call
+
+    online = tmp_path / "online"
+    online_flags = [flag for flag in flags if flag != "--no-network"]
+    assert main([*_run(data, *online_flags), "--out-dir", str(online)]) == 0
+    capsys.readouterr()
+    assert fakes.calls["model"][1]["allow_network"] is True
+
+
+def test_model_and_nautilus_reuse_the_pinned_window(
+    tmp_path: Path, fakes: Fakes, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """After the data stage pins a window, no later stage reloads history."""
+    data = tmp_path / "data"
+    argv = _run(data, "--strategy", "crown_stack_long", "--lookback-days", "30")
+    assert main([*argv, "--train-model"]) == 0
+    capsys.readouterr()
+    [load] = fakes.calls["load"]
+    [tune] = fakes.calls["tune"]
+    assert tune["pin_cache"] is True
+    [replay] = fakes.calls["nautilus"]
+    [model] = fakes.calls["model"]
+    assert len(replay["ohlcv"]) == BARS and len(model["ohlcv"]) == BARS
 
 
 def test_too_few_model_labels_is_a_result_not_a_failure(
