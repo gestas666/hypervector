@@ -1,39 +1,34 @@
 # Cohort backend health and market clocks
 
-The file-backed cohort TUI derives current health from the latest run-bound
-backend heartbeat. Copying or touching a ledger, or appending an operator
-acknowledgement, does not renew that heartbeat. The existing 60-second inactivity
-limit now applies to observer and live cohort ledgers. A fresh running heartbeat
-restores the connection; degraded, missing, malformed, unsupported, or future
-health evidence cannot present a healthy connection.
+Interpret health from backend-authored run-bound heartbeat and lifecycle evidence.
+Copying or touching a ledger, or appending an operator acknowledgement, does not
+renew the backend heartbeat. Monitor attachment has an explicit maximum evidence
+age (`cohort monitor --help`); source candles and book timestamps have their own
+clocks. File modification time cannot substitute for either source clock.
 
-`runtime_fault` remains terminal for its run. A normal observer return appends
-`runtime_stopped` with `operator_stop` or `bounded_run_complete`. This distinct
-event preserves existing polling counts and cadence statistics. A later actual
-heartbeat may resume the same normally stopped observer; an unrelated write
-cannot. A new run starts with its own health evidence. Abrupt process death
-without a terminal event is detected through heartbeat inactivity, not instantly.
+`runtime_fault` is terminal for its run. Normal observer return records
+`runtime_stopped` with `operator_stop` or `bounded_run_complete`. A new run needs
+its own health evidence. Abrupt process death without a terminal event is only
+observable after inactivity or another independent process check.
 
-The header labels the actual heartbeat clock as `HEARTBEAT`. The strategy chart
-inspector reports age since the latest source one-minute candle closed and age
-since the book's venue timestamp. These source clocks remain separate from the
-configured strategy chart timeframe, file modification time, and operator events.
-Unavailable and invalid clocks are explicit; no market values are synthesized.
+A stopped checkpoint remains a dated snapshot. Refreshing its report does not
+produce strategy decisions or prove that a backend is running. Missing, malformed,
+unsupported or future timestamps must remain unavailable or fail validation.
+Inspect the selected run/profile, backend heartbeat, source one-minute candle
+close and book venue timestamp separately from the configured strategy timeframe.
 
-An explicitly stopped backend is labeled `BACKEND STOPPED`. A stale or unknown
-backend does not claim current live authority. Detached-monitor quit labels
-describe quitting the monitor without claiming that an unknown backend is alive.
-Manual requests continue to require a connected backend and the existing live
-authority checks. These display changes do not alter automatic strategy routing,
-position sizing, leverage, stops, or order submission.
+Monitoring owns no execution process. Operator request publication and backend
+acceptance are separate events; neither proves venue execution without receipts.
+The current JSON monitor replaces former terminal health labels and screenshots.
+Historical native display captures remain dated evidence rather than current
+software acceptance.
 
-Focused validation:
+Validation:
 
-```bash
-cargo test -p hypervector-tui --release --test cohort_heartbeat_freshness_test
-uv run pytest tests/test_multi_asset_observer_lifecycle.py -q -m "not network"
+```sh
+.venv/bin/python -m pytest tests/test_multi_asset_observer_lifecycle.py tests/test_cohort_monitor_stale_attachment.py tests/test_monitor_validation_edges.py tests/test_cohort_supervisor_degraded_freshness.py -q
 ```
 
-The research acceptance additionally checks native terminal cells against actual
-source timestamps at 100x28, 120x36 and 190x52. This is technical display and
-lifecycle evidence; it does not establish profitability or installed live readiness.
+Confidence is bounded by those controlled lifecycle/freshness cases. An unrelated
+write renewing backend health, or a stale snapshot represented as live authority,
+would require a correction and additional regression coverage.

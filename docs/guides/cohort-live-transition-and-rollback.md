@@ -1,6 +1,11 @@
 # Cohort live transition and rollback
 
-This runbook changes the current multi-asset cohort only from a verified flat
+This runbook includes a frozen historical V9 worked example. Its profile paths
+and approvals do not describe the current checkout or authorize a restart.
+Use the exact newly approved profile and evidence for any future deployment;
+see `HANDOFF.md` for the recorded stopped state.
+
+A cohort transition changes the selected implementation only from a verified flat
 venue boundary. It does not close positions to create that boundary and does
 not hot-mutate a running strategy.
 
@@ -64,7 +69,7 @@ Before changing an active strategy config or any shared Python execution
 source, publish a credential-free source baseline:
 
 ```bash
-uv run python scripts/cohort_prechange_backup.py \
+.venv/bin/python scripts/cohort_prechange_backup.py \
   --config configs/multi_asset_bidirectional_canary.toml \
   --backtest-lab-root ../backtest-lab/backtest_lab
 ```
@@ -101,10 +106,12 @@ process while it has an open position merely to load the new code.
 
 ## 1. Request a drain on a drain-capable run
 
-On TUI screen 7, select `TRANSITION DRAIN`, press Enter, inspect the explicit
-confirmation, and press `y` only with current operator authorization. The Rust
-TUI writes no venue order. The armed Python backend validates the exact run and
-profile identity, persists the request, withholds new entries on flat symbols,
+Use `hypervector cohort request --help` to construct a `transition_drain`
+request with the exact run ID, profile fingerprint and existing operator inbox.
+Inspect its default dry run. Publish only with current operator authorization
+and `--submit --enabled --i-accept-live-risk`. Request publication writes no venue
+order. The armed Python backend validates the exact run and profile identity,
+persists the request, withholds new entries on flat symbols,
 and continues automatic exits, maximum-hold exits, manual closes, and
 venue-native protection. It never activates or starts a candidate profile.
 
@@ -215,15 +222,15 @@ exact old profile and its recorded lifecycle instead.
 For either path, confirm both wrapper and Python backend processes have exited:
 
 ```bash
-pgrep -af 'scripts/multi_asset_bidirectional_live.py'
+pgrep -af 'multi_asset_bidirectional_live(\.py)?( |$)|hypervector cohort live'
 ```
 
 Expected output is empty. Do not kill a process. The append-only ledgers and
-completed drain evidence remain in place. Quit the monitor TUI after the backend
-has stopped, then require the following checkpoint-writer check to be empty:
+completed drain evidence remain in place. Stop any separately owned reporter
+after the backend has stopped, then require the checkpoint-writer check to be empty:
 
 ```bash
-pgrep -af 'scripts/multi_asset_bidirectional_live_checkpoint.py'
+pgrep -af 'multi_asset_bidirectional_live_checkpoint(\.py)?( |$)|hypervector cohort checkpoint'
 ```
 
 Do not publish the manual candidate checkpoint while the monitor-owned sidecar
@@ -237,7 +244,7 @@ current one-time legacy cutover has no marker and skips directly to Step 4.
 Preview first using the exact run identity shown by the checkpoint:
 
 ```bash
-uv run python scripts/cohort_transition_drain_archive.py \
+.venv/bin/python scripts/cohort_transition_drain_archive.py \
   --expected-run-id <exact-drained-run-id>
 ```
 
@@ -252,7 +259,7 @@ clearing the live start blocker.
 Publish one final report-only checkpoint using the candidate configuration:
 
 ```bash
-uv run python scripts/multi_asset_bidirectional_live_checkpoint.py \
+.venv/bin/python scripts/multi_asset_bidirectional_live_checkpoint.py \
   --ledger-root data/live/bidirectional_cohort \
   --out data/runtime/bidirectional_cohort/latest_checkpoint.json \
   --config configs/multi_asset_bidirectional_evidence_routed_hype75_extension_candidate.toml \
@@ -315,7 +322,7 @@ pre-start backup verified: path=... manifest_sha256=... strategy_changed=yes
 Copy the exact printed bundle path and independently verify it:
 
 ```bash
-uv run python scripts/cohort_prestart_backup_verify.py \
+.venv/bin/python scripts/cohort_prestart_backup_verify.py \
   --bundle data/backups/bidirectional_cohort/prestart_<exact-path>
 ```
 
@@ -327,7 +334,7 @@ Missing implementation identity is a refused new start, not a warning.
 
 ## 6. Accept the new run identity before accepting entries
 
-The TUI and checkpoint must show:
+The backend configuration identity and checkpoint must show:
 
 - runtime profile `multi_asset_bidirectional_evidence_routed_hype75_v9`;
 - runtime fingerprint `750b2df6...` matching the candidate;
@@ -343,12 +350,9 @@ The TUI and checkpoint must show:
 The new run's authoritative `configuration_identity` event must also contain a
 `prestart_backup` object with `status=verified`, the exact bundle and manifest
 paths, the manifest SHA-256, strategy-change flag, nonzero implementation file
-count, and composite implementation SHA-256. The TUI restart-profile page must
-render `PRESTART VERIFIED` with matching manifest/source hash prefixes and file
-count. Re-run the independent verifier against that exact bundle if any value
-disagrees. A legacy `PRESTART BACKUP UNAVAILABLE` display is valid only for a
-process that demonstrably started before this journal field existed; it is not
-acceptable for the new candidate run.
+count, and composite implementation SHA-256. Inspect the same exact fields in
+the checkpoint JSON and re-run the independent verifier against that bundle if
+any value disagrees. Missing evidence cannot authorize the new candidate run.
 
 On the first new position, require a nonzero venue stop OID, matching signed
 venue size, isolated 5x leverage, liquidation price, fees, funding, entry

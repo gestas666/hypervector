@@ -1,108 +1,49 @@
-# V89 strategy and regime monitor
+# Cohort strategy and regime monitoring
 
-The installed monitor covers BTC, ETH, SOL, HYPE, xyz:SPCX, xyz:SNDK and
-xyz:BRENTOIL. It displays the backend's strategy evidence and portfolio state.
-Use a terminal at least 120 columns by 36 rows; 100 by 28 is the compact floor.
+Use backend-authored JSON through the unified CLI. Select the exact profile and
+checkpoint for the intended run; the former terminal renderer is retired.
 
-```bash
-cd /Users/gestas/Prototypes/hypervector
-.venv/bin/python -m hypervector cohort-tui --mode monitor --independent-monitor \
-  --config configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml \
-  --tui-bin target/release/tui-regime-detector-v89-monitor-20260915-exits \
-  --tui-bin-sha256 52df3fbb38a0a91f8e4577bebb7884da537dc8c3c8fd35411751684d7866bc84
+```sh
+.venv/bin/python -m hypervector cohort monitor --help
+.venv/bin/python -m hypervector cohort monitor --config profile.toml \
+  --source-checkpoint snapshot.json --run-id RUN_ID --follow
 ```
 
-Run this in another terminal and leave the original combined session open.
-This independent mode owns only its reporter and TUI; quitting it preserves the
-financial backend. It requires fresh same-run shared reporting and does not
-load credentials, submit operator commands, make network requests or write the
-research database. A stale or mismatched source fails explicitly.
+The monitor validates shared run/profile identity and freshness. It owns no
+financial backend. Ending the monitor leaves a separately owned backend alone.
+It cannot establish fresh venue state from an old checkpoint. Incompatible,
+stale or malformed evidence fails explicitly.
 
-If the shared reporter is absent, use the normal read-only monitor. It starts
-its own checkpoint reporter, can query unsigned venue information and can refresh
-the reporting database. It does not start the financial backend:
+To publish an independent report, select a distinct output path:
 
-```bash
-cd /Users/gestas/Prototypes/hypervector
-.venv/bin/python -m hypervector cohort-tui --mode monitor \
-  --config configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml \
-  --tui-bin target/release/tui-regime-detector-v89-monitor-20260915-exits \
-  --tui-bin-sha256 52df3fbb38a0a91f8e4577bebb7884da537dc8c3c8fd35411751684d7866bc84
+```sh
+.venv/bin/python -m hypervector cohort monitor --config profile.toml \
+  --source-checkpoint snapshot.json --run-id RUN_ID --out independent.json
 ```
 
-The [stopped-checkpoint repair](../reviews/2026-09-16-v89-stopped-checkpoint-recovery.md)
-preserves the stopped backend state when older trade history must be recovered.
-A fresh report does not make its last strategy indicators current.
+`--out` rebuilds reporting from the selected shared evidence and accounting
+epoch. Do not point two checkpoint writers at the same output. When shared
+reporting is absent, inspect `cohort checkpoint --help` and explicitly select
+the profile, ledger and run before starting a separate reporter. Its optional
+venue/research features have different IO requirements from monitor attachment.
 
-The monitor labels provider exits by their recorded target side (`EXIT SHORT`,
-for example), separately from entry eligibility and actual execution receipts.
-Missing exit-side evidence remains `EXIT SIDE N/A`. See the
-[exit-side validation](../reviews/2026-09-15-v89-provider-exit-side-display.md).
+Inspect provider, asset, direction, source timestamps, recorded indicators,
+configured sizing, position/protection evidence and accounting identity.
+Strategy evidence at a decision and the latest recorded regime context can have
+different ages. Missing evidence remains unavailable. Regime strength and
+prerequisite completion are diagnostics, not win probabilities.
 
-The separate binary path preserves the executable pinned by the existing user
-startup. `LEV C/V` means configured/venue leverage: `20x/-` is a flat asset
-configured for 20x; `10x/10x` records both configured and observed leverage.
-An open position with missing venue leverage shows `N/A`. The rolling strip uses
-`PROFILE` for compatible historical results and `RUN` only for explicit current-run
-results. See [September 15 installed validation](../reviews/2026-09-15-v89-independent-monitor-and-leverage.md).
+The supervisor and live backend have separate lifecycles. Inspect `cohort
+supervisor --help` and the [transition guide](cohort-live-transition-and-rollback.md)
+for ownership and restart procedures. No monitor command authorizes live startup.
+Historical V89 terminal captures remain in dated reviews and Git history; their
+binary hashes and screen controls are not current installation instructions.
 
+Validation:
 
-| Task | Controls | Evidence to inspect |
-| --- | --- | --- |
-| Inspect a strategy setup | `2`, up/down, `Enter`, `PgUp/PgDn` | Exact provider and asset, recorded indicators, readiness prerequisites, blockers, entry/exit plan and configured sizing. |
-| Relate indicators to regime | Continue through the setup inspector | Canonical 1m/5m/15m context at the recorded strategy decision, separately from the latest recorded context; each has its own time and age. |
-| Inspect the strategy chart | `3`, left/right to select asset, `Enter` | Reported signal timeframe and configured source timeframe. Hourly strategies show completed hourly candles; missing or incomplete evidence is explicit. |
-| Monitor regime changes | `8`, left/right, `PgUp/PgDn` | All assets, three regime pages, trend/compression diagnostics, transitions, open lifecycle context and outcome/arbitration evidence. |
-| Plan configuration changes | `9`, up/down, `PgUp/PgDn` | Effective settings beside the local next-run draft. Editing a draft does not make it effective. |
-| Inspect portfolio and exposure | `1`; open-lifecycle page on `8` | Recorded positions, costs, stop/target evidence and bound hold-clock origin. |
-
-`Esc` closes an inspector. `q` quits the monitor. The existing nine screens
-remain available through keys `1`–`9`.
-
-Read `DATA AGE` before treating an indicator as current. `ARRIVAL LAG` measures
-the difference between decision and observation time. A newly generated
-checkpoint can still contain old strategy evidence. When the backend is
-stopped, the monitor may refresh its report-only checkpoint but cannot produce
-new strategy decisions. `STOPPED SNAPSHOT`, `IF STILL OPEN` and `LOCAL EXITS OFF`
-describe dated position evidence and absent local exit management.
-
-Readiness measures prerequisite completion; regime strength is a diagnostic.
-Neither is a win probability. Provider entry rules remain separate from
-canonical context. Missing data should remain unavailable rather than become
-zero, neutral or a fabricated current reading.
-
-High confidence in installed display/source parity comes from the authenticated
-installation, Rust regression tests and native terminal captures described in
-[the current installation review](../reviews/2026-09-14-v89-partial-protection-tui-installed.md).
-That confidence is limited to the observed inputs and terminal sizes. A wrong
-provider, timestamp or timeframe, omitted indicator, clipped required panel,
-changed binary hash or failed launcher would require revalidation. Display
-acceptance does not establish strategy profitability or fresh venue state.
-
-## Current running session — September 16
-
-The [approved protection-fix deployment](../reviews/2026-09-16-v89-entry-read-failure-protection-installed.md)
-restarted the financial backend independently of the monitor. Run
-`bidirectional-live-1789586105858`, backend 83722 and reporter 18490 were verified
-healthy after the 19:27 UTC startup. The nine-screen installed monitor shows
-the restored SPCX/Brent stops and configured/venue leverage. Use the normal
-read-only monitor command above to attach; closing it leaves this backend running.
-Do not start another live launcher while the existing backend owns the account.
-The combined launcher below has a different lifecycle: quitting its TUI stops its
-owned backend.
-
-## Start the backend and TUI together
-
-Use the installed supervised launcher:
-
-```bash
-cd /Users/gestas/Prototypes/hypervector
-.venv/bin/python -m hypervector cohort-tui \
-  --mode live --enabled --i-accept-live-risk \
-  --config configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml \
-  --tui-bin target/release/tui-regime-detector-v89-monitor-20260915-exits \
-  --tui-bin-sha256 52df3fbb38a0a91f8e4577bebb7884da537dc8c3c8fd35411751684d7866bc84 \
-  --startup-timeout-seconds 1800
+```sh
+.venv/bin/python -m pytest tests/test_headless_monitor_cli.py tests/test_incremental_monitor_identity.py tests/test_cohort_monitor_stale_attachment.py tests/test_monitor_validation_edges.py -q
 ```
 
-It opens the TUI after a fresh backend configuration identity appears and binds the checkpoint writer to that run. Historical initialization can take several minutes. The explicit timeout permits up to 30 minutes; it does not predict startup time. Quitting this combined TUI stops its owned backend. The detached monitor command at the top of this guide leaves a separately started backend running. The [September 15 startup memory update](../reviews/2026-09-15-v89-startup-history-and-memory.md) is installed.
+A wrong run/profile, cross-epoch accounting, stale attachment accepted as fresh,
+or monitoring that restarts execution would falsify the intended contract.

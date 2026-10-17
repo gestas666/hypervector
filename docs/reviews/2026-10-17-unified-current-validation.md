@@ -57,9 +57,52 @@ No trading service is armed or restarted by this software merge.
   supervisor's imported modules. Compatible local supervisor/accounting work
   passed its ten initial tests and the expanded supervisor regressions.
 
-Final main-checkout, wheel, lint/dependency and Git results are appended after
-verification. Raw command logs are in `/tmp/hv-current-*.log`; these temporary
-logs supplement this durable record and reproducible commands.
+## Final current-checkout acceptance
+
+- Fast-forwarded original `main` from `32c65f0` through implementation commit
+  `e24822c`. All compatible original local work is committed. The old tip,
+  original eleven-file stash and backup archive remain available for recovery.
+- Preserved the previous `.venv` as `venv-before-merge` in the backup directory.
+  Created the current environment at its normal path with
+  `uv sync --locked --extra dev --extra ml --extra optuna`; all 112 installed
+  packages passed `uv pip check`. The lockfile check passed.
+- Full suite in the original checkout: **11,128 passed, 3 skipped, 26 warnings,
+  147.88 seconds**. The skips require absent V90 operator-local screen evidence.
+  Warnings include upstream pandas/Numba deprecations, not test failures.
+- Current guide/monitor/operator validation: **44 passed**. Current guide links
+  resolve; stale terminal instructions and two obsolete skill reference files
+  were removed. Versioned runbooks and signed historical records remain intact.
+- The final wheel was installed outside the source tree. Ten command groups,
+  ten packaged operations and four supervisor subcommands passed help checks.
+  Real VectorBT, TA-Lib SMA, two Karpathy trials, two Optuna trials, 400-bar
+  Nautilus replay, paper/shadow STOP and unarmed live refusal passed with
+  network access denied. Optuna float bounds now match their actual step grid.
+- Current local model probe loaded the 17-feature calibrated bundle. Default
+  status still leaves models unprobed and distinguishes capability presence
+  from readiness. No exchange execution client was needed for these checks.
+- Undefined/unused-import checks (`ruff --select F401,F811,F821`), Python
+  compilation, dependency compatibility and Git whitespace checks passed.
+- Final five-sample warm-cache medians: CLI import **0.050 seconds**, help
+  **0.064 seconds**, status **0.078 seconds**. Synthetic recovery used **6,650
+  traced Python bytes at 2 MiB** and **6,642 bytes at 8 MiB**. The earlier
+  same-environment baseline was about 1.143 seconds for import and 1.185 seconds
+  for help; recovery previously allocated about 35.4 MB at 8 MiB. These are
+  local subprocess/synthetic observations, not production latency or RSS claims.
+  Streaming improves recovery allocation; no recovery latency gain is claimed.
+- Moved 517,772,182 bytes of retired TUI build output, residual crate metadata
+  and stale distribution archives out of the active checkout into recoverable
+  backup directories. `dist/` now contains the tested current wheel. No model,
+  ledger, vendor source or research dataset was purged.
+- STOP, completed drain and credentials file hashes matched the pre-merge
+  preservation manifest. No backend or supervisor was started. These checks do
+  not establish fresh venue-flat state.
+
+The tested wheel is `dist/hypervector-0.1.0-py3-none-any.whl`, SHA-256
+`af7b5e3461dbf06232044f0a6ebfeb120f365944322ab7019ee43e7c161be686`.
+Raw command logs/XML, the final profile and wheel smoke results are retained
+under the backup directory's `validation/` folder. This acceptance covers the
+maintained software workflows; the historical audit failures below still need
+profile-specific resolution before any future live deployment.
 
 ## Historical evidence and retention decisions
 
@@ -98,7 +141,7 @@ Verification commands:
 
 ```sh
 .venv/bin/python -m pytest tests/ -q -n 4 --dist loadfile
-.venv/bin/python -m pytest tests/ -q -n 4 -m integration --ignore=tests/test_install.py
+.venv/bin/python -m pytest tests/ -q -n 4 -m "integration and not network" --ignore=tests/test_install.py
 .venv/bin/python -m pytest tests/test_fetchers.py -q -m network
 .venv/bin/python -m hypervector --help
 .venv/bin/python -m hypervector status

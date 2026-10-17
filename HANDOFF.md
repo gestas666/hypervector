@@ -6,6 +6,12 @@ Hyperliquid and 0xArchive are retained. The terminal UI is retired.
 Current verification and merge records are in
 `docs/reviews/2026-10-17-unified-current-validation.md`.
 
+The original checkout is now updated on `main` and its locked environment has
+been refreshed. Final offline acceptance: 11,128 passed, 3 historical-evidence
+skips. The installed wheel also passed retained-engine and CLI smoke checks.
+Recovery copies are in
+`/Users/gestas/.codex/backups/hypervector/20261017-unified-current/`.
+
 Trading remains stopped. A source merge does not authorize a restart or make
 older source-bound live approvals valid for the updated implementation.
 
