@@ -16,6 +16,7 @@ from hypervector.strategies import register_all_strategies
 from hypervector.strategies.registry import StrategySpec, register
 
 FIXTEST_ENTER_AT = "fixtest_enter_at"
+FIXTEST_ENTER_EACH = "fixtest_enter_each"
 FIXTEST_RAISE_AFTER = "fixtest_raise_after"
 FIXTEST_LOOKAHEAD = "fixtest_lookahead_long"
 
@@ -142,6 +143,20 @@ def _enter_at(
     return entries, exits, direction
 
 
+def _enter_each(
+    df: pd.DataFrame, *, entry_ts: str = "", direction: str = "long"
+) -> tuple[pd.Series, pd.Series, str]:
+    """Enter at every bar-open label in the comma-separated ``entry_ts``; causal."""
+    index = (
+        df.index
+        if isinstance(df.index, pd.DatetimeIndex)
+        else pd.DatetimeIndex(df["timestamp"])
+    )
+    labels = [pd.Timestamp(t) for t in str(entry_ts).split(",") if t.strip()]
+    entries = pd.Series(index.isin(labels), index=df.index)
+    return entries, pd.Series(False, index=df.index), direction
+
+
 def _raise_after(
     df: pd.DataFrame, *, max_rows: int = 50
 ) -> tuple[pd.Series, pd.Series, str]:
@@ -164,6 +179,7 @@ def _lookahead(df: pd.DataFrame) -> tuple[pd.Series, pd.Series, str]:
 def register_fix_strategies() -> None:
     register_all_strategies()
     register(StrategySpec(FIXTEST_ENTER_AT, "other", {}, _enter_at, "test only"))
+    register(StrategySpec(FIXTEST_ENTER_EACH, "other", {}, _enter_each, "test only"))
     register(StrategySpec(FIXTEST_RAISE_AFTER, "other", {}, _raise_after, "test only"))
     register(StrategySpec(FIXTEST_LOOKAHEAD, "other", {}, _lookahead, "test only"))
 
@@ -189,6 +205,12 @@ def capture_engine(monkeypatch: Any) -> dict[str, Any]:
                         "quantity": float(order.quantity.as_double()),
                         "filled_qty": float(order.filled_qty.as_double()),
                         "avg_px": float(order.avg_px) if order.avg_px else None,
+                        "trigger_price": (
+                            float(order.trigger_price)
+                            if getattr(order, "trigger_price", None) is not None
+                            else None
+                        ),
+                        "reduce_only": bool(order.is_reduce_only),
                     }
                 )
             captured["orders"] = sorted(orders, key=lambda r: (r["ts_init"], r["side"]))

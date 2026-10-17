@@ -75,6 +75,39 @@
     },
     {
       "flags": [
+        "--book-max-pages"
+      ],
+      "options": {
+        "dest": "book_max_pages",
+        "type": "int",
+        "default": 40,
+        "help": "maximum pages per orderbook chunk before the chunk is retried"
+      }
+    },
+    {
+      "flags": [
+        "--trade-max-pages"
+      ],
+      "options": {
+        "dest": "trade_max_pages",
+        "type": "int",
+        "default": 500,
+        "help": "maximum pages per public-trade chunk before the chunk is retried"
+      }
+    },
+    {
+      "flags": [
+        "--price-max-pages"
+      ],
+      "options": {
+        "dest": "price_max_pages",
+        "type": "int",
+        "default": 20,
+        "help": "maximum pages per mark/oracle price chunk before the chunk is retried"
+      }
+    },
+    {
+      "flags": [
         "--include-prices"
       ],
       "options": {

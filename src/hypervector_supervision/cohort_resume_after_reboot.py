@@ -557,9 +557,9 @@ def _utc(epoch: float | None) -> str | None:
     return None if epoch is None else datetime.fromtimestamp(epoch, UTC).isoformat()
 
 
-def build_parser() -> argparse.ArgumentParser:
-    """Build the command line."""
-    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+def build_parser(prog: str | None = None) -> argparse.ArgumentParser:
+    """Build the command line (``prog`` names it in usage text)."""
+    parser = argparse.ArgumentParser(prog=prog, description=__doc__.split("\n\n")[0])
     parser.add_argument(
         "--yes",
         action="store_true",
@@ -579,9 +579,9 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(argv: Sequence[str] | None = None, *, prog: str | None = None) -> int:
     """Check the host after a reboot and, with --yes, resume supervision."""
-    args = build_parser().parse_args(argv)
+    args = build_parser(prog).parse_args(argv)
     if args.yes and not (args.enabled and args.i_accept_live_risk):
         print(f"resume refused: {AUTHORITY_REFUSAL}", file=sys.stderr)
         return EXIT_AUTHORITY_REFUSED

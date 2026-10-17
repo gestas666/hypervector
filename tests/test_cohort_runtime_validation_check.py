@@ -21,7 +21,7 @@ from hypervector.live.multi_asset_live_config import (
 V95 = Path("configs/multi_asset_growth_first_5000_review_fixes_v95.toml")
 V94 = Path("configs/multi_asset_growth_first_5000_review_actions_v94.toml")
 V95_TO_V94_ROLLBACK = Path("configs/v95-to-v94-rollback-20260927-v1.toml")
-HULK_CANARY = Path("configs/multi_asset_bidirectional_canary.toml")
+HULK_CANARY = Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml")
 # V94 keeps HYPE as a watch-only provider (execution_symbols = []) with a side
 # override: the observe-only shape whose leftover sizing table broke the
 # 2026-09-22 armed start.

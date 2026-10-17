@@ -82,8 +82,31 @@
         "dest": "out",
         "type": "Path",
         "default": null,
-        "help": "optional path for the complete JSON tuning board"
+        "help": "write the durable tuning board here instead of logs/research (refused if the file exists)"
+      }
+    },
+    {
+      "flags": [
+        "--max-cache-age-hours"
+      ],
+      "options": {
+        "dest": "max_cache_age_hours",
+        "type": "positive_finite_float",
+        "default": null,
+        "help": "refresh a cached window only when its last bar is older than this many hours (default: 24)"
+      }
+    },
+    {
+      "flags": [
+        "--pin-cache"
+      ],
+      "options": {
+        "dest": "pin_cache",
+        "action": "store_true",
+        "default": false,
+        "help": "serve an existing cached window as is, whatever its age or coverage (reproduce a run on an installed archive window)"
       }
     }
-  ]
+  ],
+  "description": "Tune causal regime parameters against recorded entries with a chronological holdout. Every run writes a durable board with its data provenance under <data-root>/logs/research/regime_autotune_<UTC>.json (exclusive create), or at --out, which must not exist yet."
 }

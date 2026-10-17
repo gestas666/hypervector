@@ -71,7 +71,7 @@ def test_inactive_directional_contract_still_rejects_drift(index: int, changed: 
 
 def test_all_inactive_override_families_survive_staging(tmp_path: Path) -> None:
     """Direction, context, stop, sizing and directional lock remain exact stored policy."""
-    original = load_multi_asset_live_config("configs/multi_asset_bidirectional_canary.toml", mode="observe")
+    original = load_multi_asset_live_config("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml", mode="observe")
     provider = replace(original.providers[1], execution_symbols=(),
                        execution_side_overrides=(("BTC", frozenset({"long"})),),
                        entry_context_overrides=(("BTC", "dual_mtf_not_opposed"),),

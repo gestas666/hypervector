@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "help": "Offline runtime validation of a profile, as the live runner sees it",
-  "description": "Reproduce the live runner's construction-time validation without credentials or a venue client. Exit 0 accepted, 1 runner objection, 2 config refusal, 3 book-level advisory (report-only; the runner never reads it).",
+  "description": "Reproduce the live runner's construction-time validation without credentials or a venue client. Prints one JSON document (verdict, exit_code, problems and, with --equity, the book-level check); operator lines go to stderr. Exit 0 accepted, 1 runner objection, 2 config refusal, 3 book-level advisory (report-only; the runner never reads it).",
   "section": "transition",
   "kind": "operation",
   "operation": "hypervector.operations.cohort_runtime_validation_check",

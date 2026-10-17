@@ -1,0 +1,39 @@
+{
+  "schema": 2,
+  "help": "Preview, then apply, a recoverable taker-only repair of one stored trade bundle",
+  "description": "Re-normalize a stored 0xArchive trade bundle from its own raw pages (taker-only fills). Without --apply nothing changes and the counts are reported; --apply moves the original aside to <bundle>.pre_taker_only_v2 and publishes the repaired bundle in its place. A bundle already at the current normalization is reported unchanged. Rebuild the research database afterwards with 'db build --replace-changed'.",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.archive:cmd_repair_trades",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--bundle"
+      ],
+      "options": {
+        "dest": "bundle",
+        "type": "Path",
+        "default": null,
+        "help": "stored trade bundle directory (its name ends in _trades)"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--apply"
+      ],
+      "options": {
+        "dest": "apply",
+        "action": "store_true",
+        "default": false,
+        "help": "publish the repair (default: preview only, nothing changes)"
+      }
+    }
+  ]
+}

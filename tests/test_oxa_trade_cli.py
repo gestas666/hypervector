@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from hypervector.cli import CLI_COMMANDS, build_parser, main
-from hypervector.data.oxa_trades import OxaTradeRequest
+from hypervector.data.oxa_trades import DEFAULT_TRADE_MAX_PAGES, OxaTradeRequest
 
 
 def test_trade_fetch_command_is_discoverable() -> None:
@@ -107,7 +107,7 @@ def test_trade_fetch_cli_is_bounded_and_secret_safe(
     assert rc == 0
     assert captured["api_key"] == secret
     assert request.limit == 1000
-    assert request.max_pages == 1
+    assert request.max_pages == DEFAULT_TRADE_MAX_PAGES
     assert report["venue"] == "hyperliquid"
     assert secret not in output
 

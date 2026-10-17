@@ -727,7 +727,7 @@ def test_publish_attaches_profile_acceptance_before_atomic_write(
         "attach_seven_asset_poststart_acceptance",
         attach,
     )
-    config_path = Path("configs/multi_asset_bidirectional_canary.toml")
+    config_path = Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml")
 
     checkpoint = publish_live_checkpoint(
         ledger_root,

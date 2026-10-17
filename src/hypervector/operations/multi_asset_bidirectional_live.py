@@ -98,8 +98,6 @@ from hypervector.runtime_lock import (
     bidirectional_live_runtime_lock,
 )
 
-_CONFIG_NAME = "multi_asset_bidirectional_complete_portfolio_canary_v25.toml"
-_DEFAULT_CONFIG = Path("configs") / _CONFIG_NAME
 _DEFAULT_BACKTEST_LAB = Path("../backtest-lab/backtest_lab")
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 _MAX_READ_COALESCE_SECONDS = 10.0
@@ -127,7 +125,9 @@ class CohortRunFailure(RuntimeError):
 def build_parser() -> argparse.ArgumentParser:
     """Build the explicit live-only cohort command boundary."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=_DEFAULT_CONFIG)
+    # Required: the old default named a canary profile that is now a test
+    # fixture; the supervised start always passes --config explicitly.
+    parser.add_argument("--config", type=Path, required=True)
     parser.add_argument(
         "--backtest-lab-root",
         type=Path,

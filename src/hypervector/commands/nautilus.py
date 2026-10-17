@@ -7,15 +7,30 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from hypervector.commands.common import CommandRefused
 from hypervector.commands.exports import resolve_export
 from hypervector.export.schema import ExportSchemaError
 
+if TYPE_CHECKING:
+    from hypervector.nautilus.errors import UnsupportedNautilusSymbol
+
 CATALOG_BATCH_SIZE = 1000
-# The Phase-2 runner builds one synthetic BTC perpetual instrument (CLI-15).
-NAUTILUS_SYMBOLS = frozenset({"BTC"})
+# Fields of the run's summary.json echoed by 'nautilus run' (existing keys stay).
+RUN_SUMMARY_FIELDS = (
+    "trade_count",
+    "pnl_basis",
+    "pnl_realized",
+    "pnl_unrealized",
+    "pnl_before_funding",
+    "funding_cost",
+    "commissions_total",
+    "open_positions_at_end",
+    "signal_mode_used",
+    "conviction_source",
+    "instrument_id",
+)
 
 
 def cmd_check(args: argparse.Namespace) -> int:
@@ -29,6 +44,7 @@ def cmd_check(args: argparse.Namespace) -> int:
             data_root=args.data_root,
             strict=not args.loose,
             probe_nautilus=not args.no_nautilus_probe,
+            probe_signals=not getattr(args, "no_signal_probe", False),
         )
     except ExportSchemaError as exc:
         _schema_error(args, path, exc)
@@ -41,31 +57,56 @@ def cmd_check(args: argparse.Namespace) -> int:
         "live execution → 'live start' (--enabled + --i-accept-live-risk)",
         file=sys.stderr,
     )
-    return 0
+    # ok is false when 'nautilus run' would fail on this bundle (no venue
+    # geometry for its symbol, or the signal probe failed): exit 1.
+    return 0 if report.get("ok", True) else 1
 
 
 def cmd_run(args: argparse.Namespace) -> int:
     """Backtest a strict strategy bundle event by event with NautilusTrader.
 
-    The lookback defaults to the bundle's own window. A non-BTC bundle is
-    refused (exit 2) before the engine loads. Technical failures (a cache miss
-    with --no-network, an engine error) print error JSON and exit 1.
+    The lookback defaults to the bundle's own window and the conviction to the
+    bundle's own (``meta.conviction``, else ``risk.default_conviction``). A
+    bundle whose symbol has no known venue geometry (neither cached in
+    ``meta.instrument`` nor built in) is refused (exit 2) before the engine
+    loads. Technical failures (a cache miss with --no-network, a strategy or
+    engine error) print error JSON and exit 1.
     """
+    from hypervector.nautilus.errors import (
+        Phase2TechnicalFailure,
+        UnsupportedNautilusSymbol,
+    )
+
     path = resolve_export(args.export, args.data_root)
-    _require_supported_symbol(path)
+    refusal = _unsupported_symbol(path)
+    if refusal is not None:
+        _technical_error(args, path, refusal, symbol=refusal.symbol, reason=refusal.reason)
+        return 2
     lookback, lookback_source = _run_lookback(args, path)
+    conviction = None if args.conviction is None else float(args.conviction)
+    if conviction is not None and not 0.0 <= conviction <= 1.0:
+        raise CommandRefused("--conviction must be within 0..1")
     try:
         from hypervector.nautilus.runner import run_phase2_backtest
 
         result = run_phase2_backtest(
             export_dir=path,
             data_root=Path(args.data_root),
-            conviction=float(args.conviction),
+            conviction=conviction,
             lookback_days=lookback,
             allow_network=not args.no_network,
+            signal_mode=getattr(args, "signal_mode", "auto"),
         )
     except ExportSchemaError as exc:
         _schema_error(args, path, exc)
+        return 1
+    except UnsupportedNautilusSymbol as exc:
+        _technical_error(args, path, exc, symbol=exc.symbol, reason=exc.reason)
+        return 2
+    except Phase2TechnicalFailure as exc:
+        if os.environ.get("HYPERVECTOR_DEBUG") == "1":
+            raise
+        _technical_error(args, path, exc, **_failure_context(exc), lookback=lookback)
         return 1
     except Exception as exc:  # noqa: BLE001 - engine failures are technical (exit 1)
         if os.environ.get("HYPERVECTOR_DEBUG") == "1":
@@ -87,7 +128,8 @@ def cmd_run(args: argparse.Namespace) -> int:
         "lookback_days": lookback,
         "lookback_source": lookback_source,
         "network": not args.no_network,
-        "conviction": payload.get("conviction", float(args.conviction)),
+        "conviction": payload.get("conviction", conviction),
+        **{key: payload.get(key) for key in RUN_SUMMARY_FIELDS},
         "loadout": result.loadout_summary,
         "artifacts": {
             "export": str(result.export_dir),
@@ -150,18 +192,38 @@ def cmd_catalog(args: argparse.Namespace) -> int:
     return 0
 
 
-def _require_supported_symbol(path: Path) -> None:
-    """Refuse non-BTC bundles: the runner prices every bar on a synthetic BTC perp."""
+def _unsupported_symbol(path: Path) -> UnsupportedNautilusSymbol | None:
+    """The refusal for a bundle whose symbol has no venue geometry, if any.
+
+    Checked before the engine loads, with the engine's own resolver: venue
+    metadata cached in the bundle's ``meta.instrument`` (or
+    ``meta.venue_meta``), else the built-in table.
+    """
+    from hypervector.nautilus.errors import UnsupportedNautilusSymbol
+    from hypervector.nautilus.venue_spec import resolve_venue_spec
+
     try:
         meta = json.loads((path / "meta.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return  # the runner reports an unreadable bundle as a schema error
-    symbol = meta.get("symbol") if isinstance(meta, dict) else None
-    if symbol is not None and str(symbol).strip().upper() not in NAUTILUS_SYMBOLS:
-        raise CommandRefused(
-            "Nautilus validation currently supports BTC exports only (CLI-15); "
-            f"bundle {path.name} is {symbol}"
-        )
+        return None  # the runner reports an unreadable bundle as a schema error
+    if not isinstance(meta, dict) or meta.get("symbol") is None:
+        return None  # the runner reports a bundle without a symbol as a schema error
+    try:
+        resolve_venue_spec(str(meta["symbol"]), meta)
+    except UnsupportedNautilusSymbol as exc:
+        return exc
+    return None
+
+
+def _failure_context(exc: BaseException) -> dict[str, Any]:
+    """The runner failure's own fields (strategy, first error) for the error JSON."""
+    to_dict = getattr(exc, "to_dict", None)
+    if not callable(to_dict):
+        return {}
+    details = dict(to_dict())
+    return {
+        key: details[key] for key in ("strategy", "first_error") if key in details
+    }
 
 
 def _run_lookback(args: argparse.Namespace, path: Path) -> tuple[int | None, str]:

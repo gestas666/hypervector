@@ -78,6 +78,7 @@ from hypervector.nautilus.precompute import (
     precompute_intents,
     probe_precomputed,
 )
+from hypervector.nautilus.trail import TRAIL_EXIT_MODEL
 from hypervector.nautilus.venue_spec import VenueInstrumentSpec, resolve_venue_spec
 from hypervector.strategies import get_strategy, register_all_strategies
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
@@ -362,11 +363,7 @@ def run_phase2_backtest(
         },
         "cost_model": costs.to_dict(),
         "exit_mode": str((strategy_config.exits or {}).get("mode")),
-        "trail_exit_model": (
-            "close_evaluated_trailing_stop_vectorbt_parity"
-            if strategy._trail_enabled
-            else None
-        ),
+        "trail_exit_model": TRAIL_EXIT_MODEL if strategy._trail_enabled else None,
         "trail_exits": int(strategy.trail_exits),
         **signal_info,
         "bars": len(bars),

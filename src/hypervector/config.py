@@ -30,7 +30,7 @@ class ResearchConfig:
     lookback_days: int = DEFAULT_LOOKBACK
     backfill_priority: tuple[str, ...] = DEFAULT_BACKFILL_PRIORITY
     strict_hl_only: bool = False
-    fee_model: str = "hl_taker_default"
+    fee_model: str = "hl_base_taker"
     extra: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:

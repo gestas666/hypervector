@@ -60,7 +60,7 @@ class _CanonicalCollector:
 def test_recovery_fetch_bridges_an_outage_longer_than_incremental_window() -> None:
     """A stale cache must backfill its full hole before providers resume."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="observe",
     )
     master = _minute_bars()

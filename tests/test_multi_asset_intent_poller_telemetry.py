@@ -53,7 +53,7 @@ class _MissedExitThenCurrentSetupCollector:
 def test_startup_telemetry_shows_current_setup_without_losing_recovery_exit() -> None:
     """Screen telemetry and execution recovery must use separate startup views."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="observe",
     )
     poller = ConfiguredMultiAssetIntentPoller(

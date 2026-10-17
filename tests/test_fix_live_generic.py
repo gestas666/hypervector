@@ -1306,25 +1306,28 @@ def test_cli_live_run_refuses_nan_cap(
     export = _write_export(tmp_path)
     monkeypatch.setenv("HYPERVECTOR_HL_WALLET_ADDRESS", WALLET)
     monkeypatch.setenv("HYPERVECTOR_HL_API_PRIVATE_KEY", KEY)
-    rc = main(
-        [
-            "--data-root",
-            str(tmp_path / "data"),
-            "live",
-            "run",
-            "--export",
-            str(export),
-            "--enabled",
-            "--i-accept-live-risk",
-            "--max-notional-usd",
-            "nan",
-            "--max-live-bars",
-            "0",
-        ]
-    )
+    # The CLI refuses a NaN cap at parse time (usage error, exit 2), before any
+    # policy, credential or engine code runs.
+    with pytest.raises(SystemExit) as refused:
+        main(
+            [
+                "--data-root",
+                str(tmp_path / "data"),
+                "live",
+                "run",
+                "--export",
+                str(export),
+                "--enabled",
+                "--i-accept-live-risk",
+                "--max-notional-usd",
+                "nan",
+                "--max-live-bars",
+                "0",
+            ]
+        )
     captured = capsys.readouterr()
-    assert rc == 1
-    assert "max_notional_usd" in captured.err
+    assert refused.value.code == 2
+    assert "--max-notional-usd" in captured.err
     assert KEY not in captured.err + captured.out
 
 

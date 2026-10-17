@@ -44,6 +44,7 @@ def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
                 "execution_mode": result.execution_mode,
                 "decisions_path": str(result.decisions_path),
                 "fills_count": result.fills_count,
+                "warmup": getattr(result, "warmup_provenance", None),
                 "position_policy": profile.position_policy(),
                 "regime_policy": profile.regime_policy(),
                 "funding_authority": "hyperliquid_ws_activeAssetCtx",
@@ -51,6 +52,7 @@ def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
                 "fee_tier": profile.fee_tier,
             },
             indent=2,
+            default=str,
         )
     )
     return 0

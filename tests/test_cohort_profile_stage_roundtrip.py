@@ -19,7 +19,7 @@ from hypervector.live.multi_asset_live_config import (
 )
 
 V89 = Path('tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml')
-CANARY = Path('configs/multi_asset_bidirectional_canary.toml')
+CANARY = Path('tests/fixtures/profiles/multi_asset_bidirectional_canary.toml')
 
 
 def unchanged_settings(config: MultiAssetLiveConfig) -> CohortProfileSettings:

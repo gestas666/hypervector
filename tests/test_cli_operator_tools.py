@@ -149,9 +149,9 @@ def resume_calls(monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
     calls: list[list[str]] = []
     original = resume.main
 
-    def record(argv: list[str] | None = None) -> int:
+    def record(argv: list[str] | None = None, **kwargs: object) -> int:
         calls.append(list(argv or []))
-        return original(argv)
+        return original(argv, **kwargs)
 
     monkeypatch.setattr(resume, "main", record)
     monkeypatch.setattr(
@@ -194,7 +194,12 @@ def test_supervisor_help_lists_resume() -> None:
 def test_resume_helper_text_points_at_the_cli() -> None:
     from hypervector_supervision.cohort_supervisor_runtime import RESUME_HELPER
 
-    assert RESUME_HELPER == "python -m hypervector live supervisor resume"
+    from hypervector_supervision.cohort_supervisor_models import REPOSITORY_ROOT
+
+    assert RESUME_HELPER == (
+        f"{REPOSITORY_ROOT / '.venv' / 'bin' / 'python'} -m hypervector "
+        "live supervisor resume"
+    )
 
 
 def test_resume_module_imports_nothing_from_hypervector() -> None:

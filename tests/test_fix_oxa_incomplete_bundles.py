@@ -413,7 +413,7 @@ def test_partial_book_sibling_is_invisible_to_backfill_resume(
     assert _existing_result(config, OxaBackfillTask("book", START, END)) is None
 
 
-def test_cli_book_fetch_refuses_incomplete_default_window(
+def test_cli_book_fetch_refuses_an_incomplete_window(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -422,6 +422,8 @@ def test_cli_book_fetch_refuses_incomplete_default_window(
     session = FakeSession(book_pages(3))
     _serve(monkeypatch, session)
 
+    # The default page budget completes a normal window; a budget smaller than
+    # the window still refuses it and stores nothing.
     rc = main(
         [
             "--data-root",
@@ -432,6 +434,8 @@ def test_cli_book_fetch_refuses_incomplete_default_window(
             START.isoformat(),
             "--end",
             END.isoformat(),
+            "--max-pages",
+            "1",
         ]
     )
 

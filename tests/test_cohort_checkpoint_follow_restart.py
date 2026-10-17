@@ -15,7 +15,7 @@ from test_multi_asset_bidirectional_live_checkpoint_script import _load_module
 _CONFIG = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml")
 
 
-_CHECKPOINT_CONFIG = ["--config", "configs/multi_asset_bidirectional_canary.toml"]
+_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"]
 
 
 def _snapshot(run_id: str) -> dict[str, object]:

@@ -124,7 +124,7 @@ def test_observer_ledger_override_rebinds_every_output(tmp_path: Path) -> None:
     """A parity observer must not append any row to the armed live root."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
         mode="observe",
     )
 
@@ -178,7 +178,7 @@ def test_observer_ledger_override_refuses_configured_root() -> None:
     """An explicit override cannot alias the source profile's live ledgers."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
         mode="observe",
     )
 
@@ -246,7 +246,7 @@ def test_observer_ledger_override_refuses_broad_roots(root: Path) -> None:
     """Observer output cannot target a system, home, or workspace root."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
         mode="observe",
     )
 
@@ -256,7 +256,7 @@ def test_observer_ledger_override_refuses_broad_roots(root: Path) -> None:
 
 def _observer_config(module: ModuleType, tmp_path: Path) -> MultiAssetLiveConfig:
     config = module.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
         mode="observe",
     )
     return module._with_observer_ledger_root(config, tmp_path / "observe" / "observer")

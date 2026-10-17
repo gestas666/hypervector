@@ -13,19 +13,46 @@ from hypervector.live.multi_asset_live_config import (
 
 # Kept profile without a transition approval; its fingerprint was recorded before
 # the optional [runtime] transition_approval boundary existed.
-_V25 = Path("configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml")
+_V25 = Path("tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml")
 _V95 = Path("configs/multi_asset_growth_first_5000_review_fixes_v95.toml")
 _V94 = Path("configs/multi_asset_growth_first_5000_review_actions_v94.toml")
 _V95_TO_V94_ROLLBACK = Path("configs/v95-to-v94-rollback-20260927-v1.toml")
 
 
-def test_existing_profile_preserves_identity_without_transition_approval() -> None:
+# The profile moved from configs/ to tests/fixtures/profiles/, and its
+# source_profile now names the fixture copy of the source-follow profile. That
+# path is part of the hashed provider identity, so the recorded fingerprint is
+# checked against the profile bytes as recorded (source_profile under configs/).
+_V25_RECORDED_SOURCE_PROFILE = (
+    'source_profile = "configs/'
+    'hypervelocity_source_follow_bidirectional_minrange12_alloc10_lev5_shadow.toml"'
+)
+_V25_FIXTURE_SOURCE_PROFILE = (
+    'source_profile = "tests/fixtures/profiles/'
+    'hypervelocity_source_follow_bidirectional_minrange12_alloc10_lev5_shadow.toml"'
+)
+
+
+def test_existing_profile_preserves_identity_without_transition_approval(
+    tmp_path: Path,
+) -> None:
     """Adding the optional boundary must not drift an incumbent fingerprint."""
     config = load_multi_asset_live_config(_V25, mode="observe")
-
     assert config.transition_approval is None
-    assert config.profile_fingerprint == (
+
+    raw = _V25.read_text(encoding="utf-8")
+    assert raw.count(_V25_FIXTURE_SOURCE_PROFILE) == 1
+    recorded = tmp_path / _V25.name
+    recorded.write_text(
+        raw.replace(_V25_FIXTURE_SOURCE_PROFILE, _V25_RECORDED_SOURCE_PROFILE),
+        encoding="utf-8",
+    )
+    assert load_multi_asset_live_config(recorded, mode="observe").profile_fingerprint == (
         "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc"
+    )
+    # Only the source path differs, and it is hashed: the fixture's own identity.
+    assert config.profile_fingerprint == (
+        "64a80852f23c3ce3fa375e5a104addc71d3233ce47a8c22ac43669986656868d"
     )
 
 

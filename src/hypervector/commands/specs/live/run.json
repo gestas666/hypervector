@@ -58,9 +58,9 @@
       ],
       "options": {
         "dest": "max_notional_usd",
-        "type": "float",
+        "type": "positive_finite_float",
         "default": 50.0,
-        "help": "hard notional cap per order in USD"
+        "help": "hard notional cap per order in USD (finite, above zero)"
       }
     },
     {

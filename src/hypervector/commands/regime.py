@@ -7,7 +7,13 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from hypervector.commands.common import CommandRefused, _load_bars
+from hypervector.commands.common import (
+    CommandRefused,
+    _load_bars,
+    align_book,
+    book_path_or_refuse,
+    cache_age_options,
+)
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -97,14 +103,10 @@ def cmd_regime_eval(args: argparse.Namespace) -> int:
     """Evaluate forward return accuracy and predictive edge of the canonical classifier."""
     from hypervector.regime.evaluator import evaluate_regime_accuracy
 
-    df_1m, _ = _load_bars(args)
-
-    book_path = getattr(args, "book_path", None)
-    if book_path and Path(book_path).is_file():
-        from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
-
-        df_book = load_l2_jsonl(book_path)
-        df_1m = align_orderbook_to_ohlcv(df_1m, df_book)
+    book_path = book_path_or_refuse(args)
+    df_1m, provenance = _load_bars(args)
+    if book_path is not None:
+        df_1m = align_book(df_1m, book_path, str(args.symbol))
 
     rpt = evaluate_regime_accuracy(df_1m, forward_horizon=args.forward_horizon)
     out = {
@@ -115,6 +117,8 @@ def cmd_regime_eval(args: argparse.Namespace) -> int:
         "forward_horizon": args.forward_horizon,
         "overall_directional_accuracy_pct": rpt.overall_directional_accuracy,
         "regime_stats": rpt.regime_stats,
+        "book_path": str(book_path) if book_path is not None else None,
+        "data_provenance": provenance,
     }
     print(json.dumps(out, indent=2, default=str))
     return 0
@@ -142,13 +146,25 @@ def cmd_regime_align(args: argparse.Namespace) -> int:
 
 
 def cmd_regime_tune(args: argparse.Namespace) -> int:
-    """Tune causal regime parameters and retain every trial result."""
+    """Tune causal regime parameters and retain every trial result.
+
+    Every run publishes a durable board with its provenance (exclusive
+    create): under ``<data-root>/logs/research`` by default, or at ``--out``,
+    which is refused before any data load when it already exists.
+    """
+    from hypervector.infra import paths_for
     from hypervector.regime.tuning import (
         autotune_regime_candidates,
         generate_candidate_parameters,
+        publish_regime_tuning_board,
+        regime_tuning_document,
     )
 
     positions_path = _positions_path(args)
+    out_path = Path(args.out) if args.out else None
+    if out_path is not None and out_path.exists():
+        raise CommandRefused(f"refusing to overwrite an existing board: {out_path}")
+    cache_age_options(args)
     df, provenance = _load_bars(args)
     candidates = generate_candidate_parameters(n_trials=args.n_trials, seed=args.seed)
     board = autotune_regime_candidates(
@@ -158,13 +174,29 @@ def cmd_regime_tune(args: argparse.Namespace) -> int:
         train_fraction=args.train_fraction,
         forward_horizon=args.forward_horizon,
     )
+    document = regime_tuning_document(
+        board,
+        bars=df,
+        data_provenance=provenance,
+        seed=args.seed,
+        n_trials=args.n_trials,
+        train_fraction=args.train_fraction,
+        forward_horizon=args.forward_horizon,
+    )
+    if out_path is not None:
+        board_path = publish_regime_tuning_board(
+            document, out_path.parent, name=out_path.name
+        )
+    else:
+        board_path = publish_regime_tuning_board(
+            document, paths_for(args.data_root).logs_research
+        )
     out = {
-        "ok": True,
-        "report_only": True,
-        "data_provenance": provenance,
-        "tuning_board": board.to_dict(),
+        **document,
+        "board_path": str(board_path.resolve()),
+        "artifacts": {"board": str(board_path.resolve())},
     }
-    _emit(out, args.out)
+    print(json.dumps(out, indent=2, default=str))
     return 0
 
 
@@ -190,14 +222,10 @@ def cmd_regime_export(args: argparse.Namespace) -> int:
     from hypervector.regime.snapshot_export import export_regime_snapshots
 
     root = Path(args.data_root)
+    book_path = book_path_or_refuse(args)
     df, prov = _load_bars(args)
-
-    book_path = getattr(args, "book_path", None)
-    if book_path and Path(book_path).is_file():
-        from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
-
-        df_book = load_l2_jsonl(book_path)
-        df = align_orderbook_to_ohlcv(df, df_book)
+    if book_path is not None:
+        df = align_book(df, book_path, str(args.symbol))
 
     out_path = args.out or (root / "exports" / "regime_snapshots.json")
     summary = export_regime_snapshots(

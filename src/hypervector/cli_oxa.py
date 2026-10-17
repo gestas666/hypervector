@@ -181,6 +181,10 @@ def cmd_oxa_candle_fetch(args: argparse.Namespace) -> int:
             )
         report["research_cache_path"] = cache_path
         report["research_cache_gap_fills"] = gap_fills
+        report["research_cache_hint"] = (
+            "research commands refresh a cache older than a day; pass --pin-cache "
+            "to run them on this installed window as is"
+        )
     return _print_success(report)
 
 

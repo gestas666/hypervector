@@ -59,8 +59,8 @@
       "options": {
         "dest": "max_pages",
         "type": "int",
-        "default": 1,
-        "help": "maximum pages to request"
+        "default": 500,
+        "help": "maximum pages to request; a window that needs more is refused and nothing is stored"
       }
     },
     {
@@ -76,6 +76,17 @@
       "legacy_flags": [
         "--timeout"
       ]
+    },
+    {
+      "flags": [
+        "--allow-partial"
+      ],
+      "options": {
+        "dest": "allow_partial",
+        "action": "store_true",
+        "default": false,
+        "help": "store an unfinished window under a non-canonical <bundle>_partial directory that backfill, audit and db build never read"
+      }
     }
   ]
 }

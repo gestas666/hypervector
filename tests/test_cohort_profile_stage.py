@@ -19,7 +19,7 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 
 def _settings() -> CohortProfileSettings:
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="observe",
     )
     return CohortProfileSettings(
@@ -47,7 +47,7 @@ def test_stage_writes_a_loadable_disarmed_profile_without_mutating_source(
     tmp_path: Path,
 ) -> None:
     """A valid full patch becomes a separate restart-only TOML profile."""
-    source = Path("configs/multi_asset_bidirectional_canary.toml")
+    source = Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml")
     before = source.read_bytes()
     config = load_multi_asset_live_config(source, mode="observe")
     output = tmp_path / "staged.toml"
@@ -72,7 +72,7 @@ def test_stage_rejects_venue_leverage_and_incomplete_provider_scope(
 ) -> None:
     """The generated profile uses the same venue and provider validation."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="observe",
     )
     settings = _settings()
@@ -97,7 +97,7 @@ def test_stage_rejects_venue_leverage_and_incomplete_provider_scope(
 def test_stage_preserves_provider_direction_overrides(tmp_path: Path) -> None:
     """Restart-only editing cannot widen an existing direction restriction."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="observe",
     )
     providers = tuple(
@@ -131,7 +131,7 @@ def test_stage_preserves_provider_direction_overrides(tmp_path: Path) -> None:
 def test_stage_preserves_provider_symbol_sizing_overrides(tmp_path: Path) -> None:
     """Restart-only editing cannot silently discard provider allocation."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="observe",
     )
     sizing = CohortEntrySizing(0.04, 15.0)
@@ -161,7 +161,7 @@ def test_stage_preserves_provider_symbol_sizing_overrides(tmp_path: Path) -> Non
 def test_stage_preserves_provider_directional_sizing_overrides(tmp_path: Path) -> None:
     """Restart-only editing cannot discard an explicit route-side allocation."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="observe",
     )
     long_policy = CohortEntrySizing(0.08, 60.0)

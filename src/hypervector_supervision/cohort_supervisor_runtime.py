@@ -55,7 +55,12 @@ from hypervector_supervision.cohort_supervisor_observation import (
 HELD_AT_START_TITLE = "HYPERVECTOR SUPERVISOR HELD AT START"
 HELD_TITLE = "HYPERVECTOR SUPERVISOR HELD"
 RELAUNCHING_AFTER_HOST_RESTART_TITLE = "HYPERVECTOR RELAUNCHING AFTER HOST RESTART"
-RESUME_HELPER = "python -m hypervector live supervisor resume"
+# The checkout's own interpreter, so the alert's command runs as written from any
+# directory (a bare "python" may not be the venv that has hypervector installed).
+RESUME_HELPER = (
+    f"{REPOSITORY_ROOT / '.venv' / 'bin' / 'python'} -m hypervector "
+    "live supervisor resume"
+)
 RESUME_AUTHORITY = "--yes --enabled --i-accept-live-risk"
 
 

@@ -42,7 +42,7 @@
       "pillar": true
     },
     "live": {
-      "help": "Hyperliquid execution and cohort operations (only 'live start' and 'live run' can arm)",
+      "help": "Hyperliquid execution and cohort operations (only 'live start' and 'live run' arm; 'live supervisor resume --yes' can restart the armed backend)",
       "pillar": true,
       "sections": {
         "run": "readiness, execution and operator requests",

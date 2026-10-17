@@ -95,6 +95,28 @@
         "help": "DuckDB research database file"
       },
       "data_default": "research/market.duckdb"
+    },
+    {
+      "flags": [
+        "--replace-changed"
+      ],
+      "options": {
+        "dest": "replace_changed",
+        "action": "store_true",
+        "default": false,
+        "help": "replace bundles whose verified manifests changed after an explicit source repair (atomic per 24-bundle batch)"
+      }
+    },
+    {
+      "flags": [
+        "--verify-all"
+      ],
+      "options": {
+        "dest": "verify_all",
+        "action": "store_true",
+        "default": false,
+        "help": "re-checksum already-ingested bundles instead of trusting their manifest fingerprint"
+      }
     }
   ]
 }

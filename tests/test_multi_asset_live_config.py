@@ -17,12 +17,12 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 
-_PROFILE = Path("configs/multi_asset_bidirectional_canary.toml")
+_PROFILE = Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml")
 _BREAKOUT_OBSERVER_PROFILE = Path(
     "tests/fixtures/profiles/multi_asset_bidirectional_breakout_observer_v3.toml"
 )
 _COMPLETE_PROFILE = Path(
-    "configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml"
+    "tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml"
 )
 _SOURCE_FOLLOW_ID = "hypervelocity_source_follow_bidirectional_5m_v1"
 _SOURCE_PROFILE_NAME = (
@@ -520,14 +520,14 @@ def test_profile_fingerprint_is_stable_across_python_hash_seeds() -> None:
     program = (
         "from hypervector.live.multi_asset_live_config import "
         "load_multi_asset_live_config as load; "
-        "print(load('configs/multi_asset_bidirectional_canary.toml', "
+        "print(load('tests/fixtures/profiles/multi_asset_bidirectional_canary.toml', "
         "mode='observe').profile_fingerprint)"
     )
     # The seeded interpreters are independent, so run them concurrently rather than in turn.
     processes = [
         subprocess.Popen(
             [sys.executable, "-c", program],
-            cwd=_PROFILE.parents[1],
+            cwd=Path(__file__).resolve().parents[1],
             env={**os.environ, "PYTHONHASHSEED": seed},
             stdout=subprocess.PIPE,
             text=True,

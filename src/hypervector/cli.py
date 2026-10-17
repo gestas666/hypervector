@@ -47,14 +47,36 @@ def load_command_environment(args: argparse.Namespace) -> None:
 
 def _error(args: argparse.Namespace, exc: BaseException, code: int) -> int:
     """Print the single JSON error document on stderr and return its exit code."""
-    report = {
+    report: dict[str, object] = {
         "ok": False,
         "command": getattr(args, "command", None),
         "error_type": type(exc).__name__,
         "error": str(exc),
     }
+    notes = getattr(exc, "__notes__", None)
+    if notes:
+        report["notes"] = [str(note) for note in notes]
     print(json.dumps(report), file=sys.stderr)
     return code
+
+
+_TECHNICAL = (KeyError, ValueError, OSError, RuntimeError)
+
+
+def is_technical_failure(exc: BaseException) -> bool:
+    """Exceptions reported as error JSON with exit 1 (technical failure).
+
+    Database errors count too. sqlite3 and duckdb are checked only when a
+    handler already imported them, so the boundary itself imports nothing.
+    """
+    if isinstance(exc, _TECHNICAL):
+        return True
+    for module_name in ("sqlite3", "duckdb"):
+        module = sys.modules.get(module_name)
+        error = getattr(module, "Error", None) if module is not None else None
+        if isinstance(error, type) and isinstance(exc, error):
+            return True
+    return False
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -69,8 +91,8 @@ def main(argv: list[str] | None = None) -> int:
         return _error(args, exc, 2)
     except KeyboardInterrupt:
         return 130
-    except (KeyError, ValueError, OSError, RuntimeError) as exc:
-        if os.environ.get("HYPERVECTOR_DEBUG") == "1":
+    except Exception as exc:
+        if not is_technical_failure(exc) or os.environ.get("HYPERVECTOR_DEBUG") == "1":
             raise
         return _error(args, exc, 1)
 

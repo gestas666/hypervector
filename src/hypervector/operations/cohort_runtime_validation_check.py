@@ -44,7 +44,8 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+import json
 import math
 from pathlib import Path
 import sys
@@ -499,14 +500,51 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def book_report(result: BookCheck) -> dict[str, object]:
+    """The book-level check as JSON (amounts in USD, fractions of equity)."""
+    equity = result.equity_usd
+    return {
+        "equity_usd": equity,
+        "maximum_positions": result.maximum_positions,
+        "at_stop_loss_usd": result.at_stop_loss_usd,
+        "at_stop_loss_fraction": result.at_stop_loss_usd / equity,
+        "at_stop_risk_limit_fraction": BOOK_AT_STOP_RISK_LIMIT,
+        "margin_usd": result.margin_usd,
+        "margin_fraction": result.margin_usd / equity,
+        "margin_limit_fraction": BOOK_MARGIN_LIMIT,
+        "routes": [asdict(route) for route in result.routes],
+        "problems": list(result.problems),
+    }
+
+
+def _emit(report: dict[str, object]) -> int:
+    """Print the single JSON document on stdout and return its exit code."""
+    print(json.dumps(report, indent=2, default=str))
+    return int(report["exit_code"])  # type: ignore[call-overload]
+
+
 def main(argv: Sequence[str] | None = None) -> int:
-    """Exit 0 only when the runner would accept the profile."""
+    """Exit 0 only when the runner would accept the profile.
+
+    stdout carries exactly one JSON document (``verdict``, ``exit_code``,
+    ``problems`` and, with ``--equity``, the ``book`` check); the operator
+    lines stay on stderr.
+    """
     args = build_parser().parse_args(argv)
     backtest_lab_root = (
         DEFAULT_BACKTEST_LAB
         if args.backtest_lab_root is None
         else args.backtest_lab_root
     )
+    report: dict[str, object] = {
+        "ok": False,
+        "config": str(args.config),
+        "mode": args.mode,
+        "equity_usd": args.equity,
+        "execution_authority": "none",
+        "problems": [],
+        "book": None,
+    }
     try:
         problems = check(
             args.config, mode=args.mode, backtest_lab_root=backtest_lab_root
@@ -527,18 +565,31 @@ def main(argv: Sequence[str] | None = None) -> int:
         # reports 2, exactly as the armed entrypoint does, so an operator can tell
         # "this profile is unloadable" from "the runner would refuse it".
         print(f"loader refused: {exc}", file=sys.stderr)
-        return 2
+        report.update(
+            verdict="loader_refused",
+            exit_code=2,
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+        return _emit(report)
     if problems:
         for problem in problems:
             print(f"runtime validator would refuse: {problem}", file=sys.stderr)
-        return 1
-    print(f"runtime validator accepts {args.config} in {args.mode} mode")
+        report.update(verdict="runner_refused", exit_code=1, problems=problems)
+        return _emit(report)
+    message = f"runtime validator accepts {args.config} in {args.mode} mode"
+    print(message, file=sys.stderr)
+    report.update(ok=True, verdict="accepted", exit_code=0, message=message)
     if book is None:
-        return 0
-    print(format_book_table(book))
+        return _emit(report)
+    print(format_book_table(book), file=sys.stderr)
     for problem in book.problems:
         print(f"book-level check would refuse: {problem}", file=sys.stderr)
-    return 3 if book.problems else 0
+    report["book"] = book_report(book)
+    if book.problems:
+        # Report-only advisory: the runner never reads the book-level check.
+        report.update(verdict="book_level_advisory", exit_code=3)
+    return _emit(report)
 
 
 if __name__ == "__main__":

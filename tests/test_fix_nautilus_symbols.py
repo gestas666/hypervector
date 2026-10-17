@@ -144,8 +144,10 @@ def test_cli_run_unsupported_symbol_is_clean_json_error(
         ]
     )
     captured = capsys.readouterr()
-    assert rc == 1
+    # Refused before the engine loads (exit 2, a refusal), as error JSON.
+    assert rc == 2
     err = json.loads(captured.err.strip().splitlines()[-1])
     assert err["ok"] is False
     assert err["error_type"] == "UnsupportedNautilusSymbol"
+    assert err["symbol"] == "DOGE"
     assert "Traceback" not in captured.err

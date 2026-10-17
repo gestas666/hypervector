@@ -36,7 +36,7 @@
         "dest": "leverage",
         "type": "float",
         "default": 2.0,
-        "help": "position size as a multiple of equity (1.0..10.0)"
+        "help": "leverage = position notional / equity; refused above the venue cap (BTC 40, ETH 25, SOL 20, HYPE and other perps 10)"
       }
     },
     {
@@ -79,7 +79,29 @@
       "options": {
         "dest": "book_path",
         "default": null,
-        "help": "optional L2 snapshot JSONL aligned to the bars"
+        "help": "optional L2 orderbook file aligned to the bars: JSONL, or .sqlite/.sqlite3/.db/.zst feature samples"
+      }
+    },
+    {
+      "flags": [
+        "--max-cache-age-hours"
+      ],
+      "options": {
+        "dest": "max_cache_age_hours",
+        "type": "positive_finite_float",
+        "default": null,
+        "help": "refresh a cached window only when its last bar is older than this many hours (default: 24)"
+      }
+    },
+    {
+      "flags": [
+        "--pin-cache"
+      ],
+      "options": {
+        "dest": "pin_cache",
+        "action": "store_true",
+        "default": false,
+        "help": "serve an existing cached window as is, whatever its age or coverage (reproduce a run on an installed archive window)"
       }
     }
   ]

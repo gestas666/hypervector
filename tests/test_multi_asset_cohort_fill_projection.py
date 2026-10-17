@@ -23,7 +23,7 @@ _CLIENT_ORDER_ID = "0x11111111111111111111111111111111"
 def test_snapshot_projects_fill_slippage_latency_and_markout(tmp_path: Path) -> None:
     """Execution quality is derived in backend telemetry rather than the TUI."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

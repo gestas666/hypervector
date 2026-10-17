@@ -16,6 +16,7 @@ SAMPLES = {
     "utc_datetime": "2026-01-01T00:00:00Z",
     "fee_model": "hl_maker",
     "sampler": "optuna",
+    "positive_finite_float": "1.5",
     "Path": "sample.path",
 }
 

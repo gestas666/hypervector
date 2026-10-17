@@ -34,7 +34,7 @@ _EXPECTATION = ConfigurationGenerationExpectation(
 def test_current_profile_exposes_the_explicit_eth_entry_context_rule() -> None:
     """The disk identity carries the exact pending rule without runtime authority."""
     expectation = load_configuration_expectation(
-        Path("configs/multi_asset_bidirectional_canary.toml")
+        Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml")
     )
 
     assert expectation.entry_context_overrides == (
@@ -49,7 +49,7 @@ def test_current_profile_exposes_the_explicit_eth_entry_context_rule() -> None:
 def test_load_expectation_retains_provider_symbol_sizing() -> None:
     """Disk identity retains an explicit provider override without activating it."""
     expectation = load_configuration_expectation(
-        Path("configs/multi_asset_bidirectional_canary.toml")
+        Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml")
     )
 
     assert expectation.provider_sizing_overrides == (
@@ -210,7 +210,7 @@ def test_load_expectation_retains_provider_directional_sizing(
     tmp_path: Path,
 ) -> None:
     """Disk identity keeps distinct long and short policies for one route."""
-    source = Path("configs/multi_asset_bidirectional_canary.toml").read_text()
+    source = Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml").read_text()
     directional = (
         "directional_sizing_overrides = { SOL = { "
         "long = { margin_fraction = 0.03, max_notional_usd = 60.0 }, "

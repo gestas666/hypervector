@@ -18,6 +18,54 @@ def cmd_backfill(args: argparse.Namespace) -> int:
     return run(args)
 
 
+def cmd_repair_trades(args: argparse.Namespace) -> int:
+    """Preview (default) or apply a recoverable taker-only trade bundle repair.
+
+    A preview reads the stored raw pages and reports the counts; nothing is
+    written. ``--apply`` keeps the original as ``<bundle>.pre_taker_only_v2``.
+    A target that is not a trade bundle is refused (exit 2); unreadable or
+    inconsistent evidence is a technical failure (exit 1).
+    """
+    from hypervector.data.oxa_trade_repair import repair_trade_bundle
+    from hypervector.data.oxa_trades import TRADE_NORMALIZATION_VERSION
+
+    bundle = Path(args.bundle)
+    if not bundle.is_dir() or not bundle.name.endswith("_trades"):
+        raise CommandRefused(f"--bundle is not a stored trade bundle: {bundle}")
+    manifest_path = bundle / "manifest.json"
+    if not manifest_path.is_file():
+        raise CommandRefused(f"trade bundle has no manifest.json: {bundle}")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    version = manifest.get("normalization_version") if isinstance(manifest, dict) else None
+    already_current = version == TRADE_NORMALIZATION_VERSION
+    repair = repair_trade_bundle(bundle, apply=bool(args.apply))
+    if repair.applied:
+        next_step: str | None = (
+            "rebuild the research database with 'db build --replace-changed'"
+        )
+    elif not args.apply and not already_current:
+        next_step = "rerun with --apply to publish the repair"
+    else:
+        next_step = None
+    report: dict[str, object] = {
+        "ok": True,
+        "command": args.command,
+        "mode": "apply" if args.apply else "preview",
+        "bundle": str(repair.directory.resolve()),
+        "backup_directory": str(repair.backup_directory),
+        "previous_trade_count": repair.previous_trade_count,
+        "repaired_trade_count": repair.repaired_trade_count,
+        "raw_fill_count": repair.raw_fill_count,
+        "applied": repair.applied,
+        "normalization_version": version,
+        "current_normalization_version": TRADE_NORMALIZATION_VERSION,
+        "already_current": already_current,
+        "next_step": next_step,
+    }
+    print(json.dumps(report, indent=2))
+    return 0
+
+
 def cmd_audit(args: argparse.Namespace) -> int:
     """Audit archived evidence coverage read-only; exit 0 whenever the audit ran.
 

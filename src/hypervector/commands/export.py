@@ -80,11 +80,23 @@ def cmd_create(args: argparse.Namespace) -> int:
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
-    """Validate a strategy bundle; strict unless --loose is given (exit 1 if invalid)."""
+    """Validate a strategy bundle; strict unless --loose is given (exit 1 if invalid).
+
+    ``--require-costed`` / ``--require-metrics`` (opt-in) turn a zero-cost
+    measurement or a missing metric key into an invalid bundle; otherwise they
+    stay non-fatal warnings, echoed on stderr.
+    """
     path = resolve_export(args.export, args.data_root)
     strict = not args.loose
+    require_costed = bool(getattr(args, "require_costed", False))
+    require_metrics = bool(getattr(args, "require_metrics", False))
     try:
-        report = validate_export_dir(path, strict=strict)
+        report = validate_export_dir(
+            path,
+            strict=strict,
+            require_costed=require_costed,
+            require_metrics=require_metrics,
+        )
     except ExportSchemaError as exc:
         print(
             json.dumps(
@@ -113,10 +125,14 @@ def cmd_validate(args: argparse.Namespace) -> int:
         out["meta"] = report["meta"]
         out["params"] = report["params"]
         out["metrics"] = report["metrics"]
+    out["require_costed"] = require_costed
+    out["require_metrics"] = require_metrics
     out["artifacts"] = {
         "export": str(path),
         "validation": {"strict": strict, "valid": True},
     }
+    for warning in report.get("warnings") or ():
+        print(f"warning: {warning}", file=sys.stderr)
     print(json.dumps(out, indent=2, default=str))
     return 0
 

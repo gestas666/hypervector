@@ -136,7 +136,7 @@ priority = 30
 timeframe = "5m"
 maximum_entry_delay_seconds = 60
 execution_symbols = ["BTC"]
-source_profile = "configs/hypervelocity_source_follow_bidirectional_minrange12_alloc10_lev5_shadow.toml"
+source_profile = "tests/fixtures/profiles/hypervelocity_source_follow_bidirectional_minrange12_alloc10_lev5_shadow.toml"
 execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", stop_bps = 80.0, target_policy = "fixed_bps", target_bps = 26.6666666667, maximum_hold_seconds = 86400, safety_stop_overlay = true }
 
 [[providers]]

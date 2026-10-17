@@ -48,6 +48,17 @@
         "default": false,
         "help": "skip the offline Nautilus import and config probe"
       }
+    },
+    {
+      "flags": [
+        "--no-signal-probe"
+      ],
+      "options": {
+        "dest": "no_signal_probe",
+        "action": "store_true",
+        "default": false,
+        "help": "skip building the strategy's signals on synthetic bars"
+      }
     }
   ]
 }

@@ -48,6 +48,28 @@
         "default": null,
         "help": "slow EMA length in bars (ema detector only; default 48)"
       }
+    },
+    {
+      "flags": [
+        "--max-cache-age-hours"
+      ],
+      "options": {
+        "dest": "max_cache_age_hours",
+        "type": "positive_finite_float",
+        "default": null,
+        "help": "refresh a cached window only when its last bar is older than this many hours (default: 24)"
+      }
+    },
+    {
+      "flags": [
+        "--pin-cache"
+      ],
+      "options": {
+        "dest": "pin_cache",
+        "action": "store_true",
+        "default": false,
+        "help": "serve an existing cached window as is, whatever its age or coverage (reproduce a run on an installed archive window)"
+      }
     }
   ]
 }

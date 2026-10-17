@@ -55,12 +55,38 @@
     },
     {
       "flags": [
+        "--objective"
+      ],
+      "options": {
+        "dest": "objective",
+        "choices": [
+          "net_pnl",
+          "score",
+          "sharpe"
+        ],
+        "default": "net_pnl",
+        "help": "ranking objective for the search, the elites and the export (score = sharpe + net_pnl / 1000)"
+      }
+    },
+    {
+      "flags": [
+        "--train-fraction"
+      ],
+      "options": {
+        "dest": "train_fraction",
+        "type": "float",
+        "default": 0.7,
+        "help": "chronological share of bars searched (0..1]; the rest is a report-only holdout, and 1.0 keeps the in-sample mode"
+      }
+    },
+    {
+      "flags": [
         "--book-path"
       ],
       "options": {
         "dest": "book_path",
         "default": null,
-        "help": "optional L2 orderbook file (JSONL or SQLite)"
+        "help": "optional L2 orderbook file: JSONL, or .sqlite/.sqlite3/.db/.zst feature samples"
       }
     },
     {

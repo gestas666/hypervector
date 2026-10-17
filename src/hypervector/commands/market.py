@@ -6,13 +6,24 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from hypervector.commands.common import _ensure_root, _load_bars
+from hypervector.commands.common import (
+    CommandRefused,
+    _ensure_root,
+    _load_bars,
+    bars_window,
+    cache_age_options,
+    history_failure,
+    json_safe,
+)
 
 
 def cmd_book_record(args: argparse.Namespace) -> int:
     """Poll HL public L2 and append snapshots under data/cache/book/."""
     from hypervector.data.book_record import append_snapshot, run_book_recorder
 
+    max_errors = int(getattr(args, "max_consecutive_errors", 10))
+    if max_errors < 1:
+        raise CommandRefused("--max-consecutive-errors must be at least 1")
     paths = _ensure_root(args)
     symbol = str(getattr(args, "symbol", "BTC"))
     once = bool(getattr(args, "once", False))
@@ -37,6 +48,7 @@ def cmd_book_record(args: argparse.Namespace) -> int:
             interval_secs=interval,
             max_snapshots=int(max_n) if max_n is not None else None,
             stop_file=stop,
+            max_consecutive_errors=max_errors,
         )
     except Exception as exc:  # noqa: BLE001
         print(json.dumps({"ok": False, "error": str(exc)}, indent=2), file=sys.stderr)
@@ -46,9 +58,18 @@ def cmd_book_record(args: argparse.Namespace) -> int:
 
 
 def cmd_history(args: argparse.Namespace) -> int:
+    """Load (cache-first) research history and report its provenance and window.
+
+    A failed load (network, failed backfill, cache miss offline) prints one
+    error document with the loader's notes and exits 1.
+    """
     from hypervector.data.pipeline import cache_key
 
-    df, prov = _load_bars(args)
+    cache_age_options(args)
+    try:
+        df, prov = _load_bars(args)
+    except (RuntimeError, OSError) as exc:
+        return history_failure(args, exc)
     key = cache_key(args.symbol, args.timeframe, args.lookback)
     cache_path = Path(args.data_root) / "cache" / f"{key}.parquet"
     start, end = _bar_window(df)
@@ -63,14 +84,18 @@ def cmd_history(args: argparse.Namespace) -> int:
     }
     print(
         json.dumps(
-            {
-                "bars": len(df),
-                "symbol": args.symbol,
-                "timeframe": args.timeframe,
-                "lookback_days": args.lookback,
-                "provenance": prov,
-                "artifacts": {"dataset": dataset},
-            },
+            json_safe(
+                {
+                    "ok": True,
+                    "bars": len(df),
+                    "symbol": args.symbol,
+                    "timeframe": args.timeframe,
+                    "lookback_days": args.lookback,
+                    "data_window": bars_window(df),
+                    "provenance": prov,
+                    "artifacts": {"dataset": dataset},
+                }
+            ),
             indent=2,
             default=str,
         )
@@ -95,38 +120,71 @@ def _bar_window(df: object) -> tuple[str | None, str | None]:
 
 
 def cmd_book_align(args: argparse.Namespace) -> int:
-    """Align L2 orderbook snapshot data with OHLCV bars and export parquet."""
+    """Align L2 orderbook snapshot data with OHLCV bars and export parquet.
+
+    The JSON reports how many bars carry a real snapshot (``matched_bars``,
+    ``book_coverage``); unmatched bars hold missing values, printed as null.
+    ``--min-coverage`` (opt-in) turns low coverage into ok:false and exit 1.
+    """
     from hypervector.data.book_align import (
         align_orderbook_to_ohlcv,
+        book_coverage_summary,
         load_l2_jsonl,
         load_l2_sqlite_feature_samples,
     )
 
-    root = Path(args.data_root)
-    df_bars, _ = _load_bars(args)
-
+    minimum = getattr(args, "min_coverage", None)
+    if minimum is not None and not 0.0 <= float(minimum) <= 1.0:
+        raise CommandRefused("--min-coverage must be within 0..1")
     book_path = Path(args.book_path)
+    if not book_path.is_file():
+        raise CommandRefused(f"book path not found: {book_path}")
+    cache_age_options(args)
+    root = Path(args.data_root)
+    try:
+        df_bars, provenance = _load_bars(args)
+    except (RuntimeError, OSError) as exc:
+        return history_failure(args, exc)
+
     if str(book_path).endswith(".jsonl"):
         df_book = load_l2_jsonl(book_path)
     else:
         df_book = load_l2_sqlite_feature_samples(book_path, coin=args.symbol)
 
     aligned = align_orderbook_to_ohlcv(df_bars, df_book)
+    coverage = book_coverage_summary(aligned)
     out_dir = root / "cache" / "aligned"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / f"{args.symbol}_{args.timeframe}_aligned_book.parquet"
     aligned.to_parquet(out_file)
 
+    columns = [
+        column
+        for column in ("close", "spread_bps", "obi_5", "book_depth_ratio")
+        if column in aligned.columns
+    ]
+    below = minimum is not None and coverage["book_coverage"] < float(minimum)
     out = {
-        "ok": True,
+        "ok": not below,
         "symbol": args.symbol,
         "timeframe": args.timeframe,
         "bars_count": len(aligned),
         "book_records": len(df_book),
         "aligned_path": str(out_file),
-        "sample": aligned[["close", "spread_bps", "obi_5", "book_depth_ratio"]]
-        .tail(3)
-        .to_dict(orient="records"),
+        "matched_bars": coverage["matched_bars"],
+        "book_coverage": coverage["book_coverage"],
+        "book_first_ts_utc": coverage["book_first_ts_utc"],
+        "book_last_ts_utc": coverage["book_last_ts_utc"],
+        "max_tolerance_ms": coverage["max_tolerance_ms"],
+        "min_coverage": minimum,
+        "warnings": coverage["warnings"],
+        "data_window": bars_window(df_bars),
+        "data_provenance": provenance,
+        "sample": aligned[columns].tail(3).to_dict(orient="records"),
     }
-    print(json.dumps(out, indent=2, default=str))
+    rendered = json.dumps(json_safe(out), indent=2, default=str, allow_nan=False)
+    if below:
+        print(rendered, file=sys.stderr)
+        return 1
+    print(rendered)
     return 0

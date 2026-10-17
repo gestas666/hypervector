@@ -31,8 +31,9 @@ def _load() -> ModuleType:
 def test_live_parser_accepts_an_explicit_accounting_epoch_bundle() -> None:
     module = _load()
 
+    # --config is required (an armed start never falls back to a default profile).
     args = module.build_parser().parse_args(
-        ["--accounting-epoch-bundle", "data/backups/epoch-v49"]
+        ["--config", str(V49), "--accounting-epoch-bundle", "data/backups/epoch-v49"]
     )
 
     assert args.accounting_epoch_bundle == Path("data/backups/epoch-v49")

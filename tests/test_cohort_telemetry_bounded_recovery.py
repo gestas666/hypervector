@@ -18,7 +18,7 @@ def test_durable_decision_recovery_does_not_materialize_complete_ledger(
 ) -> None:
     """Telemetry retains decision rows while streaming unrelated history."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

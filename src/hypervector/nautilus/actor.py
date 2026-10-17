@@ -39,9 +39,13 @@ from hypervector.nautilus.sizing import (
     exit_config_from_loadout,
     position_size_frac,
 )
-from hypervector.nautilus.trail import TrailState, trail_start, trail_step
+from hypervector.nautilus.trail import (
+    TrailState,
+    grid_stop_price,
+    trail_ratchet,
+    trail_start,
+)
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
-from hypervector.strategies.indicators import atr as atr_indicator
 from hypervector.sweep.exits import stop_distance_frac, tp_distance_frac
 
 if TYPE_CHECKING:
@@ -249,21 +253,6 @@ def _stop_tp_fracs(
     return stop_frac, tp_last
 
 
-def _trail_distance(df: pd.DataFrame, exits: dict[str, Any] | None) -> float:
-    """Last-bar ``trail_atr_mult x ATR`` (the research trail distance)."""
-    cfg = exit_config_from_dict(exits)
-    value = (
-        cfg.trail_atr_mult
-        * atr_indicator(
-            df["high"].astype(float),
-            df["low"].astype(float),
-            df["close"].astype(float),
-            cfg.atr_length,
-        ).iloc[-1]
-    )
-    return float(value)
-
-
 # ---------------------------------------------------------------------------
 # Strategy actor
 # ---------------------------------------------------------------------------
@@ -293,7 +282,12 @@ class HypervectorStrategy(Strategy):
         self._trail_enabled = mode == "trail" and not _uses_strategy_exits_only(
             config.strategy_name
         )
+        # Trail mode: one trailing stop per position (see hypervector.nautilus.trail).
         self._trail: TrailState | None = None
+        self._trail_order: Any = None  # resting reduce-only STOP_MARKET
+        self._trail_open_exit_ns: int | None = None  # scheduled next-open exit
+        self._trail_stopped = False  # the trail closed the position since last bar
+        self._last_close: Any = None  # close Price of the latest bar
         # Run telemetry read by the runner after engine.run().
         self.intent_error: dict[str, Any] | None = None
         self.positions_opened = 0
@@ -328,8 +322,13 @@ class HypervectorStrategy(Strategy):
     def on_bar(self, bar: Bar) -> None:
         """Append bar, read/recompute intent, enter/exit with one netting position."""
         self._bars_seen += 1
+        self._last_close = bar.close
         if self._precomputed is None:
             self._append_bar(bar)
+        # A trail stop that filled since the previous bar makes this VectorBT's
+        # stop bar: its signals are not acted on.
+        trail_stopped = self._trail_stopped
+        self._trail_stopped = False
         if self._bars_seen < 2:
             return
 
@@ -354,13 +353,13 @@ class HypervectorStrategy(Strategy):
         action = _action_from_intent(
             intent, is_flat=is_flat, position_side=position_side
         )
-        if self._trail is not None:
+        if trail_stopped:
+            action = "hold"
+        elif self._trail is not None:
             if is_flat and not self._pending_entry:
-                self._trail = None
-            elif not is_flat and self._step_trail(bar, row=row, frame=frame):
-                if action == "hold":
-                    action = "close"
-                self.trail_exits += 1
+                self._clear_trail()
+            elif not is_flat and action == "hold":
+                self._ratchet_trail(bar, instrument_id)
         self.log.info(
             f"execution_mode={self.execution_mode} bar={self._bars_seen} "
             f"flat={is_flat} side={position_side} "
@@ -416,32 +415,120 @@ class HypervectorStrategy(Strategy):
 
     # -- trailing stop -------------------------------------------------------
 
-    def _trail_distance_at(
-        self, *, row: int | None, frame: pd.DataFrame | None
-    ) -> float:
-        if self._precomputed is not None and row is not None:
-            return float(self._precomputed.trail_dist[row])
-        df = frame if frame is not None else _bars_to_ohlcv_df(self._bar_buffer)
-        return _trail_distance(df, self.config.exits)
-
-    def _step_trail(
-        self, bar: Bar, *, row: int | None, frame: pd.DataFrame | None
-    ) -> bool:
+    def _ratchet_trail(self, bar: Bar, instrument_id: InstrumentId) -> None:
+        """Take this bar's extreme into the anchor, then move the resting stop."""
         assert self._trail is not None
-        self._trail, hit = trail_step(
+        self._trail = trail_ratchet(
             self._trail,
             high=float(bar.high.as_double()),
             low=float(bar.low.as_double()),
-            close=float(bar.close.as_double()),
-            trail_dist=self._trail_distance_at(row=row, frame=frame),
         )
-        if hit:
-            self.log.info(
-                f"execution_mode={self.execution_mode} trail stop hit "
-                f"close={bar.close} stop={self._trail.stop_level:.8g}",
-                color=LogColor.YELLOW,
+        self._sync_trail_order(instrument_id)
+
+    def _sync_trail_order(self, instrument_id: InstrumentId) -> None:
+        """Rest (or move) the reduce-only stop at the grid price of the level.
+
+        A level already at/through the last close cannot rest (the venue
+        rejects a stop in the market); the exit is scheduled for the next bar's
+        open instead, where VectorBT fills it.
+        """
+        trail = self._trail
+        if trail is None or self._trail_open_exit_ns is not None:
+            return
+        instrument = self.cache.instrument(instrument_id)
+        if instrument is None or self._last_close is None:
+            raise RuntimeError(
+                f"trail stop needs instrument {instrument_id} and a last bar close"
             )
-        return hit
+        value = grid_stop_price(
+            trail.stop_level,
+            increment=float(instrument.price_increment.as_double()),
+            precision=int(instrument.price_precision),
+            direction=trail.direction,
+        )
+        if value is None:
+            return  # level below one tick: unreachable, VectorBT never fills it
+        trigger = instrument.make_price(value)
+        long = trail.direction == "long"
+        if (trigger >= self._last_close) if long else (trigger <= self._last_close):
+            self._schedule_trail_open_exit(trigger)
+            return
+        order = self._trail_order
+        if order is None or order.is_closed:
+            qty = self._open_quantity(instrument_id)
+            if qty is None:
+                return
+            order = self.order_factory.stop_market(
+                instrument_id=instrument_id,
+                order_side=OrderSide.SELL if long else OrderSide.BUY,
+                quantity=qty,
+                trigger_price=trigger,
+                time_in_force=TimeInForce.GTC,
+                reduce_only=True,
+                tags=["TRAIL"],
+            )
+            self._trail_order = order
+            self.submit_order(order)
+            self.log.info(
+                f"execution_mode={self.execution_mode} trail stop placed "
+                f"{trail.direction} trigger={trigger} level={trail.stop_level:.8g}",
+                color=LogColor.GREEN,
+            )
+        elif order.trigger_price != trigger and not order.is_pending_cancel:
+            self.modify_order(order, trigger_price=trigger)
+
+    def _schedule_trail_open_exit(self, trigger: Any) -> None:
+        now = int(self.clock.timestamp_ns())
+        self._trail_open_exit_ns = now + 1
+        self.clock.set_time_alert_ns(
+            name=f"{self.id}-trail-open-exit-{now}",
+            alert_time_ns=now + 1,
+            callback=self._on_trail_open_exit,
+        )
+        self.log.info(
+            f"execution_mode={self.execution_mode} trail level {trigger} is through "
+            f"the close {self._last_close}: exit at the next bar open",
+            color=LogColor.YELLOW,
+        )
+
+    def _on_trail_open_exit(self, event: Any) -> None:
+        """Next-bar-open exit for a level that ratcheted through the close."""
+        if self._trail is None or self._trail_open_exit_ns != int(event.ts_event):
+            return  # position already closed by something else
+        self._trail_open_exit_ns = None
+        instrument_id = self._instrument_id
+        if instrument_id is None or self._is_flat(instrument_id):
+            self._clear_trail()
+            return
+        self.trail_exits += 1
+        self._trail_stopped = True
+        self.log.info(
+            f"execution_mode={self.execution_mode} trail stop hit at the open",
+            color=LogColor.YELLOW,
+        )
+        self._close_position(instrument_id)
+
+    def _clear_trail(self) -> None:
+        """Forget the trail and cancel its resting stop (never left behind)."""
+        order = self._trail_order
+        self._trail = None
+        self._trail_order = None
+        self._trail_open_exit_ns = None
+        if order is not None and not order.is_closed and not order.is_pending_cancel:
+            self.cancel_order(order)
+
+    def _is_trail_order(self, event: Any) -> bool:
+        order = self._trail_order
+        return order is not None and event.client_order_id == order.client_order_id
+
+    def _open_quantity(self, instrument_id: InstrumentId) -> Quantity | None:
+        try:
+            net = self.portfolio.net_position(instrument_id)
+        except Exception:
+            return None
+        if net is None or float(net) == 0.0:
+            return None
+        return self._make_qty(instrument_id, abs(float(net)))
 
     # -- portfolio helpers -------------------------------------------------
 
@@ -557,20 +644,12 @@ class HypervectorStrategy(Strategy):
                 color=LogColor.GREEN,
             )
         if self._trail_enabled:
-            # Trail mode has no bracket: protect the position with the
-            # close-evaluated trailing stop anchored at this entry bar.
+            # Trail mode has no bracket: the trailing stop is anchored at this
+            # bar's close with the entry-bar distance; its order rests once the
+            # position exists (on_position_opened).
+            self._clear_trail()
             self._trail = trail_start(
-                direction,
-                high=float(bar.high.as_double()),
-                low=float(bar.low.as_double()),
-                close=price,
-                trail_dist=self._trail_distance_at(row=row, frame=frame),
-                sl_frac=float(stop_frac),
-            )
-            self.log.info(
-                f"execution_mode={self.execution_mode} trail stop placed "
-                f"{direction} stop={self._trail.stop_level:.8g}",
-                color=LogColor.GREEN,
+                direction, entry_close=price, sl_frac=float(stop_frac)
             )
         self._pending_entry = True
 
@@ -624,7 +703,7 @@ class HypervectorStrategy(Strategy):
         )
 
     def _close_position(self, instrument_id: InstrumentId) -> None:
-        self._trail = None
+        self._clear_trail()
         try:
             self.close_all_positions(instrument_id)
             self.log.info(
@@ -675,17 +754,50 @@ class HypervectorStrategy(Strategy):
     def on_order_denied(self, event: Any) -> None:
         """Clear pending-entry so a deny cannot wedge the strategy forever."""
         self._pending_entry = False
+        self._on_trail_order_refused(event)
 
     def on_order_rejected(self, event: Any) -> None:
         self._pending_entry = False
+        self._on_trail_order_refused(event)
+
+    def on_order_modify_rejected(self, event: Any) -> None:
+        self._on_trail_order_refused(event)
+
+    def _on_trail_order_refused(self, event: Any) -> None:
+        """A refused trail stop/modify leaves the level in the market: exit at the open."""
+        if self._trail is None or not self._is_trail_order(event):
+            return
+        self.log.warning(
+            f"execution_mode={self.execution_mode} trail stop refused: "
+            f"{getattr(event, 'reason', event)}"
+        )
+        if self._trail_order is not None and self._trail_order.is_closed:
+            self._trail_order = None
+        if self._trail_open_exit_ns is None:
+            self._schedule_trail_open_exit(None)
+
+    def on_order_filled(self, event: Any) -> None:
+        if not self._is_trail_order(event) or not self._trail_order.is_closed:
+            return
+        self.trail_exits += 1
+        self._trail_stopped = True
+        self._trail_order = None
+        self._trail = None
+        self.log.info(
+            f"execution_mode={self.execution_mode} trail stop filled "
+            f"px={event.last_px}",
+            color=LogColor.YELLOW,
+        )
 
     def on_position_opened(self, event: Any) -> None:
         self._pending_entry = False
         self.positions_opened += 1
+        if self._trail is not None:
+            self._sync_trail_order(event.instrument_id)
 
     def on_position_closed(self, event: Any) -> None:
         self._pending_entry = False
-        self._trail = None
+        self._clear_trail()
         self.position_records.append(_position_record(event))
 
     def on_event(self, event: Any) -> None:

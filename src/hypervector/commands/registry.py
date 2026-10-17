@@ -14,6 +14,7 @@ from functools import lru_cache
 from importlib import import_module
 from importlib.resources import files
 import json
+import math
 from pathlib import Path
 import sys
 from typing import Any, Callable, cast
@@ -106,6 +107,17 @@ def fee_model(value: str) -> str:
     return key
 
 
+def positive_finite_float(value: str) -> float:
+    """A finite number above zero; NaN, infinities and <= 0 are usage errors."""
+    try:
+        number = float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"invalid number: {value!r}") from exc
+    if not math.isfinite(number) or number <= 0.0:
+        raise argparse.ArgumentTypeError("must be a finite positive number")
+    return number
+
+
 def sampler(value: str) -> str:
     """Accept the retired 'hybrid' sampler name as Optuna, with a note."""
     key = str(value).lower().strip()
@@ -128,6 +140,7 @@ CONVERTERS: dict[str, Callable[[str], object]] = {
     "lookback_days": lookback_days,
     "fee_model": fee_model,
     "sampler": sampler,
+    "positive_finite_float": positive_finite_float,
 }
 
 

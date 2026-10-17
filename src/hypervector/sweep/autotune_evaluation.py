@@ -111,6 +111,10 @@ class TrialEvaluator:
     calculate: Callable[..., dict[str, object]]
     objective: str = DEFAULT_OBJECTIVE
     trials: list[dict[str, object]] = field(default_factory=list)
+    #: Traded symbol: selects the venue leverage cap and maintenance margin in
+    #: ``compute_trial_metrics``. ``None`` keeps the charter maximum (40x) and
+    #: liquidation at a full loss of margin.
+    symbol: str | None = None
     _measured: dict[object, dict[str, object]] = field(
         default_factory=dict, repr=False
     )
@@ -202,6 +206,7 @@ class TrialEvaluator:
             exit_signals = exit_signals.iloc[evaluation_start:]
         contract = HypervelocityContract() if self.hypervelocity else None
         exit_config, leverage = self._exits(exits, contract)
+        venue = {} if self.symbol is None else {"symbol": self.symbol}
         metrics = self.calculate(
             window["close"].astype(float),
             entries,
@@ -216,6 +221,7 @@ class TrialEvaluator:
             fixed_notional_fraction=contract.notional_fraction if contract else None,
             fixed_margin_fraction=contract.margin_fraction if contract else None,
             strategy_managed_exits=self.hypervelocity,
+            **venue,
         )
         if contract is not None:
             # The run used strategy-managed exits with no stop; report that

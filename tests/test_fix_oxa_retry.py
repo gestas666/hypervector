@@ -257,6 +257,10 @@ def test_candle_cli_survives_one_429_on_page_three(
             "2026-07-26T00:00:00Z",
             "--end",
             "2026-07-26T01:00:00Z",
+            # The scripted vendor pages more than a real 1-hour window needs,
+            # so the window-derived default budget would stop it first.
+            "--max-pages",
+            "20",
         ]
     )
 

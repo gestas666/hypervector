@@ -68,7 +68,7 @@ def test_stop_telemetry_failure_is_propagated(tmp_path: Path) -> None:
 
 def _telemetry(tmp_path: Path) -> tuple[MultiAssetCohortTelemetry, SolLiveLedger]:
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml", mode="observe"
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml", mode="observe"
     )
     ledger = SolLiveLedger(
         path=tmp_path / "observe/decisions.jsonl",

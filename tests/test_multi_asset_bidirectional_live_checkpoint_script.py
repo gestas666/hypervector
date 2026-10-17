@@ -28,7 +28,7 @@ SCRIPT = (
 )
 
 
-_CHECKPOINT_CONFIG = ["--config", "configs/multi_asset_bidirectional_canary.toml"]
+_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"]
 
 
 def _load_module() -> ModuleType:
@@ -76,7 +76,7 @@ def test_once_publishes_one_read_only_checkpoint(tmp_path: Path) -> None:
             tmp_path / "ledgers",
             output,
             "run-a",
-            Path("configs/multi_asset_bidirectional_canary.toml"),
+            Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"),
         )
     ]
     source = SCRIPT.read_text(encoding="utf-8")

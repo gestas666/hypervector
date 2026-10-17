@@ -48,8 +48,23 @@
       "options": {
         "dest": "conviction",
         "type": "float",
-        "default": 0.5,
-        "help": "position-sizing conviction (0..1)"
+        "default": null,
+        "help": "position-sizing conviction 0..1 (default: the bundle's meta.conviction, else its risk.default_conviction)"
+      }
+    },
+    {
+      "flags": [
+        "--signal-mode"
+      ],
+      "options": {
+        "dest": "signal_mode",
+        "choices": [
+          "auto",
+          "windowed",
+          "precomputed"
+        ],
+        "default": "auto",
+        "help": "auto precomputes signals when a causal probe agrees, else replays windowed; precomputed fails instead of falling back"
       }
     },
     {

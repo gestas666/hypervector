@@ -68,6 +68,17 @@
         "default": null,
         "help": "stop when this path exists"
       }
+    },
+    {
+      "flags": [
+        "--max-consecutive-errors"
+      ],
+      "options": {
+        "dest": "max_consecutive_errors",
+        "type": "int",
+        "default": 10,
+        "help": "end the recording after this many failed polls in a row"
+      }
     }
   ]
 }

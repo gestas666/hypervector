@@ -24,7 +24,7 @@ V66_CONFIG = Path(
 )
 
 
-_CHECKPOINT_CONFIG = ["--config", "configs/multi_asset_bidirectional_canary.toml"]
+_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"]
 
 
 def _load_checkpoint_script() -> ModuleType:

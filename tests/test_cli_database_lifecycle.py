@@ -40,8 +40,8 @@ def test_read_commands_close_their_database(
     try:
         argv = ["--data-root", str(tmp_path), *command, "--track", "uptrend"]
         if failed_query:
-            with pytest.raises(sqlite3.OperationalError, match="injected"):
-                main(argv)
+            # A database error is a technical failure: error JSON and exit 1.
+            assert main(argv) == 1
         else:
             assert main(argv) == expected
         with pytest.raises(sqlite3.ProgrammingError, match="closed"):

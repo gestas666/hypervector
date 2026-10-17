@@ -24,10 +24,24 @@ def validate_candle_cache_interval(args: argparse.Namespace) -> None:
         )
 
 
+# Footer origin of an installed archive window. It is not the research
+# loader's own origin, so a network-enabled default load still keeps the file
+# aside (``__preserved_*``) before refreshing; research commands serve it as is
+# with --pin-cache.
+INSTALL_ORIGIN = "oxa_install"
+
+
 def install_candle_cache(
     args: argparse.Namespace, report: dict[str, object]
 ) -> tuple[str, int]:
-    """Install a whole-day minute cache with explicitly labeled gap fills."""
+    """Install a whole-day minute cache with explicitly labeled gap fills.
+
+    The file's footer records where the window came from (bundle, exact
+    start/end, install time, gap fills), so the provenance survives in the
+    cache and in any preserved copy.
+    """
+    from datetime import UTC, datetime
+
     import pandas as pd
 
     from hypervector.data.cache import ParquetCache
@@ -43,7 +57,19 @@ def install_candle_cache(
     frame, gap_fills = repair_candle_cadence(frame, start=args.start, end=args.end)
     cache = ParquetCache(Path(args.data_root) / "cache")
     installed = cache.save(
-        cache_key(args.symbol, args.timeframe, int(duration_days)), frame
+        cache_key(args.symbol, args.timeframe, int(duration_days)),
+        frame,
+        metadata={
+            "origin": INSTALL_ORIGIN,
+            "source": "0xarchive_hyperliquid_candles",
+            "symbol": str(args.symbol),
+            "timeframe": str(args.timeframe),
+            "window_start": args.start.isoformat(),
+            "window_end": args.end.isoformat(),
+            "installed_at": datetime.now(UTC).isoformat(),
+            "gap_fills": int(gap_fills),
+            "bundle": candles_path,
+        },
     )
     return str(installed.resolve()), gap_fills
 

@@ -89,6 +89,6 @@ def test_liquidation_fetch_cli_is_bounded_and_secret_safe(
     assert rc == 0
     assert captured["api_key"] == secret
     assert request.limit == 1000
-    assert request.max_pages == 1
+    assert request.max_pages == 250  # a default fetch completes a window
     assert report["venue"] == "hyperliquid"
     assert secret not in output

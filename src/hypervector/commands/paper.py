@@ -9,18 +9,19 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from hypervector.commands.common import _secrets_present
 from hypervector.commands.exports import resolve_export, resolve_metalabel_bundle
 from hypervector.infra import ensure_data_layout
 from hypervector.nautilus.load_export import load_strategy_loadout
-from hypervector.paper.conviction import resolve_metalabel_mode
 from hypervector.paper.fill_models import DEFAULT_MAX_BOOK_AGE_MS, FILL_MODEL_L2_WALK_V1
 from hypervector.paper.order_intent import NETWORK_MAINNET
 from hypervector.paper.report import report_from_data_root
-from hypervector.paper.runner import PaperDaemonResult, start_paper_daemon
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
+
+if TYPE_CHECKING:
+    from hypervector.paper.runner import PaperDaemonResult
 
 DEFAULT_PREFERRED_FILL_MODEL = FILL_MODEL_L2_WALK_V1
 DEFAULT_EXECUTION_MODE = "shadow"
@@ -30,6 +31,24 @@ METALABEL_ROOT_ENV = "HYPERVECTOR_METALABEL_ROOT"
 
 class PaperArgumentsError(ValueError):
     """Conflicting or unsupported explicit paper command options."""
+
+
+def start_paper_daemon(**options: Any) -> PaperDaemonResult:
+    """Start the no-submit paper daemon; the runner (and its engines) load here.
+
+    A module-level seam, so ``paper report`` never imports the runner and
+    tests can replace the daemon.
+    """
+    from hypervector.paper.runner import start_paper_daemon as start
+
+    return start(**options)
+
+
+def resolve_metalabel_mode(**options: Any) -> str:
+    """Resolve the metalabel mode; the model stack (pandas) loads only here."""
+    from hypervector.paper.conviction import resolve_metalabel_mode as resolve
+
+    return resolve(**options)
 
 
 def cmd_paper_run(args: argparse.Namespace) -> int:
@@ -101,6 +120,8 @@ def cmd_paper_report(args: argparse.Namespace) -> int:
             root,
             decisions_path=decisions,
             last_n=last_n,
+            run_id=getattr(args, "run_id", None),
+            strategy=getattr(args, "strategy", None),
         )
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
@@ -224,6 +245,7 @@ def _paper_result(
         "bars_processed": result.bars_processed,
         "fills_count": result.fills_count,
         "stop_reason": result.stop_reason,
+        "warmup": getattr(result, "warmup_provenance", None),
         "sandbox_enabled": False,
         "preferred_fill_model": options["preferred_fill_model"],
         "max_book_age_ms": options["max_book_age_ms"],

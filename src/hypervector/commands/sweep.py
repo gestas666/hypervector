@@ -73,13 +73,16 @@ def run_sweep(args: argparse.Namespace, role: str) -> dict[str, Any]:
     from hypervector.strategies import register_all_strategies
     from hypervector.sweep.search import run_grid_search
 
+    from hypervector.commands.common import cache_age_options
+
     register_all_strategies()
     strategy = _select_sweep_strategy(args, role)
     init_cash, cost, exit_cfg, risk_cfg = _sweep_settings(args)
+    cache_age_options(args)
     df, prov = _sweep_bars(args)
     root = Path(args.data_root)
     _emit_sweep_diagnostics(
-        strategy, len(df), init_cash, cost, exit_cfg, risk_cfg, prov
+        strategy, len(df), init_cash, cost, exit_cfg, risk_cfg, prov, args.symbol
     )
     apply_costs = not getattr(args, "no_costs", False)
     results = run_grid_search(
@@ -91,6 +94,7 @@ def run_sweep(args: argparse.Namespace, role: str) -> dict[str, Any]:
         risk_cfg=risk_cfg,
         conviction=risk_cfg.default_conviction,
         apply_costs=apply_costs,
+        symbol=args.symbol,
     )
     run_id = str(uuid.uuid4())[:8]
     research_meta = _sweep_metadata(
@@ -105,11 +109,22 @@ def run_sweep(args: argparse.Namespace, role: str) -> dict[str, Any]:
             "inspect the technical errors above"
         )
     best = _best_stored_trial(root, run_id, role)
-    export_dir = (
-        None
-        if getattr(args, "no_export", False) or best is None
-        else _export_sweep_best(root, run_id, role, best)
-    )
+    warnings: list[str] = []
+    if not apply_costs:
+        warnings.append(
+            "--no-costs: every trial was measured without fees or slippage; "
+            "the result is diagnostic only"
+        )
+    export_dir = None
+    if not getattr(args, "no_export", False) and best is not None:
+        if not apply_costs:
+            warnings.append(
+                "the exported bundle is zero-cost (meta.apply_costs false); "
+                "'export validate --require-costed' rejects it"
+            )
+        export_dir = _export_sweep_best(root, run_id, role, best)
+    for warning in warnings:
+        print(f"warning: {warning}", file=sys.stderr)
     runs_db = paths_for(root).runs_db
     return {
         "ok": True,
@@ -125,6 +140,8 @@ def run_sweep(args: argparse.Namespace, role: str) -> dict[str, Any]:
         "ok_trials": ok_count,
         "failed_trials": len(results) - ok_count,
         "best": _trial_summary(best),
+        "sizing": _sizing_summary(risk_cfg, results, best),
+        "warnings": warnings,
         "export_dir": str(export_dir) if export_dir else None,
         "candidate_id": export_dir.name if export_dir else None,
         "data_provenance": prov,
@@ -167,25 +184,41 @@ def _select_sweep_strategy(args: argparse.Namespace, role: str) -> StrategySpec:
 def _sweep_settings(
     args: argparse.Namespace,
 ) -> tuple[float, CostModel, ExitConfig, RiskConfig]:
-    """Explicit sweep settings; no performance gates are introduced here."""
-    from hypervector.sweep.costs import resolve_cost_model
-    from hypervector.sweep.sizing import RiskConfig
+    """Explicit sweep settings; no performance gates are introduced here.
 
+    ``--leverage`` is checked against the symbol's venue cap before any data
+    load (a refusal exits 2).
+    """
+    from hypervector.sweep.costs import resolve_cost_model
+    from hypervector.sweep.sizing import RiskConfig, validate_leverage
+
+    try:
+        leverage = validate_leverage(
+            float(getattr(args, "leverage", 1.0)), symbol=args.symbol
+        )
+    except ValueError as exc:
+        raise CommandRefused(f"--leverage refused: {exc}") from exc
     init_cash = float(args.initial_cash)
     cost = resolve_cost_model(args.fee_model)
     exit_cfg = exit_config_from_args(args)
-    risk_cfg = RiskConfig(
-        risk_pct_min=float(getattr(args, "risk_min", 0.01)),
-        risk_pct_max=float(getattr(args, "risk_max", 0.05)),
-        default_conviction=float(getattr(args, "conviction", 0.5)),
-    )
+    try:
+        risk_cfg = RiskConfig(
+            risk_pct_min=float(getattr(args, "risk_min", 0.01)),
+            risk_pct_max=float(getattr(args, "risk_max", 0.05)),
+            default_conviction=float(getattr(args, "conviction", 0.5)),
+            max_size_frac=leverage,
+        )
+    except ValueError as exc:
+        raise CommandRefused(str(exc)) from exc
     return init_cash, cost, exit_cfg, risk_cfg
 
 
 def _sweep_bars(args: argparse.Namespace) -> tuple[pd.DataFrame, dict[str, object]]:
     """Load the sweep's bars (cache-first; ``no_network`` keeps it offline)."""
+    from hypervector.commands.common import cache_age_options
     from hypervector.data.pipeline import load_research_history
 
+    options = cache_age_options(args)
     ensure_data_layout(Path(args.data_root))
     return load_research_history(
         args.data_root,
@@ -195,6 +228,7 @@ def _sweep_bars(args: argparse.Namespace) -> tuple[pd.DataFrame, dict[str, objec
         strict_hl_only=getattr(args, "strict_hl_only", False),
         force_refresh=getattr(args, "force", False),
         allow_network=not getattr(args, "no_network", False),
+        **options,
     )
 
 
@@ -206,8 +240,12 @@ def _emit_sweep_diagnostics(
     exit_cfg: ExitConfig,
     risk_cfg: RiskConfig,
     prov: dict[str, object],
+    symbol: str | None = None,
 ) -> None:
     """Report the actual search settings and source provenance on stderr."""
+    from hypervector.sweep.sizing import maintenance_margin_rate, venue_leverage_cap
+
+    cap = venue_leverage_cap(symbol)
     print(
         json.dumps(
             {
@@ -218,6 +256,9 @@ def _emit_sweep_diagnostics(
                 "tp_sl_mode": exit_cfg.mode,
                 "risk_pct_range": [risk_cfg.risk_pct_min, risk_cfg.risk_pct_max],
                 "conviction": risk_cfg.default_conviction,
+                "leverage": risk_cfg.max_size_frac,
+                "venue_leverage_cap": cap,
+                "maintenance_margin_rate": maintenance_margin_rate(cap),
                 "costs": cost.to_dict(),
                 "data_provenance": prov,
             },
@@ -270,6 +311,7 @@ def _persist_sweep_trials(
                 "strategy": result.strategy,
                 "params": result.params,
                 "status": result.status,
+                **({"error": result.error} if result.error else {}),
                 **result.metrics,
             }
         )
@@ -329,6 +371,37 @@ def _export_sweep_best(
     return publish_trial_export(
         root, chosen, candidate_id=f"{role}_{chosen['strategy']}_{run_id}"
     )
+
+
+def _sizing_summary(
+    risk_cfg: RiskConfig,
+    results: list[TrialResult],
+    best: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Requested leverage and the best trial's measured sizing (never a gate)."""
+    summary: dict[str, Any] = {"leverage": risk_cfg.max_size_frac}
+    if best is None:
+        return summary
+    measured = next(
+        (
+            result.metrics
+            for result in results
+            if result.status == "ok"
+            and result.strategy == best.get("strategy")
+            and result.params == best.get("params")
+        ),
+        {},
+    )
+    for key in (
+        "effective_risk_pct",
+        "size_cap_bound_fraction",
+        "venue_leverage_cap",
+        "maintenance_margin_rate",
+        "liquidations",
+        "equity_depleted",
+    ):
+        summary[key] = measured.get(key)
+    return summary
 
 
 def _trial_summary(row: dict[str, Any] | None) -> dict[str, Any] | None:

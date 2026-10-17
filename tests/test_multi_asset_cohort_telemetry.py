@@ -40,7 +40,7 @@ def _telemetry(
     prestart_backup: CohortPrestartBackupResult | None = None,
 ) -> tuple[MultiAssetCohortTelemetry, SolLiveLedger]:
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -136,7 +136,7 @@ def test_funding_reconciliation_window_is_append_only_raw_evidence(
 def test_snapshots_project_explicit_transition_drain_state(tmp_path: Path) -> None:
     """The TUI receives current drain truth rather than inferring command history."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -478,7 +478,7 @@ def test_canonical_regime_telemetry_is_separate_and_non_executable(
 def test_observe_telemetry_is_explicitly_disarmed(tmp_path: Path) -> None:
     """The same TUI schema must not imply order authority in observe mode."""
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="observe",
     )
     ledger = SolLiveLedger(
@@ -633,7 +633,7 @@ def test_provider_exit_decision_rejects_conflicting_stable_identity(
 
 def _restarted_telemetry(ledger: SolLiveLedger) -> MultiAssetCohortTelemetry:
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

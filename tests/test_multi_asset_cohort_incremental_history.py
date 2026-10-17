@@ -111,7 +111,7 @@ def _runtime(
     tmp_path: Path,
 ) -> tuple[MultiAssetLiveConfig, SolLiveLedger, dict[str, SolLiveLedger]]:
     config = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

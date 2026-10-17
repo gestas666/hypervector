@@ -52,6 +52,28 @@
     },
     {
       "flags": [
+        "--require-costed"
+      ],
+      "options": {
+        "dest": "require_costed",
+        "action": "store_true",
+        "default": false,
+        "help": "reject a bundle measured without costs (meta.apply_costs false)"
+      }
+    },
+    {
+      "flags": [
+        "--require-metrics"
+      ],
+      "options": {
+        "dest": "require_metrics",
+        "action": "store_true",
+        "default": false,
+        "help": "reject a bundle whose metrics lack a required metric key"
+      }
+    },
+    {
+      "flags": [
         "--strict"
       ],
       "options": {

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from hypervector.cli import main
-from hypervector.data.oxa_history import OxaBookRequest
+from hypervector.data.oxa_history import DEFAULT_BOOK_MAX_PAGES, OxaBookRequest
 from hypervector.data.sources import split_source_frames
 from hypervector.data.history import merge_history
 from hypervector.data.provenance import summarize_provenance
@@ -190,7 +190,7 @@ def test_cli_oxa_book_fetch_is_bounded_and_secret_safe(
     assert rc == 0
     assert captured["api_key"] == secret
     assert request.limit == 1000
-    assert request.max_pages == 1
+    assert request.max_pages == DEFAULT_BOOK_MAX_PAGES
     assert request.depth == 20
     assert report["venue"] == "hyperliquid"
     assert secret not in output

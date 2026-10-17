@@ -148,7 +148,7 @@ def test_completed_drain_does_not_require_previous_config_source(
 
 def _config(tmp_path: Path) -> MultiAssetLiveConfig:
     loaded = load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -161,7 +161,7 @@ def _config(tmp_path: Path) -> MultiAssetLiveConfig:
 
 def _source_config() -> MultiAssetLiveConfig:
     return load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="observe",
     )
 

@@ -121,7 +121,7 @@ def test_transient_fetch_failure_captures_only_after_successful_full_cycle(tmp_p
 def test_command_binds_capture_before_constructing_runner(monkeypatch: pytest.MonkeyPatch) -> None:
     """The real launcher wiring remains offline under fake runner/signal boundaries."""
     module = _load_module()
-    config = load_multi_asset_live_config("configs/multi_asset_bidirectional_canary.toml", mode="observe")
+    config = load_multi_asset_live_config("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml", mode="observe")
     timeline: list[str] = []
     observer = Mock(spec=CohortStartupCandleRecorder)
     poller = Mock()

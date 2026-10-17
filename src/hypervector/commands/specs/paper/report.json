@@ -38,6 +38,26 @@
         "default": 5,
         "help": "number of recent market fills in the sample"
       }
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null,
+        "help": "summarize only this paper run id"
+      }
+    },
+    {
+      "flags": [
+        "--strategy"
+      ],
+      "options": {
+        "dest": "strategy",
+        "default": null,
+        "help": "summarize only decisions of this strategy"
+      }
     }
   ]
 }

@@ -82,8 +82,8 @@
       "options": {
         "dest": "max_pages",
         "type": "int",
-        "default": 20,
-        "help": "maximum pages to request"
+        "default": null,
+        "help": "maximum pages to request (default: derived from the window)"
       }
     },
     {

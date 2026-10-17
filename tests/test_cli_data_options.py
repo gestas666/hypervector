@@ -37,6 +37,11 @@ def test_history_flags_reach_the_acquisition_boundary(
         raise HistoryBoundaryReached
 
     monkeypatch.setattr(loader, capture)
+    if "--book-path" in command:
+        # A missing book file is refused before any load, so give it one.
+        book = tmp_path / command[command.index("--book-path") + 1]
+        book.write_text("", encoding="utf-8")
+        command = [str(book) if part == book.name else part for part in command]
     with pytest.raises(HistoryBoundaryReached):
         main(["--data-root", str(tmp_path), *command, "--strict-hl-only", "--refresh"])
     assert observed.get("strict_hl_only") is True

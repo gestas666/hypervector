@@ -293,9 +293,12 @@ def _live_result(result: LiveDaemonResult, policy: LivePolicy) -> dict[str, obje
         "bars_processed": result.bars_processed,
         "fills_count": result.fills_count,
         "places_count": result.places_count,
+        "catchup_bars": getattr(result, "catchup_bars", 0),
         "stop_reason": result.stop_reason,
         "cancel_attempted": result.cancel_attempted,
         "cancel_ok": result.cancel_ok,
+        # cancel_ok means no owned resting order remained (not every order on the coin).
+        "cancel_scope": "owned_resting_orders",
         "cancel_error": result.cancel_error,
         "network": NETWORK_MAINNET,
         "max_notional_usd": policy.max_notional_usd,

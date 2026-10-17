@@ -5,24 +5,36 @@ from __future__ import annotations
 import argparse
 import json
 import pandas as pd
-from pathlib import Path
 from hypervector.strategies import register_all_strategies
-from hypervector.strategies.registry import StrategySpec, get_strategy
+from hypervector.strategies.registry import (
+    StrategySpec,
+    get_strategy,
+    normalize_direction,
+)
 from hypervector.sweep.costs import resolve_cost_model
-from hypervector.sweep.sizing import RiskConfig
+from hypervector.sweep.sizing import RiskConfig, validate_leverage
 from hypervector.commands.common import (
     CommandRefused,
     _load_bars,
+    align_book,
+    bars_window,
+    book_path_or_refuse,
+    cache_age_options,
     exit_config_from_args,
 )
 
 
 def cmd_backtest(args: argparse.Namespace) -> int:
-    """Backtest one registered strategy with leverage, fee and exit models."""
+    """Backtest one registered strategy with leverage, fee and exit models.
+
+    The strategy, the leverage (against the symbol's venue cap), the book path
+    and the cache options are checked before any data load; a refusal exits 2.
+    """
     from hypervector.sweep.metrics import compute_trial_metrics
 
     spec = _validated_strategy(args)
-    df_bars = _backtest_bars(args)
+    leverage = _validated_leverage(args)
+    df_bars, provenance = _backtest_bars(args)
 
     params = {}
     if getattr(args, "book_gate", False):
@@ -34,26 +46,31 @@ def cmd_backtest(args: argparse.Namespace) -> int:
     close = df_bars["close"].astype(float)
 
     exit_cfg = exit_config_from_args(args)
-    risk_cfg = RiskConfig(max_size_frac=args.leverage)
+    risk_cfg = RiskConfig(max_size_frac=leverage)
     cost = resolve_cost_model(args.fee_model)
-
-    direction_clean = "short" if "short" in str(direction).lower() else "long"
 
     m = compute_trial_metrics(
         close,
         entries,
         exits,
-        direction=direction_clean,
+        direction=normalize_direction(direction),
         init_cash=args.initial_cash,
         df=df_bars,
         cost=cost,
         exit_cfg=exit_cfg,
         risk_cfg=risk_cfg,
+        symbol=args.symbol,
     )
 
     out = _backtest_report(args, m)
+    out["data_provenance"] = provenance
+    out["data_window"] = bars_window(df_bars)
     print(json.dumps(out, indent=2, default=str))
     return 0
+
+
+def _rounded(value: object, digits: int) -> object:
+    return round(value, digits) if isinstance(value, (int, float)) else value
 
 
 def _backtest_report(
@@ -85,6 +102,18 @@ def _backtest_report(
             "avg_trade_pnl": round(m["net_pnl"] / m["trade_count"], 2)
             if m["trade_count"] > 0
             else 0.0,
+            "liquidations": m.get("liquidations"),
+            "min_equity": _rounded(m.get("min_equity"), 2),
+            "equity_depleted": m.get("equity_depleted"),
+            "effective_risk_pct": m.get("effective_risk_pct"),
+            "size_cap_bound_fraction": m.get("size_cap_bound_fraction"),
+        },
+        "model": {
+            "bar_freq": m.get("bar_freq"),
+            "stop_fill_model": m.get("stop_fill_model"),
+            "leverage_model": m.get("leverage_model"),
+            "venue_leverage_cap": m.get("venue_leverage_cap"),
+            "maintenance_margin_rate": m.get("maintenance_margin_rate"),
         },
     }
 
@@ -96,21 +125,23 @@ def _validated_strategy(args: argparse.Namespace) -> StrategySpec:
         spec = get_strategy(args.strategy)
     except KeyError as exc:
         raise CommandRefused(f"unknown strategy: {args.strategy}") from exc
-    book_path = getattr(args, "book_path", None)
-    if book_path and not Path(book_path).is_file():
-        raise CommandRefused(f"book path not found: {book_path}")
+    book_path_or_refuse(args)
+    cache_age_options(args)
     return spec
 
 
-def _backtest_bars(args: argparse.Namespace) -> pd.DataFrame:
+def _validated_leverage(args: argparse.Namespace) -> float:
+    """Leverage must be finite, positive and within the symbol's venue cap."""
+    try:
+        return validate_leverage(args.leverage, symbol=args.symbol)
+    except ValueError as exc:
+        raise CommandRefused(f"--leverage refused: {exc}") from exc
+
+
+def _backtest_bars(args: argparse.Namespace) -> tuple[pd.DataFrame, dict[str, object]]:
     """Load explicit market inputs and align optional historical depth evidence."""
-    df_bars, _ = _load_bars(args)
-
-    book_path = getattr(args, "book_path", None)
-    if book_path and Path(book_path).is_file():
-        from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
-
-        df_book = load_l2_jsonl(book_path)
-        df_bars = align_orderbook_to_ohlcv(df_bars, df_book)
-
-    return df_bars
+    df_bars, provenance = _load_bars(args)
+    book_path = book_path_or_refuse(args)
+    if book_path is not None:
+        df_bars = align_book(df_bars, book_path, str(args.symbol))
+    return df_bars, provenance

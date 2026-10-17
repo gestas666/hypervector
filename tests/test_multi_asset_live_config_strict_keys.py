@@ -106,12 +106,17 @@ def test_unknown_key_refusal_names_its_table_and_key(
 
 
 # The retained cohort profiles: the live V95 chain (V95, its V94 predecessor and
-# the V95->V94 rollback) plus the two canaries other tests mutate as templates.
+# the V95->V94 rollback). The two canaries other tests mutate as templates are
+# test fixtures now.
 RETAINED_COHORT_PROFILES = frozenset(
     {
         "multi_asset_growth_first_5000_review_fixes_v95.toml",
         "multi_asset_growth_first_5000_review_actions_v94.toml",
         "v95-to-v94-rollback-20260927-v1.toml",
+    }
+)
+TEMPLATE_FIXTURE_PROFILES = frozenset(
+    {
         "multi_asset_bidirectional_canary.toml",
         "multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
     }
@@ -138,4 +143,5 @@ def test_every_checked_in_cohort_profile_still_loads() -> None:
 
 def test_every_fixture_cohort_profile_still_loads() -> None:
     """Historical profiles kept as test fixtures stay valid under strict keys."""
-    assert {V91.name, V93.name} <= _load_every_cohort_profile(FIXTURE_PROFILES)
+    loaded = _load_every_cohort_profile(FIXTURE_PROFILES)
+    assert {V91.name, V93.name} | TEMPLATE_FIXTURE_PROFILES <= loaded

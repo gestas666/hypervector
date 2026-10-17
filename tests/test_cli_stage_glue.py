@@ -355,18 +355,32 @@ def test_nautilus_run_technical_errors_are_json_exit_one(
     assert error["command"] == "nautilus run"
 
 
-def test_nautilus_run_refuses_non_btc_bundles_before_the_engine(
+def test_nautilus_run_refuses_symbols_without_venue_geometry_before_the_engine(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    phase2_calls: list[dict[str, object]],
+) -> None:
+    data = tmp_path / "data"
+    _strict_export(data, "doge", symbol="DOGE")
+    assert main(["--data-root", str(data), "nautilus", "run", "--export", "doge"]) == 2
+    error = json.loads(capsys.readouterr().err)
+    assert error["command"] == "nautilus run"
+    assert "does not support symbol 'DOGE'" in error["error"]
+    assert phase2_calls == []
+
+
+def test_nautilus_run_routes_built_in_non_btc_symbols_to_the_engine(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
     phase2_calls: list[dict[str, object]],
 ) -> None:
     data = tmp_path / "data"
     _strict_export(data, "eth", symbol="ETH")
-    assert main(["--data-root", str(data), "nautilus", "run", "--export", "eth"]) == 2
-    error = json.loads(capsys.readouterr().err)
-    assert error["command"] == "nautilus run"
-    assert "supports BTC exports only" in error["error"]
-    assert phase2_calls == []
+    assert main(["--data-root", str(data), "nautilus", "run", "--export", "eth"]) == 0
+    assert len(phase2_calls) == 1
+    assert phase2_calls[0]["conviction"] is None
+    assert phase2_calls[0]["signal_mode"] == "auto"
+    assert json.loads(capsys.readouterr().out)["ok"] is True
 
 
 def test_nautilus_check_never_creates_directories(
@@ -876,9 +890,12 @@ def test_paper_compare_lives_in_the_shadow_module(
 
 
 def test_trial_rows_with_failed_queries_still_close_the_database(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """The board's database handle is released even when a query fails."""
+    """The board's database handle is released even when a query fails.
+
+    The failure itself is a technical failure: error JSON and exit 1.
+    """
     database = RunsDB(tmp_path / "runs" / "hypervector.db")
     monkeypatch.setattr("hypervector.commands.sweep.RunsDB", lambda _path: database)
 
@@ -886,7 +903,9 @@ def test_trial_rows_with_failed_queries_still_close_the_database(
         raise sqlite3.OperationalError("injected")
 
     monkeypatch.setattr(database, "list_trials", refuse)
-    with pytest.raises(sqlite3.OperationalError):
-        main(["--data-root", str(tmp_path), "backtest", "report", "--source", "sweep"])
+    argv = ["--data-root", str(tmp_path), "backtest", "report", "--source", "sweep"]
+    assert main(argv) == 1
+    error = json.loads(capsys.readouterr().err)
+    assert (error["error_type"], error["error"]) == ("OperationalError", "injected")
     with pytest.raises(sqlite3.ProgrammingError):
         database.init_schema()

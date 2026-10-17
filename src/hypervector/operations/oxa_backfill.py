@@ -11,7 +11,10 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from hypervector.data.oxa_backfill import (
+    DEFAULT_BOOK_MAX_PAGES,
+    DEFAULT_PRICE_MAX_PAGES,
     DEFAULT_RETRIES,
+    DEFAULT_TRADE_MAX_PAGES,
     OxaBackfillConfig,
     OxaBackfillResult,
     run_oxa_backfill,
@@ -24,7 +27,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 def run(args: argparse.Namespace) -> int:
-    """Run one validated backfill job; 0 when it completed, 1 when it failed."""
+    """Run one validated backfill job.
+
+    0 when it completed, 1 when it is incomplete or failed, 2 when the job
+    bounds or flag combination are invalid (refused before any vendor call).
+    """
     try:
         config = OxaBackfillConfig(
             symbol=args.symbol,
@@ -34,20 +41,37 @@ def run(args: argparse.Namespace) -> int:
             chunk=timedelta(minutes=args.chunk_minutes),
             workers=args.workers,
             retries=args.retries,
+            book_max_pages=getattr(args, "book_max_pages", DEFAULT_BOOK_MAX_PAGES),
+            trade_max_pages=getattr(args, "trade_max_pages", DEFAULT_TRADE_MAX_PAGES),
+            price_max_pages=getattr(args, "price_max_pages", DEFAULT_PRICE_MAX_PAGES),
             include_prices=args.include_prices,
             price_only=args.prices_only,
             market_family=args.market_family,
             book_only=args.books_only,
         )
+    except (TypeError, ValueError) as exc:
+        _print_error(args, exc)
+        return 2
+    try:
         key = os.environ.get("OXA_API_KEY", "")
         results = run_oxa_backfill(config, api_key=key, progress=_print_progress)
     except (OSError, RuntimeError, ValueError) as exc:
-        print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
+        _print_error(args, exc)
         return 1
     rows = sum(result.rows for result in results)
     pages = sum(result.pages for result in results)
     print(json.dumps({"ok": True, "tasks": len(results), "rows": rows, "pages": pages}))
     return 0
+
+
+def _print_error(args: argparse.Namespace, exc: BaseException) -> None:
+    report = {
+        "ok": False,
+        "command": getattr(args, "command", "archive backfill"),
+        "error_type": type(exc).__name__,
+        "error": str(exc),
+    }
+    print(json.dumps(report), file=sys.stderr)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -60,6 +84,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--chunk-minutes", type=int, default=60)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--retries", type=int, default=DEFAULT_RETRIES)
+    parser.add_argument("--book-max-pages", type=int, default=DEFAULT_BOOK_MAX_PAGES)
+    parser.add_argument(
+        "--trade-max-pages", type=int, default=DEFAULT_TRADE_MAX_PAGES
+    )
+    parser.add_argument(
+        "--price-max-pages", type=int, default=DEFAULT_PRICE_MAX_PAGES
+    )
     parser.add_argument("--include-prices", action="store_true")
     parser.add_argument("--prices-only", action="store_true")
     parser.add_argument("--market-family", choices=("core", "hip3"), default="core")

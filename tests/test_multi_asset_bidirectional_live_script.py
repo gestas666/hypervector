@@ -24,7 +24,7 @@ from hypervector.live.multi_asset_live_config import MultiAssetLiveConfigError
 from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunnerError
 
 SCRIPT = Path(__file__).parents[1] / "src" / "hypervector" / "operations" / "multi_asset_bidirectional_live.py"
-V25 = Path("configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml")
+V25 = Path("tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml")
 V90_CONFIG = Path(
     "tests/fixtures/profiles/multi_asset_growth_first_5000_bankroll_builder_candidate_v90.toml"
 )
@@ -53,7 +53,7 @@ def _load_module() -> ModuleType:
 
 def _args(**overrides: object) -> argparse.Namespace:
     values: dict[str, object] = {
-        "config": Path("configs/multi_asset_bidirectional_canary.toml"),
+        "config": Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"),
         "backtest_lab_root": Path("../backtest-lab/backtest_lab"),
         "enabled": False,
         "i_accept_live_risk": False,
@@ -64,11 +64,14 @@ def _args(**overrides: object) -> argparse.Namespace:
     return argparse.Namespace(**values)
 
 
-def test_live_command_defaults_to_the_complete_staged_portfolio() -> None:
-    """A future explicitly armed start must not silently select the old shell."""
+def test_live_command_requires_an_explicit_profile() -> None:
+    """An armed start never falls back to a default profile (the old default is a fixture)."""
     live_script = _load_module()
 
-    assert live_script.build_parser().parse_args([]).config == V25
+    with pytest.raises(SystemExit) as missing:
+        live_script.build_parser().parse_args([])
+    assert missing.value.code == 2
+    assert live_script.build_parser().parse_args(["--config", str(V25)]).config == V25
 
 
 def test_router_preserves_canonical_asset_order_across_providers() -> None:
@@ -220,7 +223,7 @@ def test_router_declares_both_sides_for_every_provider_and_symbol() -> None:
     """Launcher assembly cannot silently collapse the cohort to one side."""
     live_script = _load_module()
     config = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="observe",
     )
 
@@ -235,7 +238,7 @@ def test_live_factory_bounds_shared_read_coalescing_below_poll_interval(
     """Account reads are shared per cycle without remaining stale next cycle."""
     live_script = _load_module()
     config = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -290,7 +293,7 @@ def test_locked_start_refuses_before_adapter_when_backup_fails(
     """No authenticated exchange client exists until backup verification passes."""
     live_script = _load_module()
     loaded = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -337,7 +340,7 @@ def test_changed_profile_requires_completed_prior_drain_before_adapter(
     """A profile change without exact drain evidence fails before SDK creation."""
     live_script = _load_module()
     base = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -392,7 +395,7 @@ def test_changed_profile_requires_exact_approval_before_adapter(
     live_script = _load_module()
     previous = live_script.load_multi_asset_live_config(V25, mode="observe")
     base = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -455,7 +458,7 @@ def test_changed_profile_requires_fresh_flat_order_free_venue_boundary(
     """Completed local evidence does not override current venue exposure."""
     live_script = _load_module()
     base = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -569,7 +572,7 @@ def test_changed_profile_with_completed_drain_and_flat_boundary_reaches_engines(
     """Exact drain evidence plus fresh venue-flat reads authorizes assembly."""
     live_script = _load_module()
     base = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -671,7 +674,7 @@ def test_locked_start_refuses_uncleared_transition_before_backup_or_adapter(
     """A prior drain cannot be silently discarded by a new live process."""
     live_script = _load_module()
     config = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -717,7 +720,7 @@ def test_explicit_recovery_backs_up_then_rebinds_active_drain_before_adapter(
     """A crash-interrupted drain resumes as a new run without admitting entries."""
     live_script = _load_module()
     base = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -791,7 +794,7 @@ def test_recovery_backup_failure_preserves_the_prior_drain_identity(
     """A failed backup cannot partially migrate crash-recovery authority."""
     live_script = _load_module()
     base = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -851,7 +854,7 @@ def test_locked_start_snapshots_discovered_implementation_before_adapter(
     """The armed boundary supplies the complete source set to its backup gate."""
     live_script = _load_module()
     loaded = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -917,7 +920,7 @@ def test_live_engines_refresh_coalesced_truth_during_consistency_retries(
     """Each live engine wires its adapter's explicit cache invalidator."""
     live_script = _load_module()
     config = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -976,7 +979,7 @@ def test_live_telemetry_receives_verified_backup_identity(
     """Launcher plumbing carries backup provenance into configuration journal."""
     live_script = _load_module()
     base = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -1051,7 +1054,7 @@ def test_locked_start_separates_construction_refusal_from_a_run_fault(
     """
     live_script = _load_module()
     config = live_script.load_multi_asset_live_config(
-        "configs/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

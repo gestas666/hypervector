@@ -166,9 +166,13 @@ def _thresholds(args: argparse.Namespace) -> HealthThresholds:
     )
 
 
-def build_parser() -> argparse.ArgumentParser:
-    """Build the supervisor command line."""
-    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+# How the unified CLI names this service in usage and help text.
+CLI_PROG = "hypervector live supervisor"
+
+
+def build_parser(prog: str | None = None) -> argparse.ArgumentParser:
+    """Build the supervisor command line (``prog`` names it in usage text)."""
+    parser = argparse.ArgumentParser(prog=prog, description=__doc__.split("\n\n")[0])
     commands = parser.add_subparsers(dest="command", required=True)
 
     status = commands.add_parser("status", help="one-shot health report")
@@ -254,8 +258,12 @@ def _strip_separator(values: Sequence[str]) -> list[str]:
     return list(values[1:]) if values and values[0] == "--" else list(values)
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    """Run one subcommand from the repository root."""
+def main(argv: Sequence[str] | None = None, *, prog: str | None = None) -> int:
+    """Run one subcommand from the repository root.
+
+    ``prog`` is the name shown in usage and errors (the unified CLI passes
+    :data:`CLI_PROG`); by default argparse uses the invoked script's name.
+    """
     arguments = list(sys.argv[1:] if argv is None else argv)
     if arguments[:1] == ["resume"]:
         # Imported only here: the resume helper is an operator tool, never part of
@@ -264,8 +272,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             main as resume_main,
         )
 
-        return resume_main(arguments[1:])
-    args = build_parser().parse_args(arguments)
+        if prog is None:
+            return resume_main(arguments[1:])
+        return resume_main(arguments[1:], prog=f"{prog} resume")
+    args = build_parser(prog).parse_args(arguments)
     os.chdir(REPOSITORY_ROOT)
     paths = SupervisorPaths()
 

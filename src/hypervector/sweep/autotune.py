@@ -206,6 +206,9 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
             hypervelocity,
             compute_trial_metrics,
             objective=settings.objective,
+            # Venue cap and maintenance margin of the traded symbol, as in
+            # 'backtest run' and 'backtest sweep'.
+            symbol=settings.symbol,
         )
 
     evaluator = evaluator_for(bars.iloc[:cut] if cut < len(bars) else bars)
