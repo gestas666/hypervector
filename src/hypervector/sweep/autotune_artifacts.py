@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import json
+import logging
 import math
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from hypervector.sweep.autotune_models import (
 from hypervector.sweep.autotune_provenance import code_identity
 
 BOARD_SCHEMA = "autotune_board/v2"
+logger = logging.getLogger(__name__)
 HoldoutMeasure = Callable[[dict[str, object], dict[str, object]], dict[str, object]]
 
 
@@ -77,6 +79,8 @@ def finish_search(
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
     label = sampler_label(settings.sampler)
     warnings = _warnings(settings, trials, valid, selection, context)
+    for note in warnings:  # report-only; surfaces on stderr for CLI runs
+        logger.warning("Autotune: %s", note)
     board_path = _publish_board(
         settings,
         trials,
@@ -93,6 +97,13 @@ def finish_search(
         )
     best = selection.best
     evaluation = _evaluation(settings, selection, context, board_path)
+    # Label the reported metrics wherever they go (export, result, CLI JSON):
+    # they are holdout metrics when a holdout exists, in-sample otherwise.
+    best_metrics = {
+        **selection.best_metrics,
+        "evaluation_window": selection.evaluation_window,
+        "selection_basis": selection.selection_basis,
+    }
     export_dir = (
         None
         if settings.no_export
@@ -108,11 +119,7 @@ def finish_search(
             provenance=provenance,
             best_params=best["params"],
             best_exit_dict=best["exit_cfg"],
-            best_metrics={
-                **selection.best_metrics,
-                "evaluation_window": selection.evaluation_window,
-                "selection_basis": selection.selection_basis,
-            },
+            best_metrics=best_metrics,
             evaluation=evaluation,
         )
     )
@@ -125,7 +132,7 @@ def finish_search(
         label,
         best["params"],  # type: ignore[arg-type]
         best["exit_cfg"],  # type: ignore[arg-type]
-        selection.best_metrics,
+        best_metrics,
         export_dir,
         board_path,
         objective=settings.objective,

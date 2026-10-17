@@ -287,3 +287,31 @@ def test_tuning_does_not_repeat_parameter_independent_work(
     assert counts["directions"] == len(candidates)
     # Entry de-duplication runs for the split and each prepared split, not per trial.
     assert counts["unique"] <= 3
+
+
+@pytest.mark.parametrize("unit", ["s", "ms", "us"])
+def test_tuning_split_accepts_entry_times_finer_than_the_bar_unit(unit: str) -> None:
+    """A split time finer than the bar index unit must not fail every trial.
+
+    ``DatetimeIndex.searchsorted`` refuses a lossy unit conversion, whereas
+    the original ``bars.index <= split_time`` mask compared any units.
+    """
+    bars, positions = _tuning_inputs()
+    bars = bars.set_axis(bars.index.as_unit(unit))
+    positions = positions.assign(
+        open_time_utc=[
+            (pd.Timestamp(t) + pd.Timedelta(nanoseconds=123_456_789)).isoformat()
+            for t in positions["open_time_utc"]
+        ]
+    )
+    split = tuning._split_positions(positions, 0.7)
+    assert split.split_time.nanosecond or split.split_time.microsecond
+
+    shared = tuning._shared_inputs(bars, split, 30)
+    assert shared.split_position == int((bars.index <= split.split_time).sum())
+
+    candidates = tuning.generate_candidate_parameters(n_trials=2, seed=7)
+    board = tuning.autotune_regime_candidates(
+        bars, positions, candidates, train_fraction=0.7, forward_horizon=30
+    )
+    assert [trial.status for trial in board.trials] == ["completed", "completed"]

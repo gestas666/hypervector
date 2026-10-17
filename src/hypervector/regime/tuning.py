@@ -169,7 +169,9 @@ def _slice_inputs(bars: pd.DataFrame, horizon: int) -> _SliceInputs:
 def _shared_inputs(bars: pd.DataFrame, split: _SplitData, horizon: int) -> _SharedInputs:
     # bars has a unique increasing index (_datetime_bars), so the original
     # ``bars.index <= split_time`` mask is exactly this positional prefix.
-    position = int(bars.index.searchsorted(split.split_time, side="right"))
+    # Count the mask rather than ``searchsorted``: the latter refuses a split
+    # time finer than the index unit (e.g. ns entries against us bars).
+    position = int(np.count_nonzero(bars.index <= split.split_time))
     return _SharedInputs(
         position,
         _slice_inputs(bars.iloc[:position], horizon),

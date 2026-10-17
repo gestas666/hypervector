@@ -70,6 +70,13 @@ def _arm_metrics(entries: pd.Series, close: pd.Series) -> dict[str, object]:
     }
 
 
+_LABELS = ("evaluation_window", "selection_basis")
+
+
+def _unlabelled(metrics: dict[str, object]) -> dict[str, object]:
+    return {key: value for key, value in metrics.items() if key not in _LABELS}
+
+
 def _install(monkeypatch: pytest.MonkeyPatch, bars: pd.DataFrame) -> list[int]:
     """Stub history and metrics; cycle the coarse sample through every arm."""
     monkeypatch.setattr(
@@ -143,11 +150,15 @@ def test_search_ranking_and_export_share_one_objective(
 
 
 def test_zero_trade_winner_is_reported_not_gated(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, arm_strategy
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    arm_strategy,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """When every trading config loses, the inactive one wins and is flagged."""
     name = arm_strategy("test_fix_arms_zero_trade")
     _install(monkeypatch, fixture_ohlcv(n_bars=120))
+    caplog.set_level("WARNING", logger="hypervector.sweep.autotune_artifacts")
 
     result = autotune.run_autotune(
         data_root=tmp_path,
@@ -164,6 +175,9 @@ def test_zero_trade_winner_is_reported_not_gated(
     assert board["zero_trade_trials"] == 1
     assert any("zero trades" in warning for warning in result.warnings)
     assert board["warnings"] == result.warnings
+    # The CLI prints only the result JSON; warnings must reach stderr too.
+    logged = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+    assert any("selected trial has zero trades" in message for message in logged)
     flags = {
         trial["params"]["arm"]: trial["sharpe_defined"] for trial in board["all_trials"]
     }
@@ -237,7 +251,10 @@ def test_selection_is_train_only_and_exported_metrics_are_holdout(
     assert result.holdout_metrics is not None
     assert result.holdout_metrics["first_index"] == 150
     assert result.holdout_metrics["bars"] == 50
-    assert result.best_metrics == result.holdout_metrics
+    assert _unlabelled(result.best_metrics) == result.holdout_metrics
+    # The result (and so the CLI JSON) says which window it reports.
+    assert result.best_metrics["evaluation_window"] == "holdout"
+    assert result.best_metrics["selection_basis"] == "train_only"
     assert result.train_metrics["bars"] == 150
     assert board["selection_basis"] == "train_only"
     assert board["best_train_metrics"] == result.train_metrics
@@ -270,7 +287,8 @@ def test_full_window_fraction_keeps_the_in_sample_contract(
 
     assert result.selection_basis == "full_window_in_sample"
     assert result.holdout_metrics is None
-    assert result.best_metrics == result.train_metrics
+    assert _unlabelled(result.best_metrics) == result.train_metrics
+    assert result.best_metrics["evaluation_window"] == "full_window_in_sample"
 
 
 @pytest.mark.parametrize("fraction", [0.0, -0.2, 1.5, float("nan")])
@@ -326,6 +344,7 @@ def test_holdout_technical_failure_keeps_the_search(
     board = json.loads(result.board_path.read_text())
     assert result.holdout_metrics is None
     assert board["holdout_error"].startswith("IndexError: injected holdout fault")
-    assert result.best_metrics == result.train_metrics
+    assert _unlabelled(result.best_metrics) == result.train_metrics
+    assert result.best_metrics["evaluation_window"] == "train_in_sample"
     assert result.selection_basis == "train_only"
     assert any("holdout" in warning for warning in result.warnings)

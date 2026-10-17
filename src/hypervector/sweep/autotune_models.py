@@ -27,7 +27,8 @@ class AutotuneResult:
     best_params: dict[str, object]
     best_exit_cfg: dict[str, object]
     #: Out-of-sample holdout metrics when a holdout exists, otherwise the
-    #: in-sample metrics of the selected trial (see ``selection_basis``).
+    #: in-sample metrics of the selected trial, labelled with
+    #: ``evaluation_window`` and ``selection_basis``.
     best_metrics: dict[str, object]
     export_dir: Path | None
     board_path: Path

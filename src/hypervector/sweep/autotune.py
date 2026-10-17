@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from functools import partial
-import logging
 import math
 from pathlib import Path
 import pandas as pd
@@ -56,7 +55,6 @@ try:
 except ImportError:
     optuna = None
 HAVE_OPTUNA = optuna is not None
-logger = logging.getLogger(__name__)
 _SQLITE_BOOK_SUFFIXES = frozenset({".sqlite", ".sqlite3", ".db", ".zst"})
 _HYBRID_NOTE = "sampler 'hybrid' is a deprecated alias of optuna TPE"
 
@@ -274,8 +272,6 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
         duplicate_resamples=stats.duplicate_resamples,
         warnings=tuple(notes),
     )
-    for note in notes:
-        logger.warning("Autotune: %s", note)
     return finish_search(
         settings,
         trials=evaluator.trials,
