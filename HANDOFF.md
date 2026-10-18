@@ -50,8 +50,12 @@ holds the group table, output contract, exit codes and legacy-name map, and
   with no open orders, confirmed by fresh unsigned core and `xyz` reads.
   Shutdown evidence:
   `data/backups/bidirectional_cohort/operator_shutdown_20261006T173755Z/`.
-- **STOP file.** `data/live/bidirectional_cohort/STOP` is present and blocks any
-  start.
+- **STOP file.** Removed on 2026-10-18 at the operator's request. Its text
+  was "Operator-requested shutdown after verified flat drain.
+  2026-10-06T17:46:51.998054+00:00". A start is still blocked by the disabled
+  launchd agents, the drain marker below and the two authority flags. To
+  restore the durable stop, write a one-line reason to
+  `data/live/bidirectional_cohort/STOP`.
 - **Drain marker.** A completed transition-drain marker is present:
   `data/live/bidirectional_cohort/transition_drain.json`. Its `status` is
   `completed`, its `run_id` is `bidirectional-live-1791308294404` and its
@@ -97,8 +101,8 @@ $HV live rollback-profile --current "$V95" --verify configs/v95-to-v94-rollback-
 
 Expected results:
 
-- **`live check`** exits 1. Its blockers are exactly the two authority flags,
-  the STOP file and the drain marker. The profile loads in observe mode with
+- **`live check`** exits 1. Its blockers are exactly the two authority flags
+  and the drain marker. The profile loads in observe mode with
   the V95 fingerprint, and provider dependencies are ok.
 - **`live validate`** exits 0. Exit 3 is a report-only book-level advisory.
 - **`live backup`** reports `status=verified`, `execution_authority=none` and
@@ -113,7 +117,7 @@ On an explicit instruction, follow "Same-profile restart from a stopped book"
 in `docs/guides/cohort-live-transition-and-rollback.md`:
 
 1. `live drain-archive --expected-run-id bidirectional-live-1791308294404 --yes`.
-2. The operator removes the STOP file.
+2. Confirm the STOP file is absent (it was removed on 2026-10-18).
 3. Publish one checkpoint with `--no-current-run-only --venue-portfolio` and
    require the flat predicate.
 4. Start V95 by enabling and bootstrapping the supervise agent, or with
@@ -152,7 +156,8 @@ at `f95f36a`, and the pre-purge tree is tag `pre-history-purge-20261017`):
   hand-off and `regime classify`; `live run` and `live start` refused (exit 2)
   without both authority flags.
 - V95 rehearsal: `live check` showed the V95 fingerprint with exactly the
-  expected blockers (authority flags, STOP file, drain marker); `live validate
+  expected blockers (after the STOP removal: the authority flags and the drain
+  marker); `live validate
   --mode live --equity 4796` exited 0 with no problems.
 - Startup: `--help` and every group help 0.06 s with no engine imports.
   Against the pre-purge tree: 96-trial sweep 15.5 s → 3.4 s, 2,161-bar
