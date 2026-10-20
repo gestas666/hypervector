@@ -35,6 +35,20 @@ What stays is capability:
   and the SOL, Hulk and source-follow engines) and the research signal builders
   (`src/hypervector/strategies/`, `src/hypervector/research/*_signals.py`)
   remain. A new profile composes them or adds new ones.
+- **Provider validators check capability only.** A new profile can reuse a
+  provider with its own stop, target, hold, entry delay, execution symbols,
+  execution sides and exit-policy combination. The per-provider validators
+  (`multi_asset_live_provider_validation.py`,
+  `multi_asset_special_provider_validation.py`,
+  `fixed_route_provider_validation.py`, `hourly_price_contract.py`,
+  `multi_asset_route_contract_validation.py`) refuse only what the signal
+  cannot compute or bind. That covers the symbols it evaluates, its signal
+  timeframe, the sides it emits, the position policy it implements, and
+  observer-only scope. It also covers the anchors its intents carry: a
+  structural stop needs a stop anchor, and SPCX cash-open needs its absolute
+  target. The generic loader and `live validate` still bound every value
+  (taker IOC only, sizing ceilings, stop inside liquidation, STOP beside the
+  ledger, authority flags).
 - **Profile schema.** `src/hypervector/live/multi_asset_live_config.py` and
   `multi_asset_live_config_parsing.py` define the cohort profile. The profiles
   under `tests/fixtures/` copy retired profiles' values for the tests; never use
@@ -111,12 +125,11 @@ holds the group table, output contract, exit codes and legacy-name map, and
   (for example `hl-api-2`) and puts its key in `.env`. Never re-approve the
   name `hl-api`: that de-registers the signer at once. After expiry, every
   armed start is refused.
-- **Provider contracts are still frozen.** Each existing provider validates its
-  own exact execution contract (timeframe, stop, target, hold; see
-  `multi_asset_live_provider_validation.py`,
-  `multi_asset_special_provider_validation.py`,
-  `fixed_route_provider_validation.py`). A new profile that reuses a provider
-  with different values is refused until that validator changes.
+- **Breakout-filter telemetry labels.** The ETH breakout-transfer and HYPE
+  compression collectors still publish their original stop and hold (60 bps
+  and 12 h; 80 bps and 8 h to 24 h) in readiness metrics and the `EXIT ... STOP`
+  indicator, whatever the profile sets. Only the telemetry is affected; the
+  bound execution plan uses the profile's values.
 - **HIP-3 settlement or halt.** A venue settlement or halt of an open HIP-3
   (`xyz:`) position faults the whole backend, and the restart is then refused.
   While live, watch the venue notices and send `live request --action
@@ -147,6 +160,22 @@ holds the group table, output contract, exit codes and legacy-name map, and
 `--help` must stay under 0.07 s.
 
 ## Last verified state
+
+Branch `claude/intelligent-archimedes-8027fe` (capability-only provider
+validators, rebased onto `main` at `8b93bd6f`), in the worktree's own venv:
+
+- Default suite: 7,671 passed, 0 failed (`-n 6`, about 60 s).
+  `tests/test_provider_execution_reuse.py` loads every provider family that has
+  a dedicated validator with new execution values. It also keeps each
+  technical refusal.
+- A `profile_b.toml` variant reuses the liquidity-sweep, hourly Donchian and
+  ETH range providers with new stops, targets, holds and entry delays.
+  `live validate --mode live --equity 5000` accepts it (exit 0, no book
+  problem). The unchanged fixture still exits 0 at `--equity 4796`.
+- `-m "integration and not network"` was not re-run in a full checkout. In the
+  worktree, 5 of 7 need `../backtest-lab/backtest_lab` or
+  `data/cache/vendor/hypertrader_ad15`, which it lacks.
+- `--help` 0.06 to 0.07 s.
 
 `main` after the 2026-10-19 clean-slate cleanup:
 

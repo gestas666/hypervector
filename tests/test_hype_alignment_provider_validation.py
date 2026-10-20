@@ -1,4 +1,4 @@
-"""Exact configuration validation for the retained HYPE alignment route."""
+"""Configuration validation for the retained HYPE alignment route."""
 
 from __future__ import annotations
 
@@ -61,14 +61,46 @@ def test_hype_alignment_exact_contract_is_valid() -> None:
         {"maximum_hold_evidence_maximum_age_seconds": 61},
     ],
 )
-def test_hype_alignment_rejects_mutated_exit_contract(
+def test_hype_alignment_accepts_its_own_exit_contract(
     execution_changes: dict[str, object],
 ) -> None:
-    """Stop, hold, and freshness drift cannot retain the frozen provider ID."""
+    """Stop, hold, and freshness values are the profile's, not the provider ID's."""
+    config = load_multi_asset_live_config(_SPCX_CONTAINMENT, mode="observe")
+    provider = _alignment(config)
+    reused = replace(
+        provider,
+        execution=replace(provider.execution, **execution_changes),
+    )
+
+    validate_multi_asset_live_config(_replace_alignment(config, reused))
+
+
+@pytest.mark.parametrize(
+    ("provider_changes", "execution_changes"),
+    [
+        ({"timeframe": "5m"}, {}),
+        ({"position_policy": "flat_entry_only"}, {}),
+        (
+            {},
+            {
+                "stop_policy": "structural_clamped_bps",
+                "stop_bps": None,
+                "minimum_stop_bps": 20.0,
+                "maximum_stop_bps": 80.0,
+            },
+        ),
+    ],
+)
+def test_hype_alignment_rejects_what_its_signal_cannot_bind(
+    provider_changes: dict[str, object],
+    execution_changes: dict[str, object],
+) -> None:
+    """A mislabeled clock, a lost close, or an anchorless structural stop is refused."""
     config = load_multi_asset_live_config(_SPCX_CONTAINMENT, mode="observe")
     provider = _alignment(config)
     mutated = replace(
         provider,
+        **provider_changes,
         execution=replace(provider.execution, **execution_changes),
     )
 

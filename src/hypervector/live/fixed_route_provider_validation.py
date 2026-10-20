@@ -1,4 +1,4 @@
-"""Exact execution contracts for the directional range, ZEC and SPCX routes."""
+"""Signal capabilities for the directional range, ZEC and SPCX routes."""
 
 from __future__ import annotations
 
@@ -8,105 +8,63 @@ from hypervector.live.directional_range_onset_provider import (
     ETH_RANGE_LONG_STRATEGY,
 )
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
+from hypervector.live.multi_asset_route_contract_validation import (
+    binds_signal_anchors,
+)
 
 if TYPE_CHECKING:
     from hypervector.live.multi_asset_live_config import StrategyProviderConfig
 
-_BOTH_SIDES = frozenset({"long", "short"})
-
 
 def validate_directional_range(provider: StrategyProviderConfig) -> None:
-    """Freeze directional range entry, opposite-onset exit, and fallback."""
-    expected = (
+    """Require the directional range symbol and the one side it enters."""
+    symbol, side = (
         ("ETH", "long")
         if provider.strategy_id == ETH_RANGE_LONG_STRATEGY
         else ("SOL", "short")
     )
-    symbol, side = expected
-    execution = provider.execution
     valid = (
         provider.symbols == (symbol,)
-        and provider.sides == _BOTH_SIDES
+        and side in provider.sides
         and provider.timeframe == "1m"
-        and provider.maximum_entry_delay_seconds == 60
-        and provider.execution_symbols in ((), (symbol,))
-        and provider.executable_sides(symbol) == frozenset({side})
         and provider.position_policy == "enter_and_close"
-        and execution.entry_liquidity == "taker_ioc"
-        and execution.stop_policy == "fixed_bps"
-        and execution.stop_bps == 60.0
-        and execution.target_policy == "none"
-        and execution.maximum_hold_seconds == 172_800
-        and execution.maximum_hold_policy == "fixed"
-        and execution.provider_recipe_exit_policy == "honor"
-        and execution.profit_lock_policy == "none"
-        and not execution.safety_stop_overlay
+        and binds_signal_anchors(provider.execution, stop_anchor=False)
     )
     if not valid:
         raise MultiAssetLiveConfigError(
-            "directional range routes require optional ETH-long or SOL-short 1m "
-            "authority, a 60 bps stop, opposite-onset exit, and 48h fallback"
+            f"directional range route {provider.strategy_id} requires {symbol}-only "
+            f"1m scope, its emitted {side} side, opposite-entry close, a fixed stop, "
+            "and no absolute target"
         )
 
 
 def validate_zec_donchian_long(provider: StrategyProviderConfig) -> None:
-    """Freeze ZEC observation and optional long probation authority."""
-    execution = provider.execution
-    execution_scope = provider.execution_symbols
-    valid_authority = execution_scope == () or (
-        execution_scope == ("ZEC",)
-        and provider.executable_sides("ZEC") == frozenset({"long"})
-    )
+    """Require ZEC observation and the long side the channel signal emits."""
     valid = (
         provider.symbols == ("ZEC",)
-        and provider.sides == _BOTH_SIDES
+        and "long" in provider.sides
         and provider.timeframe == "15m"
-        and provider.maximum_entry_delay_seconds == 30
-        and valid_authority
         and provider.position_policy == "enter_and_close"
-        and execution.entry_liquidity == "taker_ioc"
-        and execution.stop_policy == "structural_clamped_bps"
-        and execution.minimum_stop_bps == 20.0
-        and execution.maximum_stop_bps == 250.0
-        and execution.target_policy == "none"
-        and execution.maximum_hold_seconds == 2_592_000
-        and execution.maximum_hold_policy == "fixed"
-        and execution.provider_recipe_exit_policy == "honor"
-        and execution.profit_lock_policy == "none"
-        and not execution.safety_stop_overlay
+        and binds_signal_anchors(provider.execution, stop_anchor=True)
     )
     if not valid:
         raise MultiAssetLiveConfigError(
-            "ZEC Donchian requires exact 15m observation, optional long-only "
-            "authority, a 20-250 bps structural stop, ten-bar exit, and 30-day "
-            "fallback"
+            "ZEC Donchian requires ZEC-only 15m scope, its emitted long side, "
+            "opposite-entry close, and no absolute target"
         )
 
 
 def validate_spcx_cash_session_long(provider: StrategyProviderConfig) -> None:
-    """Freeze the low-confidence SPCX cash-session probation contract."""
-    execution = provider.execution
+    """Require SPCX observation and the long side the session signal emits."""
     valid = (
         provider.symbols == ("xyz:SPCX",)
-        and provider.sides == _BOTH_SIDES
+        and "long" in provider.sides
         and provider.timeframe == "15m"
-        and provider.maximum_entry_delay_seconds == 30
-        and provider.execution_symbols == ("xyz:SPCX",)
-        and provider.executable_sides("xyz:SPCX") == frozenset({"long"})
         and provider.position_policy == "enter_and_close"
-        and execution.entry_liquidity == "taker_ioc"
-        and execution.stop_policy == "fixed_bps"
-        and execution.stop_bps == 60.0
-        and execution.target_policy == "fixed_bps"
-        and execution.target_bps == 120.0
-        and execution.maximum_hold_seconds == 22_500
-        and execution.maximum_hold_policy == "fixed"
-        and execution.provider_recipe_exit_policy == "honor"
-        and execution.profit_lock_policy == "none"
-        and not execution.safety_stop_overlay
+        and binds_signal_anchors(provider.execution, stop_anchor=False)
     )
     if not valid:
         raise MultiAssetLiveConfigError(
-            "SPCX cash-session probation requires exact 15m long authority, "
-            "a 60 bps stop, 120 bps target, session-close exit, and fallback"
+            "SPCX cash-session requires xyz:SPCX-only 15m scope, its emitted long "
+            "side, opposite-entry close, a fixed stop, and no absolute target"
         )

@@ -2,19 +2,11 @@
 
 from __future__ import annotations
 
-import math
 from typing import TYPE_CHECKING
 
-from hypervector.live.btc_hulk_robust_short_provider import (
-    HULK_ROBUST_SHORT_STRATEGY,
-    HULK_SHORT_STRATEGIES,
-)
-from hypervector.live.btc_hulk_delayed_component_floor import (
-    BTC_HULK_DELAYED_COMPONENT_POLICY_IDS,
-)
+from hypervector.live.btc_hulk_robust_short_provider import HULK_SHORT_STRATEGIES
 from hypervector.live.btc_liquidity_sweep_long_provider import (
     LIQUIDITY_SWEEP_LONG_STRATEGIES,
-    LIQUIDITY_SWEEP_LONG_TARGET60_STRATEGY,
 )
 from hypervector.live.btc_structural_contract import BTC_STRUCTURAL_FIXED60_STRATEGY
 from hypervector.live.directional_range_onset_provider import (
@@ -43,7 +35,7 @@ from hypervector.live.hip3_cash_open_gap_provider import (
 )
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
 from hypervector.live.multi_asset_route_contract_validation import (
-    has_neutral_exit_modifiers,
+    binds_signal_anchors,
     validate_reused_route_contract,
 )
 from hypervector.live.multi_asset_special_provider_validation import (
@@ -289,68 +281,47 @@ def _validate_cross_asset_breakout(provider: StrategyProviderConfig) -> None:
 
 
 def _validate_hype_compression(provider: StrategyProviderConfig) -> None:
-    execution = provider.execution
     valid = (
         provider.symbols == ("HYPE",)
+        and provider.sides == _BOTH_SIDES
         and provider.timeframe == "1m"
-        and provider.execution_symbols in {(), ("HYPE",)}
-        and execution.stop_policy == "fixed_bps"
-        and execution.stop_bps == 80.0
-        and execution.target_policy == "none"
-        and execution.maximum_hold_seconds == 28_800
-        and execution.maximum_hold_policy == "extend_while_regime_supported"
-        and execution.hard_maximum_hold_seconds == 86_400
+        and binds_signal_anchors(provider.execution, stop_anchor=False)
     )
     if not valid:
         raise MultiAssetLiveConfigError(
-            "HYPE compression breakout requires HYPE-only 1m scope, an 80 bps "
-            "stop, and the exact 8h-to-24h extension contract"
+            "HYPE compression breakout requires HYPE-only 1m scope, both emitted "
+            "sides, a fixed stop, and no absolute target"
         )
 
 
 def _validate_eth_transfer(provider: StrategyProviderConfig) -> None:
-    execution = provider.execution
     valid = (
         provider.symbols == ("ETH",)
+        and provider.sides == _BOTH_SIDES
         and provider.timeframe == "1m"
-        and provider.maximum_entry_delay_seconds == 60
-        and provider.execution_symbols in {(), ("ETH",)}
-        and provider.source_profile is None
         and provider.position_policy == "enter_and_close"
-        and execution.stop_policy == "fixed_bps"
-        and execution.stop_bps == 60.0
-        and execution.target_policy == "none"
-        and execution.maximum_hold_seconds == 43_200
-        and execution.maximum_hold_policy == "fixed"
-        and has_neutral_exit_modifiers(execution)
+        and binds_signal_anchors(provider.execution, stop_anchor=False)
     )
     if not valid:
         raise MultiAssetLiveConfigError(
-            "ETH breakout transfer requires the 1m source timeframe, ETH-only "
-            "observation, at most ETH-only execution authority, a 60 bps stop, "
-            "and a 12-hour maximum hold"
+            "ETH breakout transfer requires ETH-only 1m scope, both emitted sides, "
+            "opposite-entry close, a fixed stop, and no absolute target"
         )
 
 
 def _validate_range_onset(provider: StrategyProviderConfig) -> None:
-    """Freeze the historical hourly-cross execution and fallback contract."""
-    execution = provider.execution
+    """Require the core symbols and both sides the hourly-cross signal emits."""
     valid = (
         bool(provider.symbols)
         and set(provider.symbols).issubset({"BTC", "ETH", "SOL", "HYPE"})
         and provider.sides == _BOTH_SIDES
         and provider.timeframe == "1m"
-        and provider.maximum_entry_delay_seconds == 60
-        and execution.stop_policy == "fixed_bps"
-        and execution.stop_bps == 60.0
-        and execution.target_policy == "none"
-        and execution.maximum_hold_seconds == 172_800
-        and execution.hard_maximum_hold_seconds is None
+        and binds_signal_anchors(provider.execution, stop_anchor=False)
     )
     if not valid:
         raise MultiAssetLiveConfigError(
-            "range onset requires supported core symbols, both sides, 1m source "
-            "polling, a 60 bps stop, opposite-cross exit, and 48h fallback"
+            "range onset requires supported core symbols, both emitted sides, 1m "
+            "source polling, a fixed stop, and no absolute target"
         )
 
 
@@ -383,67 +354,30 @@ def _validate_sol_aligned_range(provider: StrategyProviderConfig) -> None:
 
 
 def _validate_hulk_robust_short(provider: StrategyProviderConfig) -> None:
-    execution = provider.execution
-    smart_floor = (
-        provider.strategy_id == HULK_ROBUST_SHORT_STRATEGY
-        and execution.profit_lock_policy in BTC_HULK_DELAYED_COMPONENT_POLICY_IDS
-        and execution.provider_recipe_exit_policy == "ignore"
-        and not execution.safety_stop_overlay
-    )
     valid = (
         provider.symbols == ("BTC",)
-        and provider.sides == frozenset({"short"})
+        and "short" in provider.sides
         and provider.timeframe == "30m"
-        and provider.maximum_entry_delay_seconds == 60
-        and provider.execution_symbols in {(), ("BTC",)}
         and provider.position_policy == "enter_and_close"
-        and execution.entry_liquidity == "taker_ioc"
-        and execution.stop_policy == "structural_clamped_bps"
-        and execution.minimum_stop_bps == 20.0
-        and execution.maximum_stop_bps == 75.0
-        and execution.target_policy == "reward_risk"
-        and execution.target_r_multiple == 3.0
-        and execution.maximum_hold_seconds == 86_400
-        and execution.maximum_hold_policy == "fixed"
-        and (has_neutral_exit_modifiers(execution) or smart_floor)
+        and binds_signal_anchors(provider.execution, stop_anchor=True)
     )
     if not valid:
         raise MultiAssetLiveConfigError(
-            "robust Hulk short requires BTC-only 30m short scope, taker IOC, "
-            "20-75 bps structural stop, 3R target, 24h maximum hold, and only "
-            "the evidence-bound robust-v3 delayed component exit"
+            "Hulk short requires BTC-only 30m scope, its emitted short side, "
+            "opposite-entry close, and no absolute target"
         )
 
 
 def _validate_liquidity_sweep_long(provider: StrategyProviderConfig) -> None:
-    execution = provider.execution
-    expected_target = (
-        60.0
-        if provider.strategy_id == LIQUIDITY_SWEEP_LONG_TARGET60_STRATEGY
-        else 26.666666666666668
-    )
-    expected_delay = (
-        30 if provider.strategy_id == LIQUIDITY_SWEEP_LONG_TARGET60_STRATEGY else 60
-    )
     valid = (
         provider.symbols == ("BTC",)
-        and provider.sides == frozenset({"long"})
+        and "long" in provider.sides
         and provider.timeframe == "1h"
-        and provider.execution_symbols in {(), ("BTC",)}
         and provider.position_policy == "enter_and_close"
-        and execution.entry_liquidity == "taker_ioc"
-        and execution.stop_policy == "fixed_bps"
-        and execution.stop_bps == 60.0
-        and execution.target_policy == "fixed_bps"
-        and execution.target_bps is not None
-        and math.isclose(execution.target_bps, expected_target)
-        and provider.maximum_entry_delay_seconds == expected_delay
-        and execution.maximum_hold_seconds == 86_400
-        and execution.maximum_hold_policy == "fixed"
-        and has_neutral_exit_modifiers(execution)
+        and binds_signal_anchors(provider.execution, stop_anchor=False)
     )
     if not valid:
         raise MultiAssetLiveConfigError(
-            "liquidity-sweep long requires exact BTC 1h long scope, "
-            f"60/{expected_target:g} bps exits, {expected_delay}s delay, and 24h hold"
+            "liquidity-sweep long requires BTC-only 1h scope, its emitted long "
+            "side, opposite-entry close, a fixed stop, and no absolute target"
         )

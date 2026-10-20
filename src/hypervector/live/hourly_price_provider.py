@@ -28,10 +28,6 @@ DONCHIAN8_STRATEGY = "hourly_donchian_8_4_atr20_bidirectional_v1"
 PROTECTED_DONCHIAN20_STRATEGY = (
     "hourly_donchian_20_10_atr20_profit_lock_bidirectional_v2"
 )
-# The identity-bound lock contract is pinned to these three routes. The
-# validator pins the symbol set as well as the lock parameters, so the protected
-# identity cannot be armed on any other market.
-PROTECTED_DONCHIAN20_SYMBOLS = frozenset({"SOL", "xyz:SNDK", "xyz:BRENTOIL"})
 # The 20/10 recipe without weak short breakdowns: a short needs the breakdown
 # to extend at least 1.0 ATR. Longs, exits and stops match the 20/10 recipe.
 STRONG_SHORT_DONCHIAN20_STRATEGY = "hourly_donchian_20_10_atr20_strong_short_v1"

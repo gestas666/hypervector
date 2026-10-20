@@ -57,16 +57,26 @@ def test_inactive_override_still_requires_an_observed_provider_symbol() -> None:
 
 
 @pytest.mark.parametrize("index", [1, 2])
-@pytest.mark.parametrize("changed", ["side", "stop"])
+@pytest.mark.parametrize("changed", ["clock", "position"])
 def test_inactive_directional_contract_still_rejects_drift(index: int, changed: str) -> None:
-    """Observe-only status does not relax the retained entry direction or protection."""
+    """Observe-only status does not relax what the directional signal can compute."""
     original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
     providers = list(original.providers)
     inactive = replace(providers[index], execution_symbols=())
-    providers[index] = (replace(inactive, execution_side_overrides=()) if changed == "side"
-                        else replace(inactive, execution=replace(inactive.execution, stop_bps=80.0)))
-    with pytest.raises(ValueError, match="directional range routes"):
+    providers[index] = (replace(inactive, timeframe="15m") if changed == "clock"
+                        else replace(inactive, position_policy="flat_entry_only"))
+    with pytest.raises(ValueError, match="directional range route"):
         validate_multi_asset_live_config(replace(original, providers=tuple(providers)))
+
+
+@pytest.mark.parametrize("index", [1, 2])
+def test_inactive_directional_route_keeps_its_own_side_and_stop(index: int) -> None:
+    """Execution side scope and stop distance are profile choices, not provider identity."""
+    original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
+    providers = list(original.providers)
+    inactive = replace(providers[index], execution_symbols=(), execution_side_overrides=())
+    providers[index] = replace(inactive, execution=replace(inactive.execution, stop_bps=80.0))
+    validate_multi_asset_live_config(replace(original, providers=tuple(providers)))
 
 
 def test_all_inactive_override_families_survive_staging(tmp_path: Path) -> None:
