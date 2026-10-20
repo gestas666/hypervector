@@ -33,9 +33,9 @@ from hypervector.live.multi_asset_live_config import (
 )
 
 _EXPECTED = {"BTC": 40, "ETH": 25, "xyz:SNDK": 10, "xyz:BRENTOIL": 20}
-# The leverage each market's engine requests, rounded up (V94's values).
+# The leverage each market's engine requests, rounded up (profile A's values).
 _REQUESTED = {"BTC": 10, "ETH": 15, "xyz:SNDK": 8, "xyz:BRENTOIL": 8}
-_V94 = Path("configs/multi_asset_growth_first_5000_review_actions_v94.toml")
+_PROFILE_A = Path("tests/fixtures/cohort_chain/profile_a.toml")
 _META = {
     "": {
         "universe": [
@@ -331,7 +331,7 @@ def test_malformed_requested_leverage_is_refused_before_any_venue_read(
 
 def test_every_configured_market_is_held_to_its_rounded_up_leverage() -> None:
     """Watch-only markets are included: each market's engine sets leverage at start."""
-    config = load_multi_asset_live_config(_V94, mode="live")
+    config = load_multi_asset_live_config(_PROFILE_A, mode="live")
     watch_only = set(config.symbols) - {
         symbol for _strategy, symbol in config.executable_provider_symbols
     }

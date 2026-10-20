@@ -2,24 +2,26 @@ from __future__ import annotations
 
 import pytest
 
+from hypervector.research import cohort_friction_contracts
+from hypervector.research.cohort_friction_contract_models import (
+    ModeledExecutionContract,
+)
 from hypervector.research.cohort_friction_parity import build_friction_parity
 
 
 _SOURCE = "hypervelocity_source_follow_bidirectional_5m_v1"
 _HYPE = "hype_breakout_onset_bidirectional_v1"
-_HYPE_COMPRESSION = "hype_breakout_compression_pullback_bidirectional_v1"
-_HYPE_ALIGNMENT = "hype_breakout_compression_alignment_bidirectional_v2"
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _RANGE = "range_onset_bidirectional_v1"
-_ETH = "eth_breakout_precompression_pullback_bidirectional_v1"
-_HIP3_SWING_INDEX = "hip3_swing_ha_sp500_spcx_bidirectional_v2"
 _HIP3_BREAKOUT_INDEX = "hip3_breakout_pressure_sp500_spcx_bidirectional_v1"
-_HIP3_BREAKOUT_COMMODITY = "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1"
 _SPCX_CASH_OPEN = "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1"
 
 
-def test_source_follow_uses_frozen_deployed_shape_without_claiming_edge() -> None:
-    """Source-follow parity cites its exact deployed-shape venue replay."""
+def test_source_follow_uses_frozen_deployed_shape_without_claiming_edge(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Source-follow parity cites its registered deployed-shape contract."""
+    _register(monkeypatch, _SOURCE, None, _source_contract())
     identity = {
         "assets": [{"symbol": "BTC", "stop_bps": 80.0, "maximum_hold_seconds": 28_800}],
         "providers": [
@@ -48,9 +50,7 @@ def test_source_follow_uses_frozen_deployed_shape_without_claiming_edge() -> Non
     assert row["runtime_contract"]["provider_recipe_exit_policy"] == "ignore"
     assert row["modeled_contract"]["entry_fee_bps"] == 4.5
     assert row["modeled_contract"]["entry_slippage_bps"] == 2.0
-    assert row["modeled_contract"]["evidence_source"] == (
-        "data/logs/research/source_follow_deployed_shape_btc_1y_20260804.json"
-    )
+    assert row["modeled_contract"]["evidence_source"] == "evidence/source.json"
     assert row["strategy_edge_identifiable"] is False
     assert row["observed_entry"]["fee_rate_bps"]["mean"] == pytest.approx(
         0.010599 / (62_915.0 * 0.00039) * 10_000.0
@@ -65,8 +65,11 @@ def test_source_follow_uses_frozen_deployed_shape_without_claiming_edge() -> Non
     )
 
 
-def test_hype_contract_matches_runtime_shape_without_claiming_edge() -> None:
+def test_hype_contract_matches_runtime_shape_without_claiming_edge(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Matching mechanics remain descriptive and separate from profitability."""
+    _register(monkeypatch, _HYPE, None, _hype_contract())
     identity = {
         "assets": [
             {"symbol": "HYPE", "stop_bps": 80.0, "maximum_hold_seconds": 28_800}
@@ -105,94 +108,45 @@ def test_hype_contract_matches_runtime_shape_without_claiming_edge() -> None:
     }
 
 
-def test_hype_compression_reuses_the_frozen_hype_execution_shape() -> None:
-    """The v39 HYPE filter changes signals, not its execution mechanics."""
+def test_unmodeled_route_is_unsupported_rather_than_aligned() -> None:
+    """A route without reviewed research mechanics cannot claim parity."""
     identity = {
         "assets": [{"symbol": "HYPE"}],
         "providers": [
             _provider(
-                _HYPE_COMPRESSION,
+                _HYPE,
                 "HYPE",
                 stop_policy="fixed_bps",
                 target_policy="none",
                 maximum_hold_seconds=28_800,
                 stop_bps=80.0,
-                maximum_hold_policy="extend_while_regime_supported",
-                hard_maximum_hold_seconds=86_400,
             )
         ],
     }
 
-    row = build_friction_parity(identity, [])["by_provider_symbol"][
-        f"{_HYPE_COMPRESSION}|HYPE"
-    ]
-
-    assert row["parity_state"] == "runtime_shape_aligned"
-    assert row["mismatches"] == []
-    assert row["modeled_contract"]["evidence_source"].endswith(
-        "hype_breakout_live_extension_parity_20260804.json"
+    report = build_friction_parity(
+        identity,
+        [_fill(_HYPE, "HYPE", fee_usd=0.01078, slippage_bps=1.924)],
     )
 
-
-def test_hype_alignment_reuses_the_exact_v51_lifecycle_shape() -> None:
-    """The alignment repair changes entry admission, not stop or hold mechanics."""
-    identity = {
-        "assets": [{"symbol": "HYPE"}],
-        "providers": [
-            _provider(
-                _HYPE_ALIGNMENT,
-                "HYPE",
-                stop_policy="fixed_bps",
-                target_policy="none",
-                maximum_hold_seconds=28_800,
-                stop_bps=80.0,
-                maximum_hold_policy="extend_while_regime_supported",
-                hard_maximum_hold_seconds=86_400,
-            )
-        ],
-    }
-
-    row = build_friction_parity(identity, [])["by_provider_symbol"][
-        f"{_HYPE_ALIGNMENT}|HYPE"
-    ]
-
-    assert row["parity_state"] == "runtime_shape_aligned"
-    assert row["mismatches"] == []
-    assert row["modeled_contract"]["evidence_source"].endswith(
-        "hype_compression_breakout_challenger_20260816_v6_alignment/report.json"
-    )
+    row = report["by_provider_symbol"][f"{_HYPE}|HYPE"]
+    assert row["parity_state"] == "unsupported_contract"
+    assert row["mismatches"] == ["modeled_contract_missing"]
+    assert row["modeled_contract"] is None
+    assert row["runtime_contract"]["stop_bps"] == 80.0
+    assert row["observed_entry"]["fills"] == 1
+    assert row["observed_entry"]["fee_mean_minus_modeled_bps"] is None
+    assert row["observed_entry"]["slippage_mean_minus_modeled_bps"] is None
+    assert row["strategy_edge_identifiable"] is False
+    assert report["summary"]["unsupported_contract"] == 1
+    assert report["summary"]["runtime_shape_aligned"] == 0
 
 
-def test_eth_pullback_contract_cites_shared_canary_falsification() -> None:
-    """ETH live friction remains comparable to its exact shared replay shape."""
-    identity = {
-        "assets": [{"symbol": "ETH", "stop_bps": 60.0, "maximum_hold_seconds": 43_200}],
-        "providers": [
-            _provider(
-                _ETH,
-                "ETH",
-                stop_policy="fixed_bps",
-                target_policy="none",
-                maximum_hold_seconds=43_200,
-                stop_bps=60.0,
-            )
-        ],
-    }
-
-    report = build_friction_parity(identity, [])
-
-    row = report["by_provider_symbol"][f"{_ETH}|ETH"]
-    assert row["parity_state"] == "runtime_shape_aligned"
-    assert row["mismatches"] == []
-    assert row["modeled_contract"]["entry_fee_bps"] == 4.5
-    assert row["modeled_contract"]["entry_slippage_bps"] == 2.0
-    assert row["modeled_contract"]["evidence_source"] == (
-        "data/logs/research/eth_sol_shared_canary_falsification_20260807_v1.json"
-    )
-
-
-def test_observed_entry_retains_signed_price_improvement() -> None:
+def test_observed_entry_retains_signed_price_improvement(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """A favorable fill remains negative slippage rather than breaking the report."""
+    _register(monkeypatch, _SOURCE, None, _source_contract())
     report = build_friction_parity(
         _identity(_SOURCE, "BTC", stop_bps=80.0, maximum_hold_seconds=28_800),
         [_fill(_SOURCE, "BTC", fee_usd=0.010599, slippage_bps=-2.666)],
@@ -209,8 +163,12 @@ def test_observed_entry_retains_signed_price_improvement() -> None:
     assert observed["slippage_mean_minus_modeled_bps"] == pytest.approx(-4.666)
 
 
-def test_all_active_provider_contracts_are_explicit_even_without_fills() -> None:
+def test_all_active_provider_contracts_are_explicit_even_without_fills(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """A no-fill mapping still discloses whether its live mechanics match research."""
+    for strategy in (_HULK, _RANGE, _SOURCE, _HYPE):
+        _register(monkeypatch, strategy, None, _hype_contract())
     identity = {
         "assets": [
             {"symbol": "BTC", "stop_bps": 80.0, "maximum_hold_seconds": 28_800},
@@ -218,11 +176,8 @@ def test_all_active_provider_contracts_are_explicit_even_without_fills() -> None
             {"symbol": "HYPE", "stop_bps": 80.0, "maximum_hold_seconds": 28_800},
         ],
         "providers": [
-            {
-                "strategy_id": "hulk_expansion_bidirectional_tuned_v2",
-                "symbols": ["BTC"],
-            },
-            {"strategy_id": "range_onset_bidirectional_v1", "symbols": ["SOL"]},
+            {"strategy_id": _HULK, "symbols": ["BTC"]},
+            {"strategy_id": _RANGE, "symbols": ["SOL"]},
             {"strategy_id": _SOURCE, "symbols": ["BTC"]},
             {"strategy_id": _HYPE, "symbols": ["HYPE"]},
         ],
@@ -239,13 +194,20 @@ def test_all_active_provider_contracts_are_explicit_even_without_fills() -> None
         "provider_symbols_with_entry_fills": 0,
     }
     assert all(
-        row["observed_entry"]["status"] == "not_observed"
+        row["runtime_contract_source"] == "asset_fallback"
+        and row["observed_entry"]["status"] == "not_observed"
         for row in report["by_provider_symbol"].values()
     )
 
 
-def test_provider_execution_contracts_override_generic_asset_defaults() -> None:
+def test_provider_execution_contracts_override_generic_asset_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Parity must compare research with each provider's configured mechanics."""
+    _register(monkeypatch, _HULK, None, _hulk_contract())
+    _register(monkeypatch, _RANGE, None, _fixed_contract(60.0, 172_800))
+    _register(monkeypatch, _SOURCE, None, _source_contract())
+    _register(monkeypatch, _HYPE, None, _hype_contract())
     identity = {
         "assets": [
             {"symbol": "BTC", "stop_bps": 80.0, "maximum_hold_seconds": 28_800},
@@ -310,8 +272,22 @@ def test_provider_execution_contracts_override_generic_asset_defaults() -> None:
     assert report["summary"]["contract_mismatch"] == 0
 
 
-def test_hip3_cost_contract_is_exact_to_provider_and_symbol() -> None:
-    """SP500 and SPCX cannot share one liquidity assumption."""
+def test_exact_symbol_contract_precedes_provider_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two symbols of one provider cannot share one liquidity assumption."""
+    _register(
+        monkeypatch,
+        _HIP3_BREAKOUT_INDEX,
+        "xyz:SP500",
+        _fixed_contract(80.0, 86_400, slippage_bps=1.4, source="evidence/sp500.json"),
+    )
+    _register(
+        monkeypatch,
+        _HIP3_BREAKOUT_INDEX,
+        None,
+        _fixed_contract(80.0, 86_400, slippage_bps=2.75, source="evidence/index.json"),
+    )
     identity = {
         "assets": [
             {"symbol": "xyz:SP500"},
@@ -320,20 +296,13 @@ def test_hip3_cost_contract_is_exact_to_provider_and_symbol() -> None:
         "providers": [
             _provider(
                 _HIP3_BREAKOUT_INDEX,
-                "xyz:SP500",
+                symbol,
                 stop_policy="fixed_bps",
                 target_policy="none",
                 maximum_hold_seconds=86_400,
                 stop_bps=80.0,
-            ),
-            _provider(
-                _HIP3_BREAKOUT_INDEX,
-                "xyz:SPCX",
-                stop_policy="fixed_bps",
-                target_policy="none",
-                maximum_hold_seconds=86_400,
-                stop_bps=80.0,
-            ),
+            )
+            for symbol in ("xyz:SP500", "xyz:SPCX")
         ],
     }
 
@@ -343,71 +312,80 @@ def test_hip3_cost_contract_is_exact_to_provider_and_symbol() -> None:
 
     assert sp500["parity_state"] == "runtime_shape_aligned"
     assert sp500["mismatches"] == []
-    assert sp500["modeled_contract"]["entry_fee_bps"] == 0.864
-    assert sp500["modeled_contract"]["entry_slippage_bps"] == pytest.approx(
-        1.4030892763
-    )
-    assert spcx["modeled_contract"]["entry_slippage_bps"] == pytest.approx(2.7515676541)
-    assert spcx["modeled_contract"]["evidence_source"].endswith(
-        "hip3_v25_lifecycle_bar_diagnostic_20260807.json"
-    )
+    assert sp500["modeled_contract"]["entry_slippage_bps"] == pytest.approx(1.4)
+    assert sp500["modeled_contract"]["evidence_source"] == "evidence/sp500.json"
+    assert spcx["parity_state"] == "runtime_shape_aligned"
+    assert spcx["modeled_contract"]["entry_slippage_bps"] == pytest.approx(2.75)
+    assert spcx["modeled_contract"]["evidence_source"] == "evidence/index.json"
 
 
-def test_hip3_gold_contract_preserves_measured_higher_fee_world() -> None:
-    """The deployed diagnostic must retain GOLD's measured higher fee."""
+def test_symbol_stop_override_requires_its_own_modeled_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A deployed per-symbol stop is compared only with research for that symbol."""
+    _register(monkeypatch, _RANGE, None, _fixed_contract(60.0, 172_800))
+    _register(monkeypatch, _RANGE, "SOL", _fixed_contract(80.0, 172_800))
     identity = {
-        "assets": [{"symbol": "xyz:GOLD"}],
+        "assets": [{"symbol": "SOL"}, {"symbol": "ETH"}],
         "providers": [
-            _provider(
-                _HIP3_BREAKOUT_COMMODITY,
-                "xyz:GOLD",
-                stop_policy="fixed_bps",
-                target_policy="none",
-                maximum_hold_seconds=86_400,
-                stop_bps=80.0,
-            )
+            {
+                **_provider(
+                    _RANGE,
+                    "SOL",
+                    stop_policy="fixed_bps",
+                    target_policy="none",
+                    maximum_hold_seconds=172_800,
+                    stop_bps=60.0,
+                ),
+                "symbols": ["SOL", "ETH"],
+                "stop_bps_overrides": {"SOL": 80.0},
+            }
         ],
     }
 
-    report = build_friction_parity(identity, [])
-    row = report["by_provider_symbol"][f"{_HIP3_BREAKOUT_COMMODITY}|xyz:GOLD"]
+    rows = build_friction_parity(identity, [])["by_provider_symbol"]
 
-    assert row["modeled_contract"]["entry_fee_bps"] == pytest.approx(8.64)
-    assert row["modeled_contract"]["entry_slippage_bps"] == pytest.approx(1.1245748882)
-    assert row["modeled_contract"]["evidence_source"].endswith(
-        "hip3_v25_lifecycle_bar_diagnostic_20260807.json"
+    sol = rows[f"{_RANGE}|SOL"]
+    assert sol["runtime_contract_source"] == "provider_execution_symbol_override"
+    assert sol["runtime_contract"]["stop_bps"] == 80.0
+    assert sol["modeled_contract"]["stop_bps"] == 80.0
+    assert sol["parity_state"] == "runtime_shape_aligned"
+    eth = rows[f"{_RANGE}|ETH"]
+    assert eth["runtime_contract_source"] == "provider_execution"
+    assert eth["modeled_contract"]["stop_bps"] == 60.0
+    assert eth["parity_state"] == "runtime_shape_aligned"
+
+    monkeypatch.delitem(cohort_friction_contracts._MODELED, (_RANGE, "SOL"))
+    rows = build_friction_parity(identity, [])["by_provider_symbol"]
+    assert rows[f"{_RANGE}|SOL"]["parity_state"] == "unsupported_contract"
+
+
+def test_spcx_cash_open_contract_matches_dynamic_target_and_session_hold(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Checkpoint friction telemetry must understand an absolute-anchor target."""
+    _register(
+        monkeypatch,
+        _SPCX_CASH_OPEN,
+        "xyz:SPCX",
+        ModeledExecutionContract(
+            "taker",
+            0.864,
+            2.75,
+            "fixed_bps",
+            80.0,
+            None,
+            None,
+            22_500,
+            "fixed",
+            None,
+            "absolute_anchor",
+            "maker",
+            None,
+            None,
+            "evidence/spcx-cash-open.json",
+        ),
     )
-
-
-def test_hip3_swing_contract_matches_deployed_fixed_stop_and_hold() -> None:
-    """Friction parity must cite the deployment-shaped lifecycle diagnostic."""
-    identity = {
-        "assets": [{"symbol": "xyz:SPCX"}],
-        "providers": [
-            _provider(
-                _HIP3_SWING_INDEX,
-                "xyz:SPCX",
-                stop_policy="fixed_bps",
-                target_policy="none",
-                maximum_hold_seconds=86_400,
-                stop_bps=80.0,
-            )
-        ],
-    }
-
-    report = build_friction_parity(identity, [])
-    row = report["by_provider_symbol"][f"{_HIP3_SWING_INDEX}|xyz:SPCX"]
-
-    assert row["parity_state"] == "runtime_shape_aligned"
-    assert row["modeled_contract"]["stop_policy"] == "fixed_bps"
-    assert row["modeled_contract"]["stop_bps"] == 80.0
-    assert row["modeled_contract"]["maximum_hold_policy"] == "fixed"
-    assert row["modeled_contract"]["maximum_hold_seconds"] == 86_400
-    assert row["mismatches"] == []
-
-
-def test_spcx_cash_open_contract_matches_dynamic_target_and_session_hold() -> None:
-    """Checkpoint friction telemetry must understand the exact additive route."""
     identity = {
         "assets": [{"symbol": "xyz:SPCX"}],
         "providers": [
@@ -431,8 +409,102 @@ def test_spcx_cash_open_contract_matches_dynamic_target_and_session_hold() -> No
     assert row["mismatches"] == []
     assert row["modeled_contract"]["target_policy"] == "absolute_anchor"
     assert row["modeled_contract"]["maximum_hold_seconds"] == 22_500
-    assert row["modeled_contract"]["evidence_source"].endswith(
-        "xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json"
+
+
+def _register(
+    monkeypatch: pytest.MonkeyPatch,
+    strategy_id: str,
+    symbol: str | None,
+    contract: ModeledExecutionContract,
+) -> None:
+    monkeypatch.setitem(
+        cohort_friction_contracts._MODELED, (strategy_id, symbol), contract
+    )
+
+
+def _fixed_contract(
+    stop_bps: float,
+    maximum_hold_seconds: int,
+    *,
+    slippage_bps: float = 2.0,
+    source: str = "evidence/fixed.json",
+) -> ModeledExecutionContract:
+    return ModeledExecutionContract(
+        "taker",
+        4.5,
+        slippage_bps,
+        "fixed_bps",
+        stop_bps,
+        None,
+        None,
+        maximum_hold_seconds,
+        "fixed",
+        None,
+        "none",
+        None,
+        None,
+        None,
+        source,
+    )
+
+
+def _source_contract() -> ModeledExecutionContract:
+    return ModeledExecutionContract(
+        "taker",
+        4.5,
+        2.0,
+        "fixed_bps",
+        80.0,
+        None,
+        None,
+        86_400,
+        "fixed",
+        None,
+        "fixed_bps",
+        "maker",
+        26.6666666667,
+        None,
+        "evidence/source.json",
+    )
+
+
+def _hype_contract() -> ModeledExecutionContract:
+    return ModeledExecutionContract(
+        "taker",
+        4.5,
+        2.0,
+        "fixed_bps",
+        80.0,
+        None,
+        None,
+        28_800,
+        "extend_while_regime_supported",
+        86_400,
+        "none",
+        None,
+        None,
+        None,
+        "evidence/hype.json",
+    )
+
+
+def _hulk_contract() -> ModeledExecutionContract:
+    return ModeledExecutionContract(
+        "taker",
+        4.5,
+        2.0,
+        "structural_clamped_bps",
+        None,
+        20.0,
+        75.0,
+        86_400,
+        "fixed",
+        None,
+        "reward_risk",
+        "maker",
+        None,
+        3.0,
+        "evidence/hulk.json",
     )
 
 

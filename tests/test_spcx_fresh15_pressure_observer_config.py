@@ -14,7 +14,7 @@ from hypervector.live.multi_asset_live_config import (
 )
 from hypervector.live.multi_asset_strategy_evidence import strategy_evidence_payloads
 
-_PROFILE = Path("tests/fixtures/profiles/index_fresh15_pressure_v2.toml")
+_PROFILE = Path("tests/fixtures/profiles/index_fresh15_pressure.toml")
 _STRATEGY = "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v2"
 
 
@@ -23,7 +23,7 @@ def test_spcx_pressure_observer_is_exact_and_execution_incapable() -> None:
     config = load_multi_asset_live_config(_PROFILE, mode="observe")
     provider = config.providers[0]
 
-    assert config.profile_id == "index_fresh15_pressure_observer_v2"
+    assert config.profile_id == "fixture_index_fresh15_pressure"
     assert config.symbols == ("xyz:SP500", "xyz:SPCX")
     assert config.maximum_positions == 2
     assert config.executable_provider_symbols == frozenset()
@@ -45,15 +45,10 @@ def test_spcx_pressure_observer_uses_fresh15_collector_and_evidence() -> None:
     }
 
     assert isinstance(collector, Hip3BreakoutPressureCollector)
-    assert evidence["xyz:SPCX"]["strategy_id"] == _STRATEGY
-    assert evidence["xyz:SPCX"]["research_state"] == (
-        "fresh15_v2_parity_defect_retired"
-    )
-    assert evidence["xyz:SP500"]["research_state"] == (
-        "fresh15_v2_parity_defect_retired"
-    )
-    assert evidence["xyz:SPCX"]["evidence_source"] == (
-        "docs/research-journal/hip3-index-preclose-pressure-parity-v3.json"
+    assert set(evidence) == {"xyz:SP500", "xyz:SPCX"}
+    assert all(row["strategy_id"] == _STRATEGY for row in evidence.values())
+    assert all(
+        row["research_state"] == "unreviewed_exact_mapping" for row in evidence.values()
     )
     assert all(row["execution_effect"] == "report_only" for row in evidence.values())
 

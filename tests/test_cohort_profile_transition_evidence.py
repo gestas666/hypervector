@@ -75,11 +75,11 @@ def test_legacy_archive_validates_retired_previous_symbols(
 ) -> None:
     """A removed asset belongs in the prior-run boundary, not the successor."""
     previous = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_growth_first_5000_nine_asset_bankroll_builder_candidate_v63.toml",
+        "tests/fixtures/profiles/nine_asset_bankroll_builder.toml",
         mode="observe",
     )
     candidate = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_growth_first_5000_eight_asset_gold_removed_candidate_v64.toml",
+        "tests/fixtures/profiles/eight_asset_gold_removed.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -148,7 +148,7 @@ def test_completed_drain_does_not_require_previous_config_source(
 
 def _config(tmp_path: Path) -> MultiAssetLiveConfig:
     loaded = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -161,7 +161,7 @@ def _config(tmp_path: Path) -> MultiAssetLiveConfig:
 
 def _source_config() -> MultiAssetLiveConfig:
     return load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
 

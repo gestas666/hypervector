@@ -30,7 +30,7 @@ from hypervector.live.multi_asset_live_runner_support import (
 )
 from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
 
-_CONFIG = "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"
+_CONFIG = "tests/fixtures/profiles/cohort_base.toml"
 
 
 def _config(live_script: ModuleType, tmp_path: Path) -> object:

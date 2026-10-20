@@ -64,7 +64,7 @@ There is no terminal UI.
 .venv/bin/python -m pytest tests/ -q -m "integration and not network"
 .venv/bin/python -m pytest tests/test_cli_surface.py tests/test_cli_spec_lint.py \
   tests/test_cli_operation_parity.py tests/test_cli_legacy_aliases.py \
-  tests/test_cli_pipeline.py tests/test_v95_restartability.py -q -n 2
+  tests/test_cli_pipeline.py -q -n 2
 .venv/bin/python -m hypervector status
 ```
 

@@ -1,4 +1,4 @@
-"""Headless process commands and profile-bound checkpoint configuration."""
+"""Headless process commands and checkpoint configuration."""
 
 from __future__ import annotations
 
@@ -7,7 +7,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 import sys
 from typing import Protocol
-from hypervector.live.eth_breakout_transfer_provider import ETH_BREAKOUT_TRANSFER_STRATEGY
 from hypervector.live.hip3_fresh15_journal_provider import HIP3_INDEX_FRESH15_V3_STRATEGY, HIP3_SNDK_FRESH15_V4_STRATEGY, require_fresh_index_observer, require_fresh_index_observers
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig, MultiAssetLiveConfigError
 from hypervector.live.spcx_cash_session_breakout_provider import SPCX_CASH_SESSION_LONG_STRATEGY
@@ -15,33 +14,7 @@ from hypervector.live.spcx_cash_session_breakout_provider import SPCX_CASH_SESSI
 CHECKPOINT_OUTPUT = Path("data/runtime/bidirectional_cohort/latest_checkpoint.json")
 _RESEARCH_DATABASE = Path("data/research/market.duckdb")
 _AUDIT_DIR = Path("data/logs/research/bidirectional_cohort")
-_V25_RESEARCH_PROFILE_ID = "multi_asset_bidirectional_complete_portfolio_canary_v25"
-_V25_RESEARCH_PROFILE_FINGERPRINT = (
-    "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc"
-)
-_V25_OPPORTUNITY_MATRIX = Path(
-    "data/logs/research/bidirectional_cohort/"
-    "v25_execution_opportunity_matrix_exlargest_20260808T2216Z.json"
-)
-_V25_ASYMMETRIC_JOURNAL = Path(
-    "docs/research-journal/cohort-asymmetric-shared-portfolio-v1.json"
-)
-_V25_SUPPLEMENTAL_MATRICES = (
-    Path("data/runtime/bidirectional_cohort/latest_spcx_swing_pivot_challenger.json"),
-    Path(
-        "data/runtime/bidirectional_cohort/"
-        "latest_sol_breakout_continuation_challenger.json"
-    ),
-    Path("data/runtime/bidirectional_cohort/latest_sndk_swing_pivot_challenger.json"),
-)
 _RESEARCH_SYNC_INTERVAL_SECONDS = 120
-_ELIGIBLE_POLICY_FORWARD_PROFILE_IDS = frozenset(
-    {
-        "multi_asset_bidirectional_evidence_routed_hype75_eth_observer_v11",
-        "multi_asset_bidirectional_evidence_routed_candidate_v18",
-        "multi_asset_bidirectional_evidence_routed_retest_observer_candidate_v21",
-    }
-)
 
 class CohortProcessArguments(Protocol):
     """Typed command fields consumed after launcher argument validation."""
@@ -179,40 +152,11 @@ def checkpoint_command(
         str(_RESEARCH_SYNC_INTERVAL_SECONDS),
         "--venue-portfolio",
         "--current-run-only",
-        *_profile_bound_research_args(config),
+        "--disable-asymmetric-forward-observer",
     )
-    if _eligible_policy_forward(config):
-        command = (*command, "--eligible-policy-forward")
     if accounting_epoch_bundle is not None:
         command = (*command, "--accounting-epoch-bundle", str(accounting_epoch_bundle))
     return command
-
-
-def _eligible_policy_forward(config: MultiAssetLiveConfig) -> bool:
-    return config.profile_id in _ELIGIBLE_POLICY_FORWARD_PROFILE_IDS and any(
-        provider.strategy_id == ETH_BREAKOUT_TRANSFER_STRATEGY
-        for provider in config.providers
-    )
-
-
-def _profile_bound_research_args(config: MultiAssetLiveConfig) -> tuple[str, ...]:
-    if (
-        config.profile_id != _V25_RESEARCH_PROFILE_ID
-        or config.profile_fingerprint != _V25_RESEARCH_PROFILE_FINGERPRINT
-    ):
-        return ("--disable-asymmetric-forward-observer",)
-    args = (
-        "--opportunity-matrix",
-        str(_V25_OPPORTUNITY_MATRIX),
-        "--asymmetric-forward-journal",
-        str(_V25_ASYMMETRIC_JOURNAL),
-    )
-    supplemental = tuple(
-        value
-        for path in _V25_SUPPLEMENTAL_MATRICES
-        for value in ("--supplemental-opportunity-matrix", str(path))
-    )
-    return (*args, *supplemental)
 
 
 def observer_checkpoint_command(config: MultiAssetLiveConfig) -> tuple[str, ...]:

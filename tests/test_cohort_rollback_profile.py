@@ -24,52 +24,54 @@ from hypervector.live.multi_asset_live_config import (
 )
 
 REPOSITORY = Path(__file__).resolve().parents[1]
-# The retained live chain: V95 runs, V94 is the rollback target. V94's own
-# transition approval admits V93 -> V94, so the V94 file cannot be restarted
-# after V95 without a separate rollback profile.
-V94 = "configs/multi_asset_growth_first_5000_review_actions_v94.toml"
-V95 = "configs/multi_asset_growth_first_5000_review_fixes_v95.toml"
-V94_ID = "multi_asset_growth_first_5000_review_actions_v94"
-V95_ID = "multi_asset_growth_first_5000_review_fixes_v95"
-V94_BOUND_APPROVAL = "docs/live-approvals/v93-to-v94-review-actions-20260924-v1.json"
-V94_APPROVAL_LINE = f'transition_approval = "{V94_BOUND_APPROVAL}"'
-NAME = "v95-to-v94-rollback-test-v1"
-APPROVAL_TEXT = "roll back to V94 (test)"
-EVIDENCE = "docs/reviews/rollback-evidence.md"
-# The checked-in rollback pair the operator would start, and the documents its
+# The profile chain: B runs, A is the rollback target. A's own transition
+# approval admits an earlier change into A, so the A file cannot be restarted
+# after B without a separate rollback profile.
+CHAIN = "tests/fixtures/cohort_chain"
+APPROVAL_DIR = f"{CHAIN}/approvals"
+PROFILE_A = f"{CHAIN}/profile_a.toml"
+PROFILE_B = f"{CHAIN}/profile_b.toml"
+PROFILE_A_ID = "fixture_cohort_a"
+PROFILE_B_ID = "fixture_cohort_b"
+PROFILE_A_BOUND_APPROVAL = f"{APPROVAL_DIR}/origin-to-a.json"
+PROFILE_A_APPROVAL_LINE = f'transition_approval = "{PROFILE_A_BOUND_APPROVAL}"'
+NAME = "b-to-a-rollback-test"
+APPROVAL_TEXT = "roll back to profile A (test)"
+EVIDENCE = f"{CHAIN}/evidence/rollback-evidence.md"
+# The checked-in rollback pair the operator would start, and the evidence its
 # approval hash-binds.
-CHECKED_IN_NAME = "v95-to-v94-rollback-20260927-v1"
-CHECKED_IN_EVIDENCE = (
-    "docs/reviews/2026-09-24-v93-full-review.md",
-    "docs/plans/2026-09-24-v94-review-actions.md",
-)
+CHECKED_IN_NAME = "rollback_b_to_a"
+CHECKED_IN_EVIDENCE = (f"{CHAIN}/evidence/rollback.md",)
 
 
 @pytest.fixture
 def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """A repository-shaped root holding real V95 (current) and V94 (target) bytes."""
+    """A repository-shaped root holding profile B (current) and A (target) bytes."""
     root = tmp_path / "repository"
-    (root / "configs").mkdir(parents=True)
-    (root / "docs/reviews").mkdir(parents=True)
-    (root / "docs/live-approvals").mkdir()
-    (root / V95).write_bytes((REPOSITORY / V95).read_bytes())
-    (root / V94).write_bytes((REPOSITORY / V94).read_bytes())
+    (root / APPROVAL_DIR).mkdir(parents=True)
+    (root / EVIDENCE).parent.mkdir()
+    for path in (PROFILE_B, PROFILE_A):
+        (root / path).write_bytes((REPOSITORY / path).read_bytes())
     (root / EVIDENCE).write_text("why the rollback exists\n")
     monkeypatch.chdir(root)
     return root
 
 
-def _create(root: Path, *extra: str, target: str = V94, name: str = NAME) -> int:
+def _create(root: Path, *extra: str, target: str = PROFILE_A, name: str = NAME) -> int:
     return rollback.main(
         [
             "--root",
             str(root),
             "--current",
-            V95,
+            PROFILE_B,
             "--target",
             target,
             "--name",
             name,
+            "--config-dir",
+            CHAIN,
+            "--approval-dir",
+            APPROVAL_DIR,
             "--operator-approval",
             APPROVAL_TEXT,
             "--evidence",
@@ -81,8 +83,8 @@ def _create(root: Path, *extra: str, target: str = V94, name: str = NAME) -> int
 
 def _outputs(root: Path, name: str = NAME) -> tuple[Path, Path]:
     return (
-        root / "configs" / f"{name}.toml",
-        root / "docs/live-approvals" / f"{name}.json",
+        root / CHAIN / f"{name}.toml",
+        root / APPROVAL_DIR / f"{name}.json",
     )
 
 
@@ -117,12 +119,49 @@ def _startup_backup(
     )
 
 
-def test_target_file_itself_is_refused_as_a_rollback() -> None:
-    """Restarting V94's own file after V95 fails closed: it names V93 -> V94."""
-    current = load_multi_asset_live_config(REPOSITORY / V95, mode="observe")
-    target = load_multi_asset_live_config(REPOSITORY / V94, mode="observe")
-    assert target.transition_approval == Path(V94_BOUND_APPROVAL)
+def _write_bound_approval(root: Path) -> None:
+    """The approval profile A binds: it admitted an earlier profile -> A."""
+    target = load_multi_asset_live_config(root / PROFILE_A, mode="observe")
+    document = {
+        "schema_version": 1,
+        "document_type": "cohort_profile_change_approval",
+        "approval_status": "approved_for_live_transition",
+        "approved_at_utc": "2026-10-19T00:00:00+00:00",
+        "approved_by": "test_fixture",
+        "operator_approval": "fixture approval: origin to profile A",
+        "execution_authority": "none",
+        "previous_profile": {
+            "profile_id": "fixture_cohort_origin",
+            "profile_fingerprint": "0" * 64,
+        },
+        "candidate_profile": {
+            "profile_id": PROFILE_A_ID,
+            "profile_fingerprint": target.profile_fingerprint,
+        },
+        "change_scopes": ["origin_to_profile_a"],
+        "recommendation_evidence": [
+            {"path": "../profile_a.toml", "sha256": _sha256(root / PROFILE_A)}
+        ],
+        "rollback": {
+            "config_path": "../origin.toml",
+            "profile_fingerprint": "0" * 64,
+            "sha256": "0" * 64,
+        },
+        "retirements": [],
+    }
+    (root / PROFILE_A_BOUND_APPROVAL).write_text(json.dumps(document, indent=2))
 
+
+def test_target_file_itself_is_refused_as_a_rollback(workspace: Path) -> None:
+    """Restarting A's own file after B fails closed: it names an earlier -> A."""
+    current = load_multi_asset_live_config(PROFILE_B, mode="observe")
+    target = load_multi_asset_live_config(PROFILE_A, mode="observe")
+    assert target.transition_approval == Path(PROFILE_A_BOUND_APPROVAL)
+
+    with pytest.raises(ProfileChangeApprovalError, match="does not exist"):
+        validate_profile_change_approval(current, target, target.transition_approval)
+
+    _write_bound_approval(workspace)
     with pytest.raises(
         ProfileChangeApprovalError, match="previous profile id differs from approval"
     ):
@@ -134,15 +173,15 @@ def test_rollback_profile_is_target_bytes_bound_to_the_new_approval(
 ) -> None:
     assert _create(workspace) == 0
     profile, _ = _outputs(workspace)
-    approval_reference = f"docs/live-approvals/{NAME}.json"
+    approval_reference = f"{APPROVAL_DIR}/{NAME}.json"
 
-    target_text = (workspace / V94).read_text()
+    target_text = (workspace / PROFILE_A).read_text()
     rollback_text = profile.read_text()
     expected = tomllib.loads(target_text)
     expected["runtime"]["transition_approval"] = approval_reference
     assert tomllib.loads(rollback_text) == expected
-    # V94 carries its own leading comments, so only the generated header (the
-    # extra leading lines) is set aside; the target's comments must survive.
+    # Only the generated header (the extra leading lines) is set aside; every
+    # target line but the approval binding must survive unchanged.
     rendered = rollback_text.splitlines()
     original = target_text.splitlines()
     header_length = len(rendered) - len(original)
@@ -155,13 +194,13 @@ def test_rollback_profile_is_target_bytes_bound_to_the_new_approval(
         (old, new) for old, new in zip(original, body, strict=True) if old != new
     ]
     assert changed == [
-        (V94_APPROVAL_LINE, f'transition_approval = "{approval_reference}"')
+        (PROFILE_A_APPROVAL_LINE, f'transition_approval = "{approval_reference}"')
     ]
 
     loaded = load_multi_asset_live_config(profile, mode="observe")
-    target = load_multi_asset_live_config(V94, mode="observe")
-    current = load_multi_asset_live_config(V95, mode="observe")
-    assert loaded.profile_id == target.profile_id == V94_ID
+    target = load_multi_asset_live_config(PROFILE_A, mode="observe")
+    current = load_multi_asset_live_config(PROFILE_B, mode="observe")
+    assert loaded.profile_id == target.profile_id == PROFILE_A_ID
     assert loaded.transition_approval == Path(approval_reference)
     assert loaded.profile_fingerprint not in {
         target.profile_fingerprint,
@@ -177,7 +216,7 @@ def test_approval_document_binds_current_to_rollback(workspace: Path) -> None:
     profile, approval = _outputs(workspace)
     document = json.loads(approval.read_text())
     candidate = load_multi_asset_live_config(profile, mode="observe")
-    current = load_multi_asset_live_config(V95, mode="observe")
+    current = load_multi_asset_live_config(PROFILE_B, mode="observe")
 
     assert approval.read_text().endswith("]\n}\n")
     assert list(document) == [
@@ -203,27 +242,28 @@ def test_approval_document_binds_current_to_rollback(workspace: Path) -> None:
     assert document["operator_approval"] == APPROVAL_TEXT
     assert document["execution_authority"] == "none"
     assert document["previous_profile"] == {
-        "profile_id": V95_ID,
+        "profile_id": PROFILE_B_ID,
         "profile_fingerprint": current.profile_fingerprint,
     }
     assert document["candidate_profile"] == {
-        "profile_id": V94_ID,
+        "profile_id": PROFILE_A_ID,
         "profile_fingerprint": candidate.profile_fingerprint,
     }
-    assert document["change_scopes"] == [f"rollback_to_{V94_ID}"]
+    assert document["change_scopes"] == [f"rollback_to_{PROFILE_A_ID}"]
     assert document["recommendation_evidence"] == [
-        {"path": f"../../{V94}", "sha256": _sha256(workspace / V94)},
+        {"path": "../profile_a.toml", "sha256": _sha256(workspace / PROFILE_A)},
         {
-            "path": "../reviews/rollback-evidence.md",
+            "path": "../evidence/rollback-evidence.md",
             "sha256": _sha256(workspace / EVIDENCE),
         },
     ]
     assert document["rollback"] == {
-        "config_path": f"../../{V95}",
+        "config_path": "../profile_b.toml",
         "profile_fingerprint": current.profile_fingerprint,
-        "sha256": _sha256(workspace / V95),
+        "sha256": _sha256(workspace / PROFILE_B),
     }
-    # V94's extra HYPE and SPCX providers are watch-only: no scope retires.
+    # Profile A's extra HYPE and xyz:SPCX providers are watch-only: no scope
+    # retires.
     assert document["retirements"] == []
 
 
@@ -231,7 +271,7 @@ def test_live_startup_gates_accept_the_rollback_offline(workspace: Path) -> None
     """Call exactly what scripts/multi_asset_bidirectional_live.py calls, offline."""
     assert _create(workspace) == 0
     profile, approval = _outputs(workspace)
-    current = load_multi_asset_live_config(V95, mode="observe")
+    current = load_multi_asset_live_config(PROFILE_B, mode="observe")
     candidate = load_multi_asset_live_config(
         profile, mode="live", enabled=True, accepts_live_risk=True
     )
@@ -241,7 +281,7 @@ def test_live_startup_gates_accept_the_rollback_offline(workspace: Path) -> None
         current, candidate, candidate.transition_approval
     )
     startup = require_approved_profile_change(
-        candidate, _startup_backup(workspace, current, V95)
+        candidate, _startup_backup(workspace, current, PROFILE_B)
     )
 
     assert startup == preflight
@@ -249,7 +289,7 @@ def test_live_startup_gates_accept_the_rollback_offline(workspace: Path) -> None
         "state": "approved_profile_change",
         "approval_required": True,
         "approval_status": "approved_for_live_transition",
-        "approval_document": f"docs/live-approvals/{NAME}.json",
+        "approval_document": f"{APPROVAL_DIR}/{NAME}.json",
         "retired_execution_scopes": [],
         "replacement_execution_scopes": [],
         "execution_authority": "none",
@@ -264,26 +304,26 @@ def test_summary_reports_identities_and_dry_run(
     profile, approval = _outputs(workspace)
     summary = json.loads(capsys.readouterr().out)
     candidate = load_multi_asset_live_config(profile, mode="observe")
-    current = load_multi_asset_live_config(V95, mode="observe")
+    current = load_multi_asset_live_config(PROFILE_B, mode="observe")
 
     assert summary["execution_authority"] == "none"
     assert summary["rollback_profile"] == {
-        "path": f"configs/{NAME}.toml",
+        "path": f"{CHAIN}/{NAME}.toml",
         "sha256": _sha256(profile),
-        "profile_id": V94_ID,
+        "profile_id": PROFILE_A_ID,
         "profile_fingerprint": candidate.profile_fingerprint,
     }
     assert summary["approval"] == {
-        "path": f"docs/live-approvals/{NAME}.json",
+        "path": f"{APPROVAL_DIR}/{NAME}.json",
         "sha256": _sha256(approval),
     }
     assert summary["current_profile"] == {
-        "path": V95,
-        "sha256": _sha256(workspace / V95),
+        "path": PROFILE_B,
+        "sha256": _sha256(workspace / PROFILE_B),
         "profile_id": current.profile_id,
         "profile_fingerprint": current.profile_fingerprint,
     }
-    assert summary["target_profile"]["path"] == V94
+    assert summary["target_profile"]["path"] == PROFILE_A
     dry_run = summary["offline_dry_run"]
     assert dry_run["runtime_validation"] == "accepted"
     assert dry_run["accounting_epoch"] == "not_required"
@@ -315,21 +355,21 @@ def test_existing_outputs_are_never_overwritten(
 )
 def test_unsafe_names_are_refused(workspace: Path, name: str) -> None:
     assert _create(workspace, name=name) == 2
-    assert sorted(path.name for path in (workspace / "configs").iterdir()) == sorted(
-        [Path(V94).name, Path(V95).name]
+    assert sorted(path.name for path in (workspace / CHAIN).glob("*.toml")) == sorted(
+        [Path(PROFILE_A).name, Path(PROFILE_B).name]
     )
-    assert list((workspace / "docs/live-approvals").iterdir()) == []
+    assert list((workspace / APPROVAL_DIR).iterdir()) == []
 
 
 def test_target_equal_to_current_is_refused(workspace: Path) -> None:
-    assert _create(workspace, target=V95) == 2
+    assert _create(workspace, target=PROFILE_B) == 2
     profile, approval = _outputs(workspace)
     assert not profile.exists() and not approval.exists()
 
 
 def test_paths_outside_the_root_are_refused(workspace: Path, tmp_path: Path) -> None:
     outside = tmp_path / "outside.toml"
-    outside.write_bytes((REPOSITORY / V94).read_bytes())
+    outside.write_bytes((REPOSITORY / PROFILE_A).read_bytes())
 
     assert _create(workspace, target=str(outside)) == 2
     assert _create(workspace, target="../outside.toml") == 2
@@ -341,48 +381,48 @@ def test_failed_dry_run_removes_the_new_files(
     workspace: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """A target the live runner would refuse leaves nothing behind to launch."""
-    text = (workspace / V94).read_text()
+    text = (workspace / PROFILE_A).read_text()
     marker = 'execution_symbols = ["BTC"]\n'
     assert text.count(marker) == 1
     assert text.count("sizing_overrides = { BTC = ") == 1
-    broken = workspace / "configs/broken_target.toml"
+    broken = workspace / CHAIN / "broken_target.toml"
     broken.write_text(text.replace(marker, "execution_symbols = []\n"))
 
-    assert _create(workspace, target="configs/broken_target.toml") == 2
+    assert _create(workspace, target=f"{CHAIN}/broken_target.toml") == 2
     assert "provider entry sizing exceeds" in capsys.readouterr().err
     profile, approval = _outputs(workspace)
     assert not profile.exists() and not approval.exists()
 
 
 def test_target_without_approval_line_gets_one_in_runtime(workspace: Path) -> None:
-    text = (workspace / V94).read_text()
-    line = f"{V94_APPROVAL_LINE}\n"
+    text = (workspace / PROFILE_A).read_text()
+    line = f"{PROFILE_A_APPROVAL_LINE}\n"
     assert text.count(line) == 1
-    bare = workspace / "configs/bare_target.toml"
+    bare = workspace / CHAIN / "bare_target.toml"
     bare.write_text(text.replace(line, ""))
 
-    assert _create(workspace, target="configs/bare_target.toml") == 0
+    assert _create(workspace, target=f"{CHAIN}/bare_target.toml") == 0
     profile, _ = _outputs(workspace)
     parsed = tomllib.loads(profile.read_text())
     expected = tomllib.loads(bare.read_text())
-    expected["runtime"]["transition_approval"] = f"docs/live-approvals/{NAME}.json"
+    expected["runtime"]["transition_approval"] = f"{APPROVAL_DIR}/{NAME}.json"
     assert parsed == expected
 
 
 def test_scopes_the_target_lacks_are_retired_without_replacement(
     workspace: Path,
 ) -> None:
-    text = (workspace / V94).read_text()
+    text = (workspace / PROFILE_A).read_text()
     marker = 'execution_symbols = ["SOL", "xyz:SNDK", "xyz:BRENTOIL", "xyz:TSLA"]\n'
     assert text.count(marker) == 1
-    narrowed = workspace / "configs/tsla_watch_only_target.toml"
+    narrowed = workspace / CHAIN / "tsla_watch_only_target.toml"
     narrowed.write_text(
         text.replace(
             marker, 'execution_symbols = ["SOL", "xyz:SNDK", "xyz:BRENTOIL"]\n'
         )
     )
 
-    assert _create(workspace, target="configs/tsla_watch_only_target.toml") == 0
+    assert _create(workspace, target=f"{CHAIN}/tsla_watch_only_target.toml") == 0
     _, approval = _outputs(workspace)
     assert json.loads(approval.read_text())["retirements"] == [
         {
@@ -398,7 +438,7 @@ def test_scopes_the_target_lacks_are_retired_without_replacement(
 
 
 def test_retired_scope_maps_to_the_unique_same_symbol_side_replacement() -> None:
-    config = load_multi_asset_live_config(REPOSITORY / V94, mode="observe")
+    config = load_multi_asset_live_config(REPOSITORY / PROFILE_A, mode="observe")
     btc = config.providers[0]
     assert btc.symbols == ("BTC",)
     renamed = replace(config, providers=(replace(btc, strategy_id="btc_new_v1"),))
@@ -429,9 +469,9 @@ def test_verify_rechecks_an_existing_pair_and_catches_drift(
         "--root",
         str(workspace),
         "--current",
-        V95,
+        PROFILE_B,
         "--verify",
-        f"configs/{NAME}.toml",
+        f"{CHAIN}/{NAME}.toml",
     ]
 
     assert rollback.main(arguments) == 0
@@ -450,9 +490,15 @@ def test_verify_rechecks_an_existing_pair_and_catches_drift(
 def test_verify_refuses_the_unbound_target_file(
     workspace: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    bound = V94_BOUND_APPROVAL
-    (workspace / bound).write_bytes((REPOSITORY / bound).read_bytes())
-    arguments = ["--root", str(workspace), "--current", V95, "--verify", V94]
+    _write_bound_approval(workspace)
+    arguments = [
+        "--root",
+        str(workspace),
+        "--current",
+        PROFILE_B,
+        "--verify",
+        PROFILE_A,
+    ]
 
     assert rollback.main(arguments) == 2
     assert "previous profile id differs from approval" in capsys.readouterr().err
@@ -461,7 +507,6 @@ def test_verify_refuses_the_unbound_target_file(
 @pytest.fixture
 def checked_in_workspace(workspace: Path) -> Path:
     """The workspace plus the documents the checked-in rollback approval binds."""
-    (workspace / "docs/plans").mkdir()
     for path in CHECKED_IN_EVIDENCE:
         (workspace / path).write_bytes((REPOSITORY / path).read_bytes())
     return workspace
@@ -470,21 +515,27 @@ def checked_in_workspace(workspace: Path) -> Path:
 def test_the_checked_in_rollback_pair_is_what_the_tool_writes(
     checked_in_workspace: Path,
 ) -> None:
-    """Re-authoring V95 -> V94 reproduces the checked-in pair byte for byte."""
+    """Re-authoring B -> A reproduces the checked-in pair byte for byte."""
     checked_in = json.loads(
-        (REPOSITORY / f"docs/live-approvals/{CHECKED_IN_NAME}.json").read_text()
+        (REPOSITORY / APPROVAL_DIR / f"{CHECKED_IN_NAME}.json").read_text()
     )
     arguments = [
         "--root",
         str(checked_in_workspace),
         "--current",
-        V95,
+        PROFILE_B,
         "--target",
-        V94,
+        PROFILE_A,
         "--name",
         CHECKED_IN_NAME,
+        "--config-dir",
+        CHAIN,
+        "--approval-dir",
+        APPROVAL_DIR,
         "--operator-approval",
         checked_in["operator_approval"],
+        "--approved-by",
+        checked_in["approved_by"],
         "--approved-at",
         checked_in["approved_at_utc"],
     ]
@@ -495,48 +546,46 @@ def test_the_checked_in_rollback_pair_is_what_the_tool_writes(
 
     profile, approval = _outputs(checked_in_workspace, CHECKED_IN_NAME)
     assert profile.read_bytes() == (
-        REPOSITORY / f"configs/{CHECKED_IN_NAME}.toml"
+        REPOSITORY / CHAIN / f"{CHECKED_IN_NAME}.toml"
     ).read_bytes()
     assert approval.read_bytes() == (
-        REPOSITORY / f"docs/live-approvals/{CHECKED_IN_NAME}.json"
+        REPOSITORY / APPROVAL_DIR / f"{CHECKED_IN_NAME}.json"
     ).read_bytes()
 
 
 def test_the_checked_in_rollback_pair_passes_the_offline_startup_gates(
     checked_in_workspace: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """The restartable V94 rollback still verifies against the V95 that runs."""
+    """The restartable A rollback still verifies against the B that runs."""
     for path in (
-        f"configs/{CHECKED_IN_NAME}.toml",
-        f"docs/live-approvals/{CHECKED_IN_NAME}.json",
+        f"{CHAIN}/{CHECKED_IN_NAME}.toml",
+        f"{APPROVAL_DIR}/{CHECKED_IN_NAME}.json",
     ):
         (checked_in_workspace / path).write_bytes((REPOSITORY / path).read_bytes())
     arguments = [
         "--root",
         str(checked_in_workspace),
         "--current",
-        V95,
+        PROFILE_B,
         "--verify",
-        f"configs/{CHECKED_IN_NAME}.toml",
+        f"{CHAIN}/{CHECKED_IN_NAME}.toml",
     ]
 
     assert rollback.main(arguments) == 0
     summary = json.loads(capsys.readouterr().out)
-    assert summary["current_profile"]["profile_id"] == V95_ID
-    assert summary["rollback_profile"]["profile_id"] == V94_ID
-    assert summary["approval"]["path"] == (
-        f"docs/live-approvals/{CHECKED_IN_NAME}.json"
-    )
+    assert summary["current_profile"]["profile_id"] == PROFILE_B_ID
+    assert summary["rollback_profile"]["profile_id"] == PROFILE_A_ID
+    assert summary["approval"]["path"] == f"{APPROVAL_DIR}/{CHECKED_IN_NAME}.json"
     assert summary["offline_dry_run"]["startup_profile_change_approval"] == {
         "state": "approved_profile_change",
         "approval_required": True,
         "approval_status": "approved_for_live_transition",
-        "approval_document": f"docs/live-approvals/{CHECKED_IN_NAME}.json",
+        "approval_document": f"{APPROVAL_DIR}/{CHECKED_IN_NAME}.json",
         "retired_execution_scopes": [],
         "replacement_execution_scopes": [],
         "execution_authority": "none",
     }
 
-    (checked_in_workspace / CHECKED_IN_EVIDENCE[1]).write_text("edited\n")
+    (checked_in_workspace / CHECKED_IN_EVIDENCE[0]).write_text("edited\n")
     assert rollback.main(arguments) == 2
     assert "recommendation evidence sha256 differs" in capsys.readouterr().err

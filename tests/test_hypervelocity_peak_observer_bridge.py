@@ -178,7 +178,7 @@ def _profile_session(
     root: Path, offset_ms: int
 ) -> tuple[PaperSession, HypervelocitySessionBridge]:
     """Attach the configured event runtime to a persistent paper root."""
-    profile = load_hypervelocity_profile("configs/hypervelocity_faithful.toml")
+    profile = load_hypervelocity_profile("tests/fixtures/profiles/hypervelocity_shadow.toml")
     profile = replace(profile, metalabel_mode="off", export_path=_write_strict_export(root, strategy="hypervelocity_1m_scalper_long"))
     session = PaperSession(
         export_dir=profile.export_path,

@@ -11,7 +11,7 @@ def _audit(*, archive_closed: int, reflected_closed: int) -> dict[str, object]:
     return {
         "portfolio_archive": {
             "accounting_epoch": {
-                "epoch_id": "v51_first_live",
+                "epoch_id": "first_live",
                 "profile_fingerprint": "a" * 64,
                 "start_venue_timestamp_ms": 1_786_653_167_380,
             },
@@ -93,10 +93,11 @@ def test_historical_merge_preserves_fresh_open_lifecycle_sections() -> None:
     alignment = bounded["entry_alignment_mechanism"]
     assert alignment["marker"] == "complete"
     assert alignment["provisional_open"] == {"mark": "fresh"}
-    hulk = bounded["hulk_entry_quality_challenger"]
-    assert hulk["marker"] == "complete"
-    assert hulk["open_trades"] == 1
-    assert hulk["open_observations"] == [{"mark": "fresh"}]
+    profit_lock = bounded["profit_lock_challenger"]
+    assert all(
+        profit_lock[key] == {"marker": "complete"}
+        for key in cohort_checkpoint_history._HISTORICAL_MECHANISM_KEYS
+    )
 
 
 def _historical_sections(label: str, open_mark: str) -> dict[str, object]:
@@ -108,11 +109,6 @@ def _historical_sections(label: str, open_mark: str) -> dict[str, object]:
         "entry_alignment_mechanism": {
             "marker": label,
             "provisional_open": {"mark": open_mark},
-        },
-        "hulk_entry_quality_challenger": {
-            "marker": label,
-            "open_trades": 1,
-            "open_observations": [{"mark": open_mark}],
         },
         "side_composition": {
             "schema_version": 2,

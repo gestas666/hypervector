@@ -7,9 +7,9 @@ from pathlib import Path
 
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
-_BASE = Path("tests/fixtures/profiles/multi_asset_bidirectional_range_retired_candidate.toml")
+_BASE = Path("tests/fixtures/profiles/range_retired.toml")
 _CANDIDATE = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_range_retired_hype_fixed8_candidate.toml"
+    "tests/fixtures/profiles/range_retired_hype_fixed8.toml"
 )
 _HYPE = "hype_breakout_onset_bidirectional_v1"
 _RANGE = "range_onset_bidirectional_v1"
@@ -23,7 +23,7 @@ def test_fixed8_candidate_changes_only_canonical_hype_exit_contract() -> None:
     candidate_providers = {row.strategy_id: row for row in candidate.providers}
 
     assert (
-        candidate.profile_id == "multi_asset_bidirectional_range_retired_hype_fixed8_v4"
+        candidate.profile_id == "fixture_range_retired_hype_fixed8"
     )
     assert (
         candidate.executable_provider_directions == base.executable_provider_directions

@@ -18,7 +18,7 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 
 RUN_ID = "live-run-eth"
 STRATEGY_ID = "eth_breakout_precompression_pullback_bidirectional_v1"
-CANDIDATE_ID = "eth_breakout_precompression_pullback_bidirectional_v1_v12"
+CANDIDATE_ID = "eth_breakout_precompression_pullback_bidirectional_v1_eligible_forward"
 
 
 def _event(
@@ -300,7 +300,7 @@ def test_pending_candidate_reports_only_funding_observed_through_latest_bar() ->
 
 def test_eth_spec_is_derived_from_the_exact_runtime_profile() -> None:
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_evidence_routed_hype75_eth_observer_v11.toml",
+        "tests/fixtures/profiles/evidence_routed_hype75_eth_observer.toml",
         mode="observe",
     )
     identity = _identity()

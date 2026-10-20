@@ -47,7 +47,7 @@ Nine pillars and four supporting groups. Each group has its own `--help`.
 | `tune` | Strategy and regime autotuning with a chronological holdout | `hypervector tune strategy --strategy crown_stack_long --objective net_pnl --train-fraction 0.7` |
 | `nautilus` | Event-driven validation of a bundle, Parquet catalog | `hypervector nautilus run --export latest --no-network` |
 | `paper` | Paper/shadow daemons, cohort observer, reports | `hypervector paper run --export latest --mode shadow --max-live-bars 60` |
-| `live` | Live readiness, execution, monitoring, transitions, supervision | `hypervector live check --config configs/multi_asset_growth_first_5000_review_fixes_v95.toml` |
+| `live` | Live readiness, execution, monitoring, transitions, supervision | `hypervector live check --config <profile.toml>` |
 | `regime` | Canonical regime classifier: classify, eval, export, challengers, align | `hypervector regime eval --symbol BTC --timeframe 1m --lookback-days 30` |
 | `model` | Walk-forward metalabel training | `hypervector model train --export latest` |
 | `export` | Strategy bundles: create, list, show, validate | `hypervector export validate --export latest` |

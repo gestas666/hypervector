@@ -15,21 +15,9 @@ from hypervector.live.cohort_accounting_continuation import (
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
 
-_CLEAN_ACCOUNTING_REQUIRED_PROFILE_FINGERPRINTS = frozenset(
-    {
-        "0be937a1a50ca56becefb330f96d770e39863727d1e2832d025474afc489ae5e",
-        "375281af0b683e0ddd6c22c02b6a20ea2807705a124a1fce23da76bb39ccc7dd",
-        "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
-        "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
-        "c057882fdd0818831076685aa0fb0134b22889618f6c145ca8e1f9f33111ab78",
-        "2e5ff9b63421c12a35353a9c3b3dbc0488408c399c223ab73256cc42fa65d6fe",
-        "3efb5cbb18c94c0b528a7d9e95744e26139f3570a6c7953ae6408f69d738526c",
-        "6c12d96e3fe09dd5dcefd24761bc7462ec6d6aa0b0d0f023a21e4b8597b646f7",
-        "89c84ecf8f927d1b22b3db7b28a9b6e62c89685d7049ef02f0cca90fc568d5ca",
-        "18306afaaad1912b368f483c770c507a94a2403f9bd2741691776220b38633e8",
-        "f454101eadaef46fd026c1a901bb7873bad61d7e7183a4c2e342e477e4e38733",
-    }
-)
+# Profile fingerprints whose start must carry a verified clean accounting
+# epoch (--accounting-epoch-bundle). None is registered today.
+_CLEAN_ACCOUNTING_REQUIRED_PROFILE_FINGERPRINTS: frozenset[str] = frozenset()
 
 
 def load_required_accounting_epoch(

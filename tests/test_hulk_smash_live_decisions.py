@@ -8,7 +8,7 @@ from hypervector.live.hulk_smash_live_decisions import (
 
 def test_completed_hulk_decisions_execute_only_exact_v3_short_selection() -> None:
     config = load_hulk_smash_live_config(
-        "tests/fixtures/profiles/hulk_smash_short_robust_v3_canary.toml",
+        "tests/fixtures/profiles/hulk_smash_short_robust.toml",
         mode="observe",
     )
     decisions = build_completed_hulk_decisions(
@@ -35,7 +35,7 @@ def test_completed_hulk_decisions_execute_only_exact_v3_short_selection() -> Non
 def test_bidirectional_mode_preserves_long_and_short_hulk_signals() -> None:
     """The shared cohort may use Hulk signals without the legacy short filter."""
     config = load_hulk_smash_live_config(
-        "tests/fixtures/profiles/hulk_smash_short_robust_v3_canary.toml",
+        "tests/fixtures/profiles/hulk_smash_short_robust.toml",
         mode="observe",
     )
 
@@ -58,7 +58,7 @@ def test_bidirectional_mode_preserves_long_and_short_hulk_signals() -> None:
 
 def test_completed_hulk_decisions_filter_history_and_incomplete_buckets() -> None:
     config = load_hulk_smash_live_config(
-        "tests/fixtures/profiles/hulk_smash_short_robust_v3_canary.toml",
+        "tests/fixtures/profiles/hulk_smash_short_robust.toml",
         mode="observe",
     )
     first = build_completed_hulk_decisions(
@@ -90,7 +90,7 @@ def test_completed_hulk_decisions_filter_history_and_incomplete_buckets() -> Non
 def test_hulk_readiness_does_not_treat_armed_squeeze_as_entry_trigger() -> None:
     """An armed squeeze without a release must report zero entry conditions."""
     config = load_hulk_smash_live_config(
-        "tests/fixtures/profiles/hulk_smash_short_robust_v3_canary.toml",
+        "tests/fixtures/profiles/hulk_smash_short_robust.toml",
         mode="observe",
     )
 

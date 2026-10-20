@@ -18,7 +18,6 @@ _HISTORICAL_MECHANISM_KEYS = (
     "risk_normalized_all_time_live_mechanism",
     "regime_conditioned_all_time_live_mechanism",
     "support_decay_all_time_live_mechanism",
-    "support_decay_retrace_all_time_live_mechanism",
 )
 _SCORECARD_EXECUTION_KEYS = (
     "execution_outcomes_identifiable",
@@ -233,12 +232,6 @@ def _copy_historical_sections(
         source,
         "entry_alignment_mechanism",
         current_keys=("provisional_open",),
-    )
-    _copy_historical_section(
-        target,
-        source,
-        "hulk_entry_quality_challenger",
-        current_keys=("open_trades", "open_observations"),
     )
     target_trade = _mutable_mapping(
         target.get("trade_reflections"), "trade reflections"

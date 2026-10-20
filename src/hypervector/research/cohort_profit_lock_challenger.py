@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from hypervector.research.cohort_live_audit_values import mapping, nonnegative_int, text
+from hypervector.research.cohort_live_audit_values import text
 from hypervector.research.cohort_profit_lock_lifecycle import (
     build_profit_lock_lifecycle_results,
     build_regime_conditioned_lifecycle_results,
@@ -26,16 +26,6 @@ _REGIME_OPPOSITION_THRESHOLD = -0.5
 _SUPPORT_DECAY_THRESHOLD = 0.25
 _MINUTE_MS = 60_000
 _POLICY_IDS = tuple(policy.policy_id for policy in POLICIES)
-_HIP3_SWING_POLICY_ID = "a60_floor15_trail30"
-_HIP3_SWING_HYPOTHESIS_ID = "hip3-swing-profit-lock"
-_HIP3_SWING_PREDECLARED_AT_UTC = "2026-08-09T04:04:06Z"
-_HIP3_SWING_ENTRY_CUTOFF_MS = 1_786_248_246_000
-_HIP3_SWING_SCOPE = {
-    "hip3_swing_ha_sp500_spcx_bidirectional_v2": frozenset({"xyz:SP500", "xyz:SPCX"}),
-    "hip3_swing_ha_sndk_gold_brent_bidirectional_v1": frozenset(
-        {"xyz:SNDK", "xyz:GOLD", "xyz:BRENTOIL"}
-    ),
-}
 
 
 def build_profit_lock_challenger(
@@ -74,65 +64,6 @@ def build_all_time_profit_lock_mechanism(
         contract=_contract(),
         limitations=_limitations(),
     )
-
-
-def build_hip3_swing_60_30_prospective_mechanism(
-    cohort_records: Sequence[Record],
-    asset_records: Mapping[str, Sequence[Record]],
-    reflected_trades: Sequence[Record],
-) -> dict[str, object]:
-    """Score only HIP-3 Swing/HA entries opened after the hypothesis cutoff."""
-    from hypervector.research.cohort_profit_lock_mechanism import (
-        build_normalized_profit_lock_report,
-    )
-
-    matching = [trade for trade in reflected_trades if _is_hip3_swing_trade(trade)]
-    prospective = [
-        trade
-        for trade in matching
-        if _entry_timestamp_ms(trade) >= _HIP3_SWING_ENTRY_CUTOFF_MS
-    ]
-    all_policy_results = build_profit_lock_lifecycle_results(
-        cohort_records, asset_records, prospective
-    )
-    results = [_only_hip3_swing_policy(row) for row in all_policy_results]
-    policy = next(
-        candidate
-        for candidate in POLICIES
-        if candidate.policy_id == _HIP3_SWING_POLICY_ID
-    )
-    report = build_normalized_profit_lock_report(
-        results,
-        policies=[policy_declaration(policy)],
-        contract=_contract(),
-        limitations=[
-            *_limitations(),
-            "the SPCX discovery lifecycle entered before the cutoff and is excluded",
-            "only exact HIP-3 Swing/HA provider-symbol mappings are in scope",
-            "the policy remains prospective evidence with no automatic promotion",
-        ],
-    )
-    report.update(
-        {
-            "mode": "hip3_swing_60_30_prospective_observer_v1",
-            "scope": "hip3_swing_entries_at_or_after_predeclared_cutoff",
-            "policy_origin": "hip3_swing_profit_lock_hypothesis_20260809",
-            "hypothesis_id": _HIP3_SWING_HYPOTHESIS_ID,
-            "predeclared_at_utc": _HIP3_SWING_PREDECLARED_AT_UTC,
-            "entry_cutoff_timestamp_ms": _HIP3_SWING_ENTRY_CUTOFF_MS,
-            "strategy_symbol_scope": _hip3_strategy_symbol_scope(),
-            "source_matching_lifecycles": len(matching),
-            "excluded_predeclaration_lifecycles": len(matching) - len(prospective),
-            "prospective_lifecycles": len(prospective),
-            "discovery_lifecycle_excluded": True,
-            "evidence_state": (
-                "prospective_resolutions_observed"
-                if prospective
-                else "awaiting_post_cutoff_resolution"
-            ),
-        }
-    )
-    return report
 
 
 def build_regime_conditioned_profit_lock_mechanism(
@@ -223,38 +154,6 @@ def _report(
         "latest_results": list(results[-_LATEST_LIMIT:]),
         "limitations": _limitations(),
     }
-
-
-def _is_hip3_swing_trade(trade: Record) -> bool:
-    strategy = text(trade.get("strategy_id"), "trade strategy")
-    symbol = text(trade.get("symbol"), "trade symbol")
-    return symbol in _HIP3_SWING_SCOPE.get(strategy, ())
-
-
-def _entry_timestamp_ms(trade: Record) -> int:
-    entry = mapping(trade.get("entry"), "trade entry")
-    return nonnegative_int(entry.get("venue_timestamp_ms"), "entry timestamp")
-
-
-def _only_hip3_swing_policy(result: Record) -> dict[str, object]:
-    policies = mapping(result.get("policies"), "profit-lock policies")
-    return {
-        **result,
-        "policies": {
-            _HIP3_SWING_POLICY_ID: mapping(
-                policies.get(_HIP3_SWING_POLICY_ID),
-                _HIP3_SWING_POLICY_ID,
-            )
-        },
-    }
-
-
-def _hip3_strategy_symbol_scope() -> list[str]:
-    return sorted(
-        f"{strategy}|{symbol}"
-        for strategy, symbols in _HIP3_SWING_SCOPE.items()
-        for symbol in symbols
-    )
 
 
 def _contract() -> dict[str, object]:

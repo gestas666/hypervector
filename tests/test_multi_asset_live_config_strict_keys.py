@@ -8,13 +8,13 @@ import pytest
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
 
-V91 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml")
-V93 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml")
+ADAPTIVE_EIGHT_ASSET = Path("tests/fixtures/profiles/adaptive_eight_asset.toml")
+EXIT_POLICY_V2 = Path("tests/fixtures/profiles/exit_policy_v2.toml")
 DONCHIAN = "hourly_donchian_20_10_atr20_bidirectional_v1"
 
 
 def _variant(tmp_path: Path, old: str, new: str, count: int = 1) -> Path:
-    text = V93.read_text()
+    text = EXIT_POLICY_V2.read_text()
     assert text.count(old) >= count
     target = tmp_path / "variant.toml"
     target.write_text(text.replace(old, new, count))
@@ -24,19 +24,23 @@ def _variant(tmp_path: Path, old: str, new: str, count: int = 1) -> Path:
 def _first_provider_line(key: str) -> str:
     return next(
         line
-        for line in V93.read_text().splitlines()
+        for line in EXIT_POLICY_V2.read_text().splitlines()
         if line.startswith("execution = ") and key in line
     )
 
 
-def test_checked_in_v91_and_v93_keep_their_fingerprints() -> None:
+def test_fixture_profiles_keep_their_fingerprints() -> None:
     assert (
-        load_multi_asset_live_config(V91, mode="observe").profile_fingerprint
-        == "00ca7e008e8b2ec7cbeac4b9541cabf39a8576a23769b92a169e984616fe8d8c"
+        load_multi_asset_live_config(
+            ADAPTIVE_EIGHT_ASSET, mode="observe"
+        ).profile_fingerprint
+        == "217720aba4e61b7001471258522f03bb02cac8f42b660ba19a049981aa4d7ae6"
     )
     assert (
-        load_multi_asset_live_config(V93, mode="observe").profile_fingerprint
-        == "33131f1898d86dda4f5cab2b6091748144f6a81da29b9c9464a644b330dc3e05"
+        load_multi_asset_live_config(
+            EXIT_POLICY_V2, mode="observe"
+        ).profile_fingerprint
+        == "b470ca1199fd14913af8e7b1c0d022b1bd3f1a24a263a041b5ad84dc542278c9"
     )
 
 
@@ -105,23 +109,22 @@ def test_unknown_key_refusal_names_its_table_and_key(
     assert table in str(refused.value) and key in str(refused.value)
 
 
-# The retained cohort profiles: the live V95 chain (V95, its V94 predecessor and
-# the V95->V94 rollback). The two canaries other tests mutate as templates are
-# test fixtures now.
-RETAINED_COHORT_PROFILES = frozenset(
+# The profile chain: profile A, its successor B and the authored B -> A rollback.
+CHAIN_PROFILES = frozenset(
     {
-        "multi_asset_growth_first_5000_review_fixes_v95.toml",
-        "multi_asset_growth_first_5000_review_actions_v94.toml",
-        "v95-to-v94-rollback-20260927-v1.toml",
+        "profile_a.toml",
+        "profile_b.toml",
+        "rollback_b_to_a.toml",
     }
 )
 TEMPLATE_FIXTURE_PROFILES = frozenset(
     {
-        "multi_asset_bidirectional_canary.toml",
-        "multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+        "cohort_base.toml",
+        "complete_portfolio.toml",
     }
 )
 FIXTURE_PROFILES = Path("tests/fixtures/profiles")
+CHAIN = Path("tests/fixtures/cohort_chain")
 
 
 def _load_every_cohort_profile(directory: Path) -> set[str]:
@@ -137,11 +140,14 @@ def _load_every_cohort_profile(directory: Path) -> set[str]:
 
 
 def test_every_checked_in_cohort_profile_still_loads() -> None:
-    """Strict-key refusal accepts every retained profile, including V95's chain."""
-    assert RETAINED_COHORT_PROFILES <= _load_every_cohort_profile(Path("configs"))
+    """Strict-key refusal accepts every checked-in profile and the profile chain."""
+    _load_every_cohort_profile(Path("configs"))
+    assert _load_every_cohort_profile(CHAIN) == CHAIN_PROFILES
 
 
 def test_every_fixture_cohort_profile_still_loads() -> None:
-    """Historical profiles kept as test fixtures stay valid under strict keys."""
+    """Profiles kept as test fixtures stay valid under strict keys."""
     loaded = _load_every_cohort_profile(FIXTURE_PROFILES)
-    assert {V91.name, V93.name} | TEMPLATE_FIXTURE_PROFILES <= loaded
+    assert {ADAPTIVE_EIGHT_ASSET.name, EXIT_POLICY_V2.name} | (
+        TEMPLATE_FIXTURE_PROFILES
+    ) <= loaded

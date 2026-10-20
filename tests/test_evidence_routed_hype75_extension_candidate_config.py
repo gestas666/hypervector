@@ -7,9 +7,9 @@ from pathlib import Path
 
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
-_BASE = Path("tests/fixtures/profiles/multi_asset_bidirectional_range_retired_hype75_candidate.toml")
+_BASE = Path("tests/fixtures/profiles/range_retired_hype75.toml")
 _CANDIDATE = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_evidence_routed_hype75_extension_candidate.toml"
+    "tests/fixtures/profiles/evidence_routed_hype75_extension.toml"
 )
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _HYPE = "hype_breakout_onset_bidirectional_v1"
@@ -23,7 +23,7 @@ def test_candidate_changes_only_provider_execution_scope() -> None:
     base_providers = {row.strategy_id: row for row in base.providers}
     providers = {row.strategy_id: row for row in candidate.providers}
 
-    assert candidate.profile_id == "multi_asset_bidirectional_evidence_routed_hype75_v9"
+    assert candidate.profile_id == "fixture_evidence_routed_hype75_extension"
     assert candidate.symbols == base.symbols
     assert candidate.maximum_positions == base.maximum_positions
     assert candidate.assets == tuple(

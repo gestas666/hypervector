@@ -64,7 +64,7 @@ from hypervector.live.research_pending_market_observer import (
 from hypervector.live.zec_donchian_provider import ZEC_DONCHIAN_LONG_STRATEGY
 from hypervector.live.hourly_price_provider import HOURLY_PRICE_STRATEGIES
 from hypervector.live.hourly_price_contract import validate_hourly_price_provider
-from hypervector.live.v79_provider_validation import (
+from hypervector.live.fixed_route_provider_validation import (
     validate_directional_range,
     validate_spcx_cash_session_long,
     validate_zec_donchian_long,

@@ -18,7 +18,7 @@ from hypervector.live.multi_asset_live_config import (
 )
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
 
-_V57 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_spcx_short_containment_v57.toml")
+_SPCX_CONTAINMENT = Path("tests/fixtures/profiles/spcx_short_containment.toml")
 
 
 def _alignment(config: MultiAssetLiveConfig) -> StrategyProviderConfig:
@@ -40,9 +40,9 @@ def _replace_alignment(
     return replace(config, providers=providers)
 
 
-def test_v57_hype_alignment_exact_contract_is_valid() -> None:
-    """The current v57 HYPE alignment contract remains loadable unchanged."""
-    config = load_multi_asset_live_config(_V57, mode="observe")
+def test_hype_alignment_exact_contract_is_valid() -> None:
+    """The current HYPE alignment contract remains loadable unchanged."""
+    config = load_multi_asset_live_config(_SPCX_CONTAINMENT, mode="observe")
 
     validate_multi_asset_live_config(config)
 
@@ -61,11 +61,11 @@ def test_v57_hype_alignment_exact_contract_is_valid() -> None:
         {"maximum_hold_evidence_maximum_age_seconds": 61},
     ],
 )
-def test_v57_hype_alignment_rejects_mutated_exit_contract(
+def test_hype_alignment_rejects_mutated_exit_contract(
     execution_changes: dict[str, object],
 ) -> None:
     """Stop, hold, and freshness drift cannot retain the frozen provider ID."""
-    config = load_multi_asset_live_config(_V57, mode="observe")
+    config = load_multi_asset_live_config(_SPCX_CONTAINMENT, mode="observe")
     provider = _alignment(config)
     mutated = replace(
         provider,

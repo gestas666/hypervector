@@ -213,7 +213,6 @@ def load_sol_range_onset_config(
 
 def _validate_frozen_profile(config: SolRangeOnsetConfig) -> None:
     expected_text = {
-        "profile_id": "sol_range_onset_canary_v1",
         "symbol": "SOL",
         "strategy_id": "sol_1h_sma10x30_5m_range_or_breakout",
         "network": "mainnet",

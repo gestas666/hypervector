@@ -550,17 +550,17 @@
     },
     "source_references": [
       {
-        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_acquisition_replay_20260912_v1/native/cold_poll.json",
+        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/acquisition_replay_20260912_v1/native/cold_poll.json",
         "sha256": "ef6655ee048dec81db7953b2893c8350ad9dfa75b6aeda70ef7070d8d4a1ffe0",
         "bytes": 558578
       },
       {
-        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_acquisition_replay_20260912_v1/reproduction/cold_poll.json",
+        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/acquisition_replay_20260912_v1/reproduction/cold_poll.json",
         "sha256": "ef6655ee048dec81db7953b2893c8350ad9dfa75b6aeda70ef7070d8d4a1ffe0",
         "bytes": 558578
       },
       {
-        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_acquisition_replay_20260912_v1/release/native/cold_poll.json",
+        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/acquisition_replay_20260912_v1/release/native/cold_poll.json",
         "sha256": "ef6655ee048dec81db7953b2893c8350ad9dfa75b6aeda70ef7070d8d4a1ffe0",
         "bytes": 558578
       }
@@ -1712,17 +1712,17 @@
     },
     "source_references": [
       {
-        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_acquisition_replay_20260912_v1/native/warm1_poll.json",
+        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/acquisition_replay_20260912_v1/native/warm1_poll.json",
         "sha256": "950aa5511bc6ad8d7fac2785d116b64ffea2041610c28883263562ee8fc4471e",
         "bytes": 576915
       },
       {
-        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_acquisition_replay_20260912_v1/reproduction/warm1_poll.json",
+        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/acquisition_replay_20260912_v1/reproduction/warm1_poll.json",
         "sha256": "950aa5511bc6ad8d7fac2785d116b64ffea2041610c28883263562ee8fc4471e",
         "bytes": 576915
       },
       {
-        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_acquisition_replay_20260912_v1/release/native/warm1_poll.json",
+        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/acquisition_replay_20260912_v1/release/native/warm1_poll.json",
         "sha256": "950aa5511bc6ad8d7fac2785d116b64ffea2041610c28883263562ee8fc4471e",
         "bytes": 576915
       }
@@ -2873,17 +2873,17 @@
     },
     "source_references": [
       {
-        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_acquisition_replay_20260912_v1/native/warm2_poll.json",
+        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/acquisition_replay_20260912_v1/native/warm2_poll.json",
         "sha256": "17384c4cfc5a9d9b2cdac052ba9f0acf5fd0e0c77376eff7968d5377ea1a262b",
         "bytes": 577000
       },
       {
-        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_acquisition_replay_20260912_v1/reproduction/warm2_poll.json",
+        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/acquisition_replay_20260912_v1/reproduction/warm2_poll.json",
         "sha256": "17384c4cfc5a9d9b2cdac052ba9f0acf5fd0e0c77376eff7968d5377ea1a262b",
         "bytes": 577000
       },
       {
-        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_acquisition_replay_20260912_v1/release/native/warm2_poll.json",
+        "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/acquisition_replay_20260912_v1/release/native/warm2_poll.json",
         "sha256": "17384c4cfc5a9d9b2cdac052ba9f0acf5fd0e0c77376eff7968d5377ea1a262b",
         "bytes": 577000
       }

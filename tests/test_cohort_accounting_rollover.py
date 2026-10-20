@@ -1,4 +1,4 @@
-"""Tests for the recoverable v39-to-growth accounting boundary."""
+"""Tests for the recoverable prior-to-growth accounting boundary."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from hypervector.live import cohort_accounting_rollover
 from hypervector.live.cohort_accounting_rollover import (
     build_accounting_rollover_manifest,
     load_accounting_rollover_manifest,
@@ -23,29 +24,17 @@ from hypervector.live.multi_asset_live_config import (
 )
 
 _PRIOR_PATH = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml"
+    "tests/fixtures/profiles/hype_compression_range_retired_current.toml"
 )
-_NEXT_PATH = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_repaired_candidate_v49.toml")
-_SIX_ASSET_PATH = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_six_asset_candidate_v50.toml"
+_NEXT_PATH = Path("tests/fixtures/profiles/repaired_b.toml")
+_PARENT_EPOCH_PATH = Path(
+    "tests/fixtures/profiles/eight_asset_incremental.toml"
 )
-_PROFIT_PROTECTED_PATH = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml"
-)
-_EVIDENCE_BOUND_PATH = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_evidence_bound_successor_v52.toml"
-)
-_V58_PATH = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml"
-)
-_V59_PATH = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_eight_asset_sp500_short_containment_candidate_v59.toml"
-)
-_V79_PATH = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_seven_asset_all_active_v79.toml"
+_CONTINUED_PATH = Path(
+    "tests/fixtures/profiles/eight_asset_sp500_short_containment.toml"
 )
 _NOW = datetime(2026, 8, 12, 23, 0, tzinfo=UTC)
-_V58_EPOCH_START_MS = 1_787_164_729_837
+_PARENT_EPOCH_START_MS = 1_787_164_729_837
 
 
 def _configs() -> tuple[MultiAssetLiveConfig, MultiAssetLiveConfig]:
@@ -131,7 +120,7 @@ def test_rollover_manifest_binds_zero_state_equity_and_preserved_history() -> No
         _checkpoint(prior),
         _preflight(prior, successor),
         _backup(prior, successor),
-        epoch_id="growth_5000_v49",
+        epoch_id="growth_5000_clean",
         backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
         checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
         preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
@@ -139,7 +128,7 @@ def test_rollover_manifest_binds_zero_state_equity_and_preserved_history() -> No
     )
 
     epoch = report["accounting_epoch"]
-    assert epoch["epoch_id"] == "growth_5000_v49"
+    assert epoch["epoch_id"] == "growth_5000_clean"
     assert epoch["profile_fingerprint"] == successor.profile_fingerprint
     assert epoch["start_venue_timestamp_ms"] == int(_NOW.timestamp() * 1_000)
     assert report["acceptance"] == {
@@ -167,7 +156,7 @@ def test_rollover_rejects_inconsistent_observed_venue_equity() -> None:
             _checkpoint(prior),
             preflight,
             _backup(prior, successor),
-            epoch_id="growth_5000_v49",
+            epoch_id="growth_5000_clean",
             backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
             checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
             preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
@@ -187,7 +176,7 @@ def test_rollover_rejects_nonflat_checkpoint() -> None:
             checkpoint,
             _preflight(prior, successor),
             _backup(prior, successor),
-            epoch_id="growth_5000_v49",
+            epoch_id="growth_5000_clean",
             backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
             checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
             preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
@@ -208,7 +197,7 @@ def test_rollover_rejects_open_or_unreconciled_preflight() -> None:
             _checkpoint(prior),
             preflight,
             _backup(prior, successor),
-            epoch_id="growth_5000_v49",
+            epoch_id="growth_5000_clean",
             backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
             checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
             preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
@@ -228,7 +217,7 @@ def test_rollover_rejects_wrong_preserved_profile_identity() -> None:
             _checkpoint(prior),
             _preflight(prior, successor),
             backup,
-            epoch_id="growth_5000_v49",
+            epoch_id="growth_5000_clean",
             backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
             checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
             preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
@@ -252,7 +241,7 @@ def _published_rollover(tmp_path: Path) -> tuple[Path, MultiAssetLiveConfig]:
         _checkpoint(prior),
         _preflight(prior, successor),
         _backup(prior, successor),
-        epoch_id="growth_5000_v49",
+        epoch_id="growth_5000_clean",
         backup_bundle_evidence=_raw_evidence(str(backup), backup.read_bytes()),
         checkpoint_evidence=_raw_evidence("final_checkpoint.json", checkpoint),
         preflight_evidence=_raw_evidence("final_preflight.json", preflight),
@@ -271,15 +260,15 @@ def _raw_evidence(path: str, raw: bytes) -> dict[str, object]:
 def _published_continuation(
     tmp_path: Path,
 ) -> tuple[Path, MultiAssetLiveConfig, MultiAssetLiveConfig]:
-    prior = load_multi_asset_live_config(_V58_PATH, mode="observe")
-    successor = load_multi_asset_live_config(_V59_PATH, mode="observe")
+    prior = load_multi_asset_live_config(_PARENT_EPOCH_PATH, mode="observe")
+    successor = load_multi_asset_live_config(_CONTINUED_PATH, mode="observe")
     bundle = tmp_path / "continuation"
     bundle.mkdir()
     checkpoint = _checkpoint(prior)
     parent_epoch = {
-        "epoch_id": "v58_eight_asset_incremental_8a04636c_r2",
+        "epoch_id": "eight_asset_incremental_parent",
         "profile_fingerprint": prior.profile_fingerprint,
-        "start_venue_timestamp_ms": _V58_EPOCH_START_MS,
+        "start_venue_timestamp_ms": _PARENT_EPOCH_START_MS,
     }
     checkpoint["audit"]["portfolio_archive"] = {
         "accounting_epoch": parent_epoch,
@@ -297,7 +286,7 @@ def _published_continuation(
         checkpoint,
         _preflight(prior, successor),
         _backup(prior, successor),
-        epoch_id="v59_sp500_short_containment_c057882f",
+        epoch_id="sp500_short_containment_continued",
         backup_bundle_evidence=_raw_evidence(str(backup), backup.read_bytes()),
         checkpoint_evidence=_raw_evidence("final_checkpoint.json", final_checkpoint),
         preflight_evidence=_raw_evidence("final_preflight.json", final_preflight),
@@ -335,7 +324,7 @@ def test_rollover_loader_returns_exact_successor_accounting_epoch(
 
     epoch = load_accounting_rollover_manifest(bundle, successor)
 
-    assert epoch.epoch_id == "growth_5000_v49"
+    assert epoch.epoch_id == "growth_5000_clean"
     assert epoch.profile_fingerprint == successor.profile_fingerprint
     assert epoch.start_venue_timestamp_ms == int(_NOW.timestamp() * 1_000)
 
@@ -376,7 +365,7 @@ def test_rollover_loader_returns_exact_continued_profile_lineage(
     epoch = load_accounting_rollover_manifest(bundle, successor)
 
     assert epoch.profile_fingerprint == successor.profile_fingerprint
-    assert epoch.start_venue_timestamp_ms == _V58_EPOCH_START_MS
+    assert epoch.start_venue_timestamp_ms == _PARENT_EPOCH_START_MS
     assert epoch.included_profile_fingerprints == (
         prior.profile_fingerprint,
         successor.profile_fingerprint,
@@ -393,48 +382,16 @@ def test_rollover_loader_rejects_changed_parent_epoch_evidence(tmp_path: Path) -
         load_accounting_rollover_manifest(bundle, successor)
 
 
-def test_v49_live_boundary_requires_the_clean_epoch_bundle() -> None:
+def test_declared_live_boundary_requires_the_clean_epoch_bundle(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A profile that declares the rollover cannot inherit prior counters."""
     _, successor = _configs()
-
-    with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
-        load_required_accounting_epoch(None, successor)
-
-
-def test_v50_live_boundary_requires_its_own_clean_epoch_bundle() -> None:
-    """The six-asset first-live profile cannot inherit v49 or legacy history."""
-    successor = load_multi_asset_live_config(_SIX_ASSET_PATH, mode="observe")
-
-    with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
-        load_required_accounting_epoch(None, successor)
-
-
-def test_v51_live_boundary_requires_its_own_clean_epoch_bundle() -> None:
-    """The profit-protected successor cannot inherit any prior reporting epoch."""
-    successor = load_multi_asset_live_config(_PROFIT_PROTECTED_PATH, mode="observe")
-
-    with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
-        load_required_accounting_epoch(None, successor)
-
-
-def test_v52_live_boundary_requires_its_own_clean_epoch_bundle() -> None:
-    """The evidence-bound successor cannot inherit v51 accounting history."""
-    successor = load_multi_asset_live_config(_EVIDENCE_BOUND_PATH, mode="observe")
-
-    with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
-        load_required_accounting_epoch(None, successor)
-
-
-def test_v59_live_boundary_requires_its_own_continuation_bundle() -> None:
-    """The contained successor cannot silently discard the active $5k epoch."""
-    successor = load_multi_asset_live_config(_V59_PATH, mode="observe")
-
-    with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
-        load_required_accounting_epoch(None, successor)
-
-
-def test_v79_live_boundary_requires_its_own_clean_epoch_bundle() -> None:
-    """The seven-active-asset TUI cannot silently inherit prior counters."""
-    successor = load_multi_asset_live_config(_V79_PATH, mode="observe")
+    monkeypatch.setattr(
+        cohort_accounting_rollover,
+        "_CLEAN_ACCOUNTING_REQUIRED_PROFILE_FINGERPRINTS",
+        frozenset({successor.profile_fingerprint}),
+    )
 
     with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
         load_required_accounting_epoch(None, successor)

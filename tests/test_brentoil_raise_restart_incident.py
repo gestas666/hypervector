@@ -1,6 +1,6 @@
-"""Replay the 2026-09-24 V93 BRENTOIL raise-recovery crash loop from its recorded ledger.
+"""Replay the 2026-09-24 BRENTOIL raise-recovery crash loop from its recorded ledger.
 
-The fixture holds the recorded rows of profile ``d263b135…`` (every control row of
+The fixture holds the recorded rows of profile ``60341adb…`` (every control row of
 the lifecycle plus the complete raise-era tail, and one foreign-profile row), read
 only from ``data/live/bidirectional_cohort/xyz:brentoil.jsonl``. Two launches each
 journaled a ``raise_protective_stop`` intent and crashed before any venue call; the
@@ -50,10 +50,10 @@ from hypervector.live.sol_range_onset_startup import (
 from hypervector.live.sol_range_onset_state import SolLiveState, SolLiveStateMachine
 
 FIXTURE = (
-    Path(__file__).parent / "fixtures" / "brentoil_v93_raise_restart_records.jsonl"
+    Path(__file__).parent / "fixtures" / "brentoil_raise_restart_records.jsonl"
 )
-PROFILE = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml")
-FINGERPRINT = "d263b1355a219024dfe0ede088a482b8bf8a293661ab53ae42049029bf96a1e7"
+PROFILE = Path("tests/fixtures/profiles/exit_policy_v2.toml")
+FINGERPRINT = "60341adb1a2aaac37912d38dac5931608df211cc5a45013a220fb350f2312f33"
 ENTRY_OID = 555018656094
 STOP_OID = 555018726035
 RAISE_IDS = (

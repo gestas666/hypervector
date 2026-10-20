@@ -1,4 +1,4 @@
-"""Causal tests for the V75 Donchian/ATR breakout candidate."""
+"""Causal tests for the Donchian/ATR breakout candidate."""
 
 from __future__ import annotations
 

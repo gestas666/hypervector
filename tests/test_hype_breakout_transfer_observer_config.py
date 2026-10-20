@@ -14,7 +14,7 @@ from hypervector.live.multi_asset_intent_poller import (
     ConfiguredMultiAssetIntentPoller,
 )
 
-_PROFILE = Path("tests/fixtures/profiles/btc_hype_breakout_transfer_v1.toml")
+_PROFILE = Path("tests/fixtures/profiles/btc_hype_breakout_transfer.toml")
 
 
 def test_transfer_profile_is_btc_only_and_execution_incapable() -> None:

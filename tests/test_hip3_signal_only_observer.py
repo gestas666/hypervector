@@ -95,11 +95,11 @@ def test_legacy_default_preserves_auxiliary_capture_requirement(tmp_path: Path) 
     assert source.timeframes == ["1m"]
 
 
-def test_only_v87_candidate_removes_unused_spcx_auxiliary_dependency() -> None:
+def test_only_signal_only_candidate_removes_unused_spcx_auxiliary_dependency() -> None:
     """The proposed deployment declares the reduced source dependency explicitly."""
     names = (
-        "multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86",
-        "multi_asset_growth_first_5000_seven_asset_sndk_durable_onset_candidate_v87",
+        "seven_asset_failed_routes_retired",
+        "seven_asset_sndk_durable_onset",
     )
     commands = [
         pressure_dependency_commands(
@@ -131,7 +131,7 @@ def test_configured_profit_lock_keeps_its_auxiliary_dependency() -> None:
     """A future exit policy cannot silently lose the minute source it consumes."""
     config = load_multi_asset_live_config(
         _FIXTURE_PROFILES
-        / "multi_asset_growth_first_5000_seven_asset_sndk_durable_onset_candidate_v87.toml",
+        / "seven_asset_sndk_durable_onset.toml",
         mode="observe",
     )
     providers = tuple(
@@ -165,9 +165,9 @@ def test_dependency_reuse_rejects_wrong_capture_mode(
     from hypervector.live.hip3_fresh15_journal_contracts import DEFAULT_OBSERVER_STATES
 
     name = (
-        "multi_asset_growth_first_5000_seven_asset_sndk_durable_onset_candidate_v87"
+        "seven_asset_sndk_durable_onset"
         if candidate
-        else "multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86"
+        else "seven_asset_failed_routes_retired"
     )
     config = load_multi_asset_live_config(
         _FIXTURE_PROFILES / f"{name}.toml", mode="observe"

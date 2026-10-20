@@ -17,9 +17,9 @@ from hypervector.research.cohort_rolling_checkpoint import (
     publish_rolling_checkpoint,
 )
 
-_EPOCH = CohortAccountingEpoch("growth_5000_v49", "a" * 64, 1_786_579_200_000)
+_EPOCH = CohortAccountingEpoch("growth_5000_a", "a" * 64, 1_786_579_200_000)
 _LINEAGE_EPOCH = CohortAccountingEpoch(
-    "growth_5000_v58_v59",
+    "growth_5000_a_b",
     "b" * 64,
     1_786_164_729_837,
     included_profile_fingerprints=("a" * 64, "b" * 64),
@@ -72,7 +72,7 @@ def test_accounting_epoch_worker_args_preserve_profile_lineage() -> None:
     """The isolated worker must receive every exact campaign fingerprint."""
     assert accounting_epoch_worker_args(_LINEAGE_EPOCH) == [
         "--accounting-epoch-id",
-        "growth_5000_v58_v59",
+        "growth_5000_a_b",
         "--accounting-epoch-profile-fingerprint",
         "b" * 64,
         "--accounting-epoch-start-ms",
@@ -99,8 +99,8 @@ def test_rolling_publish_does_not_fall_back_to_unscoped_history(
         publish,
         tmp_path / "ledger",
         checkpoint,
-        requested_run_id="run-v49",
-        config_path=Path("v49.toml"),
+        requested_run_id="run-a",
+        config_path=Path("profile_a.toml"),
         once=True,
         venue_portfolio=None,
         opportunity_matrix_path=None,

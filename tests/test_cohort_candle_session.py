@@ -21,7 +21,7 @@ from hypervector.live.multi_asset_live_config import (
 )
 from hypervector.runtime_env import CredentialPresence
 
-PROFILE = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml")
+PROFILE = Path("tests/fixtures/profiles/noncrypto_live.toml")
 REQUESTS = tuple(
     (symbol, "1m", 5 / 1440, cutoff)
     for cutoff in (1000, 2000)

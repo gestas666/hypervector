@@ -152,18 +152,16 @@ def test_flat_run_preserves_readiness_health_and_zero_trade_evidence() -> None:
         "estimated_minus_actual_net_usd": 0,
         "profit_factor": None,
     }
-    assert "support_decay_all_time_live_mechanism" not in profit_lock
-    prospective_hip3 = profit_lock.get("hip3_swing_60_30_prospective_mechanism")
-    assert isinstance(prospective_hip3, dict)
-    assert prospective_hip3["entry_cutoff_timestamp_ms"] == 1_786_248_246_000
-    assert prospective_hip3["prospective_lifecycles"] == 0
-    assert prospective_hip3["evidence_state"] == "awaiting_post_cutoff_resolution"
-    assert prospective_hip3["contract"]["execution_authority"] == "none"
+    support_decay = profit_lock.get("support_decay_all_time_live_mechanism")
+    assert isinstance(support_decay, dict)
+    assert support_decay["contract"]["execution_authority"] == "none"
+    assert support_decay["contract"]["automatic_promotion"] is False
+    assert support_decay["latest_results"] == []
     assert report["execution"]["friction_parity"]["summary"] == {
         "provider_symbols": 8,
-        "runtime_shape_aligned": 8,
+        "runtime_shape_aligned": 0,
         "contract_mismatch": 0,
-        "unsupported_contract": 0,
+        "unsupported_contract": 8,
         "runtime_contract_missing": 0,
         "provider_symbols_with_entry_fills": 0,
     }
@@ -404,13 +402,16 @@ def test_closed_trade_is_attributed_by_provider_side_and_realized_friction() -> 
         conditioned["summary_by_policy"]["a25_floor15_trail10"]["eligible_lifecycles"]
         == 1
     )
-    assert "support_decay_all_time_live_mechanism" not in profit_lock
-    retrace = profit_lock.get("support_decay_retrace_all_time_live_mechanism")
-    assert isinstance(retrace, dict)
-    assert retrace["contract"]["execution_authority"] == "none"
-    assert retrace["contract"]["automatic_promotion"] is False
-    assert retrace["strategy_scope"] == "hype_breakout_onset_bidirectional_v1"
-    assert retrace["source_lifecycles"] == 0
+    support_decay = profit_lock.get("support_decay_all_time_live_mechanism")
+    assert isinstance(support_decay, dict)
+    assert support_decay["contract"]["execution_authority"] == "none"
+    assert support_decay["contract"]["automatic_promotion"] is False
+    assert support_decay["activation_contract"]["source"] == (
+        "causal_regime_support_decay_persistence_v1"
+    )
+    support_summary = support_decay["summary_by_policy"]["a25_floor15_trail10"]
+    assert support_summary["eligible_lifecycles"] == 0
+    assert support_summary["withheld_lifecycles"] == 1
     entry_alignment = report["entry_alignment_mechanism"]
     assert entry_alignment["contract"]["execution_authority"] == "none"
     assert entry_alignment["closed_trades"] == 1

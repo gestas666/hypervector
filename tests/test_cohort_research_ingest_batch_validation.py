@@ -52,7 +52,7 @@ def _event(payload: dict[str, object]) -> dict[str, object]:
         "effective_mode": "LIVE ARMED",
         "live_armed": True,
         "execution_authority": "hyperliquid_mainnet",
-        "profile_id": "cohort-v64",
+        "profile_id": "cohort-a",
         "profile_fingerprint": "a" * 64,
         "run_fingerprint": "b" * 64,
         "run_id": "run-current",

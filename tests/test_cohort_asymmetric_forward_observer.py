@@ -8,8 +8,8 @@ from hypervector.research.cohort_asymmetric_forward_observer import (
     build_asymmetric_forward_observer,
 )
 
-_PROFILE = "v25-profile-fingerprint"
-_RUN_ID = "v25-live-run"
+_PROFILE = "current-profile-fingerprint"
+_RUN_ID = "current-live-run"
 _CUTOFF_MS = 1_000_000
 
 

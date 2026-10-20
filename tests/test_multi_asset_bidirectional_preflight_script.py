@@ -22,15 +22,13 @@ _SCRIPT = (
     Path(__file__).parents[1]
     / "src/hypervector/operations/multi_asset_bidirectional_preflight.py"
 )
-_V95 = Path("configs/multi_asset_growth_first_5000_review_fixes_v95.toml")
-_V94 = Path("configs/multi_asset_growth_first_5000_review_actions_v94.toml")
-_V95_TO_V94_ROLLBACK = Path("configs/v95-to-v94-rollback-20260927-v1.toml")
-# Historical profile kept only as a fixture: it routes the HIP-3 fresh15 v3
-# provider whose observer dependency the preflight must enforce.
-_V51 = Path(
-    "tests/fixtures/profiles/"
-    "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml"
-)
+_CHAIN = Path("tests/fixtures/cohort_chain")
+_PROFILE_A = _CHAIN / "profile_a.toml"
+_PROFILE_B = _CHAIN / "profile_b.toml"
+_ROLLBACK_B_TO_A = _CHAIN / "rollback_b_to_a.toml"
+# Routes the HIP-3 fresh15 v3 provider whose observer dependency the preflight
+# must enforce.
+_OBSERVER_PROFILE = Path("tests/fixtures/profiles/six_asset_profit_lock.toml")
 
 
 def _load_module() -> ModuleType:
@@ -98,10 +96,10 @@ def test_command_has_no_live_flags_and_writes_atomic_report(
     module = _load_module()
     checkpoint = tmp_path / "checkpoint.json"
     output = tmp_path / "preflight.json"
-    _checkpoint(checkpoint, _V95, open_symbol="xyz:SNDK")
+    _checkpoint(checkpoint, _PROFILE_B, open_symbol="xyz:SNDK")
     readers = {
         symbol: object()
-        for symbol in load_multi_asset_live_config(_V95, mode="observe").symbols
+        for symbol in load_multi_asset_live_config(_PROFILE_B, mode="observe").symbols
     }
     monkeypatch.setattr(module, "_readers", lambda config: readers)
 
@@ -119,9 +117,9 @@ def test_command_has_no_live_flags_and_writes_atomic_report(
     args = module.build_parser().parse_args(
         [
             "--config",
-            str(_V95),
+            str(_PROFILE_B),
             "--active-config",
-            str(_V95),
+            str(_PROFILE_B),
             "--checkpoint",
             str(checkpoint),
             "--output",
@@ -147,7 +145,7 @@ def test_nonflat_preflight_returns_distinct_not_ready_status(
     """A valid but non-flat report is not confused with a technical crash."""
     module = _load_module()
     checkpoint = tmp_path / "checkpoint.json"
-    _checkpoint(checkpoint, _V95, open_symbol="BTC")
+    _checkpoint(checkpoint, _PROFILE_B, open_symbol="BTC")
     monkeypatch.setattr(
         module,
         "_readers",
@@ -163,9 +161,9 @@ def test_nonflat_preflight_returns_distinct_not_ready_status(
     args = module.build_parser().parse_args(
         [
             "--config",
-            str(_V95),
+            str(_PROFILE_B),
             "--active-config",
-            str(_V95),
+            str(_PROFILE_B),
             "--checkpoint",
             str(checkpoint),
         ]
@@ -179,14 +177,14 @@ def test_changed_profile_without_approval_is_visible_but_has_no_authority(
 ) -> None:
     """Public preflight distinguishes technical checks from live approval."""
     module = _load_module()
-    active = load_multi_asset_live_config(_V94, mode="observe")
-    raw = _V95.read_text(encoding="utf-8")
+    active = load_multi_asset_live_config(_PROFILE_A, mode="observe")
+    raw = _PROFILE_B.read_text(encoding="utf-8")
     approval_line = next(
         line
         for line in raw.splitlines(keepends=True)
         if line.startswith("transition_approval =")
     )
-    unapproved = tmp_path / "v95_without_approval.toml"
+    unapproved = tmp_path / "profile_b_without_approval.toml"
     unapproved.write_text(raw.replace(approval_line, "", 1), encoding="utf-8")
     candidate = load_multi_asset_live_config(unapproved, mode="observe")
     assert candidate.transition_approval is None
@@ -201,14 +199,14 @@ def test_changed_profile_without_approval_is_visible_but_has_no_authority(
 
 @pytest.mark.parametrize(
     ("active_path", "candidate_path"),
-    [(_V94, _V95), (_V95, _V95_TO_V94_ROLLBACK)],
-    ids=["v94-to-v95", "v95-to-v94-rollback"],
+    [(_PROFILE_A, _PROFILE_B), (_PROFILE_B, _ROLLBACK_B_TO_A)],
+    ids=["a-to-b", "b-to-a-rollback"],
 )
-def test_real_live_approvals_are_projected_without_authority(
+def test_chain_approvals_are_projected_without_authority(
     active_path: Path,
     candidate_path: Path,
 ) -> None:
-    """The kept forward and rollback approvals pass yet grant no authority."""
+    """The forward and rollback chain approvals pass yet grant no authority."""
     module = _load_module()
     active = load_multi_asset_live_config(active_path, mode="observe")
     candidate = load_multi_asset_live_config(candidate_path, mode="observe")
@@ -260,14 +258,14 @@ def test_open_checkpoint_without_position_evidence_fails_closed() -> None:
         module._asset_expectation("ETH", opened, {})
 
 
-def test_v51_stale_index_observer_aborts_before_venue_reads(
+def test_stale_index_observer_aborts_before_venue_reads(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The final launch preflight must enforce its observer dependency."""
     module = _load_module()
     checkpoint = tmp_path / "checkpoint.json"
-    _checkpoint(checkpoint, _V95)
+    _checkpoint(checkpoint, _PROFILE_B)
     venue_read = False
 
     def reject_observer(_observed_at: object) -> None:
@@ -283,9 +281,9 @@ def test_v51_stale_index_observer_aborts_before_venue_reads(
     args = module.build_parser().parse_args(
         [
             "--config",
-            str(_V51),
+            str(_OBSERVER_PROFILE),
             "--active-config",
-            str(_V95),
+            str(_PROFILE_B),
             "--checkpoint",
             str(checkpoint),
         ]
@@ -303,8 +301,8 @@ def test_additive_candidate_reconciles_new_asset_outside_active_checkpoint(
     """A new flat asset must use its ledger plus venue instead of being impossible."""
     module = _load_module()
     checkpoint = tmp_path / "checkpoint.json"
-    _checkpoint(checkpoint, _V95)
-    candidate = load_multi_asset_live_config(_V95_TO_V94_ROLLBACK, mode="observe")
+    _checkpoint(checkpoint, _PROFILE_B)
+    candidate = load_multi_asset_live_config(_ROLLBACK_B_TO_A, mode="observe")
     readers = {symbol: object() for symbol in candidate.symbols}
     monkeypatch.setattr(module, "_readers", lambda config: readers)
     monkeypatch.setattr(
@@ -331,9 +329,9 @@ def test_additive_candidate_reconciles_new_asset_outside_active_checkpoint(
     args = module.build_parser().parse_args(
         [
             "--config",
-            str(_V95_TO_V94_ROLLBACK),
+            str(_ROLLBACK_B_TO_A),
             "--active-config",
-            str(_V95),
+            str(_PROFILE_B),
             "--checkpoint",
             str(checkpoint),
         ]
@@ -346,14 +344,14 @@ def test_removed_asset_remains_a_transition_blocker(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """V95 cannot hide active V94 SPCX exposure by removing the asset."""
+    """Profile B cannot hide active profile A SPCX exposure by removing the asset."""
     module = _load_module()
     checkpoint = tmp_path / "checkpoint.json"
     output = tmp_path / "preflight.json"
-    _checkpoint(checkpoint, _V94, open_symbol="xyz:SPCX")
+    _checkpoint(checkpoint, _PROFILE_A, open_symbol="xyz:SPCX")
     readers = {
         symbol: object()
-        for symbol in load_multi_asset_live_config(_V94, mode="observe").symbols
+        for symbol in load_multi_asset_live_config(_PROFILE_A, mode="observe").symbols
     }
     retired: list[str] = []
     monkeypatch.setattr(module, "_readers", lambda _config: readers)
@@ -373,9 +371,9 @@ def test_removed_asset_remains_a_transition_blocker(
     args = module.build_parser().parse_args(
         [
             "--config",
-            str(_V95),
+            str(_PROFILE_B),
             "--active-config",
-            str(_V94),
+            str(_PROFILE_A),
             "--checkpoint",
             str(checkpoint),
             "--output",
@@ -437,7 +435,9 @@ def test_main_reports_missing_public_wallet_without_traceback(
         "run_preflight",
         lambda args: (_ for _ in ()).throw(SolSdkFactoryError("wallet missing")),
     )
-    result = module.main(["--config", str(_V95), "--active-config", str(_V94)])
+    result = module.main(
+        ["--config", str(_PROFILE_B), "--active-config", str(_PROFILE_A)]
+    )
 
     captured = capsys.readouterr()
     assert result == 2

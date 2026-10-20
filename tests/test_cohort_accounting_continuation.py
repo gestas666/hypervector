@@ -1,4 +1,4 @@
-"""Tests for immutable accounting continuity across V58 and V59."""
+"""Tests for immutable accounting continuity across adjacent profiles."""
 
 from __future__ import annotations
 
@@ -15,9 +15,9 @@ from hypervector.live.cohort_accounting_continuation import (
 )
 from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
 
-_V58 = "a" * 64
-_V59 = "b" * 64
-_V60 = "c" * 64
+_PROFILE_A = "a" * 64
+_PROFILE_B = "b" * 64
+_PROFILE_C = "c" * 64
 _START_MS = 1_787_164_729_837
 
 
@@ -31,10 +31,10 @@ def test_continuation_preserves_parent_start_and_inherited_closed_trades() -> No
     )
 
     assert report["accounting_epoch"] == {
-        "epoch_id": "v58_v59_growth_5000",
-        "profile_fingerprint": _V59,
+        "epoch_id": "a_b_growth_5000",
+        "profile_fingerprint": _PROFILE_B,
         "start_venue_timestamp_ms": _START_MS,
-        "included_profile_fingerprints": [_V58, _V59],
+        "included_profile_fingerprints": [_PROFILE_A, _PROFILE_B],
     }
     assert report["acceptance"] == {
         "inherited_closed_trades": 8,
@@ -53,20 +53,20 @@ def test_continuation_preserves_parent_start_and_inherited_closed_trades() -> No
 def test_continuation_appends_to_existing_profile_lineage() -> None:
     """A second successor must retain every earlier funded-campaign profile."""
     parent = _parent()
-    parent["successor_identity"] = _identity("v59", _V59)
+    parent["successor_identity"] = _identity("profile_b", _PROFILE_B)
     parent["accounting_epoch"] = {
-        "epoch_id": "v58_v59_growth_5000",
-        "profile_fingerprint": _V59,
+        "epoch_id": "a_b_growth_5000",
+        "profile_fingerprint": _PROFILE_B,
         "start_venue_timestamp_ms": _START_MS,
-        "included_profile_fingerprints": [_V58, _V59],
+        "included_profile_fingerprints": [_PROFILE_A, _PROFILE_B],
     }
     checkpoint = _checkpoint()
     checkpoint["audit"]["portfolio_archive"]["accounting_epoch"] = parent[
         "accounting_epoch"
     ]
     rollover = _rollover()
-    rollover["prior_identity"] = _identity("v59", _V59)
-    rollover["successor_identity"] = _identity("v60", _V60)
+    rollover["prior_identity"] = _identity("profile_b", _PROFILE_B)
+    rollover["successor_identity"] = _identity("profile_c", _PROFILE_C)
 
     report = build_accounting_continuation_manifest(
         rollover,
@@ -76,10 +76,10 @@ def test_continuation_appends_to_existing_profile_lineage() -> None:
     )
 
     assert report["accounting_epoch"] == {
-        "epoch_id": "v58_v59_growth_5000",
-        "profile_fingerprint": _V60,
+        "epoch_id": "a_b_growth_5000",
+        "profile_fingerprint": _PROFILE_C,
         "start_venue_timestamp_ms": _START_MS,
-        "included_profile_fingerprints": [_V58, _V59, _V60],
+        "included_profile_fingerprints": [_PROFILE_A, _PROFILE_B, _PROFILE_C],
     }
 
 
@@ -100,7 +100,7 @@ def test_continuation_appends_to_existing_profile_lineage() -> None:
         ),
         (
             lambda parent, _checkpoint_value: parent["accounting_epoch"].update(
-                {"included_profile_fingerprints": [_V58, _V59]}
+                {"included_profile_fingerprints": [_PROFILE_A, _PROFILE_B]}
             ),
             "parent accounting epoch",
         ),
@@ -135,10 +135,10 @@ def test_loaded_continuation_verifies_internal_parent_manifest(tmp_path: Path) -
         parent_manifest_evidence=_evidence(parent_raw),
     )
     epoch = CohortAccountingEpoch(
-        "v58_v59_growth_5000",
-        _V59,
+        "a_b_growth_5000",
+        _PROFILE_B,
         _START_MS,
-        included_profile_fingerprints=(_V58, _V59),
+        included_profile_fingerprints=(_PROFILE_A, _PROFILE_B),
     )
 
     validate_accounting_continuation(tmp_path, report, epoch)
@@ -154,11 +154,11 @@ def _rollover() -> dict[str, object]:
     return {
         "schema_version": 1,
         "mode": "cohort_accounting_epoch_rollover_v1",
-        "prior_identity": _identity("v58", _V58),
-        "successor_identity": _identity("v59", _V59),
+        "prior_identity": _identity("profile_a", _PROFILE_A),
+        "successor_identity": _identity("profile_b", _PROFILE_B),
         "accounting_epoch": {
-            "epoch_id": "v58_v59_growth_5000",
-            "profile_fingerprint": _V59,
+            "epoch_id": "a_b_growth_5000",
+            "profile_fingerprint": _PROFILE_B,
             "start_venue_timestamp_ms": 1_787_396_800_000,
         },
         "acceptance": {
@@ -183,10 +183,10 @@ def _parent() -> dict[str, object]:
     return {
         "schema_version": 1,
         "mode": "cohort_accounting_epoch_rollover_v1",
-        "successor_identity": _identity("v58", _V58),
+        "successor_identity": _identity("profile_a", _PROFILE_A),
         "accounting_epoch": {
-            "epoch_id": "v58_growth_5000",
-            "profile_fingerprint": _V58,
+            "epoch_id": "a_growth_5000",
+            "profile_fingerprint": _PROFILE_A,
             "start_venue_timestamp_ms": _START_MS,
         },
     }

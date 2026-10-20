@@ -253,7 +253,8 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
 
 
 def _validate_identity(raw: Mapping[str, object]) -> None:
-    _expect(raw, "profile", "hypervelocity_faithful_v2")
+    if not _text(raw, "profile").strip():
+        raise ValueError("profile must be non-empty")
     _expect(raw, "symbol", "BTC")
     _expect(raw, "timeframe", "1m")
     _expect(raw, "strategy_id", "hypervelocity_1m_scalper")

@@ -15,7 +15,7 @@ from test_multi_asset_live_audit import _asset_rows, _cohort_rows
 from test_multi_asset_bidirectional_live_checkpoint_script import _load_module
 
 
-_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"]
+_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/cohort_base.toml"]
 
 
 @pytest.mark.parametrize("failure", [False, True])

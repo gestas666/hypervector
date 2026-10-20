@@ -547,7 +547,7 @@ def test_hulk_market_entry_and_native_stop_are_explicit_btc_orders() -> None:
 
 
 def test_hardened_ioc_cap_reaches_both_entry_and_forced_close() -> None:
-    """The V68 BTC cap must protect both SDK market mutation paths."""
+    """The hardened BTC cap must protect both SDK market mutation paths."""
     exchange = _Exchange()
     adapter = BtcHyperliquidAdapter(
         info=_Info(),

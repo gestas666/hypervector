@@ -77,7 +77,7 @@ def test_accounting_epoch_filters_prior_profile_and_pre_epoch_rows(
 ) -> None:
     database = tmp_path / "market.duckdb"
     database.touch()
-    epoch = CohortAccountingEpoch("growth_5000_v49", _CURRENT, 1_800)
+    epoch = CohortAccountingEpoch("growth_5000_a", _CURRENT, 1_800)
 
     archive = load_cohort_live_portfolio_archive(
         database,
@@ -104,7 +104,7 @@ def test_accounting_epoch_lineage_includes_each_exact_profile_after_start(
     database = tmp_path / "market.duckdb"
     database.touch()
     epoch = CohortAccountingEpoch(
-        "growth_5000_v58_v59",
+        "growth_5000_a_b",
         _CURRENT,
         1_800,
         included_profile_fingerprints=(_PRIOR, _CURRENT),
@@ -117,7 +117,7 @@ def test_accounting_epoch_lineage_includes_each_exact_profile_after_start(
     )
 
     assert archive["accounting_epoch"] == {
-        "epoch_id": "growth_5000_v58_v59",
+        "epoch_id": "growth_5000_a_b",
         "profile_fingerprint": _CURRENT,
         "start_venue_timestamp_ms": 1_800,
         "included_profile_fingerprints": [_PRIOR, _CURRENT],
@@ -134,7 +134,7 @@ def test_accounting_epoch_archive_reconciles_new_reflected_close_once(
     database = tmp_path / "market.duckdb"
     database.touch()
     epoch = CohortAccountingEpoch(
-        "growth_5000_v58_v59",
+        "growth_5000_a_b",
         _CURRENT,
         1_800,
         included_profile_fingerprints=(_PRIOR, _CURRENT),
@@ -180,7 +180,7 @@ def test_accounting_epoch_reconciliation_never_drops_database_lifecycles(
     database = tmp_path / "market.duckdb"
     database.touch()
     epoch = CohortAccountingEpoch(
-        "growth_5000_v58_v59",
+        "growth_5000_a_b",
         _CURRENT,
         1_800,
         included_profile_fingerprints=(_PRIOR, _CURRENT),
@@ -222,7 +222,7 @@ def test_accounting_epoch_rejects_invalid_profile_lineage(
     """Lineage scope must be unique, valid, and include the current profile."""
     with pytest.raises(ValueError, match="accounting epoch profile lineage"):
         CohortAccountingEpoch(
-            "growth_5000_v58_v59",
+            "growth_5000_a_b",
             _CURRENT,
             1_800,
             included_profile_fingerprints=included,
@@ -234,7 +234,7 @@ def test_accounting_epoch_can_publish_an_explicit_zero_trade_archive(
 ) -> None:
     database = tmp_path / "market.duckdb"
     database.touch()
-    epoch = CohortAccountingEpoch("growth_5000_v49", _CURRENT, 3_000)
+    epoch = CohortAccountingEpoch("growth_5000_a", _CURRENT, 3_000)
 
     archive = load_cohort_live_portfolio_archive(
         database,

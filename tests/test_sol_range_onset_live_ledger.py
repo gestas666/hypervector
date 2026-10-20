@@ -17,7 +17,7 @@ from hypervector.live.sol_range_onset_ledger import (
 def _ledger(path: Path, *, run_id: str = "run-001") -> SolLiveLedger:
     return SolLiveLedger(
         path=path,
-        profile_id="sol_range_onset_canary_v1",
+        profile_id="fixture_sol_range_onset",
         profile_fingerprint="profile-hash",
         run_fingerprint="run-hash",
         run_id=run_id,
@@ -48,7 +48,7 @@ def test_every_required_event_is_append_only_and_identity_stamped(
     assert all(record["execution_mode"] == "live" for record in records)
     assert all(record["effective_mode"] == "LIVE ARMED" for record in records)
     assert all(
-        record["profile_id"] == "sol_range_onset_canary_v1" for record in records
+        record["profile_id"] == "fixture_sol_range_onset" for record in records
     )
     assert all(record["run_id"] == "run-001" for record in records)
 
@@ -203,7 +203,7 @@ def test_observer_ledger_uses_a_separate_domain_and_truthful_mode(
     path = tmp_path / "data/observe/btc_hype_breakout_transfer/decisions.jsonl"
     ledger = SolLiveLedger(
         path=path,
-        profile_id="btc_hype_breakout_transfer_observer_v1",
+        profile_id="fixture_btc_hype_breakout_transfer",
         profile_fingerprint="profile-hash",
         run_fingerprint="run-hash",
         run_id="observer-001",

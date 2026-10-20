@@ -17,20 +17,20 @@ from hypervector.live.cohort_profile_transition_venue import (
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
 _SCRIPT = Path(__file__).parents[1] / "src/hypervector/operations/multi_asset_bidirectional_live.py"
-_V63 = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_nine_asset_bankroll_builder_candidate_v63.toml"
+_NINE_ASSET = Path(
+    "tests/fixtures/profiles/nine_asset_bankroll_builder.toml"
 )
-_V64 = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_eight_asset_gold_removed_candidate_v64.toml"
+_GOLD_REMOVED = Path(
+    "tests/fixtures/profiles/eight_asset_gold_removed.toml"
 )
 
 
 def test_changed_profile_rejects_retired_gold_venue_exposure() -> None:
     """Removing GOLD from the config cannot hide a live GOLD position or order."""
     live_script = _load_script()
-    previous = load_multi_asset_live_config(_V63, mode="observe")
+    previous = load_multi_asset_live_config(_NINE_ASSET, mode="observe")
     candidate = load_multi_asset_live_config(
-        _V64,
+        _GOLD_REMOVED,
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -63,9 +63,9 @@ def test_changed_profile_rejects_retired_gold_venue_exposure() -> None:
 
 def test_changed_profile_reconciles_retained_and_flat_retired_symbols() -> None:
     """A flat removal checks every candidate adapter and retired reader once."""
-    previous = load_multi_asset_live_config(_V63, mode="observe")
+    previous = load_multi_asset_live_config(_NINE_ASSET, mode="observe")
     candidate = load_multi_asset_live_config(
-        _V64,
+        _GOLD_REMOVED,
         mode="live",
         enabled=True,
         accepts_live_risk=True,

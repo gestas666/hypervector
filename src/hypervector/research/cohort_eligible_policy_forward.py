@@ -36,7 +36,7 @@ from hypervector.research.cohort_signal_candidates import (
 
 Record = Mapping[str, object]
 T = TypeVar("T")
-ETH_TRANSFER_FORWARD_CANDIDATE = f"{ETH_BREAKOUT_TRANSFER_STRATEGY}_v12"
+ETH_TRANSFER_FORWARD_CANDIDATE = f"{ETH_BREAKOUT_TRANSFER_STRATEGY}_eligible_forward"
 _ETH_MODELED_ROUND_TRIP_FRICTION_BPS = 13.0
 
 

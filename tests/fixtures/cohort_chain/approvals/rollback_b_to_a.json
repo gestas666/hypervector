@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "document_type": "cohort_profile_change_approval",
+  "approval_status": "approved_for_live_transition",
+  "approved_at_utc": "2026-10-19T00:00:00+00:00",
+  "approved_by": "test_fixture",
+  "operator_approval": "fixture approval: roll profile B back to profile A",
+  "execution_authority": "none",
+  "previous_profile": {
+    "profile_id": "fixture_cohort_b",
+    "profile_fingerprint": "6cc3839112ced355d72c6b39dad4f373810c0f7c31e02deda1b06a5ea03b22c2"
+  },
+  "candidate_profile": {
+    "profile_id": "fixture_cohort_a",
+    "profile_fingerprint": "bf221b197c1e2bd037615e33207d829c5ffcc3c9adc1d0a4a41ef1a543f99358"
+  },
+  "change_scopes": [
+    "rollback_to_fixture_cohort_a"
+  ],
+  "recommendation_evidence": [
+    {
+      "path": "../profile_a.toml",
+      "sha256": "8b2d54448673209587a794160af415ddd8710fe75640f2aa04ded3f7b22680ba"
+    },
+    {
+      "path": "../evidence/rollback.md",
+      "sha256": "088b6dfeee95d88d9f98e07583ca3a3531591aa8b9c4ad54c952f895eb00f30e"
+    }
+  ],
+  "rollback": {
+    "config_path": "../profile_b.toml",
+    "profile_fingerprint": "6cc3839112ced355d72c6b39dad4f373810c0f7c31e02deda1b06a5ea03b22c2",
+    "sha256": "da26b4fd322730854bb8d0ad989beede82124b14f9fc35b35670fad054510427"
+  },
+  "retirements": []
+}

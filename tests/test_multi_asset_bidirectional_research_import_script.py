@@ -87,7 +87,7 @@ def test_accounting_epoch_is_forwarded_and_prevents_cross_epoch_cache_reuse(
     identity = archive_module.cohort_live_fill_identity(database_path).to_dict()
     checkpoint = tmp_path / "latest.json"
     checkpoint.write_text(json.dumps(_checkpoint(_archive(identity))), encoding="utf-8")
-    epoch = CohortAccountingEpoch("growth_5000_v49", "a" * 64, 123)
+    epoch = CohortAccountingEpoch("growth_5000_a", "a" * 64, 123)
     observed: list[CohortAccountingEpoch | None] = []
 
     def rebuild(
@@ -121,7 +121,7 @@ def test_accounting_epoch_cli_reconstructs_exact_profile_lineage() -> None:
     args = module.parse_args(
         [
             "--accounting-epoch-id",
-            "growth_5000_v58_v59",
+            "growth_5000_a_b",
             "--accounting-epoch-profile-fingerprint",
             "b" * 64,
             "--accounting-epoch-start-ms",
@@ -134,7 +134,7 @@ def test_accounting_epoch_cli_reconstructs_exact_profile_lineage() -> None:
     )
 
     assert module._accounting_epoch(args) == CohortAccountingEpoch(
-        "growth_5000_v58_v59",
+        "growth_5000_a_b",
         "b" * 64,
         1_786_164_729_837,
         included_profile_fingerprints=("a" * 64, "b" * 64),
@@ -404,7 +404,7 @@ def _event(sequence: int, event_type: str) -> dict[str, object]:
         "effective_mode": "LIVE ARMED",
         "live_armed": True,
         "execution_authority": "hyperliquid_mainnet",
-        "profile_id": "cohort-v25",
+        "profile_id": "cohort-a",
         "profile_fingerprint": "a" * 64,
         "run_fingerprint": "b" * 64,
         "run_id": "run-1",

@@ -312,7 +312,7 @@ class _SharingProbe:
 def test_poller_shares_decisions_for_exactly_one_cycle() -> None:
     """Every collector in a poll sees one fresh cycle cache; none survives the poll."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml", mode="observe"
+        "tests/fixtures/profiles/cohort_base.toml", mode="observe"
     )
     seen: list[object] = []
     collectors = {

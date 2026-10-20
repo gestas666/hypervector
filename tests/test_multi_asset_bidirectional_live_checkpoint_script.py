@@ -28,7 +28,7 @@ SCRIPT = (
 )
 
 
-_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"]
+_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/cohort_base.toml"]
 
 
 def _load_module() -> ModuleType:
@@ -76,7 +76,7 @@ def test_once_publishes_one_read_only_checkpoint(tmp_path: Path) -> None:
             tmp_path / "ledgers",
             output,
             "run-a",
-            Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"),
+            Path("tests/fixtures/profiles/cohort_base.toml"),
         )
     ]
     source = SCRIPT.read_text(encoding="utf-8")
@@ -131,7 +131,7 @@ def test_parser_can_enable_exact_eligible_policy_forward_journal() -> None:
 
 
 def test_parser_can_disable_profile_specific_asymmetric_observer() -> None:
-    """A successor sidecar can refuse inheritance of the frozen v25 observer."""
+    """A successor sidecar can refuse inheritance of a frozen asymmetric observer."""
     module = _load_module()
 
     args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--disable-asymmetric-forward-observer"])

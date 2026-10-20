@@ -265,7 +265,6 @@ def _build_config(
 
 def _validate_frozen_contract(config: HulkSmashLiveConfig) -> None:
     expected_text = {
-        "profile_id": "hulk_expansion_short_robust_v3_canary_v1",
         "symbol": "BTC",
         "strategy_id": "hulk_expansion_short_robust_v3",
         "network": "mainnet",

@@ -124,7 +124,7 @@ def test_observer_ledger_override_rebinds_every_output(tmp_path: Path) -> None:
     """A parity observer must not append any row to the armed live root."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+        "tests/fixtures/profiles/complete_portfolio.toml",
         mode="observe",
     )
 
@@ -144,11 +144,11 @@ def test_observer_rebinding_changes_only_storage_identity(tmp_path: Path) -> Non
     """A different fingerprint must not conceal a different strategy contract."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_btc_specialists_growth_sizing_candidate_v45.toml",
+        "tests/fixtures/profiles/btc_specialists_growth_sizing.toml",
         mode="observe",
     )
 
-    isolated = module._with_observer_ledger_root(config, tmp_path / "v45-observer")
+    isolated = module._with_observer_ledger_root(config, tmp_path / "isolated-observer")
 
     assert isolated.profile_id == config.profile_id
     assert isolated.profile_fingerprint != config.profile_fingerprint
@@ -178,7 +178,7 @@ def test_observer_ledger_override_refuses_configured_root() -> None:
     """An explicit override cannot alias the source profile's live ledgers."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+        "tests/fixtures/profiles/complete_portfolio.toml",
         mode="observe",
     )
 
@@ -190,7 +190,7 @@ def test_observer_builds_hip3_only_poller_without_fake_core_route() -> None:
     """A HIP-3 study must not need an unrelated core strategy provider."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/index_fresh15_pressure_v2.toml",
+        "tests/fixtures/profiles/index_fresh15_pressure.toml",
         mode="observe",
     )
 
@@ -207,7 +207,7 @@ def test_observer_cache_bypasses_completed_bar_profit_lock_symbols() -> None:
     """Observer transport must retain raw polling for lock-sensitive symbols."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+        "tests/fixtures/profiles/eight_asset_incremental.toml",
         mode="observe",
     )
     calls: list[str] = []
@@ -246,7 +246,7 @@ def test_observer_ledger_override_refuses_broad_roots(root: Path) -> None:
     """Observer output cannot target a system, home, or workspace root."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+        "tests/fixtures/profiles/complete_portfolio.toml",
         mode="observe",
     )
 
@@ -256,7 +256,7 @@ def test_observer_ledger_override_refuses_broad_roots(root: Path) -> None:
 
 def _observer_config(module: ModuleType, tmp_path: Path) -> MultiAssetLiveConfig:
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+        "tests/fixtures/profiles/complete_portfolio.toml",
         mode="observe",
     )
     return module._with_observer_ledger_root(config, tmp_path / "observe" / "observer")

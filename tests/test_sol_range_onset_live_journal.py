@@ -27,7 +27,7 @@ def _record(
         "effective_mode": "LIVE ARMED",
         "live_armed": True,
         "execution_authority": "hyperliquid_mainnet",
-        "profile_id": "sol_range_onset_canary_v1",
+        "profile_id": "fixture_sol_range_onset",
         "profile_fingerprint": "profile",
         "run_fingerprint": "run",
         "run_id": "run-1",

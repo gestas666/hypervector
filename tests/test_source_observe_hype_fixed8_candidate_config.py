@@ -8,16 +8,16 @@ from pathlib import Path
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
 _BASE = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_range_retired_hype_fixed8_candidate.toml"
+    "tests/fixtures/profiles/range_retired_hype_fixed8.toml"
 )
 _CANDIDATE = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_source_observe_hype_fixed8_candidate.toml"
+    "tests/fixtures/profiles/source_observe_hype_fixed8.toml"
 )
 _SCALED = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_hype_core75_source_observe_fixed8_candidate.toml"
+    "tests/fixtures/profiles/hype_core75_source_observe_fixed8.toml"
 )
 _ROUTED = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_evidence_routed_hype75_fixed8_candidate.toml"
+    "tests/fixtures/profiles/evidence_routed_hype75_fixed8.toml"
 )
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _HYPE = "hype_breakout_onset_bidirectional_v1"
@@ -33,7 +33,7 @@ def test_candidate_changes_only_source_follow_execution_authority() -> None:
 
     assert (
         candidate.profile_id
-        == "multi_asset_bidirectional_source_observe_hype_fixed8_v5"
+        == "fixture_source_observe_hype_fixed8"
     )
     assert candidate.symbols == base.symbols
     assert candidate.maximum_positions == base.maximum_positions
@@ -71,7 +71,7 @@ def test_hype_core75_candidate_scales_only_breakout_provider_exposure() -> None:
 
     assert (
         scaled.profile_id
-        == "multi_asset_bidirectional_hype_core75_source_observe_fixed8_v6"
+        == "fixture_hype_core75_source_observe_fixed8"
     )
     assert scaled.executable_provider_directions == base.executable_provider_directions
     assert scaled.maximum_positions == base.maximum_positions
@@ -115,7 +115,7 @@ def test_evidence_routed_candidate_limits_orders_without_losing_observation() ->
     base_providers = {row.strategy_id: row for row in base.providers}
     routed_providers = {row.strategy_id: row for row in routed.providers}
 
-    assert routed.profile_id == "multi_asset_bidirectional_evidence_routed_hype75_v7"
+    assert routed.profile_id == "fixture_evidence_routed_hype75_fixed8"
     assert routed.symbols == base.symbols
     assert routed.maximum_positions == base.maximum_positions
     assert routed.executable_provider_directions == frozenset(

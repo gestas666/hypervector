@@ -20,10 +20,10 @@ SCRIPT = (
     Path(__file__).parents[1]
     / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_live_checkpoint.py'
 )
-EPOCH = CohortAccountingEpoch("growth_5000_v49", "a" * 64, 1_786_579_200_000)
+EPOCH = CohortAccountingEpoch("growth_5000_a", "a" * 64, 1_786_579_200_000)
 
 
-_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"]
+_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/cohort_base.toml"]
 
 
 def _load() -> ModuleType:
@@ -38,15 +38,15 @@ def _load() -> ModuleType:
 def test_parser_accepts_one_explicit_accounting_epoch_bundle() -> None:
     module = _load()
 
-    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--accounting-epoch-bundle", "data/backups/epoch-v49"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--accounting-epoch-bundle", "data/backups/epoch-a"]
     )
 
-    assert args.accounting_epoch_bundle == Path("data/backups/epoch-v49")
+    assert args.accounting_epoch_bundle == Path("data/backups/epoch-a")
 
 
 def test_accounting_epoch_requires_the_research_archive_worker() -> None:
     module = _load()
-    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--accounting-epoch-bundle", "data/backups/epoch-v49"]
+    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--accounting-epoch-bundle", "data/backups/epoch-a"]
     )
 
     with pytest.raises(ValueError, match="requires --research-database"):
@@ -60,11 +60,11 @@ def test_accounting_epoch_is_loaded_against_the_checkpoint_config(
     args = module.build_parser().parse_args(
         [
             "--config",
-            "v49.toml",
+            "profile_a.toml",
             "--research-database",
             "market.duckdb",
             "--accounting-epoch-bundle",
-            "epoch-v49",
+            "epoch-a",
         ]
     )
     loaded: list[tuple[Path, object]] = []
@@ -78,12 +78,12 @@ def test_accounting_epoch_is_loaded_against_the_checkpoint_config(
         module,
         "load_required_accounting_epoch",
         lambda bundle, successor: EPOCH
-        if (bundle, successor) == (Path("epoch-v49"), config)
+        if (bundle, successor) == (Path("epoch-a"), config)
         else None,
     )
 
     assert module._accounting_epoch(args) == EPOCH
-    assert loaded == [(Path("v49.toml"), "observe")]
+    assert loaded == [(Path("profile_a.toml"), "observe")]
 
 
 def test_checkpoint_applies_required_epoch_policy_without_a_bundle(
@@ -91,7 +91,7 @@ def test_checkpoint_applies_required_epoch_policy_without_a_bundle(
 ) -> None:
     module = _load()
     args = module.build_parser().parse_args(
-        ["--config", "v49.toml", "--research-database", "market.duckdb"]
+        ["--config", "profile_a.toml", "--research-database", "market.duckdb"]
     )
     config = object()
     monkeypatch.setattr(

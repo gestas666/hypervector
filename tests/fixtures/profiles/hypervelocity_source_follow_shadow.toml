@@ -1,9 +1,6 @@
-# Shadow-only runtime candidate derived from immutable 24/7 risk-surface evidence.
-# This profile inherits venue friction and safety controls from the checksum-pinned
-# faithful profile, then changes only the explicitly measured candidate fields.
 profile = "hypervelocity_source_follow_shadow_v1"
-base_profile = "../../../configs/hypervelocity_faithful.toml"
-base_profile_sha256 = "fa9e65ac518f18bbc5305cdbb35f5737a3c5ffc0dce86eecb27359a3910984d8"
+base_profile = "hypervelocity_shadow.toml"
+base_profile_sha256 = "3796e8632bf803b6825715eef68f3e37a765c61dae25af654a2e460124475192"
 symbol = "BTC"
 timeframe = "1m"
 strategy_id = "hypervelocity_1m_scalper"

@@ -1,4 +1,4 @@
-"""Exercise approved V88 runtime assembly without execution clients or networks."""
+"""Exercise approved four-core runtime assembly without execution clients or networks."""
 
 from dataclasses import replace
 from pathlib import Path
@@ -12,7 +12,7 @@ from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from test_multi_asset_bidirectional_live_script import _load_module
 
 _CONFIG = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_four_core_evidence_candidate_v88.toml"
+    "tests/fixtures/profiles/four_core_evidence.toml"
 )
 
 
@@ -68,7 +68,7 @@ def test_approved_four_core_runtime_constructs_without_execution(
     monkeypatch.setattr(script, "create_armed_multi_asset_adapters", forbidden)
     engines = {symbol: Mock() for symbol in config.symbols}
     runner = script._create_runner(
-        config, engines, Mock(), Mock(), Mock(), "offline-v88-assembly"
+        config, engines, Mock(), Mock(), Mock(), "offline-four-core-assembly"
     )
     assert isinstance(runner, MultiAssetLiveRunner)
     forbidden.assert_not_called()

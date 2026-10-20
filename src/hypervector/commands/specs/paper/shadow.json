@@ -23,9 +23,10 @@
       "options": {
         "dest": "config",
         "type": "Path",
-        "default": "configs/hypervelocity_faithful.toml",
+        "default": null,
         "help": "Hypervelocity runtime profile TOML"
-      }
+      },
+      "required": true
     },
     {
       "flags": [

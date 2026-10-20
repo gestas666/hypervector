@@ -511,7 +511,7 @@ def test_fresh_profile_session_uses_configured_initial_cash(tmp_path: Path) -> N
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
-    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_text = Path("tests/fixtures/profiles/hypervelocity_shadow.toml").read_text()
     profile_path = tmp_path / "profile.toml"
     profile_path.write_text(
         profile_text.replace(
@@ -681,7 +681,7 @@ def test_live_book_refresh_records_authoritative_microstructure(
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
-    profile = load_hypervelocity_profile("configs/hypervelocity_faithful.toml")
+    profile = load_hypervelocity_profile("tests/fixtures/profiles/hypervelocity_shadow.toml")
     session = PaperSession(
         export_dir=export,
         data_root=tmp_path / "data",
@@ -979,7 +979,7 @@ def test_profile_activates_event_runtime_and_stamps_authority(tmp_path: Path) ->
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
-    profile = load_hypervelocity_profile("configs/hypervelocity_faithful.toml")
+    profile = load_hypervelocity_profile("tests/fixtures/profiles/hypervelocity_shadow.toml")
     session = PaperSession(
         export_dir=export,
         data_root=tmp_path / "data",
@@ -1066,7 +1066,7 @@ def test_peak_observer_is_outside_portfolio_fingerprint(tmp_path: Path) -> None:
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
-    config = Path("configs/hypervelocity_faithful.toml").read_text()
+    config = Path("tests/fixtures/profiles/hypervelocity_shadow.toml").read_text()
     assert '[peak_observer]\nmode = "observe"' in config
     configured = config.replace(
         "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
@@ -1243,7 +1243,7 @@ def test_asset_context_updates_funding_and_continuous_mark_without_fill(
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
-    profile = load_hypervelocity_profile("configs/hypervelocity_faithful.toml")
+    profile = load_hypervelocity_profile("tests/fixtures/profiles/hypervelocity_shadow.toml")
     session = PaperSession(
         export_dir=export,
         data_root=tmp_path / "data",
@@ -1309,7 +1309,7 @@ def test_event_restart_reconciles_funding_without_candle_fills(tmp_path: Path) -
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
-    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_text = Path("tests/fixtures/profiles/hypervelocity_shadow.toml").read_text()
     profile_path = tmp_path / "profile.toml"
     profile_path.write_text(
         profile_text.replace(
@@ -1828,7 +1828,7 @@ def test_bidirectional_profile_holds_then_switches_only_after_exit(
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
-    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_text = Path("tests/fixtures/profiles/hypervelocity_shadow.toml").read_text()
     profile_path = tmp_path / "profile.toml"
     profile_path.write_text(
         profile_text.replace(

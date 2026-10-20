@@ -1,7 +1,7 @@
 """An expired blindness bound restarts only a backend a restart can repair.
 
 The live ledger holds account-blind streaks of 63.8 min (09-24, 32 polls) and
-197.7 min (09-02, 97 polls). V93 rode both out in place. A relaunch cannot reach
+197.7 min (09-02, 97 polls). The runner rode both out in place. A relaunch cannot reach
 an offline venue either: it waits in the start probe, then writes a bundle and
 replays every ledger after connectivity returns. So when the bound expires the
 runner repeats the start probe's public metadata read on a fresh session, keeps
@@ -27,7 +27,7 @@ from hypervector.live.multi_asset_live_runner_support import (
 )
 
 _OFFLINE = "transport_connection_retry_exhausted"
-_V94 = Path("configs/multi_asset_growth_first_5000_review_actions_v94.toml")
+_PROFILE_A = Path("tests/fixtures/cohort_chain/profile_a.toml")
 # 33 failed polls stay below the one-hour default; the 34th crosses it.
 _POLLS_BELOW_BOUND = 33
 
@@ -210,7 +210,7 @@ def test_the_live_runner_is_built_with_the_profile_reachability_probe(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     script = _load_module()
-    loaded = script.load_multi_asset_live_config(_V94, mode="observe")
+    loaded = script.load_multi_asset_live_config(_PROFILE_A, mode="observe")
     # Keep the operator inbox and STOP file out of the checkout's real data/live.
     ledger = tmp_path / "live/bidirectional_cohort/cohort.jsonl"
     config = replace(loaded, cohort_ledger=ledger, stop_file=ledger.parent / "STOP")
@@ -221,7 +221,7 @@ def test_the_live_runner_is_built_with_the_profile_reachability_probe(
     )
     engines = {symbol: Mock() for symbol in config.symbols}
     runner = script._create_runner(
-        config, engines, Mock(), Mock(), Mock(), "offline-v94-assembly"
+        config, engines, Mock(), Mock(), Mock(), "offline-profile-a-assembly"
     )
     _install_sessions(monkeypatch, {"": requests.ConnectionError("offline")})
 

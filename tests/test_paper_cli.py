@@ -117,7 +117,7 @@ def test_daemon_activates_authoritative_event_stream_without_rest_book_poll(
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
-    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_text = Path("tests/fixtures/profiles/hypervelocity_shadow.toml").read_text()
     profile_path = tmp_path / "profile.toml"
     profile_path.write_text(
         profile_text.replace(
@@ -170,7 +170,7 @@ def test_event_authority_defaults_to_websocket_context_not_rest_refresh(
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
-    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_text = Path("tests/fixtures/profiles/hypervelocity_shadow.toml").read_text()
     profile_path = tmp_path / "profile.toml"
     profile_path.write_text(
         profile_text.replace(
@@ -234,7 +234,7 @@ def test_event_stream_start_failure_is_not_masked_by_cleanup(
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
-    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_text = Path("tests/fixtures/profiles/hypervelocity_shadow.toml").read_text()
     profile_path = tmp_path / "profile.toml"
     profile_path.write_text(
         profile_text.replace(
@@ -997,7 +997,7 @@ def test_hypervelocity_shadow_cli_uses_websocket_funding_authority(
             "paper",
             "shadow",
             "--config",
-            "configs/hypervelocity_faithful.toml",
+            "tests/fixtures/profiles/hypervelocity_shadow.toml",
             "--max-live-bars",
             "0",
         ]

@@ -170,7 +170,7 @@ hypervector paper check
 hypervector paper run --export latest --mode shadow --max-live-bars 60
 hypervector paper run --export latest --metalabel-bundle latest --metalabel-mode observe
 hypervector paper report --last 5
-hypervector paper shadow --config configs/hypervelocity_faithful.toml --max-live-bars 30
+hypervector paper shadow --config <hypervelocity-profile.toml> --max-live-bars 30   # --config required
 hypervector paper shadow-reset                       # dry run; --yes backs up, then resets
 hypervector paper compare --shadow-ledger <decisions.jsonl> --positions positions.csv --run-id RUN
 hypervector paper observe --config <profile.toml> --max-polls 10     # cohort collectors, zero authority
@@ -192,7 +192,7 @@ hypervector paper audit --run-id RUN --out-dir data/logs/observer-audits
 Run section. Readiness, execution and requests:
 
 ```sh
-hypervector live check --config configs/multi_asset_growth_first_5000_review_fixes_v95.toml   # exit 0 ready, 1 not
+hypervector live check --config <profile.toml>                                              # exit 0 ready, 1 not
 hypervector live start --config <profile.toml> --enabled --i-accept-live-risk                 # ARMS: operator request only
 hypervector live run --export <bundle> --enabled --i-accept-live-risk --max-notional-usd 50   # ARMS: generic daemon
 hypervector live request --inbox <dir> --run-id RUN --profile-fingerprint FP --action manual_close --symbol SOL
@@ -256,7 +256,7 @@ hypervector live backup-verify --bundle <printed path>
 hypervector live validate --config <candidate.toml> --mode live --equity 5000   # 0 ok, 1 objection, 2 refused, 3 advisory
 hypervector live preflight --config <candidate.toml> --active-config <active.toml>   # 0 ready, 3 not ready, 2 refused
 hypervector live drain-archive --expected-run-id RUN            # dry run; --yes archives and clears the blocker
-hypervector live rollback-profile --current <active.toml> --verify configs/v95-to-v94-rollback-20260927-v1.toml
+hypervector live rollback-profile --current <active.toml> --verify <rollback.toml>
 ```
 
 None of these arms or starts anything. Follow the full procedure in

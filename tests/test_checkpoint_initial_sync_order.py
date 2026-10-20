@@ -16,7 +16,7 @@ SCRIPT = (
 )
 
 
-_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"]
+_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/cohort_base.toml"]
 
 
 def _load_module() -> ModuleType:

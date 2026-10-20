@@ -56,7 +56,7 @@ from hypervector.live.process_signal_stop import (
 )
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 
-_V94 = Path("configs/multi_asset_growth_first_5000_review_actions_v94.toml")
+_PROFILE_A = Path("tests/fixtures/cohort_chain/profile_a.toml")
 _NOW = datetime(2026, 8, 1, 12, tzinfo=UTC)
 _END_MS = 1_785_585_600_000
 _LIVE_READ_TIMEOUT_SECONDS = 10.0
@@ -164,7 +164,7 @@ def test_stop_during_a_hung_candle_read_exits_within_the_read_timeout(
     4 x 30 s + 7 s, and every later symbol could do the same.
     """
     script = _load_module()
-    config = script.load_multi_asset_live_config(_V94, mode="observe")
+    config = script.load_multi_asset_live_config(_PROFILE_A, mode="observe")
     symbols = config.symbols
     clock = _Clock()
     latch = ProcessSignalStop()
@@ -347,7 +347,7 @@ def test_a_real_sigterm_mid_poll_reaches_the_clean_stop_within_one_read_timeout(
 ) -> None:
     """Real poller, launcher fetcher, runner and socket: the whole stop path."""
     script = _load_module()
-    config = script.load_multi_asset_live_config(_V94, mode="observe")
+    config = script.load_multi_asset_live_config(_PROFILE_A, mode="observe")
     monkeypatch.setattr(
         script, "_PUBLIC_CANDLE_TIMEOUT_SECONDS", _LOOPBACK_TIMEOUT_SECONDS
     )
@@ -587,7 +587,7 @@ def test_the_runner_waits_on_the_latch_it_was_handed(
 ) -> None:
     """The launcher installs the handed latch and makes the poll wait stop-aware."""
     script = _load_module()
-    config = script.load_multi_asset_live_config(_V94, mode="observe")
+    config = script.load_multi_asset_live_config(_PROFILE_A, mode="observe")
     installed: list[object] = []
 
     def install(stop: ProcessSignalStop | None = None) -> ProcessSignalStop:

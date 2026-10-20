@@ -19,12 +19,12 @@ CHECKPOINT_SCRIPT = (
     Path(__file__).parents[1]
     / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_live_checkpoint.py'
 )
-V66_CONFIG = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_four_asset_brentoil_retired_candidate_v66.toml"
+BRENTOIL_RETIRED_CONFIG = Path(
+    "tests/fixtures/profiles/four_asset_brentoil_retired.toml"
 )
 
 
-_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"]
+_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/cohort_base.toml"]
 
 
 def _load_checkpoint_script() -> ModuleType:
@@ -86,7 +86,7 @@ def test_changed_profile_seeds_current_run_without_full_history(
         tmp_path / "ledgers",
         checkpoint,
         requested_run_id="run-new",
-        config_path=tmp_path / "v66.toml",
+        config_path=tmp_path / "brentoil_retired.toml",
         once=False,
         venue_portfolio=None,
         opportunity_matrix_path=None,
@@ -132,7 +132,7 @@ def test_once_flag_can_force_a_bounded_current_run_checkpoint(tmp_path: Path) ->
 
 def test_live_checkpoint_command_is_always_current_run_bounded() -> None:
     """Continuous live checkpoint publication must not replay the multi-gigabyte ledger."""
-    config = load_multi_asset_live_config(V66_CONFIG, mode="observe")
+    config = load_multi_asset_live_config(BRENTOIL_RETIRED_CONFIG, mode="observe")
 
     command = checkpoint_command(config)
 
@@ -141,7 +141,7 @@ def test_live_checkpoint_command_is_always_current_run_bounded() -> None:
 
 def test_live_audit_command_is_current_run_bounded() -> None:
     """Stopped backend audit must not replay all historical cohort ledgers."""
-    config = load_multi_asset_live_config(V66_CONFIG, mode="observe")
+    config = load_multi_asset_live_config(BRENTOIL_RETIRED_CONFIG, mode="observe")
 
     command = audit_command(config)
 

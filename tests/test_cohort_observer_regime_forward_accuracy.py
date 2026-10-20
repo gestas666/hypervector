@@ -8,7 +8,7 @@ from hypervector.research.cohort_observer_regime_forward_accuracy import (
     build_observer_regime_forward_accuracy,
 )
 
-_RUN = "observer-v49"
+_RUN = "observer-a"
 _STRATEGY = "range_onset_bidirectional_v1"
 
 
@@ -23,7 +23,7 @@ def _envelope(
         "effective_mode": "OBSERVE ONLY",
         "live_armed": False,
         "execution_authority": "none",
-        "profile_id": "v49",
+        "profile_id": "profile_a",
         "profile_fingerprint": "profile",
         "run_fingerprint": "run",
         "payload": payload,
@@ -82,10 +82,10 @@ def _records(*, missing_states: bool = False) -> list[dict[str, object]]:
 
 def _continued_records() -> list[dict[str, object]]:
     rows = _records()
-    rows[0]["run_id"] = "observer-v49-2"
+    rows[0]["run_id"] = "observer-a-2"
     rows[0]["observed_at_utc"] = "1970-01-01T00:04:30+00:00"
     for minute, row in zip(range(5, 9), rows[1:], strict=True):
-        row["run_id"] = "observer-v49-2"
+        row["run_id"] = "observer-a-2"
         row["observed_at_utc"] = f"1970-01-01T00:{minute:02}:01+00:00"
         payload = row["payload"]
         assert isinstance(payload, dict)
@@ -162,7 +162,7 @@ def test_regime_accuracy_extends_across_exact_compatible_restarts() -> None:
     )
     route = report["horizons"]["1m"]["by_provider_symbol"][f"{_STRATEGY}|SOL"]
 
-    assert report["source"]["compatible_run_ids"] == [_RUN, "observer-v49-2"]
+    assert report["source"]["compatible_run_ids"] == [_RUN, "observer-a-2"]
     assert route["coverage"]["candidate_observations"] == 8
     assert route["coverage"]["resolved_future_prices"] == 7
 

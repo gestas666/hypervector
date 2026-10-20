@@ -36,9 +36,6 @@ from hypervector.research.cohort_live_audit_values import (
     mapping_list as _mapping_list,
 )
 from hypervector.research.cohort_live_audit_values import (
-    nonnegative_int as _nonnegative_int,
-)
-from hypervector.research.cohort_live_audit_values import (
     provider_cadence_minutes as _provider_cadence_minutes,
 )
 from hypervector.research.cohort_live_audit_values import (
@@ -65,9 +62,6 @@ from hypervector.research.cohort_live_audit_summaries import (
 from hypervector.research.cohort_entry_alignment_mechanism import (
     build_live_entry_alignment_mechanism,
 )
-from hypervector.research.cohort_hulk_entry_quality import (
-    build_hulk_entry_quality_mechanism,
-)
 from hypervector.research.cohort_ignored_provider_exit_scorecard import (
     build_ignored_provider_exit_policy_scorecard,
 )
@@ -85,7 +79,6 @@ from hypervector.research.cohort_open_trade_reflections import (
 )
 from hypervector.research.cohort_profit_lock_challenger import (
     build_all_time_profit_lock_mechanism,
-    build_hip3_swing_60_30_prospective_mechanism,
     build_profit_lock_challenger,
     build_regime_conditioned_profit_lock_mechanism,
     build_support_decay_profit_lock_mechanism,
@@ -111,17 +104,12 @@ from hypervector.research.cohort_signal_outcomes import (
 from hypervector.research.cohort_strategy_scorecard import (
     build_strategy_scorecard,
 )
-from hypervector.research.cohort_support_decay_retrace import (
-    build_support_decay_retrace_mechanism,
-)
 from hypervector.research.cohort_trade_reflections import (
     build_all_time_trade_reflections,
     build_trade_reflections,
 )
 
 Record = Mapping[str, object]
-_SUPPORT_DECAY_SOL_PROVIDER = "hype_breakout_onset_bidirectional_v1|SOL"
-_SUPPORT_DECAY_REQUIRED_POLICY = "a40_floor15_trail20"
 
 
 def audit_multi_asset_live_run(
@@ -334,10 +322,6 @@ def _execution_evidence(
             all_time_live.get("trades"), "all-time reflected trades"
         ),
     )
-    resolved["hulk_entry_quality_challenger"] = build_hulk_entry_quality_mechanism(
-        _mapping_list(all_time_live.get("trades"), "all-time reflected trades"),
-        open_reflected_trades,
-    )
     return {
         "execution": execution,
         "open_trade_reflections": open_trade_reflections,
@@ -401,13 +385,6 @@ def _resolved_exit_evidence(
             all_time_reflected_trades,
         )
     )
-    profit_lock["hip3_swing_60_30_prospective_mechanism"] = (
-        build_hip3_swing_60_30_prospective_mechanism(
-            all_time_cohort,
-            all_time_assets,
-            all_time_reflected_trades,
-        )
-    )
     profit_lock["regime_conditioned_all_time_live_mechanism"] = (
         build_regime_conditioned_profit_lock_mechanism(
             all_time_cohort,
@@ -415,15 +392,8 @@ def _resolved_exit_evidence(
             all_time_reflected_trades,
         )
     )
-    support_decay = build_support_decay_profit_lock_mechanism(
-        all_time_cohort,
-        all_time_assets,
-        all_time_reflected_trades,
-    )
-    if _has_displayable_support_decay_sol_observation(support_decay):
-        profit_lock["support_decay_all_time_live_mechanism"] = support_decay
-    profit_lock["support_decay_retrace_all_time_live_mechanism"] = (
-        build_support_decay_retrace_mechanism(
+    profit_lock["support_decay_all_time_live_mechanism"] = (
+        build_support_decay_profit_lock_mechanism(
             all_time_cohort,
             all_time_assets,
             all_time_reflected_trades,
@@ -442,26 +412,6 @@ def _resolved_exit_evidence(
             open_trades=open_reflected_trades,
         ),
     }
-
-
-def _has_displayable_support_decay_sol_observation(report: Record) -> bool:
-    providers = _mapping(report.get("by_provider_symbol"), "support-decay providers")
-    raw_sol = providers.get(_SUPPORT_DECAY_SOL_PROVIDER)
-    if raw_sol is None:
-        return False
-    sol = _mapping(raw_sol, "support-decay SOL provider")
-    policies = _mapping(sol.get("summary_by_policy"), "support-decay SOL policies")
-    a40 = _mapping(
-        policies.get(_SUPPORT_DECAY_REQUIRED_POLICY),
-        "support-decay SOL A40 policy",
-    )
-    return (
-        _nonnegative_int(
-            a40.get("eligible_lifecycles"),
-            "support-decay SOL A40 eligible lifecycles",
-        )
-        > 0
-    )
 
 
 def _audit_document(

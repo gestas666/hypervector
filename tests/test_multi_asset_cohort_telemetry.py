@@ -26,9 +26,14 @@ from hypervector.live.multi_asset_cohort_telemetry import (
     MultiAssetCohortTelemetry,
     SharedAccountFacts,
 )
+from hypervector.live import multi_asset_strategy_evidence
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.multi_asset_intent_poller import CohortMarketBar
 from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.multi_asset_strategy_evidence_models import (
+    StrategyDirectionalEvidence,
+    StrategyResearchEvidence,
+)
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.hyperliquid_protocol import SolBookLevel, SolBookSnapshot
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
@@ -40,7 +45,7 @@ def _telemetry(
     prestart_backup: CohortPrestartBackupResult | None = None,
 ) -> tuple[MultiAssetCohortTelemetry, SolLiveLedger]:
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -136,7 +141,7 @@ def test_funding_reconciliation_window_is_append_only_raw_evidence(
 def test_snapshots_project_explicit_transition_drain_state(tmp_path: Path) -> None:
     """The TUI receives current drain truth rather than inferring command history."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -224,8 +229,35 @@ def _flat_snapshot_assets() -> tuple[AssetCohortSnapshot, ...]:
     )
 
 
-def test_configuration_exposes_non_gating_strategy_evidence(tmp_path: Path) -> None:
+def test_configuration_exposes_non_gating_strategy_evidence(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Every provider-symbol mapping carries an honest research-state record."""
+    hulk = "hulk_expansion_bidirectional_tuned_v2"
+    monkeypatch.setitem(
+        multi_asset_strategy_evidence._EVIDENCE,
+        (hulk, "BTC"),
+        StrategyResearchEvidence(
+            hulk,
+            "BTC",
+            "contradictory",
+            "medium",
+            "historical sample",
+            "long and short disagree",
+            "evidence/hulk-btc.json",
+            directional_evidence=(
+                StrategyDirectionalEvidence(
+                    "short",
+                    "historical_candidate",
+                    "low",
+                    "12 trades",
+                    "short survives modeled costs",
+                    "evidence/hulk-btc.json",
+                ),
+            ),
+        ),
+    )
     telemetry, ledger = _telemetry(tmp_path)
 
     telemetry.emit_configuration()
@@ -250,15 +282,21 @@ def test_configuration_exposes_non_gating_strategy_evidence(tmp_path: Path) -> N
     assert all(record["execution_effect"] == "report_only" for record in evidence)
     assert all(record["confidence"] in {"high", "medium", "low"} for record in evidence)
     assert all(record["cadence"] for record in evidence)
-    _assert_range_evidence(evidence)
     hulk_btc = next(
         record
         for record in evidence
-        if record["strategy_id"] == "hulk_expansion_bidirectional_tuned_v2"
-        and record["symbol"] == "BTC"
+        if record["strategy_id"] == hulk and record["symbol"] == "BTC"
     )
     assert hulk_btc["research_state"] == "contradictory"
-    assert "short-only survivor is a different provider" in hulk_btc["summary"]
+    assert hulk_btc["evidence_source"] == "evidence/hulk-btc.json"
+    assert [row["side"] for row in hulk_btc["directional_evidence"]] == ["short"]
+    assert hulk_btc["directional_evidence"][0]["execution_effect"] == "report_only"
+    assert all(
+        record["research_state"] == "unreviewed_exact_mapping"
+        and record["evidence_source"] == "none"
+        for record in evidence
+        if record is not hulk_btc
+    )
 
 
 def test_configuration_persists_verified_prestart_backup_identity(
@@ -288,33 +326,6 @@ def test_configuration_persists_verified_prestart_backup_identity(
         "implementation_file_count": 1_156,
         "implementation_sha256": "b" * 64,
     }
-
-
-def _assert_range_evidence(evidence: list[dict[str, object]]) -> None:
-    sol_range = next(
-        record
-        for record in evidence
-        if record["strategy_id"] == "range_onset_bidirectional_v1"
-        and record["symbol"] == "SOL"
-    )
-    assert sol_range["research_state"] == "historical_candidate"
-    assert "42 trades" in sol_range["cadence"]
-    eth_range = next(
-        record
-        for record in evidence
-        if record["strategy_id"] == "range_onset_bidirectional_v1"
-        and record["symbol"] == "ETH"
-    )
-    assert eth_range["research_state"] == "directional_candidate"
-    assert eth_range["confidence"] == "medium"
-    assert "45 long trades" in eth_range["cadence"]
-    assert "long" in eth_range["summary"]
-    assert "short" in eth_range["summary"]
-    assert "dual-MTF" in eth_range["summary"]
-    assert eth_range["evidence_source"].endswith(
-        "range_onset_context_challenger_ETH_20250728_20260728_v2.json"
-    )
-    assert eth_range["execution_effect"] == "report_only"
 
 
 def test_routing_records_selected_and_withheld_strategy_identity(
@@ -478,7 +489,7 @@ def test_canonical_regime_telemetry_is_separate_and_non_executable(
 def test_observe_telemetry_is_explicitly_disarmed(tmp_path: Path) -> None:
     """The same TUI schema must not imply order authority in observe mode."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
     ledger = SolLiveLedger(
@@ -633,7 +644,7 @@ def test_provider_exit_decision_rejects_conflicting_stable_identity(
 
 def _restarted_telemetry(ledger: SolLiveLedger) -> MultiAssetCohortTelemetry:
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

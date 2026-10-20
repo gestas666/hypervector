@@ -1,7 +1,7 @@
 """Fail-closed approval contracts for cohort profile changes and retirements.
 
-The synthetic lineage cases are built from the live V95 profile; the real
-V94 -> V95 approval and the V95 -> V94 rollback approval are validated as-is.
+The synthetic lineage cases are built from fixture profile B; the A -> B
+approval and the B -> A rollback approval are validated as-is.
 """
 
 from __future__ import annotations
@@ -23,9 +23,10 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 
-_V95 = Path("configs/multi_asset_growth_first_5000_review_fixes_v95.toml")
-_V94 = Path("configs/multi_asset_growth_first_5000_review_actions_v94.toml")
-_V95_TO_V94_ROLLBACK = Path("configs/v95-to-v94-rollback-20260927-v1.toml")
+_CHAIN = Path("tests/fixtures/cohort_chain")
+_PROFILE_A = _CHAIN / "profile_a.toml"
+_PROFILE_B = _CHAIN / "profile_b.toml"
+_ROLLBACK_B_TO_A = _CHAIN / "rollback_b_to_a.toml"
 _BTC_SWEEP = "liquidity_sweep_long_1h_stop60_target60_v2"
 _DONCHIAN = "hourly_donchian_20_10_atr20_strong_short_v1"
 _DONCHIAN_SYMBOLS = '["SOL", "xyz:SNDK", "xyz:BRENTOIL", "xyz:TSLA"]'
@@ -39,10 +40,10 @@ def _provider(config: MultiAssetLiveConfig, strategy_id: str) -> StrategyProvide
     return next(row for row in config.providers if row.strategy_id == strategy_id)
 
 
-def test_real_v94_to_v95_approval_admits_the_live_transition() -> None:
-    """The kept V95 approval binds V94 -> V95 exactly and retires no scope."""
-    previous = _load(_V94)
-    candidate = _load(_V95)
+def test_a_to_b_approval_admits_the_live_transition() -> None:
+    """Profile B's approval binds A -> B exactly and retires no scope."""
+    previous = _load(_PROFILE_A)
+    candidate = _load(_PROFILE_B)
 
     result = validate_profile_change_approval(
         previous, candidate, candidate.transition_approval
@@ -59,10 +60,10 @@ def test_real_v94_to_v95_approval_admits_the_live_transition() -> None:
     }
 
 
-def test_real_v95_to_v94_rollback_approval_admits_the_rollback() -> None:
-    """The kept rollback approval binds V95 -> rollback-V94 exactly."""
-    previous = _load(_V95)
-    candidate = _load(_V95_TO_V94_ROLLBACK)
+def test_b_to_a_rollback_approval_admits_the_rollback() -> None:
+    """The authored rollback approval binds B -> rollback-A exactly."""
+    previous = _load(_PROFILE_B)
+    candidate = _load(_ROLLBACK_B_TO_A)
 
     result = validate_profile_change_approval(
         previous, candidate, candidate.transition_approval
@@ -74,32 +75,45 @@ def test_real_v95_to_v94_rollback_approval_admits_the_rollback() -> None:
     assert result["execution_authority"] == "none"
 
 
-def test_real_approvals_do_not_transfer_between_v94_twins() -> None:
-    """V94 and its rollback twin differ only by approval path, never interchangeably."""
-    v94 = _load(_V94)
-    rollback = _load(_V95_TO_V94_ROLLBACK)
-    v95 = _load(_V95)
+def test_approvals_do_not_transfer_between_profile_a_twins() -> None:
+    """A and its rollback twin differ only by approval path, never interchangeably."""
+    profile_a = _load(_PROFILE_A)
+    rollback = _load(_ROLLBACK_B_TO_A)
+    profile_b = _load(_PROFILE_B)
 
     with pytest.raises(
         ProfileChangeApprovalError,
         match="previous profile fingerprint differs from approval",
     ):
-        validate_profile_change_approval(rollback, v95, v95.transition_approval)
+        validate_profile_change_approval(
+            rollback, profile_b, profile_b.transition_approval
+        )
     with pytest.raises(
         ProfileChangeApprovalError,
         match="candidate profile fingerprint differs from approval",
     ):
-        validate_profile_change_approval(v95, v94, rollback.transition_approval)
+        validate_profile_change_approval(
+            profile_b, profile_a, rollback.transition_approval
+        )
     with pytest.raises(
         ProfileChangeApprovalError,
         match="previous profile id differs from approval",
     ):
-        validate_profile_change_approval(v94, v95, v94.transition_approval)
+        validate_profile_change_approval(
+            profile_a, profile_b, rollback.transition_approval
+        )
+    with pytest.raises(
+        ProfileChangeApprovalError,
+        match="approval document does not exist",
+    ):
+        validate_profile_change_approval(
+            profile_b, profile_a, profile_a.transition_approval
+        )
 
 
 def test_unchanged_profile_restart_needs_no_change_approval() -> None:
     """A byte-equivalent profile restart is not a strategy change."""
-    config = _load(_V95)
+    config = _load(_PROFILE_B)
 
     result = validate_profile_change_approval(config, config, None)
 
@@ -114,8 +128,8 @@ def test_unchanged_profile_restart_needs_no_change_approval() -> None:
 
 def test_changed_profile_without_approval_fails_closed() -> None:
     """A changed execution contract cannot inherit approval implicitly."""
-    previous = _load(_V95)
-    candidate = replace(previous, profile_id="v96-parameter-fix")
+    previous = _load(_PROFILE_B)
+    candidate = replace(previous, profile_id="candidate-parameter-fix")
 
     with pytest.raises(
         ProfileChangeApprovalError,
@@ -128,8 +142,8 @@ def test_research_approval_does_not_grant_live_transition_authority(
     tmp_path: Path,
 ) -> None:
     """An approved research build remains separate from live promotion."""
-    previous = _load(_V95)
-    candidate = replace(previous, profile_id="v96-research-only")
+    previous = _load(_PROFILE_B)
+    candidate = replace(previous, profile_id="candidate-research-only")
     approval = _write_approval(
         tmp_path,
         previous,
@@ -163,8 +177,8 @@ def test_malformed_approval_headers_fail_closed(
     message: str,
 ) -> None:
     """Malformed governance metadata cannot be interpreted as approval."""
-    previous = _load(_V95)
-    candidate = replace(previous, profile_id="v96-invalid-header")
+    previous = _load(_PROFILE_B)
+    candidate = replace(previous, profile_id="candidate-invalid-header")
     approval = _write_approval(tmp_path, previous, candidate)
     document = json.loads(approval.read_text(encoding="utf-8"))
     document[field] = value
@@ -176,8 +190,8 @@ def test_malformed_approval_headers_fail_closed(
 
 def test_approval_is_bound_to_exact_profile_fingerprints(tmp_path: Path) -> None:
     """An approval for an earlier candidate cannot authorize later drift."""
-    previous = _load(_V95)
-    candidate = replace(previous, profile_id="v96-exact")
+    previous = _load(_PROFILE_B)
+    candidate = replace(previous, profile_id="candidate-exact")
     approval = _write_approval(tmp_path, previous, candidate)
     drifted = replace(candidate, poll_seconds=candidate.poll_seconds + 1.0)
 
@@ -190,8 +204,8 @@ def test_approval_is_bound_to_exact_profile_fingerprints(tmp_path: Path) -> None
 
 def test_approval_rejects_changed_evidence_bytes(tmp_path: Path) -> None:
     """Recommendation evidence must remain identical after approval."""
-    previous = _load(_V95)
-    candidate = replace(previous, profile_id="v96-evidence")
+    previous = _load(_PROFILE_B)
+    candidate = replace(previous, profile_id="candidate-evidence")
     approval = _write_approval(tmp_path, previous, candidate)
     (tmp_path / "recommendation.json").write_text("drifted\n", encoding="utf-8")
 
@@ -204,8 +218,8 @@ def test_approval_rejects_changed_evidence_bytes(tmp_path: Path) -> None:
 
 def test_approval_rejects_changed_rollback_bytes(tmp_path: Path) -> None:
     """A rollback artifact must still reproduce the prior profile exactly."""
-    previous = _load(_V95)
-    candidate = replace(previous, profile_id="v96-rollback")
+    previous = _load(_PROFILE_B)
+    candidate = replace(previous, profile_id="candidate-rollback")
     approval = _write_approval(tmp_path, previous, candidate)
     (tmp_path / "rollback.toml").write_text("drifted\n", encoding="utf-8")
 
@@ -215,9 +229,11 @@ def test_approval_rejects_changed_rollback_bytes(tmp_path: Path) -> None:
 
 def test_rollback_must_reproduce_previous_profile(tmp_path: Path) -> None:
     """A hash-matched rollback file for another profile is not a rollback."""
-    previous = _load(_V95)
-    candidate = replace(previous, profile_id="v96-wrong-rollback")
-    approval = _write_approval(tmp_path, previous, candidate, rollback_source=_V94)
+    previous = _load(_PROFILE_B)
+    candidate = replace(previous, profile_id="candidate-wrong-rollback")
+    approval = _write_approval(
+        tmp_path, previous, candidate, rollback_source=_PROFILE_A
+    )
 
     with pytest.raises(
         ProfileChangeApprovalError,
@@ -228,7 +244,7 @@ def test_rollback_must_reproduce_previous_profile(tmp_path: Path) -> None:
 
 def test_retired_scope_requires_named_added_replacement(tmp_path: Path) -> None:
     """Removing execution authority without replacement cannot be approved."""
-    previous = _load(_V95)
+    previous = _load(_PROFILE_B)
     retired = _provider(previous, _BTC_SWEEP)
     candidate = _replace_provider(previous, retired, None)
     approval = _write_approval(tmp_path, previous, candidate)
@@ -242,7 +258,7 @@ def test_retired_scope_requires_named_added_replacement(tmp_path: Path) -> None:
 
 def test_absent_asset_scopes_allow_explicit_terminal_removal(tmp_path: Path) -> None:
     """An operator may remove an entire asset without inventing a replacement."""
-    previous = _load(_V95)
+    previous = _load(_PROFILE_B)
     shared = _provider(previous, _DONCHIAN)
     narrowed = replace(
         shared,
@@ -253,7 +269,7 @@ def test_absent_asset_scopes_allow_explicit_terminal_removal(tmp_path: Path) -> 
     )
     candidate = replace(
         _replace_provider(previous, shared, narrowed),
-        profile_id="v96-tsla-terminal-removal",
+        profile_id="candidate-tsla-terminal-removal",
         assets=tuple(row for row in previous.assets if row.symbol != "xyz:TSLA"),
     )
     approval = _write_approval(
@@ -286,7 +302,7 @@ def test_retained_asset_scope_allows_explicit_terminal_removal(
     tmp_path: Path,
 ) -> None:
     """An operator may reduce one retained asset's execution authority."""
-    previous = _load(_V95)
+    previous = _load(_PROFILE_B)
     retired = _provider(previous, _BTC_SWEEP)
     candidate = _replace_provider(previous, retired, None)
     assert "BTC" in candidate.symbols
@@ -314,11 +330,11 @@ def test_retained_asset_scope_allows_explicit_terminal_removal(
 
 def test_replacement_must_preserve_symbol_and_side_coverage(tmp_path: Path) -> None:
     """A long BTC retirement cannot be filled by a short BTC route."""
-    previous = _load(_V95)
+    previous = _load(_PROFILE_B)
     retired = _provider(previous, _BTC_SWEEP)
     replacement = replace(
         retired,
-        strategy_id="v96-btc-short-replacement",
+        strategy_id="candidate-btc-short-replacement",
         sides=frozenset({"short"}),
     )
     candidate = _replace_provider(previous, retired, replacement)
@@ -347,9 +363,9 @@ def test_replacement_must_preserve_symbol_and_side_coverage(tmp_path: Path) -> N
 
 def test_retired_scope_cannot_be_mapped_twice(tmp_path: Path) -> None:
     """Duplicate mappings cannot disguise incomplete one-to-one lineage."""
-    previous = _load(_V95)
+    previous = _load(_PROFILE_B)
     retired = _provider(previous, _BTC_SWEEP)
-    replacement = replace(retired, strategy_id="v96-btc-long-replacement")
+    replacement = replace(retired, strategy_id="candidate-btc-long-replacement")
     candidate = _replace_provider(previous, retired, replacement)
     mapping = _retirement(
         retired.strategy_id,
@@ -405,9 +421,9 @@ def test_approved_replacement_covers_every_removed_scope_once(
     tmp_path: Path,
 ) -> None:
     """Exact live approval accepts a complete one-to-one replacement lineage."""
-    previous = _load(_V95)
+    previous = _load(_PROFILE_B)
     retired = _provider(previous, _BTC_SWEEP)
-    replacement = replace(retired, strategy_id="v96-btc-long-replacement")
+    replacement = replace(retired, strategy_id="candidate-btc-long-replacement")
     candidate = _replace_provider(previous, retired, replacement)
     approval = _write_approval(
         tmp_path,
@@ -438,8 +454,8 @@ def test_approved_replacement_covers_every_removed_scope_once(
 
 
 def _write_shared_btc_long_profile(root: Path) -> Path:
-    """Write a V95 variant whose Donchian route also executes BTC both ways."""
-    text = _V95.read_text(encoding="utf-8")
+    """Write a profile B variant whose Donchian route also executes BTC both ways."""
+    text = _PROFILE_B.read_text(encoding="utf-8")
     assert text.count(_DONCHIAN_SYMBOLS) == 2
     path = root / "previous.toml"
     path.write_text(
@@ -458,7 +474,7 @@ def _replace_provider(
     providers = tuple(row for row in config.providers if row is not retired)
     if replacement is not None:
         providers = (replacement, *providers)
-    return replace(config, profile_id="v96-lineage", providers=providers)
+    return replace(config, profile_id="candidate-lineage", providers=providers)
 
 
 def _retirement(
@@ -491,7 +507,7 @@ def _write_approval(
     *,
     status: str = "approved_for_live_transition",
     retirements: list[dict[str, object]] | None = None,
-    rollback_source: Path = _V95,
+    rollback_source: Path = _PROFILE_B,
 ) -> Path:
     """Write an exact approval fixture with hash-bound evidence and rollback."""
     evidence = root / "recommendation.json"

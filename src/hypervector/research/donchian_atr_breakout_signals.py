@@ -24,7 +24,7 @@ from hypervector.research.completed_signal_projection import (
 
 @dataclass(frozen=True)
 class DonchianAtrBreakoutConfig:
-    """Immutable channel parameters; the existing V75 defaults remain four-hour."""
+    """Immutable channel parameters; the defaults are four-hour."""
 
     entry_channel_bars: int = 20
     exit_channel_bars: int = 10

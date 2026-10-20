@@ -16,13 +16,13 @@ from hypervector.live.multi_asset_live_config import (
 )
 from test_cohort_profile_stage_roundtrip import unchanged_settings
 
-V89_PROFILE = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml")
+NONCRYPTO_PROFILE = Path("tests/fixtures/profiles/noncrypto_live.toml")
 
 
 @pytest.mark.parametrize("index", range(7))
-def test_disable_and_reenable_preserves_exact_v89_policy(index: int, tmp_path: Path) -> None:
+def test_disable_and_reenable_preserves_exact_policy(index: int, tmp_path: Path) -> None:
     """The scope switch alone removes authority; inactive overrides survive the round trip."""
-    original = load_multi_asset_live_config(V89_PROFILE, mode="observe")
+    original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
     settings = unchanged_settings(original)
     providers = list(settings.providers)
     providers[index] = replace(providers[index], execution_symbols=())
@@ -44,12 +44,12 @@ def test_disable_and_reenable_preserves_exact_v89_policy(index: int, tmp_path: P
     enabled = load_multi_asset_live_config(enabled_path, mode="observe")
     assert enabled.providers == original.providers
     assert enabled.executable_provider_directions == original.executable_provider_directions
-    assert original == load_multi_asset_live_config(V89_PROFILE, mode="observe")
+    assert original == load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
 
 
 def test_inactive_override_still_requires_an_observed_provider_symbol() -> None:
     """Preserved settings cannot name an asset the provider does not observe."""
-    original = load_multi_asset_live_config(V89_PROFILE, mode="observe")
+    original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
     invalid = replace(original.providers[0], execution_symbols=(),
                       execution_side_overrides=(("ETH", frozenset({"long"})),))
     with pytest.raises(ValueError, match="execution_side_overrides"):
@@ -60,7 +60,7 @@ def test_inactive_override_still_requires_an_observed_provider_symbol() -> None:
 @pytest.mark.parametrize("changed", ["side", "stop"])
 def test_inactive_directional_contract_still_rejects_drift(index: int, changed: str) -> None:
     """Observe-only status does not relax the retained entry direction or protection."""
-    original = load_multi_asset_live_config(V89_PROFILE, mode="observe")
+    original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
     providers = list(original.providers)
     inactive = replace(providers[index], execution_symbols=())
     providers[index] = (replace(inactive, execution_side_overrides=()) if changed == "side"
@@ -71,7 +71,7 @@ def test_inactive_directional_contract_still_rejects_drift(index: int, changed: 
 
 def test_all_inactive_override_families_survive_staging(tmp_path: Path) -> None:
     """Direction, context, stop, sizing and directional lock remain exact stored policy."""
-    original = load_multi_asset_live_config("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml", mode="observe")
+    original = load_multi_asset_live_config("tests/fixtures/profiles/cohort_base.toml", mode="observe")
     provider = replace(original.providers[1], execution_symbols=(),
                        execution_side_overrides=(("BTC", frozenset({"long"})),),
                        entry_context_overrides=(("BTC", "dual_mtf_not_opposed"),),

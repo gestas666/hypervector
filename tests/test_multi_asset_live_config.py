@@ -17,12 +17,12 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 
-_PROFILE = Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml")
+_PROFILE = Path("tests/fixtures/profiles/cohort_base.toml")
 _BREAKOUT_OBSERVER_PROFILE = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_breakout_observer_v3.toml"
+    "tests/fixtures/profiles/breakout_observer.toml"
 )
 _COMPLETE_PROFILE = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_complete_portfolio_canary_v25.toml"
+    "tests/fixtures/profiles/complete_portfolio.toml"
 )
 _SOURCE_FOLLOW_ID = "hypervelocity_source_follow_bidirectional_5m_v1"
 _SOURCE_PROFILE_NAME = (
@@ -520,7 +520,7 @@ def test_profile_fingerprint_is_stable_across_python_hash_seeds() -> None:
     program = (
         "from hypervector.live.multi_asset_live_config import "
         "load_multi_asset_live_config as load; "
-        "print(load('tests/fixtures/profiles/multi_asset_bidirectional_canary.toml', "
+        "print(load('tests/fixtures/profiles/cohort_base.toml', "
         "mode='observe').profile_fingerprint)"
     )
     # The seeded interpreters are independent, so run them concurrently rather than in turn.

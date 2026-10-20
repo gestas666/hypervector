@@ -3,58 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import replace
 import math
 
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
 from hypervector.research.cohort_friction_contract_models import (
     ModeledExecutionContract,
 )
-from hypervector.research.cohort_friction_contract_recent import (
-    spcx_cash_open_modeled_contract,
-    v58_commodity_fresh15_modeled_contracts,
-    v76_sndk_fresh15_modeled_contract,
-    v79_route_modeled_contracts,
-    v89_hourly_modeled_contracts,
-    v90_hourly_modeled_contracts,
-    v94_strong_short_modeled_contracts,
-)
-from hypervector.research.eth_pullback_replay import ETH_PULLBACK_STRATEGY
-from hypervector.research.hype_breakout_exit_models import HypeExitReplayConfig
-from hypervector.research.market_cipher_strategy_research import (
-    resolve_market_cipher_replay_config,
-)
-from hypervector.research.range_onset_event_models import EventReplayConfig
-from hypervector.research.source_follow_live_shape_models import SourceLiveShapeConfig
 
 Record = Mapping[str, object]
-HULK_STRATEGY = "hulk_expansion_bidirectional_tuned_v2"
-HULK_ROBUST_SHORT_STRATEGY = "hulk_expansion_short_robust_v3"
-HULK_TUNED_SHORT_STRATEGY = "hulk_expansion_short_tuned_v2"
-RANGE_STRATEGY = "range_onset_bidirectional_v1"
-LIQUIDITY_SWEEP_TARGET60_STRATEGY = "liquidity_sweep_long_1h_stop60_target60_v2"
-SOURCE_STRATEGY = "hypervelocity_source_follow_bidirectional_5m_v1"
-HYPE_STRATEGY = "hype_breakout_onset_bidirectional_v1"
-HYPE_COMPRESSION_STRATEGY = "hype_breakout_compression_pullback_bidirectional_v1"
-HYPE_ALIGNMENT_STRATEGY = "hype_breakout_compression_alignment_bidirectional_v2"
-HYPE_ALIGNMENT_EVIDENCE = (
-    "data/logs/research/hype_compression_breakout_challenger_"
-    "20260816_v6_alignment/report.json"
-)
-HIP3_SWING_INDEX = "hip3_swing_ha_sp500_spcx_bidirectional_v2"
-HIP3_BREAKOUT_INDEX = "hip3_breakout_pressure_sp500_spcx_bidirectional_v1"
-HIP3_BREAKOUT_FRESH15_INDEX = (
-    "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3"
-)
-HIP3_SWING_COMMODITY = "hip3_swing_ha_sndk_gold_brent_bidirectional_v1"
-HIP3_BREAKOUT_COMMODITY = "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1"
-SPCX_CASH_OPEN = "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1"
-HIP3_V25_LIFECYCLE_EVIDENCE = (
-    "data/logs/research/hip3_v25_lifecycle_bar_diagnostic_20260807.json"
-)
-V51_GROWTH_STRESS_EVIDENCE = (
-    "data/logs/research/bidirectional_cohort/v51_growth_sizing_stress_20260813_v1.json"
-)
+
+# Research-modeled mechanics keyed by (strategy_id, symbol), with a
+# (strategy_id, None) entry as the provider-wide fallback. Empty until a
+# profile's research is reviewed; unlisted routes report as unmodeled.
+_MODELED: dict[tuple[str, str | None], ModeledExecutionContract] = {}
 
 
 def modeled_contract(
@@ -62,13 +23,7 @@ def modeled_contract(
     symbol: str | None = None,
 ) -> ModeledExecutionContract | None:
     """Resolve cited mechanics for an exact pair before provider fallback."""
-    route = (strategy, symbol)
-    exact = v89_hourly_modeled_contracts().get(route)
-    exact = exact or v90_hourly_modeled_contracts().get(route)
-    exact = exact or v94_strong_short_modeled_contracts().get(route)
-    exact = exact or v79_route_modeled_contracts().get(route)
-    exact = exact or _hip3_modeled_contracts().get(route)
-    return exact or _modeled_contracts().get(strategy)
+    return _MODELED.get((strategy, symbol)) or _MODELED.get((strategy, None))
 
 
 def symbol_override_modeled_contract(
@@ -76,13 +31,7 @@ def symbol_override_modeled_contract(
     symbol: str,
 ) -> ModeledExecutionContract | None:
     """Return cited mechanics for an explicit deployed symbol override."""
-    if (strategy, symbol) != (RANGE_STRATEGY, "SOL"):
-        return None
-    return replace(
-        _range_modeled_contract(),
-        stop_bps=80.0,
-        evidence_source=V51_GROWTH_STRESS_EVIDENCE,
-    )
+    return _MODELED.get((strategy, symbol))
 
 
 def runtime_contract(
@@ -130,216 +79,6 @@ def contract_mismatches(
     _compare_hold(modeled, runtime, mismatches)
     _compare_target(modeled, runtime, mismatches)
     return mismatches
-
-
-def _modeled_contracts() -> dict[str, ModeledExecutionContract]:
-    return {
-        HULK_STRATEGY: _hulk_modeled_contract(),
-        HULK_ROBUST_SHORT_STRATEGY: _hulk_modeled_contract(),
-        HULK_TUNED_SHORT_STRATEGY: _hulk_modeled_contract(),
-        RANGE_STRATEGY: _range_modeled_contract(),
-        LIQUIDITY_SWEEP_TARGET60_STRATEGY: _liquidity_sweep_target60_contract(),
-        SOURCE_STRATEGY: _source_modeled_contract(),
-        HYPE_STRATEGY: _hype_modeled_contract(),
-        HYPE_COMPRESSION_STRATEGY: _hype_modeled_contract(),
-        HYPE_ALIGNMENT_STRATEGY: replace(
-            _hype_modeled_contract(), evidence_source=HYPE_ALIGNMENT_EVIDENCE
-        ),
-        ETH_PULLBACK_STRATEGY: _eth_pullback_modeled_contract(),
-    }
-
-
-def _hip3_modeled_contracts() -> dict[tuple[str, str | None], ModeledExecutionContract]:
-    costs = {
-        "xyz:SP500": (0.864, 1.4030892763),
-        "xyz:SPCX": (0.864, 2.7515676541),
-        "xyz:SNDK": (0.864, 9.2638468063),
-        "xyz:GOLD": (8.64, 1.1245748882),
-        "xyz:BRENTOIL": (0.864, 2.9133263178),
-    }
-    groups = {
-        HIP3_SWING_INDEX: ("xyz:SP500", "xyz:SPCX"),
-        HIP3_BREAKOUT_INDEX: ("xyz:SP500", "xyz:SPCX"),
-        HIP3_BREAKOUT_FRESH15_INDEX: ("xyz:SP500", "xyz:SPCX"),
-        HIP3_SWING_COMMODITY: ("xyz:SNDK", "xyz:GOLD", "xyz:BRENTOIL"),
-        HIP3_BREAKOUT_COMMODITY: ("xyz:SNDK", "xyz:GOLD", "xyz:BRENTOIL"),
-    }
-    contracts = {
-        (strategy, symbol): _hip3_modeled_contract(
-            costs[symbol],
-            V51_GROWTH_STRESS_EVIDENCE
-            if strategy == HIP3_BREAKOUT_FRESH15_INDEX
-            else HIP3_V25_LIFECYCLE_EVIDENCE,
-        )
-        for strategy, symbols in groups.items()
-        for symbol in symbols
-    }
-    contracts[(SPCX_CASH_OPEN, "xyz:SPCX")] = spcx_cash_open_modeled_contract()
-    contracts.update(v58_commodity_fresh15_modeled_contracts())
-    route, contract = v76_sndk_fresh15_modeled_contract()
-    contracts[route] = contract
-    return contracts
-
-
-def _hip3_modeled_contract(
-    costs: tuple[float, float],
-    evidence_source: str,
-) -> ModeledExecutionContract:
-    fee_bps, slippage_bps = costs
-    return ModeledExecutionContract(
-        "taker",
-        fee_bps,
-        slippage_bps,
-        "fixed_bps",
-        80.0,
-        None,
-        None,
-        86_400,
-        "fixed",
-        None,
-        "none",
-        None,
-        None,
-        None,
-        evidence_source,
-    )
-
-
-def _hulk_modeled_contract() -> ModeledExecutionContract:
-    hulk = resolve_market_cipher_replay_config("nominal", bar_minutes=30)
-    return ModeledExecutionContract(
-        "taker",
-        _rate_bps(hulk.entry_fee_rate),
-        hulk.entry_slippage_bps,
-        "structural_clamped_bps",
-        None,
-        hulk.minimum_stop_bps,
-        hulk.maximum_stop_bps,
-        hulk.maximum_hold_bars * 30 * 60,
-        "fixed",
-        None,
-        "reward_risk",
-        "maker",
-        None,
-        hulk.target_r_multiple,
-        "docs/reviews/2026-08-01-market-cipher-strategy-rehabilitation.md",
-    )
-
-
-def _range_modeled_contract() -> ModeledExecutionContract:
-    range_onset = EventReplayConfig()
-    return ModeledExecutionContract(
-        "taker",
-        _rate_bps(range_onset.taker_fee_rate),
-        None,
-        "fixed_bps",
-        range_onset.stop_bps,
-        None,
-        None,
-        range_onset.max_hold_ms // 1_000,
-        "fixed",
-        None,
-        "none",
-        None,
-        None,
-        None,
-        "docs/reviews/2026-07-31-sol-range-onset-clean-extension.md",
-    )
-
-
-def _liquidity_sweep_target60_contract() -> ModeledExecutionContract:
-    return ModeledExecutionContract(
-        "taker",
-        4.5,
-        2.0,
-        "fixed_bps",
-        60.0,
-        None,
-        None,
-        86_400,
-        "fixed",
-        None,
-        "fixed_bps",
-        "maker",
-        60.0,
-        None,
-        "data/logs/research/bidirectional_cohort/"
-        "btc_liquidity_sweep_taker_parity_20260811_v2.json",
-    )
-
-
-def _source_modeled_contract() -> ModeledExecutionContract:
-    source = SourceLiveShapeConfig()
-    return ModeledExecutionContract(
-        "taker",
-        _rate_bps(source.entry_fee_rate),
-        source.entry_slippage_bps,
-        "fixed_bps",
-        source.stop_bps,
-        None,
-        None,
-        source.maximum_hold_minutes * 60,
-        "fixed",
-        None,
-        "fixed_bps",
-        "maker",
-        source.target_bps,
-        None,
-        "data/logs/research/source_follow_deployed_shape_btc_1y_20260804.json",
-    )
-
-
-def _hype_modeled_contract() -> ModeledExecutionContract:
-    hype = HypeExitReplayConfig(
-        maximum_hold_policy="extend_while_regime_supported",
-        hard_maximum_hold_minutes=1_440,
-    )
-    hard_hold_minutes = hype.hard_maximum_hold_minutes
-    if hard_hold_minutes is None:
-        raise RuntimeError("HYPE live-extension research requires a hard hold")
-    return ModeledExecutionContract(
-        "taker",
-        hype.fee_bps_per_side,
-        hype.slippage_bps_per_side,
-        "fixed_bps",
-        hype.stop_bps,
-        None,
-        None,
-        hype.maximum_hold_minutes * 60,
-        hype.maximum_hold_policy,
-        hard_hold_minutes * 60,
-        "none",
-        None,
-        None,
-        None,
-        "data/logs/research/hype_breakout_live_extension_parity_20260804.json",
-    )
-
-
-def _eth_pullback_modeled_contract() -> ModeledExecutionContract:
-    eth = HypeExitReplayConfig(
-        stop_bps=60.0,
-        maximum_hold_minutes=720,
-        fee_bps_per_side=4.5,
-        slippage_bps_per_side=2.0,
-    )
-    return ModeledExecutionContract(
-        "taker",
-        eth.fee_bps_per_side,
-        eth.slippage_bps_per_side,
-        "fixed_bps",
-        eth.stop_bps,
-        None,
-        None,
-        eth.maximum_hold_minutes * 60,
-        "fixed",
-        None,
-        "none",
-        None,
-        None,
-        None,
-        "data/logs/research/eth_sol_shared_canary_falsification_20260807_v1.json",
-    )
 
 
 def _provider_runtime_contract(
@@ -494,10 +233,6 @@ def _positive_integer(value: object, label: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         raise ValueError(f"{label} must be a positive integer")
     return value
-
-
-def _rate_bps(rate: float) -> float:
-    return round(rate * 10_000.0, 10)
 
 
 def _nonempty_text(value: object, label: str) -> str:

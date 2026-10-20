@@ -4,12 +4,41 @@ from datetime import datetime, timezone
 
 import pytest
 
+from hypervector.research import cohort_friction_contracts
+from hypervector.research.cohort_friction_contract_models import (
+    ModeledExecutionContract,
+)
 from hypervector.research.cohort_signal_orderbook_context import (
     build_orderbook_opportunity_diagnostics,
 )
 
 _DECISION_MS = 1_800_000_000_000
 _STRATEGY = "hype_breakout_onset_bidirectional_v1"
+
+
+@pytest.fixture(autouse=True)
+def _modeled_friction(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(
+        cohort_friction_contracts._MODELED,
+        (_STRATEGY, None),
+        ModeledExecutionContract(
+            "taker",
+            4.5,
+            2.0,
+            "fixed_bps",
+            80.0,
+            None,
+            None,
+            28_800,
+            "fixed",
+            None,
+            "none",
+            None,
+            None,
+            None,
+            "evidence/hype.json",
+        ),
+    )
 
 
 def test_markout_uses_post_publication_executable_bbo() -> None:
@@ -63,6 +92,37 @@ def test_markout_uses_post_publication_executable_bbo() -> None:
     assert latest["entry_book_time_ms"] == entry_ms
     assert latest["exit_book_time_ms"] == exit_ms
     assert latest["pressure_stance"] == "aligned"
+
+
+def test_markout_without_modeled_friction_keeps_only_gross_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unmodeled route resolves gross BBO paths without inventing costs."""
+    monkeypatch.delitem(cohort_friction_contracts._MODELED, (_STRATEGY, None))
+    entry_ms = _DECISION_MS + 3_000
+    exit_ms = entry_ms + 5 * 60_000
+    report = _report(
+        [_routing(_DECISION_MS, _DECISION_MS + 2_000, side="long")],
+        [
+            _book_row(_DECISION_MS + 1_000, 100.0, 0.4),
+            _book_row(entry_ms, 100.0, 0.3),
+            _book_row(exit_ms, 101.0, 0.2),
+        ],
+    )
+
+    horizon = _markouts(report)["horizons"]["5"]
+    assert horizon["coverage"] == {
+        **_coverage(resolved=1),
+        "friction_contract_missing": 1,
+    }
+    aligned = horizon["by_pressure_stance"]["aligned"]
+    entry_ask = 100.0 * (1.0 + 0.20 / 20_000.0)
+    exit_bid = 101.0 * (1.0 - 0.20 / 20_000.0)
+    assert aligned["mean_gross_bbo_bps"] == pytest.approx(
+        (exit_bid / entry_ask - 1.0) * 10_000.0
+    )
+    assert aligned["mean_after_fee_bps"] is None
+    assert aligned["mean_after_modeled_friction_bps"] is None
 
 
 def test_markout_is_censored_without_a_future_exit_book() -> None:

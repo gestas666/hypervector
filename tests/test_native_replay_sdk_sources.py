@@ -93,7 +93,7 @@ def test_missing_midpoint_does_not_hide_observed_prices_for_other_symbols() -> N
     from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
+        "tests/fixtures/profiles/noncrypto_live.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

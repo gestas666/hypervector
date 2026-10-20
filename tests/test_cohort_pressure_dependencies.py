@@ -16,13 +16,13 @@ from hypervector.live import cohort_pressure_dependencies as dependencies
 from hypervector.live import cohort_dependency_supervision as supervision
 
 _CONFIG = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86.toml"
+    "tests/fixtures/profiles/seven_asset_failed_routes_retired.toml"
 )
 _OLD = "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v3"
 
 
 def test_only_corrected_sndk_adds_its_unsigned_dependency() -> None:
-    """The V86 baseline retains SPCX-only supervision; v4 adds exactly SNDK."""
+    """The baseline profile retains SPCX-only supervision; v4 adds exactly SNDK."""
     config = load_multi_asset_live_config(_CONFIG, mode="observe")
     assert set(dependencies.pressure_dependency_commands(config)) == {"xyz:SPCX"}
     config = replace(

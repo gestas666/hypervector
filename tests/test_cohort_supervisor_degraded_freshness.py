@@ -17,7 +17,7 @@ import pytest
 
 import cohort_backend_supervisor as sup
 from test_cohort_backend_supervisor import _paths, _write_healthy_files
-from test_cohort_supervisor_v94_alerts import (
+from test_cohort_supervisor_alerts import (
     _degraded,
     _health,
     _ledger,

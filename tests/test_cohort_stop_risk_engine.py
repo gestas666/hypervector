@@ -68,14 +68,14 @@ def test_native_size_is_lot_rounded_below_budget_and_journaled(
     assert restored.start().execution_plan == result.execution_plan
 
 
-def test_v91_fingerprint_unchanged_and_risk_budget_changes_identity() -> None:
+def test_adaptive_fingerprint_unchanged_and_risk_budget_changes_identity() -> None:
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml",
+        "tests/fixtures/profiles/adaptive_eight_asset.toml",
         mode="observe",
     )
     assert (
         config.profile_fingerprint
-        == "00ca7e008e8b2ec7cbeac4b9541cabf39a8576a23769b92a169e984616fe8d8c"
+        == "217720aba4e61b7001471258522f03bb02cac8f42b660ba19a049981aa4d7ae6"
     )
     first = config.providers[0]
     changed = replace(
@@ -92,7 +92,7 @@ def test_budget_survives_profile_staging_and_checkpoint_projection(
     tmp_path: Path,
 ) -> None:
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml",
+        "tests/fixtures/profiles/adaptive_eight_asset.toml",
         mode="observe",
     )
     first = config.providers[0]
@@ -116,11 +116,11 @@ def test_budget_survives_profile_staging_and_checkpoint_projection(
 
 def test_proposal_keeps_existing_strategies_and_has_no_live_approval() -> None:
     original = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml",
+        "tests/fixtures/profiles/adaptive_eight_asset.toml",
         mode="observe",
     )
     candidate = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_v92_risk_control_proposal.toml", mode="observe"
+        "tests/fixtures/profiles/risk_control.toml", mode="observe"
     )
     assert not candidate.enabled and not candidate.accepts_live_risk
     assert candidate.transition_approval is None

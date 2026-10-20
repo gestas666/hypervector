@@ -6,12 +6,12 @@ from hypervector.live.multi_asset_cohort_payloads import provider_config_payload
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
 
-_V48 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_repaired_candidate_v48.toml")
+_REPAIRED_A = Path("tests/fixtures/profiles/repaired_a.toml")
 
 
 def test_provider_payload_preserves_directional_authority() -> None:
     """Telemetry must not relabel one-sided providers as bidirectional."""
-    config = load_multi_asset_live_config(_V48, mode="observe")
+    config = load_multi_asset_live_config(_REPAIRED_A, mode="observe")
     sides = {
         provider.strategy_id: provider_config_payload(provider)["sides"]
         for provider in config.providers

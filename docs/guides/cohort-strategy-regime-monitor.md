@@ -6,7 +6,7 @@ publishes. Select the exact profile and run you mean.
 ```sh
 .venv/bin/python -m hypervector live monitor --help
 .venv/bin/python -m hypervector live monitor \
-  --config configs/multi_asset_growth_first_5000_review_fixes_v95.toml \
+  --config <profile.toml> \
   --source-checkpoint data/runtime/bidirectional_cohort/latest_checkpoint.json \
   --run-id RUN_ID --follow
 ```

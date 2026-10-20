@@ -17,18 +17,11 @@ from hypervector.research.cohort_configuration_generation import (
     configuration_generation_evidence,
     load_configuration_expectation,
 )
-from hypervector.research.v79_execution_quality_guard import (
-    validate_v79_execution_quality,
-)
 
 _ADDRESS = "0x1111111111111111111111111111111111111111"
 _ENTRY_CLOID = "0x00000000000000000000000000000001"
 _CLOSE_CLOID = "0x00000000000000000000000000000002"
-_V79 = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_seven_asset_all_active_v79.toml")
-_V79_FINGERPRINT = "6c12d96e3fe09dd5dcefd24761bc7462ec6d6aa0b0d0f023a21e4b8597b646f7"
-_V80 = Path(
-    "tests/fixtures/profiles/multi_asset_growth_first_5000_seven_asset_entry_ioc_hardened_v80.toml"
-)
+_ALL_ACTIVE = Path("tests/fixtures/profiles/seven_asset_all_active.toml")
 _LIVE_SCRIPT = Path("src/hypervector/operations/multi_asset_bidirectional_live.py")
 
 
@@ -174,51 +167,6 @@ def test_configuration_generation_exposes_pending_entry_and_close_caps(
     }
 
 
-def test_legacy_profile_identity_keeps_its_single_ioc_cap() -> None:
-    """Adding the split must not silently change an approved old fingerprint."""
-    config = load_multi_asset_live_config(_V79, mode="observe")
-
-    assert config.profile_fingerprint == _V79_FINGERPRINT
-    assert all(asset.entry_slippage_cap_fraction is None for asset in config.assets)
-    assert all(
-        asset.effective_entry_slippage_cap_fraction
-        == asset.market_slippage_cap_fraction
-        for asset in config.assets
-    )
-
-
-def test_execution_quality_uses_the_entry_cap_not_the_close_cap() -> None:
-    """A 50 bps entry must fail V80 even though the close envelope is 100 bps."""
-    config = load_multi_asset_live_config(_V80, mode="observe")
-    slippage_bps = (100.5 / 100.0 - 1.0) * 10_000.0
-    audit = {
-        "execution": {
-            "fill_details": [
-                {
-                    "operation": "entry",
-                    "symbol": "BTC",
-                    "strategy_id": "liquidity_sweep_long_1h_stop60_target60_v2",
-                    "oid": 101,
-                    "side": "B",
-                    "price": 100.5,
-                    "size": 1.0,
-                    "fee_usd": 0.0,
-                    "expected_price": 100.0,
-                    "slippage_bps": slippage_bps,
-                    "acknowledgement_latency_ms": 5,
-                }
-            ],
-            "fee_rate_bps": _summary(0.0),
-            "slippage_bps": _summary(slippage_bps),
-            "acknowledgement_latency_ms": _summary(5.0),
-        }
-    }
-
-    result = validate_v79_execution_quality(audit, config)
-
-    assert result.reasons == ("entry_slippage_cap_exceeded:BTC:101",)
-
-
 def _accepted(oid: int, size: float) -> object:
     """Return one official-SDK-shaped accepted fill acknowledgement."""
     return {
@@ -230,23 +178,11 @@ def _accepted(oid: int, size: float) -> object:
     }
 
 
-def _summary(value: float) -> dict[str, float | int | str]:
-    """Build one exact complete execution-quality summary."""
-    return {
-        "status": "observed",
-        "count": 1,
-        "minimum": value,
-        "median": value,
-        "maximum": value,
-        "mean": value,
-    }
-
-
 def _split_config(tmp_path: Path) -> Path:
     """Create one temporary profile with separate entry and close caps."""
-    source = _V79.read_text(encoding="utf-8")
+    source = _ALL_ACTIVE.read_text(encoding="utf-8")
     source = source.replace(
-        'profile = "multi_asset_growth_first_5000_seven_asset_all_active_v79"',
+        'profile = "fixture_seven_asset_all_active"',
         'profile = "entry_slippage_split_test"',
     )
     source = "\n".join(

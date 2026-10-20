@@ -30,9 +30,8 @@ route's widest stop plus its cost buffer must stay inside the isolated
 liquidation distance at that lowest tolerated maximum, so no venue change the
 start accepts can leave a stop that never fires.
 
-With ``--equity`` it also runs the book-level config check of the V94 size
-ladder (docs/plans/2026-09-24-v94-size-ladder.md): across executable routes at
-that equity, the summed maximum at-stop loss must stay within 3% of equity and
+With ``--equity`` it also runs the book-level config check: across executable
+routes at that equity, the summed maximum at-stop loss must stay within 3% of equity and
 the summed posted margin within 25%. It is a configuration validation, not a
 trade gate: the live runner never consults it.
 
@@ -71,7 +70,7 @@ from hypervector.live.multi_asset_market_bars import MultiAssetIntentPollerError
 
 BOOK_AT_STOP_RISK_LIMIT = 0.03
 BOOK_MARGIN_LIMIT = 0.25
-# The declared stop-risk cost allowance every V93 provider uses; applied only to
+# The default stop-risk cost allowance; applied only to
 # a route whose provider declares no stop_risk_budget of its own.
 DEFAULT_COST_BUFFER_BPS = 20.0
 BPS_PER_UNIT = 10_000.0
@@ -399,7 +398,7 @@ def _stop_budget(
 ) -> tuple[float | None, float, str]:
     """Return (effective budget, cost buffer, source) as the runtime prices it.
 
-    ``maximum_loss_fraction_of_equity`` (V94) is read tolerantly beside the
+    ``maximum_loss_fraction_of_equity`` is read tolerantly beside the
     legacy ``maximum_loss_usd``; when both are declared the smaller applies,
     matching ``StopRiskBudget.effective_maximum_loss_usd``.
     """

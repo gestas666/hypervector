@@ -149,7 +149,7 @@ def _audit(
     return {
         "run": {
             "run_id": "run-1",
-            "profile_id": "profile-v25",
+            "profile_id": "fixture_profile",
             "profile_fingerprint": "a" * 64,
             "last_observed_at_utc": "2026-08-09T05:00:00+00:00",
         },

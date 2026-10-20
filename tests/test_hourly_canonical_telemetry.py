@@ -15,10 +15,10 @@ from hypervector.live.configured_canonical_regime import (
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
 
-def test_v89_canonical_scope_includes_every_configured_hourly_route() -> None:
+def test_noncrypto_canonical_scope_includes_every_configured_hourly_route() -> None:
     """Explicit hourly mechanisms opt into telemetry without changing legacy scope."""
     config = load_multi_asset_live_config(
-        Path("tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_research_v89.toml"),
+        Path("tests/fixtures/profiles/noncrypto_research.toml"),
         mode="observe",
     )
     assert configured_canonical_regime_symbols(config) == config.symbols

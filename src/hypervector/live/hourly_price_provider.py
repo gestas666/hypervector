@@ -28,14 +28,12 @@ DONCHIAN8_STRATEGY = "hourly_donchian_8_4_atr20_bidirectional_v1"
 PROTECTED_DONCHIAN20_STRATEGY = (
     "hourly_donchian_20_10_atr20_profit_lock_bidirectional_v2"
 )
-# The identity-bound lock contract is only evidenced on these three routes
-# (docs/reviews/2026-09-21-v90-profit-protection-readiness.md). The validator
-# pins the symbol set as well as the lock parameters, so the protected identity
-# cannot be armed on a market that has no protected-exit evidence.
+# The identity-bound lock contract is pinned to these three routes. The
+# validator pins the symbol set as well as the lock parameters, so the protected
+# identity cannot be armed on any other market.
 PROTECTED_DONCHIAN20_SYMBOLS = frozenset({"SOL", "xyz:SNDK", "xyz:BRENTOIL"})
-# V94: the 20/10 recipe without weak short breakdowns. The 1.0 ATR threshold was
-# fixed before its re-score (docs/plans/2026-09-24-v94-review-actions.md,
-# "Pre-registered bar") and is never tuned. Longs, exits and stops are unchanged.
+# The 20/10 recipe without weak short breakdowns: a short needs the breakdown
+# to extend at least 1.0 ATR. Longs, exits and stops match the 20/10 recipe.
 STRONG_SHORT_DONCHIAN20_STRATEGY = "hourly_donchian_20_10_atr20_strong_short_v1"
 STRONG_SHORT_MINIMUM_EXTENSION_ATR = 1.0
 HOURLY_PRICE_STRATEGIES = frozenset(
@@ -57,11 +55,6 @@ HOURLY_PRICE_SYMBOLS = frozenset(
         "xyz:SP500",
         "xyz:SNDK",
         "xyz:BRENTOIL",
-        # V90 addition. Screened 2026-09-20 on 52 days of venue history against a
-        # bar declared before the results (docs/plans/2026-09-20-v90-aggressive-
-        # bankroll-builder.md section 10.6); it failed that bar on one condition
-        # and is admitted as an operator scope choice at the screened $500
-        # contract, not as evidence of edge.
         "xyz:TSLA",
     }
 )

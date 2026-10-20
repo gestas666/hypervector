@@ -23,7 +23,7 @@ def _history(tmp_path: Path) -> tuple[SolRangeOnsetConfig, SolLiveLedger]:
     """Create a local-only ledger and configuration without an execution client."""
     config = replace(
         load_sol_range_onset_config(
-            Path('tests/fixtures/profiles/sol_range_onset_canary.toml'),
+            Path('tests/fixtures/profiles/sol_range_onset.toml'),
             mode='live', enabled=True, accepts_live_risk=True,
         ),
         live_ledger=tmp_path / 'live/sol_range_onset_canary/decisions.jsonl',

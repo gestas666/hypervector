@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "document_type": "cohort_profile_change_approval",
+  "approval_status": "approved_for_live_transition",
+  "approved_at_utc": "2026-10-19T00:00:00+00:00",
+  "approved_by": "test_fixture",
+  "operator_approval": "fixture approval: profile A to profile B",
+  "execution_authority": "none",
+  "previous_profile": {
+    "profile_id": "fixture_cohort_a",
+    "profile_fingerprint": "11159a55c9fc0ea1871a4585b1da4d85ed7ced51c89b3cd971f0f237464b0833"
+  },
+  "candidate_profile": {
+    "profile_id": "fixture_cohort_b",
+    "profile_fingerprint": "6cc3839112ced355d72c6b39dad4f373810c0f7c31e02deda1b06a5ea03b22c2"
+  },
+  "change_scopes": [
+    "hype_asset_and_watch_only_provider_removed",
+    "xyz_spcx_asset_and_watch_only_provider_removed"
+  ],
+  "recommendation_evidence": [
+    {
+      "path": "../evidence/a-to-b.md",
+      "sha256": "baf44753f7f651710cbb569fc6d549c1ca10fe5c5ef0628330d0d0464b40b585"
+    }
+  ],
+  "rollback": {
+    "config_path": "../profile_a.toml",
+    "profile_fingerprint": "11159a55c9fc0ea1871a4585b1da4d85ed7ced51c89b3cd971f0f237464b0833",
+    "sha256": "8b2d54448673209587a794160af415ddd8710fe75640f2aa04ded3f7b22680ba"
+  },
+  "retirements": []
+}

@@ -377,7 +377,7 @@ def test_checkpoint_attaches_exact_eligible_policy_forward_journal() -> None:
     spec = EligiblePolicyForwardSpec(
         source_strategy_id="eth_breakout_precompression_pullback_bidirectional_v1",
         candidate_strategy_id=(
-            "eth_breakout_precompression_pullback_bidirectional_v1_v12"
+            "eth_breakout_precompression_pullback_bidirectional_v1_eligible_forward"
         ),
         symbol="ETH",
         source_run_id=_RUN_ID,
@@ -408,7 +408,7 @@ def test_checkpoint_threads_official_funding_into_exact_policy_journal() -> None
     spec = EligiblePolicyForwardSpec(
         source_strategy_id="eth_breakout_precompression_pullback_bidirectional_v1",
         candidate_strategy_id=(
-            "eth_breakout_precompression_pullback_bidirectional_v1_v12"
+            "eth_breakout_precompression_pullback_bidirectional_v1_eligible_forward"
         ),
         symbol="ETH",
         source_run_id=_RUN_ID,
@@ -697,49 +697,6 @@ def test_publish_atomically_replaces_one_bounded_latest_checkpoint(
     assert second["generated_at_utc"] == second_time.isoformat()
     assert json.loads(destination.read_text(encoding="utf-8")) == second
     assert [path.name for path in destination.parent.iterdir()] == [destination.name]
-
-
-def test_publish_attaches_profile_acceptance_before_atomic_write(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The exact report verdict must be present in the published checkpoint."""
-    ledger_root = tmp_path / "ledgers"
-    ledger_root.mkdir()
-    _write_rows(ledger_root / "decisions.jsonl", _cohort_rows())
-    for symbol in _SYMBOLS:
-        _write_rows(ledger_root / f"{symbol.lower()}.jsonl", _asset_rows(symbol))
-    destination = tmp_path / "runtime" / "latest_checkpoint.json"
-    calls: list[tuple[Path, datetime]] = []
-
-    def attach(
-        checkpoint: dict[str, object],
-        config_path: Path,
-        *,
-        observed_at: datetime,
-    ) -> bool:
-        checkpoint["poststart_acceptance"] = {"accepted": True}
-        calls.append((config_path, observed_at))
-        return True
-
-    monkeypatch.setattr(
-        cohort_live_checkpoint,
-        "attach_seven_asset_poststart_acceptance",
-        attach,
-    )
-    config_path = Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml")
-
-    checkpoint = publish_live_checkpoint(
-        ledger_root,
-        destination,
-        run_id=_RUN_ID,
-        generated_at=_GENERATED_AT,
-        config_path=config_path,
-    )
-
-    assert calls == [(config_path, _GENERATED_AT)]
-    assert checkpoint["poststart_acceptance"] == {"accepted": True}
-    assert json.loads(destination.read_text(encoding="utf-8")) == checkpoint
 
 
 def test_publish_retains_retired_history_without_runtime_authority(
@@ -1204,7 +1161,6 @@ def _historical_projection_fixture(generated_at: str) -> dict[str, object]:
             "risk_normalized_all_time_live_mechanism",
             "regime_conditioned_all_time_live_mechanism",
             "support_decay_all_time_live_mechanism",
-            "support_decay_retrace_all_time_live_mechanism",
         )
     }
     return {

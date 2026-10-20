@@ -26,7 +26,7 @@ from hypervector.live.cohort_implementation_sources import (
 )
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfigError
 
-_CONFIG = "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"
+_CONFIG = "tests/fixtures/profiles/cohort_base.toml"
 
 
 def _sources(tmp_path: Path) -> dict[str, Path]:

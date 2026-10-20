@@ -172,7 +172,7 @@ def test_target_fill_uses_exact_target_order_context(tmp_path: Path) -> None:
 
 def _config() -> MultiAssetLiveConfig:
     return load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

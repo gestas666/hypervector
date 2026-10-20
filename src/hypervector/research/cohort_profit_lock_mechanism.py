@@ -73,27 +73,6 @@ def build_normalized_support_decay_profit_lock_report(
     return report
 
 
-def build_normalized_support_decay_retrace_report(
-    results: Sequence[Record],
-    *,
-    policies: Sequence[Record],
-    contract: Record,
-    activation_contract: Record,
-    limitations: Sequence[str],
-) -> dict[str, object]:
-    """Describe cost-aware retrace exits after persistent support decay."""
-    report = _normalized_report(
-        results,
-        policies=policies,
-        contract=contract,
-        limitations=limitations,
-        mode="cohort_support_decay_retrace_mechanism_v1",
-        policy_origin="post_hoc_hype_breakout_giveback_hypothesis_20260807",
-    )
-    report["activation_contract"] = dict(activation_contract)
-    return report
-
-
 def _normalized_report(
     results: Sequence[Record],
     *,

@@ -15,7 +15,7 @@ from hypervector.research.cohort_configuration_exit_policy import (
 )
 
 _FIXTURE_PROFILES = Path("tests/fixtures/profiles")
-_V95 = Path("configs/multi_asset_growth_first_5000_review_fixes_v95.toml")
+_PROFILE_B = Path("tests/fixtures/cohort_chain/profile_b.toml")
 
 _EXPECTATION = ConfigurationGenerationExpectation(
     source_path="configs/cohort.toml",
@@ -34,7 +34,7 @@ _EXPECTATION = ConfigurationGenerationExpectation(
 def test_current_profile_exposes_the_explicit_eth_entry_context_rule() -> None:
     """The disk identity carries the exact pending rule without runtime authority."""
     expectation = load_configuration_expectation(
-        Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml")
+        Path("tests/fixtures/profiles/cohort_base.toml")
     )
 
     assert expectation.entry_context_overrides == (
@@ -49,7 +49,7 @@ def test_current_profile_exposes_the_explicit_eth_entry_context_rule() -> None:
 def test_load_expectation_retains_provider_symbol_sizing() -> None:
     """Disk identity retains an explicit provider override without activating it."""
     expectation = load_configuration_expectation(
-        Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml")
+        Path("tests/fixtures/profiles/cohort_base.toml")
     )
 
     assert expectation.provider_sizing_overrides == (
@@ -58,10 +58,10 @@ def test_load_expectation_retains_provider_symbol_sizing() -> None:
     )
 
 
-def test_v36_expectation_retains_exact_provider_membership_and_routes() -> None:
+def test_staged_expectation_retains_exact_provider_membership_and_routes() -> None:
     """The pending generation exposes its complete execution roster."""
     expectation = load_configuration_expectation(
-        _FIXTURE_PROFILES / "multi_asset_bidirectional_evidence_roster_canary_v36.toml"
+        _FIXTURE_PROFILES / "evidence_roster.toml"
     )
 
     scopes = dict(expectation.provider_execution_scopes)
@@ -71,7 +71,7 @@ def test_v36_expectation_retains_exact_provider_membership_and_routes() -> None:
     assert "hip3_swing_ha_sp500_spcx_bidirectional_v2" not in scopes
     assert "hip3_swing_ha_sndk_gold_brent_bidirectional_v1" not in scopes
     active = load_configuration_expectation(
-        _FIXTURE_PROFILES / "multi_asset_bidirectional_all_live_canary_v35.toml"
+        _FIXTURE_PROFILES / "all_live.toml"
     )
     active_routes = {
         (provider, symbol)
@@ -96,10 +96,10 @@ def test_v36_expectation_retains_exact_provider_membership_and_routes() -> None:
     assert staged_routes - active_routes == set()
 
 
-def test_v43_expectation_retains_exact_side_specialist_directions() -> None:
+def test_staged_expectation_retains_exact_side_specialist_directions() -> None:
     """Staged evidence reports aggregate BTC coverage without name inference."""
     expectation = load_configuration_expectation(
-        _FIXTURE_PROFILES / "multi_asset_bidirectional_btc_specialists_candidate_v43.toml"
+        _FIXTURE_PROFILES / "btc_specialists.toml"
     )
 
     directions = {
@@ -133,11 +133,11 @@ def test_v43_expectation_retains_exact_side_specialist_directions() -> None:
     ] == ["long"]
 
 
-def test_v44_expectation_exposes_corrected_long_identity_and_six_sides() -> None:
-    """The staged cockpit sees the corrected route rather than its v43 alias."""
+def test_staged_expectation_exposes_corrected_long_identity_and_six_sides() -> None:
+    """The staged cockpit sees the corrected route rather than its earlier alias."""
     expectation = load_configuration_expectation(
         _FIXTURE_PROFILES
-        / "multi_asset_bidirectional_btc_specialists_corrected_candidate_v44.toml"
+        / "btc_specialists_corrected.toml"
     )
     directions = {
         (strategy, symbol): sides
@@ -152,9 +152,9 @@ def test_v44_expectation_exposes_corrected_long_identity_and_six_sides() -> None
     assert ("liquidity_sweep_long_1h_stop60_v1", "BTC") not in directions
 
 
-def test_v95_expectation_exposes_exact_live_routes_without_authority() -> None:
+def test_profile_b_expectation_exposes_exact_live_routes_without_authority() -> None:
     """The retained live profile publishes its six route-sides as report-only."""
-    expectation = load_configuration_expectation(_V95)
+    expectation = load_configuration_expectation(_PROFILE_B)
 
     assert dict(expectation.provider_execution_scopes) == {
         "eth_range_onset_long_dual_mtf_v2": ("ETH",),
@@ -210,7 +210,7 @@ def test_load_expectation_retains_provider_directional_sizing(
     tmp_path: Path,
 ) -> None:
     """Disk identity keeps distinct long and short policies for one route."""
-    source = Path("tests/fixtures/profiles/multi_asset_bidirectional_canary.toml").read_text()
+    source = Path("tests/fixtures/profiles/cohort_base.toml").read_text()
     directional = (
         "directional_sizing_overrides = { SOL = { "
         "long = { margin_fraction = 0.03, max_notional_usd = 60.0 }, "
@@ -236,7 +236,7 @@ def test_load_expectation_retains_provider_directional_sizing(
 def test_load_expectation_retains_exact_pending_asset_sizing() -> None:
     """The selected profile exposes every asset cap without activating it."""
     expectation = load_configuration_expectation(
-        _FIXTURE_PROFILES / "multi_asset_bidirectional_range_retired_hype75_candidate.toml"
+        _FIXTURE_PROFILES / "range_retired_hype75.toml"
     )
 
     assert expectation.asset_sizing == (
@@ -250,7 +250,7 @@ def test_load_expectation_retains_exact_pending_asset_sizing() -> None:
 def test_generation_exposes_preserved_provider_exit_policy_without_authority() -> None:
     """The operator can verify the HYPE extension remains unchanged."""
     expectation = load_configuration_expectation(
-        _FIXTURE_PROFILES / "multi_asset_bidirectional_range_retired_hype75_candidate.toml"
+        _FIXTURE_PROFILES / "range_retired_hype75.toml"
     )
     evidence = configuration_generation_evidence(
         "runtime-profile",
@@ -588,11 +588,11 @@ def test_generation_exposes_enabled_profit_lock_without_authority() -> None:
     assert evidence["automatic_restart"] is False
 
 
-def test_v60_generation_exposes_btc_component_floor_without_authority() -> None:
+def test_generation_exposes_btc_component_floor_without_authority() -> None:
     """The checkpoint accepts only the exact staged BTC specialized policy."""
     expectation = load_configuration_expectation(
         _FIXTURE_PROFILES
-        / "multi_asset_growth_first_5000_eight_asset_btc_hulk_smart_exit_candidate_v60.toml"
+        / "eight_asset_btc_hulk_smart_exit.toml"
     )
 
     evidence = configuration_generation_evidence(
@@ -621,7 +621,7 @@ def test_generation_exposes_directional_profit_lock_without_collapsing_scope(
     tmp_path: Path,
 ) -> None:
     """Checkpoint evidence preserves strategy, symbol, and side identity."""
-    source = _FIXTURE_PROFILES / "multi_asset_growth_first_5000_repaired_candidate_v49.toml"
+    source = _FIXTURE_PROFILES / "repaired_b.toml"
     text = source.read_text(encoding="utf-8")
     anchor = 'execution_symbols = ["HYPE"]\n'
     override = (

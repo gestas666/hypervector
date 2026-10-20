@@ -22,7 +22,6 @@ from hypervector.live.cohort_adaptive_exit_policy import (
 )
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
 from hypervector.live.hyperliquid_protocol import SolBookSnapshot
-from hypervector.live.cohort_exit_continuation_shadow import continuation_shadow
 from hypervector.live.multi_asset_live_runner_support import entry_provider_strategy_id
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
 from hypervector.live.multi_asset_signal_source import ProviderEvaluation
@@ -110,9 +109,6 @@ def adaptive_exit_action(
         "state": asdict(updated),
         "cost_basis": "20bps_round_trip_plus_spread_excludes_funding",
     }
-    payload["continuation_ml"] = continuation_shadow(
-        symbol, str(identity["side"]), market_bars, observed_ms
-    )
     journal.append(payload)
     return (
         _action(identity, updated, inputs.price)
@@ -285,9 +281,6 @@ def retention_exit_action(
         "state": asdict(updated),
         "cost_basis": "20bps_round_trip_plus_spread_excludes_funding",
     }
-    payload["continuation_ml"] = continuation_shadow(
-        symbol, side, market_bars, observed_ms
-    )
     journal.append(payload)
     return (
         _retention_action(identity, updated, inputs.price)

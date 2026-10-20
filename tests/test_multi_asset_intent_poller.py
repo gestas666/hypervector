@@ -329,7 +329,7 @@ def _one_minute_bars(symbol: str) -> pd.DataFrame:
 def test_poller_uses_one_minute_feed_and_incremental_refresh() -> None:
     """Live polling derives 5m locally and never repeats a full warmup cycle."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
     calls: list[tuple[str, str, float, int | None]] = []
@@ -388,7 +388,7 @@ def test_poller_uses_one_minute_feed_and_incremental_refresh() -> None:
 def test_startup_seeds_readiness_without_routing_retroactive_intents() -> None:
     """Latest completed setups are visible immediately but never executable."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
     collectors = {
@@ -435,7 +435,7 @@ def test_first_fresh_row_does_not_bypass_missed_exit_recovery_seed() -> None:
     """Crossing a bar during startup must retain the pre-activation exit scan."""
     activation_ms = _OBSERVED_MS - 1_000
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
     collectors = {
@@ -469,7 +469,7 @@ def test_first_fresh_recipe_exit_is_not_hidden_by_readiness_seed() -> None:
     """A delayed first poll must retain a fresh post-activation recipe exit."""
     activation_ms = _OBSERVED_MS - 1_000
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
     collectors = {
@@ -501,7 +501,7 @@ def test_first_fresh_recipe_exit_is_not_hidden_by_readiness_seed() -> None:
 def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None:
     """Every provider advances causally even when it emits no entry intent."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
     calls: list[tuple[str, str, float, int | None]] = []
@@ -572,9 +572,9 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
 
 
 def test_range_retired_profile_keeps_canonical_regime_outside_route_roster() -> None:
-    """v39 routes remain exact while independent regime evidence weights intents."""
+    """Retained routes remain exact while independent regime evidence weights intents."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml",
+        "tests/fixtures/profiles/hype_compression_range_retired_current.toml",
         mode="observe",
     )
     collectors = {
@@ -615,7 +615,7 @@ def test_range_retired_profile_keeps_canonical_regime_outside_route_roster() -> 
 def test_stale_completed_entries_are_visible_but_not_routable() -> None:
     """A backend outage cannot turn old completed signals into live entries."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
     collectors = {
@@ -644,7 +644,7 @@ def test_stale_completed_entries_are_visible_but_not_routable() -> None:
 def test_default_collectors_require_the_real_backtest_lab_root() -> None:
     """Runtime construction fails before polling when Hulk dependencies are absent."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
 
@@ -664,7 +664,7 @@ def test_default_collectors_require_the_real_backtest_lab_root() -> None:
 def test_default_collectors_support_the_staged_sol_aligned_provider() -> None:
     """The next-flat profile must have a concrete causal runtime collector."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_range_retired_hype75_candidate.toml",
+        "tests/fixtures/profiles/range_retired_hype75.toml",
         mode="observe",
     )
 
@@ -683,7 +683,7 @@ def _assert_transient_fetch_failure_preserves_boundaries(
 ) -> None:
     """Assert a retry-exhausted public read can recover on the next cycle."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
     collectors = {
@@ -769,7 +769,7 @@ def test_exhausted_candle_server_error_preserves_boundaries(status: int) -> None
 def test_permanent_candle_http_error_remains_fatal(status: int) -> None:
     """Invalid requests and unsupported APIs cannot become temporary-data gaps."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
     collectors = {

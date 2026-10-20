@@ -38,7 +38,7 @@ def test_reconciliation_emits_each_venue_fill_and_fee_exactly_once(
     path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
     config = replace(
         load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset_canary.toml"),
+            Path("tests/fixtures/profiles/sol_range_onset.toml"),
             mode="live",
             enabled=True,
             accepts_live_risk=True,
@@ -130,7 +130,7 @@ def test_distinct_partial_fills_emit_distinct_fill_and_fee_rows(tmp_path: Path) 
     path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
     config = replace(
         load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset_canary.toml"),
+            Path("tests/fixtures/profiles/sol_range_onset.toml"),
             mode="live",
             enabled=True,
             accepts_live_risk=True,
@@ -185,7 +185,7 @@ def test_exact_funding_payment_is_restart_deduplicated(tmp_path: Path) -> None:
     path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
     config = replace(
         load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset_canary.toml"),
+            Path("tests/fixtures/profiles/sol_range_onset.toml"),
             mode="live",
             enabled=True,
             accepts_live_risk=True,
@@ -231,7 +231,7 @@ def test_preflight_identity_contains_complete_read_only_tui_contract(
     path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
     config = replace(
         load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset_canary.toml"),
+            Path("tests/fixtures/profiles/sol_range_onset.toml"),
             mode="live",
             enabled=True,
             accepts_live_risk=True,
@@ -292,7 +292,7 @@ def _hip3_fee_event(
     path = tmp_path / "data/live/bidirectional_cohort/xyz:sndk.jsonl"
     config = replace(
         load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset_canary.toml"),
+            Path("tests/fixtures/profiles/sol_range_onset.toml"),
             mode="live",
             enabled=True,
             accepts_live_risk=True,
@@ -377,7 +377,7 @@ def test_book_snapshot_is_projected_for_read_only_tui(tmp_path: Path) -> None:
     path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
     config = replace(
         load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset_canary.toml"),
+            Path("tests/fixtures/profiles/sol_range_onset.toml"),
             mode="live",
             enabled=True,
             accepts_live_risk=True,

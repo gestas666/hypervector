@@ -42,7 +42,7 @@ from hypervector.live.sol_order_transport import (
 )
 
 
-PROFILE = Path("tests/fixtures/profiles/sol_range_onset_canary.toml")
+PROFILE = Path("tests/fixtures/profiles/sol_range_onset.toml")
 
 
 class FakeSolAdapter:

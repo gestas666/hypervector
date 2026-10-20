@@ -15,7 +15,7 @@ from hypervector.live.multi_asset_strategy_evidence import (
     strategy_evidence_payloads,
 )
 
-_PROFILE = Path("tests/fixtures/profiles/all_asset_hype_breakout_transfer_v1.toml")
+_PROFILE = Path("tests/fixtures/profiles/all_asset_hype_breakout_transfer.toml")
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 
 
@@ -23,7 +23,7 @@ def test_all_asset_transfer_profile_is_execution_incapable() -> None:
     """Every supported coin is observed without inheriting order authority."""
     config = load_multi_asset_live_config(_PROFILE, mode="observe")
 
-    assert config.profile_id == "all_asset_hype_breakout_transfer_observer_v1"
+    assert config.profile_id == "fixture_all_asset_hype_breakout_transfer"
     assert config.symbols == _SYMBOLS
     assert config.maximum_positions == 4
     assert config.executable_provider_symbols == frozenset()
@@ -63,26 +63,16 @@ def test_default_factory_builds_all_asset_breakout_collectors() -> None:
     assert isinstance(poller, ConfiguredMultiAssetIntentPoller)
 
 
-def test_all_asset_transfer_profile_reports_reviewed_mapping_evidence() -> None:
-    """The observer must not label already-reviewed transfers as unreviewed."""
+def test_all_asset_transfer_profile_reports_non_gating_evidence() -> None:
+    """Every observed transfer carries a report-only research-state record."""
     config = load_multi_asset_live_config(_PROFILE, mode="observe")
     evidence = {
         row["symbol"]: row for row in strategy_evidence_payloads(config.providers)
     }
 
-    assert evidence["BTC"]["research_state"] == "unstable_recent_short_observer"
-    assert evidence["BTC"]["confidence"] == "low"
-    assert "development" in evidence["BTC"]["summary"]
-    assert "final-60-day" in evidence["BTC"]["summary"]
-    assert evidence["ETH"]["research_state"] == "historical_transfer_rejected"
-    assert evidence["SOL"]["research_state"] == "historical_transfer_rejected"
-    assert evidence["ETH"]["confidence"] == "medium"
-    assert evidence["SOL"]["confidence"] == "medium"
+    assert tuple(evidence) == _SYMBOLS
     assert all(
-        row["evidence_source"]
-        == "docs/reviews/2026-08-05-hype-breakout-cross-asset-transfer.md"
-        for symbol, row in evidence.items()
-        if symbol != "HYPE"
+        row["research_state"] == "unreviewed_exact_mapping" for row in evidence.values()
     )
     assert all(row["execution_effect"] == "report_only" for row in evidence.values())
     assert config.executable_provider_symbols == frozenset()

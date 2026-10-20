@@ -1,0 +1,46 @@
+profile = "fixture_hulk_smash_short_robust"
+symbol = "BTC"
+strategy_id = "hulk_expansion_short_robust_v3"
+
+[venue]
+network = "mainnet"
+margin_mode = "isolated"
+leverage = 5.0
+venue_max_leverage = 40.0
+market_slippage_cap_fraction = 0.002
+
+[risk]
+risk_fraction = 0.0025
+maximum_portfolio_risk_fraction = 0.02
+max_notional_usd = 150.0
+max_positions_per_symbol = 1
+
+[signal]
+source_timeframe = "5m"
+signal_timeframe = "30m"
+lookback_days = 14
+minimum_score = 7
+pivot_bars = 6
+supertrend_period = 7
+supertrend_multiplier = 3.0
+adx_period = 20
+squeeze_period = 20
+adx_usable = 16.0
+adx_trending = 23.0
+backtest_lab_root = "../../backtest-lab/backtest_lab"
+backtest_lab_tree_sha256 = "5bed4e1299bee3508c6a79807c1f96672ec974d7b44bda9768f5c2a7d8fa4360"
+
+[exit]
+minimum_stop_bps = 20.0
+maximum_stop_bps = 75.0
+target_r_multiple = 3.0
+maximum_hold_bars = 48
+
+[runtime]
+backend_ledger = "data/live/hulk_smash/decisions.jsonl"
+stop_file = "data/live/hulk_smash/STOP"
+maximum_entry_delay_seconds = 60
+markout_horizon_ms = 5000
+capital_source = "standalone_canary"
+portfolio_purpose = "canary_validation"
+metalabel_mode = "observe"

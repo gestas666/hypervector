@@ -40,7 +40,7 @@ from hypervector.research.cohort_configuration_exit_policy import (
     provider_exit_policy_evidence,
 )
 
-V93 = "tests/fixtures/profiles/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml"
+EXIT_POLICY_V2 = "tests/fixtures/profiles/exit_policy_v2.toml"
 NOW = 1_800_000_000_000
 
 
@@ -228,7 +228,7 @@ def test_missing_stale_or_crossed_quote_skips_without_consuming_an_attempt(
     assert events[0]["executable_price"] is None
 
 
-def test_entry_offset_default_is_the_exact_v93_attempt() -> None:
+def test_entry_offset_default_is_the_exact_baseline_attempt() -> None:
     mutated, calls, events, counts = _run(
         plan=_plan("entry_offset"), size=1.0, book=_book(100.1, 100.11)
     )
@@ -318,11 +318,11 @@ def test_floor_target_requires_a_known_value_and_the_v2_floor(
         replace(_contract("floor"), **changes)  # type: ignore[arg-type]
 
 
-def test_option_absent_keeps_v93_identity_and_floor_changes_it(tmp_path) -> None:
-    config = load_multi_asset_live_config(V93, mode="observe")
+def test_option_absent_keeps_baseline_identity_and_floor_changes_it(tmp_path) -> None:
+    config = load_multi_asset_live_config(EXIT_POLICY_V2, mode="observe")
     assert (
         config.profile_fingerprint
-        == "33131f1898d86dda4f5cab2b6091748144f6a81da29b9c9464a644b330dc3e05"
+        == "b470ca1199fd14913af8e7b1c0d022b1bd3f1a24a263a041b5ad84dc542278c9"
     )
     assert all(
         provider.execution.breakeven_stop_target == "entry_offset"

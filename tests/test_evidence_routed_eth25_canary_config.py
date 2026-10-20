@@ -14,26 +14,26 @@ from hypervector.live.multi_asset_intent_poller import ConfiguredMultiAssetInten
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.multi_asset_strategy_evidence import strategy_evidence_payloads
 
-_V11 = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_evidence_routed_hype75_eth_observer_v11.toml"
+_ETH_OBSERVER = Path(
+    "tests/fixtures/profiles/evidence_routed_hype75_eth_observer.toml"
 )
-_V12 = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_evidence_routed_hype75_eth25_canary_v12.toml"
+_ETH25_CANARY = Path(
+    "tests/fixtures/profiles/evidence_routed_hype75_eth25.toml"
 )
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _HYPE = "hype_breakout_onset_bidirectional_v1"
 _ETH = "eth_breakout_precompression_pullback_bidirectional_v1"
 
 
-def test_v12_changes_only_eth_transfer_execution_scope_and_profile_identity() -> None:
-    """The inactive candidate preserves v11 except for bounded ETH authority."""
-    prior = load_multi_asset_live_config(_V11, mode="observe")
-    candidate = load_multi_asset_live_config(_V12, mode="observe")
+def test_eth25_changes_only_eth_transfer_execution_scope_and_profile_identity() -> None:
+    """The inactive candidate keeps the observer except for bounded ETH authority."""
+    prior = load_multi_asset_live_config(_ETH_OBSERVER, mode="observe")
+    candidate = load_multi_asset_live_config(_ETH25_CANARY, mode="observe")
     prior_providers = {row.strategy_id: row for row in prior.providers}
     providers = {row.strategy_id: row for row in candidate.providers}
 
     assert candidate.profile_id == (
-        "multi_asset_bidirectional_evidence_routed_hype75_eth25_canary_v12"
+        "fixture_evidence_routed_hype75_eth25"
     )
     assert candidate.assets == tuple(
         replace(asset, parent_profile_id=candidate.profile_id) for asset in prior.assets
@@ -52,10 +52,10 @@ def test_v12_changes_only_eth_transfer_execution_scope_and_profile_identity() ->
         assert providers[strategy_id] == prior_providers[strategy_id]
 
 
-def test_v12_keeps_both_eth_sides_and_the_reproduced_exit_contract() -> None:
+def test_eth25_keeps_both_eth_sides_and_the_reproduced_exit_contract() -> None:
     """The staged ETH canary retains the audited bidirectional 60bps/12h shape."""
     config = load_multi_asset_live_config(
-        _V12,
+        _ETH25_CANARY,
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -73,9 +73,9 @@ def test_v12_keeps_both_eth_sides_and_the_reproduced_exit_contract() -> None:
 
 
 @pytest.mark.integration
-def test_v12_builds_runtime_collectors_and_retains_low_confidence_evidence() -> None:
+def test_eth25_builds_runtime_collectors_and_retains_low_confidence_evidence() -> None:
     """Execution scope does not inflate the candidate's research confidence."""
-    config = load_multi_asset_live_config(_V12, mode="observe")
+    config = load_multi_asset_live_config(_ETH25_CANARY, mode="observe")
     evidence = next(
         row
         for row in strategy_evidence_payloads(config.providers)
@@ -87,23 +87,21 @@ def test_v12_builds_runtime_collectors_and_retains_low_confidence_evidence() -> 
         fetch_bars=lambda symbol, timeframe, days, *, end_ms=None: None,
         backtest_lab_root=Path("../backtest-lab/backtest_lab").resolve(),
     )
-    assert evidence["research_state"] == "prospective_requalification_open_long_only"
+    assert evidence["research_state"] == "unreviewed_exact_mapping"
     assert evidence["confidence"] == "low"
-    assert evidence["evidence_source"] == (
-        "docs/research-journal/eth-breakout-precompression-pullback-v17.json"
-    )
+    assert evidence["evidence_source"] == "none"
     assert evidence["execution_effect"] == "report_only"
 
 
 @pytest.mark.parametrize(("mode", "expected"), [("observe", False), ("live", True)])
-def test_v12_binds_eth_readiness_authority_to_runtime_mode(
+def test_eth25_binds_eth_readiness_authority_to_runtime_mode(
     monkeypatch: pytest.MonkeyPatch,
     mode: str,
     expected: bool,
 ) -> None:
     """The default factory must not label an observer as armed or an arm as inert."""
     config = load_multi_asset_live_config(
-        _V12,
+        _ETH25_CANARY,
         mode=mode,
         enabled=mode == "live",
         accepts_live_risk=mode == "live",

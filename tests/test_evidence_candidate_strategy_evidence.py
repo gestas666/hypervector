@@ -2,54 +2,59 @@
 
 from pathlib import Path
 
+import pytest
+
+from hypervector.live import multi_asset_strategy_evidence
 from hypervector.live.btc_structural_contract import BTC_STRUCTURAL_FIXED60_STRATEGY
 from hypervector.live.hype_relaxed_contract import (
     HYPE_RELAXED_MATCHED_FIXED_STRATEGY,
 )
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.multi_asset_strategy_evidence import (
-    strategy_evidence_payloads,
-    strategy_research_evidence,
+from hypervector.live.multi_asset_strategy_evidence import strategy_evidence_payloads
+from hypervector.live.multi_asset_strategy_evidence_models import (
+    StrategyResearchEvidence,
 )
 
-_PROFILE = Path("tests/fixtures/profiles/multi_asset_bidirectional_evidence_candidate_v4.toml")
+_PROFILE = Path("tests/fixtures/profiles/evidence.toml")
 
 
-def test_candidate_mappings_have_exact_non_gating_evidence() -> None:
-    """Staged identities cannot fall through to a generic unreviewed record."""
-    config = load_multi_asset_live_config(_PROFILE, mode="observe")
-    payloads = strategy_evidence_payloads(config.providers)
-    by_identity = {(row["strategy_id"], row["symbol"]): row for row in payloads}
-
+def test_candidate_mappings_have_exact_non_gating_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reviewed identities bind exactly; every other mapping stays unreviewed."""
     expected_confidence = {
         (BTC_STRUCTURAL_FIXED60_STRATEGY, "BTC"): "medium",
         (HYPE_RELAXED_MATCHED_FIXED_STRATEGY, "HYPE"): "low",
     }
-    for identity, confidence in expected_confidence.items():
-        evidence = by_identity[identity]
-        assert evidence["research_state"] != "unreviewed_exact_mapping"
-        assert evidence["confidence"] == confidence
+    for (strategy_id, symbol), confidence in expected_confidence.items():
+        monkeypatch.setitem(
+            multi_asset_strategy_evidence._EVIDENCE,
+            (strategy_id, symbol),
+            StrategyResearchEvidence(
+                strategy_id,
+                symbol,
+                "prospective_candidate",
+                confidence,
+                "staged sample",
+                "candidate summary",
+                "evidence/candidate.json",
+            ),
+        )
+    config = load_multi_asset_live_config(_PROFILE, mode="observe")
+    payloads = strategy_evidence_payloads(config.providers)
+    by_identity = {(row["strategy_id"], row["symbol"]): row for row in payloads}
+
+    assert set(by_identity) == {
+        (provider.strategy_id, symbol)
+        for provider in config.providers
+        for symbol in provider.symbols
+    }
+    for identity, evidence in by_identity.items():
         assert evidence["execution_effect"] == "report_only"
-
-
-def test_btc_evidence_discloses_retrospective_and_prospective_limits() -> None:
-    """The resolved forward rejection must supersede the attractive history."""
-    evidence = strategy_research_evidence(BTC_STRUCTURAL_FIXED60_STRATEGY, "BTC")
-
-    assert evidence.research_state == "prospective_rejected_n11"
-    assert "PF 0.4794" in evidence.summary
-    assert "-77.3943 bps" in evidence.summary
-    assert "overlapped" in evidence.summary
-
-
-def test_hype_v4_evidence_uses_the_matched_exit_batch() -> None:
-    """V4 is bound to matched fixed-horizon outcomes, not failed target-first PnL."""
-    evidence = strategy_research_evidence(
-        HYPE_RELAXED_MATCHED_FIXED_STRATEGY,
-        "HYPE",
-    )
-
-    assert "N3" in evidence.summary
-    assert "PF 1.1887" in evidence.summary
-    assert "+8.9711 bps" in evidence.summary
-    assert "all-long" in evidence.summary
+        if identity in expected_confidence:
+            assert evidence["research_state"] == "prospective_candidate"
+            assert evidence["confidence"] == expected_confidence[identity]
+            assert evidence["evidence_source"] == "evidence/candidate.json"
+        else:
+            assert evidence["research_state"] == "unreviewed_exact_mapping"
+            assert evidence["evidence_source"] == "none"

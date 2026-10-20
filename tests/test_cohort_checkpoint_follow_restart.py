@@ -12,10 +12,10 @@ from hypervector.research.cohort_rolling_checkpoint import publish_rolling_check
 from test_cohort_checkpoint_bounded_transition import _complete_checkpoint
 from test_multi_asset_bidirectional_live_checkpoint_script import _load_module
 
-_CONFIG = Path("tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml")
+_CONFIG = Path("tests/fixtures/profiles/noncrypto_live.toml")
 
 
-_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml"]
+_CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/cohort_base.toml"]
 
 
 def _snapshot(run_id: str) -> dict[str, object]:

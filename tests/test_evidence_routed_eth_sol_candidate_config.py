@@ -12,19 +12,19 @@ from hypervector.live.multi_asset_intent_poller import (
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
 _PROFILE = Path(
-    "tests/fixtures/profiles/multi_asset_bidirectional_eth_pullback_sol_range_candidate_v15.toml"
+    "tests/fixtures/profiles/eth_pullback_sol_range.toml"
 )
 _ETH = "eth_breakout_precompression_pullback_bidirectional_v1"
 _SOL = "range_onset_bidirectional_v1"
 
 
-def test_v15_routes_only_independent_eth_and_sol_candidates() -> None:
+def test_eth_sol_routes_only_independent_eth_and_sol_candidates() -> None:
     """The candidate must not carry the rejected cross-asset breakout routes."""
     config = load_multi_asset_live_config(_PROFILE, mode="observe")
     providers = {row.strategy_id: row for row in config.providers}
 
     assert config.profile_id == (
-        "multi_asset_bidirectional_eth_pullback_sol_range_candidate_v15"
+        "fixture_eth_pullback_sol_range"
     )
     assert config.maximum_positions == 4
     assert config.executable_provider_symbols == {
@@ -37,7 +37,7 @@ def test_v15_routes_only_independent_eth_and_sol_candidates() -> None:
     )
 
 
-def test_v15_preserves_audited_exit_and_risk_shapes() -> None:
+def test_eth_sol_preserves_audited_exit_and_risk_shapes() -> None:
     """Each candidate must retain the exact historical contract it represents."""
     config = load_multi_asset_live_config(_PROFILE, mode="observe")
     providers = {row.strategy_id: row for row in config.providers}
@@ -59,7 +59,7 @@ def test_v15_preserves_audited_exit_and_risk_shapes() -> None:
 
 
 @pytest.mark.integration
-def test_v15_constructs_every_declared_provider() -> None:
+def test_eth_sol_constructs_every_declared_provider() -> None:
     """An inactive profile is invalid if any declared collector is unavailable."""
     config = load_multi_asset_live_config(_PROFILE, mode="observe")
 

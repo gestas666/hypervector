@@ -13,8 +13,8 @@ from hypervector.strategies.hypervelocity_profile import (
     load_hypervelocity_profile,
 )
 
-FAITHFUL_PROFILE = Path(__file__).resolve().parents[1] / "configs" / (
-    "hypervelocity_faithful.toml"
+FAITHFUL_PROFILE = Path(__file__).resolve().parent / "fixtures" / "profiles" / (
+    "hypervelocity_shadow.toml"
 )
 _FAITHFUL_EXPORT = "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1"
 

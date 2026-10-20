@@ -22,7 +22,7 @@ from hypervector.research.cohort_configuration_exit_policy import (
     provider_exit_policy_evidence,
 )
 
-V93 = "tests/fixtures/profiles/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml"
+EXIT_POLICY_V2 = "tests/fixtures/profiles/exit_policy_v2.toml"
 
 
 def _plan(budget: StopRiskBudget | None = None) -> BoundExecutionPlan:
@@ -186,11 +186,11 @@ def test_unknown_budget_key_is_named_in_the_refusal() -> None:
         )
 
 
-def test_dollar_budget_payload_is_byte_identical_to_v93() -> None:
+def test_dollar_budget_payload_is_byte_identical_to_baseline() -> None:
     assert json.dumps(StopRiskBudget(25, 20).as_payload()) == (
         '{"maximum_loss_usd": 25.0, "cost_buffer_bps": 20.0}'
     )
-    config = load_multi_asset_live_config(V93, mode="observe")
+    config = load_multi_asset_live_config(EXIT_POLICY_V2, mode="observe")
     for provider in config.providers:
         payload = provider.execution.as_payload()
         assert payload["stop_risk_budget"] == {
@@ -209,7 +209,7 @@ def test_dollar_budget_payload_is_byte_identical_to_v93() -> None:
 def test_fraction_budget_round_trips_through_contract_plan_and_staging(
     tmp_path,
 ) -> None:
-    config = load_multi_asset_live_config(V93, mode="observe")
+    config = load_multi_asset_live_config(EXIT_POLICY_V2, mode="observe")
     budget = StopRiskBudget(None, 20, 0.006)
     first = config.providers[0]
     changed = replace(

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
@@ -19,7 +18,6 @@ from hypervector.data.hl_events import (
 )
 from hypervector.data.research_database import ResearchDatabase
 from hypervector.cli import main
-from hypervector.research.research_database_replay import canonical_trade_bars
 
 
 def _trade(received_ts_ns: int) -> PublicTradeEvent:
@@ -279,29 +277,3 @@ def test_live_event_import_cli_is_explicitly_report_only(
     assert status["live_events"]["archive_overlap_trade_rows"] == 0
     assert status["live_events"]["exact_archive_overlap_rows"] == 0
     assert status["live_events"]["canonical_extension_trade_rows"] == 1
-
-
-def test_canonical_trade_bars_can_use_live_evidence_after_archive_cutoff(
-    tmp_path: Path,
-) -> None:
-    _write_live_archive(tmp_path)
-    database_path = tmp_path / "research" / "market.duckdb"
-    database = ResearchDatabase(database_path)
-    database.ingest_live_event_archive(tmp_path, "BTC")
-
-    bars = canonical_trade_bars(
-        database_path,
-        "BTC",
-        datetime(2026, 7, 27, 8, 0, tzinfo=UTC),
-        datetime(2026, 7, 27, 8, 5, tzinfo=UTC),
-    )
-
-    assert len(bars) == 1
-    assert bars.iloc[0].to_dict() == {
-        "open": 65_001.0,
-        "high": 65_001.0,
-        "low": 65_001.0,
-        "close": 65_001.0,
-        "volume": 0.25,
-        "trade_count": 1.0,
-    }

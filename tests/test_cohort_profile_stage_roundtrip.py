@@ -18,8 +18,8 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 
-V89 = Path('tests/fixtures/profiles/multi_asset_growth_first_5000_noncrypto_live_v89.toml')
-CANARY = Path('tests/fixtures/profiles/multi_asset_bidirectional_canary.toml')
+NONCRYPTO = Path('tests/fixtures/profiles/noncrypto_live.toml')
+CANARY = Path('tests/fixtures/profiles/cohort_base.toml')
 
 
 def unchanged_settings(config: MultiAssetLiveConfig) -> CohortProfileSettings:
@@ -35,11 +35,11 @@ def unchanged_settings(config: MultiAssetLiveConfig) -> CohortProfileSettings:
     )
 
 
-def test_exact_v89_stage_preserves_all_provider_contracts(tmp_path: Path) -> None:
+def test_exact_stage_preserves_all_provider_contracts(tmp_path: Path) -> None:
     """The actual seven-asset profile must load with unchanged provider contracts."""
-    original_bytes = V89.read_bytes()
-    original = load_multi_asset_live_config(V89, mode='observe')
-    output = tmp_path / 'v89-staged.toml'
+    original_bytes = NONCRYPTO.read_bytes()
+    original = load_multi_asset_live_config(NONCRYPTO, mode='observe')
+    output = tmp_path / 'staged.toml'
     cohort_profile_stage.stage_cohort_profile(config=original, settings=unchanged_settings(original), output_path=output)
     candidate = load_multi_asset_live_config(output, mode='observe')
     assert candidate.providers == original.providers
@@ -47,12 +47,12 @@ def test_exact_v89_stage_preserves_all_provider_contracts(tmp_path: Path) -> Non
     assert candidate.transition_approval is None
     assert not candidate.enabled and not candidate.accepts_live_risk
     assert all(not asset.enabled and not asset.accepts_live_risk for asset in candidate.assets)
-    assert V89.read_bytes() == original_bytes
+    assert NONCRYPTO.read_bytes() == original_bytes
 
 
 def test_narrow_asset_scope_remains_invalid(tmp_path: Path) -> None:
     """The existing two-direction asset envelope rule is not weakened by this fix."""
-    original = load_multi_asset_live_config(V89, mode='observe')
+    original = load_multi_asset_live_config(NONCRYPTO, mode='observe')
     assets = tuple(replace(a, sides=frozenset({'long'})) if a.symbol == 'BTC' else a for a in original.assets)
     original = replace(original, assets=assets)
     output = tmp_path / 'narrow.toml'
@@ -106,7 +106,7 @@ def test_valid_but_changed_serialization_is_rejected(tmp_path: Path, monkeypatch
 
 def test_flat_entry_position_policy_survives(tmp_path: Path) -> None:
     """A supported flat-entry-only provider must not gain position-close authority."""
-    original = load_multi_asset_live_config('tests/fixtures/profiles/multi_asset_bidirectional_hype_relaxed_candidate.toml', mode='observe')
+    original = load_multi_asset_live_config('tests/fixtures/profiles/hype_relaxed.toml', mode='observe')
     assert any(p.position_policy == 'flat_entry_only' for p in original.providers)
     output = tmp_path / 'flat-entry.toml'
     cohort_profile_stage.stage_cohort_profile(config=original, settings=unchanged_settings(original), output_path=output)

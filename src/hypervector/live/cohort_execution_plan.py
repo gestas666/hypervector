@@ -37,7 +37,7 @@ ProfitLockPolicy = Literal[
     "btc_hulk_delayed_component_floor_v1",
     "btc_hulk_delayed_component_exit_v2",
 ]
-# Where the v2 floor moves the resting venue stop: entry +/- 25 bps (V93), or
+# Where the v2 floor moves the resting venue stop: entry +/- 25 bps, or
 # the more protective of that and the +/- 0.5R software floor.
 BreakevenStopTarget = Literal["entry_offset", "floor"]
 

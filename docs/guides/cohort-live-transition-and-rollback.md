@@ -16,10 +16,9 @@ that instruction.
 
 | Item | Value |
 | --- | --- |
-| Active profile (example) | `configs/multi_asset_growth_first_5000_review_fixes_v95.toml` |
-| Active fingerprint | `dd779cce74568e4ba6963d1a19810a7fbcaa7f4279e40f45be83f12286339420` |
-| Rollback profile | `configs/v95-to-v94-rollback-20260927-v1.toml` (fingerprint `5fe5a9de…`) |
-| Rollback approval | `docs/live-approvals/v95-to-v94-rollback-20260927-v1.json` |
+| Active profile | `configs/<active-profile>.toml` (none is checked in today) |
+| Rollback profile | `configs/<name>.toml`, authored by `live rollback-profile` |
+| Approvals | `docs/live-approvals/<name>.json` |
 | Cohort ledger | `data/live/bidirectional_cohort/decisions.jsonl` (plus per-symbol journals) |
 | STOP file | `data/live/bidirectional_cohort/STOP` |
 | Drain marker | `data/live/bidirectional_cohort/transition_drain.json` |
@@ -30,7 +29,7 @@ that instruction.
 The shell examples use these variables:
 
 ```bash
-ACTIVE=configs/multi_asset_growth_first_5000_review_fixes_v95.toml
+ACTIVE=configs/<active-profile>.toml
 CANDIDATE=configs/<candidate-profile>.toml
 CKPT=data/runtime/bidirectional_cohort/latest_checkpoint.json
 HV=".venv/bin/python -m hypervector"
@@ -43,6 +42,25 @@ it builds any client when that approval is missing or does not match.
 A same-profile restart needs no new approval. If the implementation identity
 changed (any edit under `src/`), the start still records a new pre-start bundle,
 and it still needs the operator's go-ahead.
+
+## First profile from a clean slate
+
+The repository holds no profile, and the ledger root
+`data/live/bidirectional_cohort/` still records the last run of a removed
+profile. A changed profile is checked against the previous profile loaded from
+its recorded path, which no longer exists, so a start on that root refuses. The
+engine hardcodes the root, so a different `cohort_ledger` path is not an option.
+
+1. With the venue flat and the backend stopped, the operator moves the root's
+   contents out of `data/live/` (for example under `data/backups/`). With no
+   recorded previous identity the start needs no approval, and the drain marker
+   leaves with the ledgers.
+2. Write the profile under `configs/` with `cohort_ledger` and `stop_file` in
+   that root, and run the offline checks: `live check`, `live validate --mode
+   live --equity <USD>` and `live backup`.
+3. Point copies of the installed plists at the new profile (see Profile-only
+   rollback below for how to edit them), then follow steps 7 to 9 on an explicit
+   operator instruction.
 
 ## Flat-boundary predicate
 
@@ -271,7 +289,7 @@ There is no hot rollback. Keep managing any open lifecycle under its recorded
 contract until the flat predicate passes. Then:
 
 ```bash
-$HV live rollback-profile --current "$ACTIVE" --verify configs/v95-to-v94-rollback-20260927-v1.toml
+$HV live rollback-profile --current "$ACTIVE" --verify configs/<rollback>.toml
 ```
 
 That verifies the approved rollback pair and dry-runs its start offline. It

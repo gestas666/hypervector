@@ -45,9 +45,9 @@ def test_reservation_before_spawn_survives_replacement(tmp_path: Path) -> None:
 def test_changed_command_requires_explicit_journal_archive(tmp_path: Path) -> None:
     """A service definition edit cannot reuse authority for a different command."""
     path = tmp_path / "events.jsonl"
-    RestartJournal(path, ["v89"]).reserve(100.0, RestartPolicy())
+    RestartJournal(path, ["backend-a"]).reserve(100.0, RestartPolicy())
     with pytest.raises(ValueError, match="command changed"):
-        RestartJournal(path, ["v90"])
+        RestartJournal(path, ["backend-b"])
 
 
 @pytest.mark.parametrize(

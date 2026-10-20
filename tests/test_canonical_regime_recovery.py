@@ -52,7 +52,7 @@ def test_rejects_unordered_recovery_batch(tmp_path: Path) -> None:
 
 def _telemetry(tmp_path: Path) -> tuple[MultiAssetCohortTelemetry, SolLiveLedger]:
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml",
+        "tests/fixtures/profiles/hype_compression_range_retired_current.toml",
         mode="observe",
     )
     ledger = SolLiveLedger(

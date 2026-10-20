@@ -4,9 +4,9 @@ Report-only. execution_authority: none. No credentials, no venue client, no
 network, and nothing is started, stopped or armed.
 
 A profile file cannot be restarted as a rollback once a later profile has run.
-Its ``[runtime] transition_approval`` names the approval that admitted it (V91's
-names V90 -> V91), while live startup validates the change from the profile that
-actually ran last (V93). ``validate_profile_change_approval`` then refuses with
+Its ``[runtime] transition_approval`` names the approval that admitted it (for
+profile B, A -> B), while live startup validates the change from the profile that
+actually ran last (say C). ``validate_profile_change_approval`` then refuses with
 "previous profile id differs from approval", and it does so only after the
 mandatory pre-start bundle has been written.
 
@@ -235,6 +235,7 @@ def create_rollback(args: argparse.Namespace) -> dict[str, object]:
     for path in (profile_path, approval_path):
         if path.exists():
             raise RollbackProfileError(f"refusing to overwrite; already exists: {path}")
+    approval_dir.mkdir(parents=True, exist_ok=True)
     current = load_multi_asset_live_config(current_path, mode="observe")
     target = load_multi_asset_live_config(target_path, mode="observe")
     if target.profile_fingerprint == current.profile_fingerprint:

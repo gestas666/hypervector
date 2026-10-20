@@ -27,7 +27,7 @@ _HOUR = 3_600.0
 
 def _tmp_config(live_script: object, tmp_path: Path) -> object:
     loaded = live_script.load_multi_asset_live_config(  # type: ignore[attr-defined]
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml",
+        "tests/fixtures/profiles/cohort_base.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

@@ -63,7 +63,7 @@ def test_collector_boundary_prevents_duplicate_or_retroactive_observations() -> 
 
 
 def test_collector_is_disabled_when_legacy_range_execution_is_configured() -> None:
-    """Existing v35 Range telemetry must not be duplicated under a second ID."""
+    """Existing legacy Range telemetry must not be duplicated under a second ID."""
     collector = CanonicalRegimeTelemetryCollector(
         symbols=("BTC",),
         legacy_execution_enabled=True,

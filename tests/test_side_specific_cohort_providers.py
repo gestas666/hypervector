@@ -23,7 +23,7 @@ from hypervector.live.multi_asset_polling_contract import (
     SOURCE_TIMEFRAMES,
 )
 
-_BASE = Path("tests/fixtures/profiles/multi_asset_bidirectional_focused_growth_5000_candidate_v42.toml")
+_BASE = Path("tests/fixtures/profiles/focused_growth_5000.toml")
 _HULK_BLOCK = """[[providers]]
 strategy_id = "hulk_expansion_bidirectional_tuned_v2"
 symbols = ["BTC"]

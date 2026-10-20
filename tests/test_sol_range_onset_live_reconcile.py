@@ -180,7 +180,7 @@ def test_fault_after_durable_mutation_remains_ambiguous() -> None:
 
 
 def test_definitive_ioc_no_fill_fault_recovers_only_with_venue_flat() -> None:
-    """The recorded V80 no-match pattern must not poison a flat restart."""
+    """The recorded IOC no-match pattern must not poison a flat restart."""
     client_order_id = "0x11111111111111111111111111111111"
     records = [
         _record("ENTRY_PENDING"),

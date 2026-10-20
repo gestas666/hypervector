@@ -19,7 +19,7 @@ from hypervector.live.multi_asset_market_bars import MultiAssetIntentPollerError
 def test_poller_captures_full_initial_frames_once_without_changing_results() -> None:
     """Observe actual retained inputs before collectors with no extra requests."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml", mode="observe"
+        "tests/fixtures/profiles/cohort_base.toml", mode="observe"
     )
     frame = candle_frame()
     requests: list[tuple[str, float, int | None]] = []
@@ -95,7 +95,7 @@ def test_archive_preserves_exact_frames_and_hourly_indicator_seeds(tmp_path: Pat
 def test_observer_binding_is_fixed_before_activation() -> None:
     """A later cycle cannot be mislabeled as the original startup input."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/multi_asset_bidirectional_canary.toml", mode="observe"
+        "tests/fixtures/profiles/cohort_base.toml", mode="observe"
     )
     poller = ConfiguredMultiAssetIntentPoller(
         config=config, fetch_bars=lambda *args, **kwargs: candle_frame(),

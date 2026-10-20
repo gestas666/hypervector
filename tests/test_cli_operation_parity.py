@@ -98,7 +98,7 @@ def test_installed_checkpoint_plist_arguments_still_parse() -> None:
         "--out",
         "data/runtime/bidirectional_cohort/latest_checkpoint.json",
         "--config",
-        "configs/multi_asset_growth_first_5000_review_fixes_v95.toml",
+        "tests/fixtures/cohort_chain/profile_b.toml",
         "--research-database",
         "data/research/market.duckdb",
         "--research-sync-interval-seconds",

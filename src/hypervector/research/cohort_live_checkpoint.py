@@ -78,9 +78,6 @@ from hypervector.research.live_ledger_snapshot import (
     snapshot_decision_ledger,
     snapshot_projected_compatible_execution_ledger,
 )
-from hypervector.research.seven_asset_checkpoint_acceptance import (
-    attach_seven_asset_poststart_acceptance,
-)
 
 Record = Mapping[str, object]
 FundingEvidenceFn = Callable[[str, int, int], EligiblePolicyFundingEvidence | None]
@@ -343,12 +340,6 @@ def publish_live_checkpoint(
         if not isinstance(checkpoint_audit, dict):
             raise ValueError("merged checkpoint audit must be mutable")
         _refresh_accounting_epoch_archive(checkpoint_audit, observed_at)
-    if config_path is not None:
-        attach_seven_asset_poststart_acceptance(
-            checkpoint,
-            config_path,
-            observed_at=observed_at,
-        )
     if research_sync is not None:
         checkpoint["research_sync"] = dict(research_sync)
     write_atomic_json(destination, checkpoint)

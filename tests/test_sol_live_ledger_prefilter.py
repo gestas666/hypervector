@@ -355,7 +355,7 @@ def test_telemetry_recovery_declares_and_reproduces_its_selection(
     path = _write_history(tmp_path, rows=80, seed=29)
     config = replace(
         load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset_canary.toml"),
+            Path("tests/fixtures/profiles/sol_range_onset.toml"),
             mode="live",
             enabled=True,
             accepts_live_risk=True,

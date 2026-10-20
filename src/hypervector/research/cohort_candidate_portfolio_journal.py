@@ -91,7 +91,6 @@ def _validated_replay(
     supported_modes = {
         "one_blocker_execution_feasibility",
         "eligible_policy_forward_observer",
-        "v51_sol_route_native_one_blocker_shadow",
     }
     if replay.get("schema_version") != 1 or replay.get("mode") not in supported_modes:
         raise ValueError("candidate portfolio replay envelope is invalid")
