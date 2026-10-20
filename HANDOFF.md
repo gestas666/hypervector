@@ -126,7 +126,7 @@ holds the group table, output contract, exit codes and legacy-name map, and
   window resets it.
 - **Free disk.** The supervisor alerts below about 14 GiB free and treats less
   than 10 GiB as a problem. 156 GiB were free on 2026-10-19 while the cleanup
-  folder (about 107 GB of old run data plus the old worktrees) still sat in the
+  folder (about 108 GB: old run data and the old worktrees) still sat in the
   Trash; emptying the Trash is the operator's call. The largest remaining
   consumers are `data/cache/` and the research databases.
 - **Checkpoint flags.** The asymmetric-forward observer and
