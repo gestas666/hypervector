@@ -108,13 +108,15 @@ hypervector archive repair-trades --bundle <dir>_trades                         
 ## backtest: VectorBT + TA-Lib
 
 ```sh
-hypervector backtest run --strategy crown_stack_long --symbol BTC --timeframe 5m --lookback-days 90 --leverage 2
-hypervector backtest run --strategy crown_stack_long --exit-mode trail --trail-atr-mult 2.5 --fee-model hl_vip1_taker
+hypervector backtest run --strategy <strategy> --symbol BTC --timeframe 5m --lookback-days 90 --leverage 2
+hypervector backtest run --strategy <strategy> --exit-mode trail --trail-atr-mult 2.5 --fee-model hl_vip1_taker
 hypervector backtest sweep --track uptrend --timeframe 5m          # every trial to the board; best trial exported
 hypervector backtest sweep --track downtrend --no-export
 hypervector backtest report --source all --limit 20 --format table
 ```
 
+- **Strategy.** `<strategy>` is any name registered under
+  `src/hypervector/strategies/`.
 - **Fees.** The default fee model is `hl_base_taker`; `--fee-model zero` and
   `--no-costs` are for debugging only.
 - **Leverage** is refused above the venue cap: BTC 40, ETH 25, SOL 20, others 10.
@@ -126,8 +128,8 @@ hypervector backtest report --source all --limit 20 --format table
 ## tune: autotuning with a chronological holdout
 
 ```sh
-hypervector tune strategy --strategy crown_stack_long --timeframe 5m --n-trials 100
-hypervector tune strategy --strategy crown_stack_long --sampler optuna --objective sharpe --train-fraction 0.8
+hypervector tune strategy --strategy <strategy> --timeframe 5m --n-trials 100
+hypervector tune strategy --strategy <strategy> --sampler optuna --objective sharpe --train-fraction 0.8
 hypervector tune regime --positions positions.csv --n-trials 100 --seed 7 --train-fraction 0.7
 ```
 
@@ -314,9 +316,9 @@ hypervector db hip3-liquidity --symbol xyz:TSLA --notional-usd 25 --notional-usd
 ## pipeline: the end-to-end flow
 
 ```sh
-hypervector pipeline run --strategy crown_stack_long --timeframe 5m --dry-run
-hypervector pipeline run --strategy crown_stack_long --timeframe 5m --train-model --paper-bars 60
-hypervector pipeline run --strategy crown_stack_long --export latest --no-nautilus
+hypervector pipeline run --strategy <strategy> --timeframe 5m --dry-run
+hypervector pipeline run --strategy <strategy> --timeframe 5m --train-model --paper-bars 60
+hypervector pipeline run --strategy <strategy> --export latest --no-nautilus
 hypervector pipeline list
 hypervector pipeline show latest
 ```
@@ -338,7 +340,7 @@ The same flow as single commands:
 
 ```sh
 hypervector data history --symbol BTC --timeframe 5m --lookback-days 90
-hypervector tune strategy --strategy crown_stack_long --symbol BTC --timeframe 5m --lookback-days 90
+hypervector tune strategy --strategy <strategy> --symbol BTC --timeframe 5m --lookback-days 90
 hypervector export list
 hypervector export validate --export latest
 hypervector nautilus run --export latest --lookback-days 90 --no-network

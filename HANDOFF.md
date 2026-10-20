@@ -36,14 +36,12 @@ What stays is capability:
   (`src/hypervector/strategies/`, `src/hypervector/research/*_signals.py`)
   remain. A new profile composes them or adds new ones.
 - **Profile schema.** `src/hypervector/live/multi_asset_live_config.py` and
-  `multi_asset_live_config_parsing.py` define the cohort profile. Working
-  examples exist only as test data: `tests/fixtures/cohort_chain/` (profiles A
-  and B, an A→B approval, an authored B→A rollback) and
-  `tests/fixtures/profiles/`. They are fixtures, not recommendations.
+  `multi_asset_live_config_parsing.py` define the cohort profile. The profiles
+  under `tests/fixtures/` copy retired profiles' values for the tests; never use
+  them as a template or starting point.
 - **Hypervelocity shadow.** `paper shadow` now requires `--config`. The Python
   contract in `src/hypervector/strategies/hypervelocity_contract.py` is
-  authoritative; `tests/fixtures/profiles/hypervelocity_shadow.toml` is a valid
-  example.
+  authoritative.
 - **Evidence registries.** `_EVIDENCE` in
   `src/hypervector/live/multi_asset_strategy_evidence.py` and `_MODELED` in
   `src/hypervector/research/cohort_friction_contracts.py` are empty. Every
@@ -92,21 +90,17 @@ holds the group table, output contract, exit codes and legacy-name map, and
   profile's path, so they cannot start anything. For a new profile, copy them
   and edit only the `--config` arguments, as "Profile-only rollback" in
   `docs/guides/cohort-live-transition-and-rollback.md` describes.
-- **Old run data stay under `data/`** by the operator's choice: the cohort
-  ledgers, a completed transition-drain marker
-  (`data/live/bidirectional_cohort/transition_drain.json`), backups and
-  research stores.
-- **Before the first armed start of a new profile**, the ledger root
-  `data/live/bidirectional_cohort/` must stop naming the old run. Its last
-  `configuration_identity` is the removed live profile. A changed profile must
-  load that previous profile from its recorded path to check the approval. That
-  path no longer exists, so the start would refuse. The engine hardcodes this
-  ledger root (supervisor, process lock, SOL ledger checks), so a different
-  `cohort_ledger` path is not an option. Moving the root's contents out of
-  `data/live/` (for example under `data/backups/`) leaves no previous identity:
-  the start needs no approval and the drain marker is gone. This is the
-  operator's call and has not been done; "First profile from a clean slate" in
-  the transition guide has the steps.
+- **`data/` holds market data only.** `data/cache/` and the research
+  databases under `data/research/` (`market.duckdb`, `hip3_market.duckdb`,
+  `live_event_research.duckdb`, `hip3_asset_context/`) remain; their old-run
+  tables (cohort events and sources, shadow ledger events, portfolio revisions)
+  are empty. Every old run's ledgers, drain marker, backups, logs, checkpoints,
+  exports, models, sweep board and paper/observer runs were moved to
+  `~/.Trash/hypervector-cleanup-20261019/` on 2026-10-19.
+- **The ledger root `data/live/bidirectional_cohort/` is empty.** The first
+  start of a new profile has no previous identity, so it needs no approval and
+  no drain archive. The engine hardcodes this root (supervisor, process lock,
+  SOL ledger checks); profiles must keep `cohort_ledger` and `stop_file` in it.
 - **Provider dependency.** Live start and validation need the external provider
   package at `../backtest-lab/backtest_lab`.
 
@@ -131,8 +125,10 @@ holds the group table, output contract, exit codes and legacy-name map, and
   long run, watch `live monitor` freshness. A same-profile restart at a flat
   window resets it.
 - **Free disk.** The supervisor alerts below about 14 GiB free and treats less
-  than 10 GiB as a problem. Large consumers are `data/backups/` and the research
-  stores. Reclaiming space is the operator's call.
+  than 10 GiB as a problem. 156 GiB were free on 2026-10-19 while the cleanup
+  folder (about 107 GB of old run data plus the old worktrees) still sat in the
+  Trash; emptying the Trash is the operator's call. The largest remaining
+  consumers are `data/cache/` and the research databases.
 - **Checkpoint flags.** The asymmetric-forward observer and
   `--eligible-policy-forward` remain in `live checkpoint`; the backend's
   checkpoint command always passes `--disable-asymmetric-forward-observer`.
@@ -152,16 +148,17 @@ holds the group table, output contract, exit codes and legacy-name map, and
 
 ## Last verified state
 
-Branch `agent/clean-slate-profiles-20261019` (from `main` at `eb0bc47a`):
+`main` after the 2026-10-19 clean-slate cleanup:
 
 - Default suite: 7,633 passed, 0 failed (`-n 6`, about 55 s).
 - `-m "integration and not network" --ignore=tests/test_install.py`: 7 passed.
   `-m network` was not run.
 - `--help` 0.05 s; `status` and `export list` exit 0.
-- `live check` and `live validate --mode live --equity 4796` load
-  `tests/fixtures/cohort_chain/profile_b.toml`; validate exits 0. `live
-  rollback-profile --verify` accepts the fixture rollback pair (exit 0). An
-  unarmed `live start` refuses (exit 2).
+- `live check --config tests/fixtures/cohort_chain/profile_b.toml` reports only
+  the two authority flags as blockers (no STOP file, no drain marker).
+  `live validate --mode live --equity 4796` exits 0 on that profile, `live
+  rollback-profile --verify` accepts the fixture rollback pair, and an unarmed
+  `live start` refuses (exit 2).
 - Three recorded fixtures under `tests/fixtures/native_runner_cold_warm_20260911/`
   still name an old evidence path; their bytes are sha256-pinned by its
   `manifest.json`.

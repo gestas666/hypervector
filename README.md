@@ -43,8 +43,8 @@ Nine pillars and four supporting groups. Each group has its own `--help`.
 | --- | --- | --- |
 | `data` | Hyperliquid bars, funding, L2 recording, HIP-3 roster | `hypervector data history --symbol BTC --timeframe 5m --lookback-days 90` |
 | `archive` | Bounded 0xArchive fetches, resumable backfill, coverage audit, trade repair | `hypervector archive audit --symbol BTC --start 2026-09-01T00:00:00Z --end 2026-09-02T00:00:00Z` |
-| `backtest` | VectorBT backtest, track sweep, trial board | `hypervector backtest run --strategy crown_stack_long --timeframe 5m` |
-| `tune` | Strategy and regime autotuning with a chronological holdout | `hypervector tune strategy --strategy crown_stack_long --objective net_pnl --train-fraction 0.7` |
+| `backtest` | VectorBT backtest, track sweep, trial board | `hypervector backtest run --strategy <strategy> --timeframe 5m` |
+| `tune` | Strategy and regime autotuning with a chronological holdout | `hypervector tune strategy --strategy <strategy> --objective net_pnl --train-fraction 0.7` |
 | `nautilus` | Event-driven validation of a bundle, Parquet catalog | `hypervector nautilus run --export latest --no-network` |
 | `paper` | Paper/shadow daemons, cohort observer, reports | `hypervector paper run --export latest --mode shadow --max-live-bars 60` |
 | `live` | Live readiness, execution, monitoring, transitions, supervision | `hypervector live check --config <profile.toml>` |
@@ -52,7 +52,7 @@ Nine pillars and four supporting groups. Each group has its own `--help`.
 | `model` | Walk-forward metalabel training | `hypervector model train --export latest` |
 | `export` | Strategy bundles: create, list, show, validate | `hypervector export validate --export latest` |
 | `db` | DuckDB research store: build, imports, reports | `hypervector db status` |
-| `pipeline` | One foreground run from data to paper hand-off | `hypervector pipeline run --strategy crown_stack_long --dry-run` |
+| `pipeline` | One foreground run from data to paper hand-off | `hypervector pipeline run --strategy <strategy> --dry-run` |
 | `system` | Data layout, capabilities, command inventory | `hypervector system status` |
 
 The `live` group lists its commands in four sections:
@@ -75,12 +75,14 @@ The `live` group lists its commands in four sections:
 7. **paper**: hands off to shadow paper.
 
 It never starts a daemon, never builds a venue client and never reaches `live`.
+`<strategy>` in these examples is any name registered under
+`src/hypervector/strategies/`.
 
 ```sh
-hypervector pipeline run --strategy crown_stack_long --timeframe 5m --dry-run   # print the plan, write nothing
-hypervector pipeline run --strategy crown_stack_long --timeframe 5m             # run it
-hypervector pipeline run --strategy crown_stack_long --timeframe 5m --train-model --paper-bars 60
-hypervector pipeline run --strategy crown_stack_long --export latest            # start from a bundle; skip data and search
+hypervector pipeline run --strategy <strategy> --timeframe 5m --dry-run   # print the plan, write nothing
+hypervector pipeline run --strategy <strategy> --timeframe 5m             # run it
+hypervector pipeline run --strategy <strategy> --timeframe 5m --train-model --paper-bars 60
+hypervector pipeline run --strategy <strategy> --export latest            # start from a bundle; skip data and search
 hypervector pipeline list
 hypervector pipeline show latest
 ```
@@ -104,7 +106,7 @@ The same flow as single commands:
 
 ```sh
 hypervector data history --symbol BTC --timeframe 5m --lookback-days 90
-hypervector tune strategy --strategy crown_stack_long --symbol BTC --timeframe 5m --lookback-days 90
+hypervector tune strategy --strategy <strategy> --symbol BTC --timeframe 5m --lookback-days 90
 hypervector export list
 hypervector export validate --export latest
 hypervector nautilus run --export latest --lookback-days 90 --no-network

@@ -64,7 +64,7 @@ metalabel_mode = "observe"
 
 [evidence]
 status = "development_candidate_not_live_proven"
-artifact = "../../../data/logs/research/hypervelocity_measured_exposure_20260428_20260728_trade_through_v1.json"
-artifact_sha256 = "25f8b7c1aa1490ee6766e4f7d1e06089e54c9f833d4c617f64c7e8dad947220f"
+artifact = "../source_follow_measured_evidence_stub.json"
+artifact_sha256 = "a567dc7afe03ddcd4a120e8eca75f39abc8d59505aed8ad88364052c79e2b346"
 execution_economics_conclusive = false
 active_book_gap_windows = 2

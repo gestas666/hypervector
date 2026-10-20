@@ -45,20 +45,17 @@ and it still needs the operator's go-ahead.
 
 ## First profile from a clean slate
 
-The repository holds no profile, and the ledger root
-`data/live/bidirectional_cohort/` still records the last run of a removed
-profile. A changed profile is checked against the previous profile loaded from
-its recorded path, which no longer exists, so a start on that root refuses. The
-engine hardcodes the root, so a different `cohort_ledger` path is not an option.
+The repository holds no profile and the ledger root
+`data/live/bidirectional_cohort/` is empty, so the first start has no previous
+identity: it needs no approval and no drain archive. The engine hardcodes the
+root, so a profile keeps `cohort_ledger` and `stop_file` in it. Build the
+profile from the schema in `src/hypervector/live/multi_asset_live_config.py`;
+the profiles under `tests/fixtures/` copy retired profiles and are not
+templates.
 
-1. With the venue flat and the backend stopped, the operator moves the root's
-   contents out of `data/live/` (for example under `data/backups/`). With no
-   recorded previous identity the start needs no approval, and the drain marker
-   leaves with the ledgers.
-2. Write the profile under `configs/` with `cohort_ledger` and `stop_file` in
-   that root, and run the offline checks: `live check`, `live validate --mode
-   live --equity <USD>` and `live backup`.
-3. Point copies of the installed plists at the new profile (see Profile-only
+1. Write the profile under `configs/` and run the offline checks: `live check`,
+   `live validate --mode live --equity <USD>` and `live backup`.
+2. Point copies of the installed plists at the new profile (see Profile-only
    rollback below for how to edit them), then follow steps 7 to 9 on an explicit
    operator instruction.
 
