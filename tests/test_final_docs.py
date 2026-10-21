@@ -410,13 +410,6 @@ def _listed_legacy_names() -> set[str]:
     return listed
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "README still lists aliases of commands removed with the old strategies "
-        "(paper shadow, regime align, tune regime); the docs rewrite pass drops them"
-    ),
-)
 def test_readme_legacy_names_all_parse() -> None:
     unknown = sorted(_listed_legacy_names() - set(LEGACY_ALIASES))
     assert unknown == [], f"README legacy names that do not parse: {unknown}"

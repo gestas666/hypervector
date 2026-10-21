@@ -1,6 +1,6 @@
 ---
 name: hypervector-cli
-description: Operate the unified hypervector CLI pillar by pillar - Hyperliquid and 0xArchive data, VectorBT/TA-Lib backtests and sweeps, Karpathy/Optuna tuning, NautilusTrader validation, metalabel models, paper/shadow trading, the double-armed live cohort and its transition tooling, the DuckDB store and the end-to-end pipeline.
+description: Operate the unified hypervector CLI pillar by pillar - Hyperliquid and 0xArchive data, VectorBT/TA-Lib backtests and sweeps, Karpathy/Optuna tuning, NautilusTrader validation, metalabel models, paper/shadow trading, the double-armed live cohort and its transition tooling, the DuckDB store, the end-to-end pipeline, and where a new research strategy or live provider registers.
 ---
 
 # Hypervector CLI
@@ -60,7 +60,8 @@ hypervector data history --symbol ETH --timeframe 1m --lookback-days 30 --pin-ca
 hypervector data funding-fetch --symbol BTC --start 2026-09-01T00:00:00Z --end 2026-10-01T00:00:00Z
 hypervector data book-record --symbol BTC --interval-seconds 2 --max-snapshots 100
 hypervector data book-align --book-path data/cache/book/BTC_l2_<YYYYMMDD>.jsonl --symbol BTC --timeframe 1m
-hypervector data hip3-roster --max-polls 1
+hypervector data hip3-roster --config <profile.toml> --max-polls 1
+hypervector data hip3-roster --market xyz:AAA=10 --market xyz:BBB=5 --max-polls 1
 ```
 
 - **Cache-first.** Every history load reports its provenance: window,
@@ -73,12 +74,16 @@ hypervector data hip3-roster --max-polls 1
 - **Backfill.** `--strict-hl-only` keeps Binance/Bybit out, and uses its own
   cache entry.
 - **Symbols.** `--symbol` takes a coin as typed: `BTC`, `kPEPE`, `xyz:TSLA`.
+- **HIP-3 roster.** `data hip3-roster` needs exactly one roster source:
+  `--config` (a cohort profile's HIP-3 assets and their `venue_max_leverage`)
+  or one `--market dex:ASSET=MAX_LEVERAGE` per market. With neither, or both,
+  it exits 2. It loads only the public wallet address and is report-only.
 
 ## archive: 0xArchive evidence
 
 ```sh
 hypervector archive candle-fetch --symbol BTC --timeframe 1m --start 2026-09-01T00:00:00Z --end 2026-09-02T00:00:00Z
-hypervector archive candle-fetch --market-family hip3 --symbol xyz:SNDK --timeframe 15m --start ... --end ...
+hypervector archive candle-fetch --market-family hip3 --symbol xyz:AAA --timeframe 15m --start ... --end ...
 hypervector archive trade-fetch --symbol BTC --start ... --end ...
 hypervector archive book-fetch  --symbol BTC --depth 20 --start ... --end ...
 hypervector archive price-fetch --symbol BTC --start ... --end ...
@@ -110,18 +115,20 @@ hypervector archive repair-trades --bundle <dir>_trades                         
 ```sh
 hypervector backtest run --strategy <strategy> --symbol BTC --timeframe 5m --lookback-days 90 --leverage 2
 hypervector backtest run --strategy <strategy> --exit-mode trail --trail-atr-mult 2.5 --fee-model hl_vip1_taker
-hypervector backtest sweep --track uptrend --timeframe 5m          # every trial to the board; best trial exported
-hypervector backtest sweep --track downtrend --no-export
+hypervector backtest sweep --track uptrend --strategy <strategy> --timeframe 5m   # every trial to the board; best trial exported
+hypervector backtest sweep --track downtrend --strategy <strategy> --no-export
 hypervector backtest report --source all --limit 20 --format table
 ```
 
-- **Strategy.** `<strategy>` is any name registered under
-  `src/hypervector/strategies/`.
+- **Strategy.** `--strategy` is required and names a registered strategy (see
+  "Adding a strategy" below). With none registered under that name,
+  `backtest run`, `backtest sweep`, `tune strategy` and `pipeline run` exit 2
+  and say how to register one.
 - **Fees.** The default fee model is `hl_base_taker`; `--fee-model zero` and
   `--no-costs` are for debugging only.
 - **Leverage** is refused above the venue cap: BTC 40, ETH 25, SOL 20, others 10.
-- **Sweep strategy.** `--strategy` defaults to the track's `trend_ride_*`, then
-  `crown_stack_*`. A strategy whose role does not match `--track` exits 2.
+- **Sweep track.** `backtest sweep` searches the strategy's `param_grid`. A
+  strategy whose role does not match `--track` exits 2.
 - **Report.** `backtest report` is read-only. It ranks RunsDB sweep trials and
   the tune boards under `logs/research/`.
 
@@ -130,7 +137,6 @@ hypervector backtest report --source all --limit 20 --format table
 ```sh
 hypervector tune strategy --strategy <strategy> --timeframe 5m --n-trials 100
 hypervector tune strategy --strategy <strategy> --sampler optuna --objective sharpe --train-fraction 0.8
-hypervector tune regime --positions positions.csv --n-trials 100 --seed 7 --train-fraction 0.7
 ```
 
 - **Sampler.** `tune strategy` defaults to Karpathy search, a random-adaptive
@@ -143,9 +149,6 @@ hypervector tune regime --positions positions.csv --n-trials 100 --seed 7 --trai
 - **Board.** It records the seed, data window, costs, search space, code
   identity and report-only warnings. A single trial error is recorded; a search
   in which every trial fails exits 1.
-- **Regime tuning.** `tune regime` writes an exclusive-create board under
-  `logs/research/regime_autotune_<UTC>.json`, or at `--out`, which must not
-  exist yet.
 
 ## nautilus: event-driven validation
 
@@ -172,9 +175,6 @@ hypervector paper check
 hypervector paper run --export latest --mode shadow --max-live-bars 60
 hypervector paper run --export latest --metalabel-bundle latest --metalabel-mode observe
 hypervector paper report --last 5
-hypervector paper shadow --config <hypervelocity-profile.toml> --max-live-bars 30   # --config required
-hypervector paper shadow-reset                       # dry run; --yes backs up, then resets
-hypervector paper compare --shadow-ledger <decisions.jsonl> --positions positions.csv --run-id RUN
 hypervector paper observe --config <profile.toml> --max-polls 10     # cohort collectors, zero authority
 hypervector paper checkpoint --once
 hypervector paper audit --run-id RUN --out-dir data/logs/observer-audits
@@ -185,6 +185,9 @@ hypervector paper audit --run-id RUN --out-dir data/logs/observer-audits
 - **Fills.** They use `l2_walk_v1` while the book is fresher than
   `--max-book-age-ms` and `bar_close` otherwise.
 - **Metalabels.** `--metalabel-mode` is `off`, `observe`, `scale` or `filter`.
+- **Observer.** `paper observe` runs the profile's registered providers with
+  zero execution authority, so an unregistered `strategy_id` is refused the
+  same way as in `live start`.
 - **Observer paths.** The observer writes to `paper/cohort/` and its checkpoint
   goes to `runtime/cohort_observer/latest_checkpoint.json`. It never touches
   the live ledger or the live checkpoint.
@@ -201,13 +204,13 @@ hypervector live request --inbox <dir> --run-id RUN --profile-fingerprint FP --a
 ```
 
 - **`live check`** reports, as booleans: credential presence, both authority
-  flags, the profile loaded in observe mode with its fingerprint, provider
-  dependencies, the STOP file and the transition-drain marker. Its `blockers[]`
-  says what stands in the way.
+  flags, the profile loaded in observe mode with its fingerprint (every
+  provider registered), the STOP file and the transition-drain marker. Its
+  `blockers[]` says what stands in the way.
 - **`live start`** refuses (exit 2) before handing over to the backend when a
-  flag is missing, the profile does not load or dependencies fail. After that
-  the backend's own codes pass through: 1 run failed, 2 start refused,
-  4 degraded.
+  flag is missing or the profile does not load in observe mode, for example
+  because a provider is not registered. After that the backend's own codes
+  pass through: 1 run failed, 2 start refused, 4 degraded.
 - **`live run`** trades one strict bundle with a hard per-order notional cap.
   `--export` takes a bundle directory, a candidate id under `exports/` or
   `latest`. It arms only when the venue position for the coin reads flat. Its
@@ -276,7 +279,9 @@ hypervector live supervisor resume --yes --enabled --i-accept-live-risk  # kicks
   when healthy, 1 when unhealthy.
 - **launchd.** The plists run the unchanged `scripts/` entry points. Never
   regenerate installed plists with `print-launchd`; copy them and edit only the
-  intended arguments.
+  intended arguments. The installed plists pass arguments the entry points no
+  longer accept; the transition guide's "Installed plists" lists what a new
+  copy must drop or add.
 
 ## regime and model
 
@@ -348,13 +353,41 @@ hypervector model train --export latest --lookback-days 90            # optional
 hypervector paper run --export latest --mode shadow --max-live-bars 60
 ```
 
+## Adding a strategy
+
+No strategy and no trading provider is built in. `README.md` ("Adding a
+strategy") holds the full contract.
+
+- **Research family.** Write a module with its signal builders and a
+  `register_family()` that calls `hypervector.strategies.registry.register()`
+  once per `StrategySpec`. Declare any non-standard execution in the spec's
+  `ExecutionProfile` (post-only entries, fixed sizing, strategy-managed exits,
+  fee model); generic code reads those options and never switches on a
+  strategy name. List the module in `STRATEGY_FAMILY_MODULES`
+  (`src/hypervector/strategies/__init__.py`).
+- **Live provider.** Write a collector and a `ProviderRegistration` (id,
+  `1m`/`5m`/`15m` signal clock, readiness lookback, collector factory,
+  `ProviderCapability`) and add it to `_BUILTIN_REGISTRATIONS` in
+  `src/hypervector/live/provider_registry.py`. A profile's `[[providers]]` row
+  names the id, and its `timeframe` must equal the signal clock.
+- **Profile values.** A provider row's `execution` table holds the exit
+  mechanics: stop and target policies, maximum hold, `adaptive_exit_policy`
+  with its `adaptive_exit` or `retention_exit` table, and `profit_lock_policy`
+  (`none` or `completed_bar_trailing`). No preset fills them in.
+- **Tests.** Tests register synthetic, test-only strategies and providers
+  (`tests/synthetic_strategies.py`, `tests/synthetic_live_providers.py`). They
+  are test data, not templates, and nothing under `src/` imports them.
+- **Identity.** A new family or provider is an edit under `src/`, so the
+  implementation-identity rule above applies.
+
 ## Legacy names
 
 Old names still work as hidden aliases, for example `cohort-live-audit-delta`
 runs `live audit-delta`, `research sweep-up` runs `backtest sweep --track uptrend`,
 and `phase2-run` runs `nautilus run`. Always write the current names.
-Retired names (bare `research`/`cohort`, the TUI commands, the removed research
-commands) exit 2 with the replacement. The full list is in `README.md`.
+Retired names (bare `research` and `cohort`, `cohort-tui`, the removed
+decision-journal commands) exit 2 with a message. The full list is in
+`README.md`.
 
 ## Verification
 

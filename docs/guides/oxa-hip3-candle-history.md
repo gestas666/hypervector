@@ -5,7 +5,7 @@ builder identity:
 
 ```bash
 .venv/bin/python -m hypervector --data-root /path/to/research-data archive candle-fetch \
-  --market-family hip3 --symbol xyz:SNDK \
+  --market-family hip3 --symbol xyz:AAA \
   --start 2026-07-01T14:00:00Z --end 2026-07-01T15:00:00Z \
   --timeframe 15m --limit 10 --max-pages 2
 ```
@@ -16,8 +16,8 @@ builder identity:
   collision before any API call.
 - **Output.** It fetches public market history, stores an immutable evidence
   bundle and starts no trading process.
-- **Market family.** Core assets keep the default family `core`. `xyz:SNDK`
-  needs `--market-family hip3`.
+- **Market family.** Core assets keep the default family `core`. A HIP-3
+  market such as `xyz:AAA` (`<dex>:<ASSET>`) needs `--market-family hip3`.
 
 The HIP-3 route is `/v1/hyperliquid/hip3/candles/{symbol}`. The vendor
 describes these as candles aggregated from HIP-3 trades, with symbol-specific

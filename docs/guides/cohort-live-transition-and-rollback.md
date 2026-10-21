@@ -49,15 +49,39 @@ The repository holds no profile and the ledger root
 `data/live/bidirectional_cohort/` is empty, so the first start has no previous
 identity: it needs no approval and no drain archive. The engine hardcodes the
 root, so a profile keeps `cohort_ledger` and `stop_file` in it. Build the
-profile from the schema in `src/hypervector/live/multi_asset_live_config.py`;
-the profiles under `tests/fixtures/` copy retired profiles and are not
-templates.
+profile from the schema in `src/hypervector/live/multi_asset_live_config.py`.
+Every `[[providers]]` row names a registered `strategy_id` (see "Adding a
+strategy" in the README); the only built-in provider is the observe-only market
+observer. The profiles under `tests/fixtures/` are test data, not templates.
 
 1. Write the profile under `configs/` and run the offline checks: `live check`,
    `live validate --mode live --equity <USD>` and `live backup`.
-2. Point copies of the installed plists at the new profile (see Profile-only
-   rollback below for how to edit them), then follow steps 7 to 9 on an explicit
-   operator instruction.
+2. Point copies of the installed plists at the new profile (see
+   [Installed plists](#installed-plists)), then follow steps 7 to 9 on an
+   explicit operator instruction.
+
+## Installed plists
+
+The launchd agents run the live checkout's `scripts/` entry points with the
+arguments stored in their plists. Never regenerate an installed plist with
+`print-launchd`: the generator is not an export of the installed
+configuration. Copy the plist and edit only the arguments that must change:
+
+- **Profile.** Point every `--config` argument (the supervise agent's backend
+  command and the checkpoint agent) at the profile to run.
+- **Removed arguments.** The installed plists pass arguments the entry points
+  no longer accept, and argparse refuses an unknown argument, so the agent
+  exits at start. Drop `--disable-asymmetric-forward-observer` from the
+  checkpoint agent, and `--backtest-lab-root` wherever it appears.
+- **Roster observer.** `local.hypervector.research.roster_observer` needs a
+  roster: add `--config <profile.toml>` (the profile's HIP-3 assets and their
+  `venue_max_leverage`) or one `--market dex:ASSET=MAX_LEVERAGE` per market.
+  With neither it exits 2.
+
+Preserve `PYTHONPATH`, restart opt-in, endpoint URLs and other installed
+settings. Validate copies with `plutil -lint` and inspect their differences
+locally without printing endpoint secrets. Record hashes in the deployment
+manifest.
 
 ## Flat-boundary predicate
 
@@ -90,9 +114,11 @@ $HV live backup --config "$ACTIVE"
 $HV live backup-verify --bundle <exact printed bundle path>
 ```
 
-`live backup` loads the profile in observe mode. It captures the bounded
-Hypervector and backtest-lab source set that a live start would hash, together
-with the ledgers, and restore-verifies every archive.
+`live backup` loads the profile in observe mode. It captures the bounded source
+set that a live start would hash (the `hypervector` and
+`hypervector_supervision` packages with their CLI option specs, the cohort
+entry point, `pyproject.toml` and `uv.lock`), together with the ledgers, and
+restore-verifies every archive.
 
 - It is credential-free and may run while the backend is live.
 - It exits 0 when verified and 2 when refused.
@@ -193,8 +219,9 @@ $HV live check --config "$CANDIDATE"
 
 Choose one of these, on an explicit operator instruction:
 
-- **Supervised.** The operator copies the installed supervise plist, edits only
-  its `--config` argument, then enables and kickstarts the agent:
+- **Supervised.** The operator copies the installed supervise plist, edits it
+  as [Installed plists](#installed-plists) describes, then enables and
+  kickstarts the agent:
 
   ```bash
   launchctl enable gui/$(id -u)/local.hypervector.cohort.supervise
@@ -303,12 +330,9 @@ $HV live rollback-profile --current "$ACTIVE" --target <profile.toml> --name <na
 It writes the profile under `configs/` and the approval under
 `docs/live-approvals/`.
 
-**Profile-only rollback.** Copy the installed plists and edit only the intended
-`--config` arguments. Preserve `PYTHONPATH`, restart opt-in, endpoint URLs and
-other installed settings. Do not regenerate installed definitions with
-`print-launchd`: the generator is not an export of the installed configuration.
-Validate copies with `plutil -lint` and inspect their differences locally
-without printing endpoint secrets. Record hashes in the deployment manifest.
+**Profile-only rollback.** Copy the installed plists and edit them as
+[Installed plists](#installed-plists) describes, with `--config` pointing at
+the rollback profile.
 
 If a start fails before the `pre-start backup verified` line, no authenticated
 client was built. Inspect the refusal and run `live backup-verify`; never bypass

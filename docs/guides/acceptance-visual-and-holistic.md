@@ -37,8 +37,9 @@ There is no terminal UI.
    exact strategy and symbol identity.
 7. **Paper and live boundaries.**
    - Paper and shadow cannot construct execution clients or submit orders.
-   - `live start` requires both authority flags, an observe-mode profile load
-     and provider dependencies before it hands over to the backend.
+   - `live start` requires both authority flags and an observe-mode profile
+     load, in which every provider is registered, before it hands over to the
+     backend.
    - The backend then requires credentials, the STOP check, a verified
      pre-start bundle and venue reconciliation.
    - No change adds an implicit performance gate.
@@ -72,7 +73,7 @@ Execution changes belong in a separate checkout with its own venv. A passing
 suite does not approve a live start. Before a deployment, supply:
 
 - the exact profile;
-- the external providers (`../backtest-lab`);
+- the provider registrations it names, in this package;
 - the models.
 
 Then follow [the transition and rollback guide](cohort-live-transition-and-rollback.md).
