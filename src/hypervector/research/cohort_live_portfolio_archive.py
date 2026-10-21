@@ -20,7 +20,6 @@ from hypervector.research.cohort_trade_performance import (
     build_all_time_trade_performance,
 )
 
-_SYMBOL_ORDER = ("BTC", "ETH", "SOL", "HYPE")
 PORTFOLIO_ARCHIVE_PROJECTION_REVISION = 4
 _PROFILE_FINGERPRINT = re.compile(r"[0-9a-f]{64}")
 
@@ -371,10 +370,7 @@ def _trade_record(row: Sequence[object]) -> dict[str, object]:
 
 
 def _ordered_symbols(trades: Sequence[Mapping[str, object]]) -> tuple[str, ...]:
-    present = {_text(trade.get("symbol"), "archive symbol") for trade in trades}
-    ordered = [symbol for symbol in _SYMBOL_ORDER if symbol in present]
-    ordered.extend(sorted(present.difference(_SYMBOL_ORDER)))
-    return tuple(ordered)
+    return tuple(sorted({_text(trade.get("symbol"), "archive symbol") for trade in trades}))
 
 
 def _side(value: object) -> str:
