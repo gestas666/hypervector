@@ -48,7 +48,8 @@ What stays is capability:
   structural stop needs a stop anchor, and SPCX cash-open needs its absolute
   target. The generic loader and `live validate` still bound every value
   (taker IOC only, sizing ceilings, stop inside liquidation, STOP beside the
-  ledger, authority flags).
+  ledger, authority flags). The operator approved this change on 2026-10-20
+  and it is on `main`.
 - **Profile schema.** `src/hypervector/live/multi_asset_live_config.py` and
   `multi_asset_live_config_parsing.py` define the cohort profile. The profiles
   under `tests/fixtures/` copy retired profiles' values for the tests; never use
@@ -161,25 +162,13 @@ holds the group table, output contract, exit codes and legacy-name map, and
 
 ## Last verified state
 
-Branch `claude/intelligent-archimedes-8027fe` (capability-only provider
-validators, rebased onto `main` at `8b93bd6f`), in the worktree's own venv:
+`main` with the capability-only provider validators, 2026-10-20:
 
-- Default suite: 7,671 passed, 0 failed (`-n 6`, about 60 s).
+- Default suite: 7,676 passed, 0 failed (`-n 6`, about 58 s).
   `tests/test_provider_execution_reuse.py` loads every provider family that has
-  a dedicated validator with new execution values. It also keeps each
-  technical refusal.
-- A `profile_b.toml` variant reuses the liquidity-sweep, hourly Donchian and
-  ETH range providers with new stops, targets, holds and entry delays.
-  `live validate --mode live --equity 5000` accepts it (exit 0, no book
-  problem). The unchanged fixture still exits 0 at `--equity 4796`.
-- `-m "integration and not network"` was not re-run in a full checkout. In the
-  worktree, 5 of 7 need `../backtest-lab/backtest_lab` or
-  `data/cache/vendor/hypertrader_ad15`, which it lacks.
-- `--help` 0.06 to 0.07 s.
-
-`main` after the 2026-10-19 clean-slate cleanup:
-
-- Default suite: 7,633 passed, 0 failed (`-n 6`, about 55 s).
+  a dedicated validator with new execution values, runs a `profile_b.toml`
+  variant with new sweep, Donchian and ETH-range exits through `live validate`
+  (exit 0), and keeps each technical refusal.
 - `-m "integration and not network" --ignore=tests/test_install.py`: 7 passed.
   `-m network` was not run.
 - `--help` 0.05 s; `status` and `export list` exit 0.
