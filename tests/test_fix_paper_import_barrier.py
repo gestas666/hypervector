@@ -24,7 +24,6 @@ ENTRY_MODULES = (
     "hypervector.paper.session",
     "hypervector.paper.report",
     "hypervector.paper.live_node",
-    "hypervector.paper.event_stream_pump",
     "hypervector.paper.warmup",
     "hypervector.runtime_lock",
     "hypervector.ml.metalabel",

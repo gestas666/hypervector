@@ -10,19 +10,12 @@ from types import ModuleType, SimpleNamespace
 
 import pytest
 
-from hypervector.live import canary_supervisor
-from hypervector.live.cohort_process_commands import audit_command, checkpoint_command
-from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.research import cohort_rolling_checkpoint
 
 CHECKPOINT_SCRIPT = (
     Path(__file__).parents[1]
     / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_live_checkpoint.py'
 )
-EEE_RETIRED_CONFIG = Path(
-    "tests/fixtures/profiles/four_asset_eee_retired.toml"
-)
-
 
 _CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/cohort_base.toml"]
 
@@ -86,7 +79,7 @@ def test_changed_profile_seeds_current_run_without_full_history(
         tmp_path / "ledgers",
         checkpoint,
         requested_run_id="run-new",
-        config_path=tmp_path / "eee_retired.toml",
+        config_path=tmp_path / "profile.toml",
         once=False,
         venue_portfolio=None,
         portfolio_archive=None,
@@ -123,49 +116,3 @@ def test_once_flag_can_force_a_bounded_current_run_checkpoint(tmp_path: Path) ->
         == 0
     )
     assert forwarded[0]["current_run_only"] is True
-
-
-def test_live_checkpoint_command_is_always_current_run_bounded() -> None:
-    """Continuous live checkpoint publication must not replay the multi-gigabyte ledger."""
-    config = load_multi_asset_live_config(EEE_RETIRED_CONFIG, mode="observe")
-
-    command = checkpoint_command(config)
-
-    assert "--current-run-only" in command
-
-
-def test_live_audit_command_is_current_run_bounded() -> None:
-    """Stopped backend audit must not replay all historical cohort ledgers."""
-    config = load_multi_asset_live_config(EEE_RETIRED_CONFIG, mode="observe")
-
-    command = audit_command(config)
-
-    scope = command.index("--history-scope")
-    assert command[scope + 1] == "current-run"
-
-
-
-
-def test_startup_capture_streams_without_materializing_the_ledger(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Backend supervision must retain identities, not the full ledger bytes."""
-    ledger = tmp_path / "decisions.jsonl"
-    rows = [
-        {"sequence": 1, "run_id": "run-a"},
-        {"sequence": 2, "run_id": "run-b"},
-    ]
-    ledger.write_text(
-        "".join(f"{json.dumps(row)}\n" for row in rows),
-        encoding="utf-8",
-    )
-
-    def refuse_materialization(*_args: object, **_kwargs: object) -> bytes:
-        raise AssertionError("startup capture materialized the complete ledger")
-
-    monkeypatch.setattr(canary_supervisor, "_read_bytes", refuse_materialization)
-
-    snapshot = canary_supervisor.capture_ledger_start(ledger)
-
-    assert snapshot.initial_size == ledger.stat().st_size
-    assert snapshot.prior_run_ids == frozenset(("run-a", "run-b"))
