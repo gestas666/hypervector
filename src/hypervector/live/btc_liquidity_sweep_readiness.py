@@ -7,12 +7,13 @@ from dataclasses import dataclass
 import pandas as pd
 
 from hypervector.live.provider_readiness import SignalReadiness
+from hypervector.research.liquidity_sweep_long import (
+    LIQUIDITY_SWEEP_CLEARANCE_BPS,
+    LIQUIDITY_SWEEP_EMA_LENGTH,
+    LIQUIDITY_SWEEP_LOOKBACK,
+    LIQUIDITY_SWEEP_VOLUME_MULTIPLE,
+)
 from hypervector.strategies.indicators import ema
-
-LIQUIDITY_SWEEP_LOOKBACK = 20
-LIQUIDITY_SWEEP_CLEARANCE_BPS = 2.0
-LIQUIDITY_SWEEP_VOLUME_MULTIPLE = 1.2
-LIQUIDITY_SWEEP_EMA_LENGTH = 55
 
 
 @dataclass(frozen=True)

@@ -2,11 +2,44 @@
 
 from __future__ import annotations
 
+from functools import partial
+
 import pandas as pd
 
 from hypervector.regime.composite import classify_multitimeframe
 from hypervector.research.shared_strategy_signals import (
-    build_registered_strategy_pair_on_timeframe,
+    build_strategy_pair_signals_on_timeframe_from_specs,
+)
+from hypervector.strategies.registry import StrategySpec
+
+
+def _sma_cross_signals(
+    df: pd.DataFrame, *, fast: int, slow: int, direction: str
+) -> tuple[pd.Series, pd.Series, str]:
+    """Enter on the fast/slow SMA cross in ``direction``; exit on the opposite cross."""
+    if fast >= slow:
+        raise ValueError("fast must be < slow")
+    close = df["close"].astype(float)
+    ma_f = close.rolling(fast, min_periods=fast).mean()
+    ma_s = close.rolling(slow, min_periods=slow).mean()
+    cross_up = ((ma_f > ma_s) & (ma_f.shift(1) <= ma_s.shift(1))).fillna(False)
+    cross_dn = ((ma_f < ma_s) & (ma_f.shift(1) >= ma_s.shift(1))).fillna(False)
+    if direction == "long":
+        return cross_up.astype(bool), cross_dn.astype(bool), direction
+    return cross_dn.astype(bool), cross_up.astype(bool), direction
+
+
+_SMA_CROSS_LONG = StrategySpec(
+    name="ma_cross_long",
+    role="uptrend",
+    param_grid={},
+    build_signals=partial(_sma_cross_signals, direction="long"),
+)
+_SMA_CROSS_SHORT = StrategySpec(
+    name="ma_cross_short",
+    role="downtrend",
+    param_grid={},
+    build_signals=partial(_sma_cross_signals, direction="short"),
 )
 
 
@@ -17,11 +50,11 @@ def build_range_onset_signals(
     regimes: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Retain completed SMA10/30 crosses in 5m RANGE or BREAKOUT state."""
-    signals = build_registered_strategy_pair_on_timeframe(
+    signals = build_strategy_pair_signals_on_timeframe_from_specs(
         bars,
         timeframe=timeframe,
-        long_strategy_name="ma_cross_long",
-        short_strategy_name="ma_cross_short",
+        long_spec=_SMA_CROSS_LONG,
+        short_spec=_SMA_CROSS_SHORT,
         long_params={"fast": 10, "slow": 30},
         short_params={"fast": 10, "slow": 30},
     )

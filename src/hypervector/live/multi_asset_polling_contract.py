@@ -41,6 +41,9 @@ from hypervector.live.research_pending_market_observer import (
 
 HULK_STRATEGY = "hulk_expansion_bidirectional_tuned_v2"
 RANGE_STRATEGY = "range_onset_bidirectional_v1"
+# The source-follow collector was removed with its strategy; profiles that
+# still list it keep their polling clock, and building its collector fails.
+SOURCE_FOLLOW_COHORT_STRATEGY = "hypervelocity_source_follow_bidirectional_5m_v1"
 SOURCE_TIMEFRAMES = {
     HULK_STRATEGY: "5m",
     HULK_ROBUST_SHORT_STRATEGY: "5m",
@@ -50,6 +53,7 @@ SOURCE_TIMEFRAMES = {
     RANGE_STRATEGY: "1m",
     directional_range.ETH_RANGE_LONG_STRATEGY: "1m",
     directional_range.SOL_RANGE_SHORT_STRATEGY: "1m",
+    SOURCE_FOLLOW_COHORT_STRATEGY: "1m",
     hype.HYPE_BREAKOUT_COHORT_STRATEGY: "1m",
     hype_native.HYPE_NATIVE_BREAKOUT_STRATEGY: "1m",
     hype_native.HYPE_NATIVE_BREAKOUT_LONG_STRATEGY: "1m",
@@ -80,6 +84,7 @@ READINESS_SEED_LOOKBACK_MINUTES = {
     RANGE_STRATEGY: 2,
     directional_range.ETH_RANGE_LONG_STRATEGY: 2 * _MINUTES_PER_DAY,
     directional_range.SOL_RANGE_SHORT_STRATEGY: 2 * _MINUTES_PER_DAY,
+    SOURCE_FOLLOW_COHORT_STRATEGY: 6,
     hype.HYPE_BREAKOUT_COHORT_STRATEGY: 2,
     hype_native.HYPE_NATIVE_BREAKOUT_STRATEGY: 2,
     hype_native.HYPE_NATIVE_BREAKOUT_LONG_STRATEGY: 2,
