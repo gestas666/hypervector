@@ -236,7 +236,7 @@ def export_regime_snapshots(
     data_root: Path | str = "data",
     max_bars: int = 1500,
 ) -> dict[str, object]:
-    """Write canonical TUI snapshot JSON and return its audit summary."""
+    """Write canonical regime snapshot JSON and return its audit summary."""
     snapshots = build_regime_snapshots(
         df,
         symbol=symbol,

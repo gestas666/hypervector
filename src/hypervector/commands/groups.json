@@ -30,7 +30,7 @@
       "default_action": "run"
     },
     "tune": {
-      "help": "Karpathy autotuning (Optuna optional) for strategies and regimes",
+      "help": "Karpathy autotuning (Optuna optional) for registered strategies",
       "pillar": true
     },
     "nautilus": {
