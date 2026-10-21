@@ -8,9 +8,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, TextIO
 
-from hypervector.infra import ensure_data_layout
-
-LOCK_NAME = "hypervelocity-shadow.lock"
 _LIVE_ACCOUNT_LOCK_NAME = "shared-account.lock"
 _CHECKPOINT_WRITER_LOCK_SUFFIX = ".writer.lock"
 _GENERIC_LIVE_LOCK = "generic_live/process.lock"
@@ -68,137 +65,11 @@ def _checkpoint_writer_lock_path(checkpoint_output: Path) -> Path:
 
 
 @contextmanager
-def hypervelocity_runtime_lock(data_root: Path) -> Iterator[Path]:
-    """Hold the single Hypervelocity backend lock for one data root."""
-    paths = ensure_data_layout(data_root)
-    lock_path = paths.root / "paper" / LOCK_NAME
-    with _runtime_lock(lock_path, "Hypervelocity backend"):
-        yield lock_path
-
-
-@contextmanager
-def sol_live_runtime_lock(live_ledger: Path) -> Iterator[Path]:
-    """Hold exclusive ownership of one SOL live ledger and venue lifecycle."""
-    lock_path = live_ledger.parent / "process.lock"
-    live_root = live_ledger.parent.parent
-    other_owners = (
-        (
-            live_root / "hypervelocity_source_follow/process.lock",
-            "BTC source-follow live backend",
-        ),
-        (live_root / "apex_regime_mm/process.lock", "Apex MM live backend"),
-        (live_root / "hulk_smash/process.lock", "Hulk Smash live backend"),
-        (
-            live_root / "bidirectional_cohort/process.lock",
-            "bidirectional live cohort",
-        ),
-        (live_root / _GENERIC_LIVE_LOCK, _GENERIC_LIVE_LABEL),
-    )
-    with _runtime_lock(lock_path, "SOL live backend"):
-        with _shared_live_account_lock(live_root):
-            _refuse_active_owners(other_owners)
-            yield lock_path
-
-
-@contextmanager
-def source_follow_live_runtime_lock(live_ledger: Path) -> Iterator[Path]:
-    """Hold exclusive ownership of the BTC source-follow venue lifecycle."""
-    lock_path = live_ledger.parent / "process.lock"
-    live_root = live_ledger.parent.parent
-    other_owners = (
-        (live_root / "sol_range_onset_canary/process.lock", "SOL live backend"),
-        (live_root / "apex_regime_mm/process.lock", "Apex MM live backend"),
-        (live_root / "hulk_smash/process.lock", "Hulk Smash live backend"),
-        (
-            live_root / "bidirectional_cohort/process.lock",
-            "bidirectional live cohort",
-        ),
-        (live_root / _GENERIC_LIVE_LOCK, _GENERIC_LIVE_LABEL),
-    )
-    with _runtime_lock(lock_path, "BTC source-follow live backend"):
-        with _shared_live_account_lock(live_root):
-            _refuse_active_owners(other_owners)
-            yield lock_path
-
-
-@contextmanager
-def apex_mm_live_runtime_lock(live_ledger: Path) -> Iterator[Path]:
-    """Hold exclusive ownership of the standalone Apex MM venue lifecycle."""
-    lock_path = live_ledger.parent / "process.lock"
-    live_root = live_ledger.parent.parent
-    other_owners = (
-        (live_root / "sol_range_onset_canary/process.lock", "SOL live backend"),
-        (
-            live_root / "hypervelocity_source_follow/process.lock",
-            "BTC source-follow live backend",
-        ),
-        (live_root / "hulk_smash/process.lock", "Hulk Smash live backend"),
-        (
-            live_root / "bidirectional_cohort/process.lock",
-            "bidirectional live cohort",
-        ),
-        (live_root / _GENERIC_LIVE_LOCK, _GENERIC_LIVE_LABEL),
-    )
-    with _runtime_lock(lock_path, "Apex MM live backend"):
-        with _shared_live_account_lock(live_root):
-            _refuse_active_owners(other_owners)
-            yield lock_path
-
-
-@contextmanager
-def hulk_smash_observer_runtime_lock(live_ledger: Path) -> Iterator[Path]:
-    """Hold singleton ownership of the execution-incapable Hulk observer."""
-    lock_path = live_ledger.parent / "observer.lock"
-    with _runtime_lock(lock_path, "Hulk Smash observer"):
-        _refuse_active_owner(
-            live_ledger.parent / "process.lock", "Hulk Smash live backend"
-        )
-        _refuse_active_owner(
-            live_ledger.parent.parent / "bidirectional_cohort/process.lock",
-            "bidirectional live cohort",
-        )
-        yield lock_path
-
-
-@contextmanager
-def hulk_smash_live_runtime_lock(live_ledger: Path) -> Iterator[Path]:
-    """Hold exclusive Hulk ledger and shared-account execution ownership."""
-    lock_path = live_ledger.parent / "process.lock"
-    live_root = live_ledger.parent.parent
-    other_owners = (
-        (live_root / "sol_range_onset_canary/process.lock", "SOL live backend"),
-        (
-            live_root / "hypervelocity_source_follow/process.lock",
-            "BTC source-follow live backend",
-        ),
-        (live_root / "apex_regime_mm/process.lock", "Apex MM live backend"),
-        (live_ledger.parent / "observer.lock", "Hulk Smash observer"),
-        (
-            live_root / "bidirectional_cohort/process.lock",
-            "bidirectional live cohort",
-        ),
-        (live_root / _GENERIC_LIVE_LOCK, _GENERIC_LIVE_LABEL),
-    )
-    with _runtime_lock(lock_path, "Hulk Smash live backend"):
-        with _shared_live_account_lock(live_root):
-            _refuse_active_owners(other_owners)
-            yield lock_path
-
-
-@contextmanager
 def bidirectional_live_runtime_lock(live_ledger: Path) -> Iterator[Path]:
-    """Own one shared account for the concurrent Hulk and SOL cohort."""
+    """Own one shared account for the live cohort."""
     lock_path = live_ledger.parent / "process.lock"
     live_root = live_ledger.parent.parent
     other_owners = (
-        (
-            live_root / "hypervelocity_source_follow/process.lock",
-            "BTC source-follow live backend",
-        ),
-        (live_root / "sol_range_onset_canary/process.lock", "SOL live backend"),
-        (live_root / "apex_regime_mm/process.lock", "Apex MM live backend"),
-        (live_root / "hulk_smash/process.lock", "Hulk Smash live backend"),
-        (live_root / "hulk_smash/observer.lock", "Hulk Smash observer"),
         (
             live_ledger.parent / "observer.lock",
             "bidirectional cohort observer",
@@ -217,20 +88,13 @@ def generic_live_runtime_lock(live_root: Path) -> Iterator[Path]:
 
     ``live_root`` must be the account's canonical root (:func:`canonical_live_root`),
     never an operator ``--data-root``: the lock only serializes against the
-    cohort and the other live backends when it lands next to theirs.
+    cohort when it lands next to its lock.
     """
     lock_path = live_root / _GENERIC_LIVE_LOCK
     other_owners = (
         (
             live_root / "bidirectional_cohort/process.lock",
             "bidirectional live cohort",
-        ),
-        (live_root / "hulk_smash/process.lock", "Hulk Smash live backend"),
-        (live_root / "sol_range_onset_canary/process.lock", "SOL live backend"),
-        (live_root / "apex_regime_mm/process.lock", "Apex MM live backend"),
-        (
-            live_root / "hypervelocity_source_follow/process.lock",
-            "BTC source-follow live backend",
         ),
     )
     with _runtime_lock(lock_path, _GENERIC_LIVE_LABEL):

@@ -1,20 +1,9 @@
 {
-  "research": "the 'research' group was split: 'backtest run|sweep|report', 'tune strategy', 'export create|validate', 'db status|build|import-events|import-paper|paper-trades|hip3-liquidity', 'paper compare' and 'live economics'",
+  "research": "the 'research' group was split: 'backtest run|sweep|report', 'tune strategy', 'export create|validate', 'db status|build|import-events|import-paper|paper-trades|hip3-liquidity' and 'live economics'",
   "cohort": "the 'cohort' group moved: 'live start|request|checkpoint|monitor|audit|audit-delta|supervisor', 'paper observe|checkpoint|audit' and 'db import-cohort'",
-  "cohort-tui": "the TUI has been retired; use 'live monitor', 'live checkpoint' or 'paper shadow'",
-  "hypervelocity-tui": "the TUI has been retired; use 'live monitor', 'live checkpoint' or 'paper shadow'",
-  "research archive-compare": "'research archive-compare' was removed: the Hypervelocity candidate selection is finished (recoverable from tag pre-history-purge-20261017)",
-  "hypervelocity-archive-compare": "'hypervelocity-archive-compare' was removed: the Hypervelocity candidate selection is finished (recoverable from tag pre-history-purge-20261017)",
-  "research maker-replay": "'research maker-replay' was removed: the maker-fill study is concluded; paper uses l2_walk_v1 (recoverable from tag pre-history-purge-20261017)",
-  "hypervelocity-maker-replay": "'hypervelocity-maker-replay' was removed: the maker-fill study is concluded; paper uses l2_walk_v1 (recoverable from tag pre-history-purge-20261017)",
+  "cohort-tui": "the TUI has been retired; use 'live monitor' or 'live checkpoint'",
   "research db-journal-append": "'research db-journal-append' was removed: decision journals are no longer kept (recoverable from tag pre-history-purge-20261017)",
   "research-db-journal-append": "'research-db-journal-append' was removed: decision journals are no longer kept (recoverable from tag pre-history-purge-20261017)",
   "research db-journal-report": "'research db-journal-report' was removed: decision journals are no longer kept (recoverable from tag pre-history-purge-20261017)",
-  "research-db-journal-report": "'research-db-journal-report' was removed: decision journals are no longer kept (recoverable from tag pre-history-purge-20261017)",
-  "research db-regime-label-import": "'research db-regime-label-import' was removed: it was a one-off Hypertrader label import (recoverable from tag pre-history-purge-20261017)",
-  "research-db-regime-label-import": "'research-db-regime-label-import' was removed: it was a one-off Hypertrader label import (recoverable from tag pre-history-purge-20261017)",
-  "research db-regime-compare": "'research db-regime-compare' was removed: it was a one-off Hypertrader label comparison (recoverable from tag pre-history-purge-20261017)",
-  "research-db-regime-compare": "'research-db-regime-compare' was removed: it was a one-off Hypertrader label comparison (recoverable from tag pre-history-purge-20261017)",
-  "cohort dependencies": "'cohort dependencies' was removed: no retained profile declares pressure dependencies; 'live start' still checks provider dependencies",
-  "cohort-dependencies": "'cohort-dependencies' was removed: no retained profile declares pressure dependencies; 'live start' still checks provider dependencies"
+  "research-db-journal-report": "'research-db-journal-report' was removed: decision journals are no longer kept (recoverable from tag pre-history-purge-20261017)"
 }
