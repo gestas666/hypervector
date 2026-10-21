@@ -24,7 +24,7 @@ from hypervector.live.multi_asset_live_config import (
 )
 
 _PRIOR_PATH = Path(
-    "tests/fixtures/profiles/hype_compression_range_retired_current.toml"
+    "tests/fixtures/profiles/ten_asset_base.toml"
 )
 _NEXT_PATH = Path("tests/fixtures/profiles/repaired_b.toml")
 _PARENT_EPOCH_PATH = Path(

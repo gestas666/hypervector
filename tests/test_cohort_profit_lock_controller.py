@@ -278,12 +278,12 @@ def test_required_plan_symbols_include_a_directional_profit_lock_override() -> N
         profit_lock_floor_bps=25.0,
         profit_lock_giveback_bps=50.0,
     )
-    contracts = {"hulk": _contract(), ("hulk", "SOL", "long"): locked}
+    contracts = {"test_trend_provider": _contract(), ("test_trend_provider", "SOL", "long"): locked}
 
     symbols = route_cycle_module._profit_lock_symbols(
         contracts,
-        frozenset({("hulk", "SOL"), ("hulk", "BTC")}),
-        frozenset({("hulk", "SOL", "long"), ("hulk", "BTC", "short")}),
+        frozenset({("test_trend_provider", "SOL"), ("test_trend_provider", "BTC")}),
+        frozenset({("test_trend_provider", "SOL", "long"), ("test_trend_provider", "BTC", "short")}),
     )
 
     assert symbols == frozenset({"SOL"})

@@ -96,7 +96,7 @@ def restored_signal_handlers() -> Iterator[None]:
 def _router(symbols: tuple[str, ...]) -> BidirectionalIntentRouter:
     return BidirectionalIntentRouter(
         tuple(
-            StrategyCapability("hulk", symbol, frozenset({"long", "short"}), 10)
+            StrategyCapability("test_trend_provider", symbol, frozenset({"long", "short"}), 10)
             for symbol in symbols
         ),
         maximum_positions=2,
@@ -116,7 +116,7 @@ def _runner(
 ) -> MultiAssetLiveRunner:
     """Build the runner with the launcher's own stop test and stop-aware wait."""
     stop_file = tmp_path / "STOP"
-    pairs = frozenset(("hulk", symbol) for symbol in symbols)
+    pairs = frozenset(("test_trend_provider", symbol) for symbol in symbols)
     return MultiAssetLiveRunner(
         symbols=symbols,
         engines=engines,
@@ -135,7 +135,7 @@ def _runner(
         poll_seconds=15.0,
         signal_stop_requested=lambda: latch.requested,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in symbols},
-        execution_contracts={"hulk": execution_contract()},
+        execution_contracts={"test_trend_provider": execution_contract()},
         maximum_entry_delay_ms_by_provider_symbol={pair: 60_000 for pair in pairs},
         executable_provider_symbols=pairs,
     )

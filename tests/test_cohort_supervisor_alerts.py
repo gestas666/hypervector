@@ -404,7 +404,7 @@ def _protection_report(tmp_path: Path, value: object, *, absent: bool = False):
 def test_exhausted_stop_raise_in_checkpoint_is_a_problem(tmp_path: Path) -> None:
     warning = {
         "symbol": "xyz:CCC",
-        "strategy_id": "donchian_20_10",
+        "strategy_id": "test_channel_provider",
         "entry_oid": 123456,
         "reason": "protective_stop_raise_exhausted",
         "observed_at_utc": "2026-09-24T15:00:00+00:00",
@@ -414,7 +414,7 @@ def test_exhausted_stop_raise_in_checkpoint_is_a_problem(tmp_path: Path) -> None
     assert report.protection_warnings == (warning,)
     detail = report.problem_details["protection_warning"]
     assert "xyz:CCC" in detail
-    assert "donchian_20_10" in detail
+    assert "test_channel_provider" in detail
     assert "protective_stop_raise_exhausted" in detail
 
 

@@ -51,7 +51,7 @@ def _write_healthy_files(paths: sup.SupervisorPaths, *, fee_bps: float = 0.864) 
             {
                 "generated_at_utc": datetime.now(UTC).isoformat(),
                 "audit": {
-                    "run": {"executable_provider_symbols": ["donchian|xyz:CCC"]},
+                    "run": {"executable_provider_symbols": ["test_channel_provider|xyz:CCC"]},
                     "execution": {
                         "fill_details": [
                             {

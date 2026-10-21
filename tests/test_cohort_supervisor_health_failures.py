@@ -103,7 +103,7 @@ def test_active_route_cannot_lose_fee_evidence_silently(
     paths = _paths(tmp_path)
     _write_healthy_files(paths)
     checkpoint = json.loads(paths.checkpoint.read_text())
-    checkpoint["audit"]["run"] = {"executable_provider_symbols": ["donchian|xyz:CCC"]}
+    checkpoint["audit"]["run"] = {"executable_provider_symbols": ["test_channel_provider|xyz:CCC"]}
     paths.checkpoint.write_text(json.dumps(checkpoint))
     roster = json.loads(paths.roster.read_text())
     if missing:

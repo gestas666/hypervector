@@ -48,7 +48,7 @@ def test_live_runner_publishes_display_rows_without_changing_runtime_rows(
 
 def _evaluation(reason: str) -> ProviderEvaluation:
     return ProviderEvaluation(
-        strategy_id="hulk",
+        strategy_id="test_trend_provider",
         symbol="BTC",
         decision_time_ms=_DECISION_MS,
         reference_price=100.0,

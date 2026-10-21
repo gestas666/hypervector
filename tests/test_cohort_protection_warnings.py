@@ -36,7 +36,7 @@ def _exhausted(symbol: str, oid: int, at: str) -> dict[str, object]:
         "observed_at_utc": at,
         "payload": {
             "symbol": symbol,
-            "strategy_id": "hourly_donchian_20_10_atr20_v1",
+            "strategy_id": "test_channel_provider",
             "entry_oid": oid,
             "reason": "protective_stop_raise_exhausted",
             "attempts": 3,
@@ -62,7 +62,7 @@ def test_open_unresolved_exhaustion_is_reported_once_with_its_first_time() -> No
     assert protection_warnings(rows, snapshot) == [
         {
             "symbol": "xyz:CCC",
-            "strategy_id": "hourly_donchian_20_10_atr20_v1",
+            "strategy_id": "test_channel_provider",
             "entry_oid": 41,
             "reason": "protective_stop_raise_exhausted",
             "observed_at_utc": "2026-09-24T12:00:00+00:00",

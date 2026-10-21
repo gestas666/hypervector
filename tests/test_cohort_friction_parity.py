@@ -14,13 +14,13 @@ _HYPE = "test_fade_1m"
 _TREND = "test_trend_5m"
 _BREAKOUT = "test_breakout_1m"
 _HIP3_BREAKOUT_INDEX = "test_session_a_15m"
-_BBB_CASH_OPEN = "test_anchor_target_15m"
+_ANCHOR_TARGET = "test_anchor_target_15m"
 
 
-def test_source_follow_uses_frozen_deployed_shape_without_claiming_edge(
+def test_mirror_provider_uses_frozen_deployed_shape_without_claiming_edge(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Source-follow parity cites its registered deployed-shape contract."""
+    """Mirror-provider parity cites its registered deployed-shape contract."""
     _register(monkeypatch, _SOURCE, None, _source_contract())
     identity = {
         "assets": [{"symbol": "BTC", "stop_bps": 80.0, "maximum_hold_seconds": 28_800}],
@@ -204,7 +204,7 @@ def test_provider_execution_contracts_override_generic_asset_defaults(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Parity must compare research with each provider's configured mechanics."""
-    _register(monkeypatch, _TREND, None, _hulk_contract())
+    _register(monkeypatch, _TREND, None, _trend_contract())
     _register(monkeypatch, _BREAKOUT, None, _fixed_contract(60.0, 172_800))
     _register(monkeypatch, _SOURCE, None, _source_contract())
     _register(monkeypatch, _HYPE, None, _hype_contract())
@@ -360,13 +360,13 @@ def test_symbol_stop_override_requires_its_own_modeled_contract(
     assert rows[f"{_BREAKOUT}|SOL"]["parity_state"] == "unsupported_contract"
 
 
-def test_bbb_cash_open_contract_matches_dynamic_target_and_session_hold(
+def test_anchor_target_contract_matches_dynamic_target_and_session_hold(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Checkpoint friction telemetry must understand an absolute-anchor target."""
     _register(
         monkeypatch,
-        _BBB_CASH_OPEN,
+        _ANCHOR_TARGET,
         "xyz:BBB",
         ModeledExecutionContract(
             "taker",
@@ -383,14 +383,14 @@ def test_bbb_cash_open_contract_matches_dynamic_target_and_session_hold(
             "maker",
             None,
             None,
-            "evidence/bbb-cash-open.json",
+            "evidence/anchor-target.json",
         ),
     )
     identity = {
         "assets": [{"symbol": "xyz:BBB"}],
         "providers": [
             _provider(
-                _BBB_CASH_OPEN,
+                _ANCHOR_TARGET,
                 "xyz:BBB",
                 stop_policy="fixed_bps",
                 stop_bps=80.0,
@@ -402,7 +402,7 @@ def test_bbb_cash_open_contract_matches_dynamic_target_and_session_hold(
     }
 
     row = build_friction_parity(identity, [])["by_provider_symbol"][
-        f"{_BBB_CASH_OPEN}|xyz:BBB"
+        f"{_ANCHOR_TARGET}|xyz:BBB"
     ]
 
     assert row["parity_state"] == "runtime_shape_aligned"
@@ -488,7 +488,7 @@ def _hype_contract() -> ModeledExecutionContract:
     )
 
 
-def _hulk_contract() -> ModeledExecutionContract:
+def _trend_contract() -> ModeledExecutionContract:
     return ModeledExecutionContract(
         "taker",
         4.5,
@@ -504,7 +504,7 @@ def _hulk_contract() -> ModeledExecutionContract:
         "maker",
         None,
         3.0,
-        "evidence/hulk.json",
+        "evidence/trend.json",
     )
 
 

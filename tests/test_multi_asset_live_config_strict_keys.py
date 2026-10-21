@@ -10,7 +10,7 @@ from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfi
 
 ADAPTIVE_EIGHT_ASSET = Path("tests/fixtures/profiles/adaptive_eight_asset.toml")
 EXIT_POLICY_V2 = Path("tests/fixtures/profiles/exit_policy_v2.toml")
-DONCHIAN = "test_channel_15m"
+CHANNEL = "test_channel_15m"
 
 
 def _variant(tmp_path: Path, old: str, new: str, count: int = 1) -> Path:
@@ -93,9 +93,9 @@ def test_misspelled_stop_risk_budget_field_is_refused(tmp_path: Path) -> None:
             "entry_slipage_cap_fraction",
         ),
         (
-            f'strategy_id = "{DONCHIAN}"\n',
-            f'strategy_id = "{DONCHIAN}"\nexecution_symbol = []\n',
-            f"[[providers]] {DONCHIAN}",
+            f'strategy_id = "{CHANNEL}"\n',
+            f'strategy_id = "{CHANNEL}"\nexecution_symbol = []\n',
+            f"[[providers]] {CHANNEL}",
             "execution_symbol",
         ),
     ],

@@ -325,12 +325,12 @@ def test_restart_overlap_uses_the_trade_source_run_for_entry_context() -> None:
     duplicate["sequence"] = len(cohort) + 1
     duplicate["run_id"] = "restart-run"
     duplicate["payload"]["actions"] = []
-    hulk = next(
+    trend = next(
         evaluation
         for evaluation in duplicate["payload"]["evaluations"]
         if evaluation["strategy_id"] == _TREND and evaluation["symbol"] == "BTC"
     )
-    hulk.update({"primary_regime": "RANGE", "eligible": False})
+    trend.update({"primary_regime": "RANGE", "eligible": False})
     asset_rows = _reflection_asset_rows()
 
     reflections = build_trade_reflections(

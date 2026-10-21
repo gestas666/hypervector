@@ -234,12 +234,12 @@ def test_configuration_exposes_non_gating_strategy_evidence(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Every provider-symbol mapping carries an honest research-state record."""
-    hulk = "test_trend_5m"
+    trend = "test_trend_5m"
     monkeypatch.setitem(
         multi_asset_strategy_evidence._EVIDENCE,
-        (hulk, "BTC"),
+        (trend, "BTC"),
         StrategyResearchEvidence(
-            hulk,
+            trend,
             "BTC",
             "contradictory",
             "medium",
@@ -285,7 +285,7 @@ def test_configuration_exposes_non_gating_strategy_evidence(
     trend_btc = next(
         record
         for record in evidence
-        if record["strategy_id"] == hulk and record["symbol"] == "BTC"
+        if record["strategy_id"] == trend and record["symbol"] == "BTC"
     )
     assert trend_btc["research_state"] == "contradictory"
     assert trend_btc["evidence_source"] == "evidence/trend-btc.json"
@@ -631,7 +631,7 @@ def test_provider_exit_decision_rejects_conflicting_stable_identity(
         "symbol": "HYPE",
         "side": "long",
         "outcome": "exit",
-        "exit_reason": "hip3_swing_ha_flip",
+        "exit_reason": "provider_exit_signal",
         "decision_time_ms": 1_785_600_000_000,
     }
     telemetry.emit_provider_exit_decision(payload)

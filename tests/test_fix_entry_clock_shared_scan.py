@@ -21,7 +21,7 @@ from hypervector.live.cohort_candidate_entry_clock import (
     CandidateEntryClockStateError,
 )
 
-_STRATEGIES = ("btc_structural", "hype_relaxed", "sol_aligned", "other\u00e9")
+_STRATEGIES = ("provider_a", "provider_b", "provider_c", "other\u00e9")
 _SYMBOLS = ("BTC", "HYPE", "SOL")
 _PAIRS = [(strategy, symbol) for strategy in _STRATEGIES for symbol in _SYMBOLS]
 

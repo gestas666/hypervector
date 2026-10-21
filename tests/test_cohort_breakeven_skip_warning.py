@@ -105,7 +105,7 @@ def test_an_hour_without_a_usable_quote_warns_once_and_journals_one_skip(
     assert exhausted == {
         "event": RAISE_EXHAUSTED_EVENT,
         "symbol": "xyz:CCC",
-        "strategy_id": "hourly_donchian_20_10_atr20_v1",
+        "strategy_id": "test_channel_provider",
         "entry_oid": 41,
         "reason": RAISE_EXHAUSTED_EVENT,
         "attempts": 0,
@@ -191,7 +191,7 @@ def test_raise_after_the_warning_clears_the_protection_warning() -> None:
     assert protection_warnings(rows, snapshot) == [
         {
             "symbol": "xyz:CCC",
-            "strategy_id": "hourly_donchian_20_10_atr20_v1",
+            "strategy_id": "test_channel_provider",
             "entry_oid": 41,
             "reason": "protective_stop_raise_exhausted",
             "observed_at_utc": rows[-1]["observed_at_utc"],

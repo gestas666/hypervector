@@ -15,14 +15,14 @@ from hypervector.live.cohort_profit_lock_history import (
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
 _FIXTURE_PROFILES = Path("tests/fixtures/profiles")
-_RANGE_RETIRED = _FIXTURE_PROFILES / "hype_compression_range_retired_current.toml"
+_TEN_ASSET = _FIXTURE_PROFILES / "ten_asset_base.toml"
 _PROFILE_B = Path("tests/fixtures/cohort_chain/profile_b.toml")
 
 
 def test_disabled_profile_requests_no_private_exit_history() -> None:
     """Existing profiles retain chart-only data cost when every lock is disabled."""
     config = load_multi_asset_live_config(
-        _RANGE_RETIRED,
+        _TEN_ASSET,
         mode="observe",
     )
 
@@ -32,7 +32,7 @@ def test_disabled_profile_requests_no_private_exit_history() -> None:
 def test_enabled_provider_requests_terminal_hold_plus_boundary_bars() -> None:
     """The lock history covers the whole possible lifecycle and boundary bars."""
     config = load_multi_asset_live_config(
-        _RANGE_RETIRED,
+        _TEN_ASSET,
         mode="observe",
     )
     provider = config.providers[0]
@@ -76,7 +76,7 @@ def test_enabled_provider_requests_terminal_hold_plus_boundary_bars() -> None:
 def test_directional_override_requests_history_when_base_lock_is_disabled() -> None:
     """A side-only lock must receive the same complete lifecycle history."""
     config = load_multi_asset_live_config(
-        _RANGE_RETIRED,
+        _TEN_ASSET,
         mode="observe",
     )
     provider = config.providers[0]

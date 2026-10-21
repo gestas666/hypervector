@@ -84,12 +84,12 @@ def test_flat_run_preserves_readiness_health_and_zero_trade_evidence() -> None:
     assert report["regime_conflict_journal"]["state"] == "not_active"
     assert report["readiness"]["evaluations"] == 16
     assert len(report["readiness"]["by_provider_symbol"]) == 8
-    hulk_btc = report["readiness"]["by_provider_symbol"][f"{_TREND}|BTC"]
-    assert hulk_btc["latest_fraction"] == 0.5
-    assert hulk_btc["maximum_fraction"] == 0.5
-    assert hulk_btc["blockers"] == {"squeeze_not_armed": 2}
-    assert hulk_btc["latest_reason"] == "no_trigger"
-    assert hulk_btc["latest_blockers"] == ["squeeze_not_armed"]
+    trend_btc = report["readiness"]["by_provider_symbol"][f"{_TREND}|BTC"]
+    assert trend_btc["latest_fraction"] == 0.5
+    assert trend_btc["maximum_fraction"] == 0.5
+    assert trend_btc["blockers"] == {"squeeze_not_armed": 2}
+    assert trend_btc["latest_reason"] == "no_trigger"
+    assert trend_btc["latest_blockers"] == ["squeeze_not_armed"]
     scorecard = report["strategy_scorecard"]
     assert scorecard["contract"] == {
         "report_only": True,

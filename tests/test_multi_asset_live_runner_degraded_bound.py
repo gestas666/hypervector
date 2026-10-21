@@ -99,7 +99,7 @@ def _runner(
     engines: dict[str, _Engine] = {
         symbol: _AccountBlindEngine(symbol, scenario) for symbol in _SYMBOLS
     }
-    pairs = frozenset(("hulk", symbol) for symbol in _SYMBOLS)
+    pairs = frozenset(("test_trend_provider", symbol) for symbol in _SYMBOLS)
     runner = MultiAssetLiveRunner(
         symbols=_SYMBOLS,
         engines=engines,
@@ -112,7 +112,7 @@ def _runner(
         poll_seconds=15.0,
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
-        execution_contracts={"hulk": _contract()},
+        execution_contracts={"test_trend_provider": _contract()},
         maximum_entry_delay_ms_by_provider_symbol={pair: 60_000 for pair in pairs},
         executable_provider_symbols=pairs,
         monotonic_fn=scenario.monotonic,

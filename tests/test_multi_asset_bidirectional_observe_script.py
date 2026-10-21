@@ -190,7 +190,7 @@ def test_observer_builds_hip3_only_poller_without_fake_core_route() -> None:
     """A HIP-3-only profile needs no core-perp provider or canonical route."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/index_fresh15_pressure.toml",
+        "tests/fixtures/profiles/hip3_only_observer.toml",
         mode="observe",
     )
 

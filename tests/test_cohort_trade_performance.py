@@ -14,7 +14,7 @@ def test_all_time_live_performance_keeps_profiles_out_of_compatible_scope() -> N
     """The user ledger must aggregate every live lifecycle across profiles."""
     report = build_all_time_trade_performance(
         [
-            _trade("hulk", 1.25, symbol="BTC", side="long"),
+            _trade("test_trend_provider", 1.25, symbol="BTC", side="long"),
             _trade("breakout", -0.25, symbol="HYPE", side="short"),
         ]
     )
@@ -22,7 +22,7 @@ def test_all_time_live_performance_keeps_profiles_out_of_compatible_scope() -> N
     assert report["scope"] == "all_live_history"
     assert report["total"]["closed_trades"] == 2
     assert report["total"]["net_pnl_usd"] == pytest.approx(1.0)
-    assert report["by_strategy"]["hulk"]["wins"] == 1
+    assert report["by_strategy"]["test_trend_provider"]["wins"] == 1
     assert report["by_strategy"]["breakout"]["losses"] == 1
     assert "current_profile" not in report
     assert "current_run" not in report

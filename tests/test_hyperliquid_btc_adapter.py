@@ -1,4 +1,4 @@
-"""Offline tests for BTC post-only source-follow venue execution."""
+"""Offline tests for BTC post-only and market venue execution."""
 
 from collections.abc import Mapping
 
@@ -510,8 +510,8 @@ def test_entry_notional_cannot_exceed_explicit_canary_cap() -> None:
         )
 
 
-def test_hulk_market_entry_and_native_stop_are_explicit_btc_orders() -> None:
-    """The Hulk path needs a bounded market entry and venue-native protection."""
+def test_market_entry_and_native_stop_are_explicit_btc_orders() -> None:
+    """A market-entry provider needs a bounded market entry and venue-native protection."""
     adapter, exchange = _adapter()
 
     entry = adapter.submit_market_entry(

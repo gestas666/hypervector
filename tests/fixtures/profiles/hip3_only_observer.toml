@@ -1,11 +1,11 @@
-profile = "fixture_index_fresh15_pressure"
+profile = "fixture_hip3_only_observer"
 network = "mainnet"
 margin_mode = "isolated"
 maximum_positions = 2
 
 [runtime]
-cohort_ledger = "data/observe/index_fresh15_pressure_v2/decisions.jsonl"
-stop_file = "data/observe/index_fresh15_pressure_v2/STOP"
+cohort_ledger = "data/observe/hip3_only_observer/decisions.jsonl"
+stop_file = "data/observe/hip3_only_observer/STOP"
 poll_seconds = 15.0
 lookback_days = 14
 

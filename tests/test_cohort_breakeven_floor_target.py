@@ -77,7 +77,7 @@ def _contract(
 
 def _plan(target: str = "floor", stop_bps: float = 250.0) -> BoundExecutionPlan:
     return _contract(target, stop_bps).bind(
-        strategy_id="hourly_donchian_20_10_atr20_v1", stop_anchor=None
+        strategy_id="test_channel_provider", stop_anchor=None
     )
 
 
@@ -267,7 +267,7 @@ def test_exhausted_raise_is_journaled_once_per_lifecycle(target: str) -> None:
         {
             "event": RAISE_EXHAUSTED_EVENT,
             "symbol": "xyz:CCC",
-            "strategy_id": "hourly_donchian_20_10_atr20_v1",
+            "strategy_id": "test_channel_provider",
             "entry_oid": 41,
             "reason": "protective_stop_raise_exhausted",
             "attempts": MAX_RAISE_ATTEMPTS,

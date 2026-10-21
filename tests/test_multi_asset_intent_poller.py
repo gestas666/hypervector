@@ -342,15 +342,15 @@ def test_poller_uses_one_minute_feed_and_incremental_refresh() -> None:
     assert {timeframe for _, timeframe, _, _ in calls} == {"1m"}
     assert {days for _, _, days, _ in calls[:4]} == {config.lookback_days}
     assert all(0.0 < days < 1.0 for _, _, days, _ in calls[4:])
-    hulk = collectors["test_trend_5m"]
-    range_onset = collectors["test_breakout_1m"]
-    source_follow = collectors["test_mirror_1m"]
+    trend = collectors["test_trend_5m"]
+    breakout = collectors["test_breakout_1m"]
+    mirror = collectors["test_mirror_1m"]
     hype_breakout = collectors["test_fade_1m"]
-    assert hulk.bar_counts == [2] * 12
-    assert range_onset.bar_counts == [10] * 12
-    assert source_follow.bar_counts == [10] * 3
+    assert trend.bar_counts == [2] * 12
+    assert breakout.bar_counts == [10] * 12
+    assert mirror.bar_counts == [10] * 3
     assert hype_breakout.bar_counts == [10] * 3
-    assert hulk.bar_times[0] == (
+    assert trend.bar_times[0] == (
         pd.Timestamp("2026-08-01T11:50:00Z"),
         pd.Timestamp("2026-08-01T11:55:00Z"),
     )
@@ -496,9 +496,9 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
         calls.append((symbol, timeframe, lookback_days, end_ms))
         return _bars(symbol, timeframe)
 
-    hulk = _Collector("test_trend_5m", emit=True)
-    range_onset = _Collector("test_breakout_1m", emit=False)
-    source_follow = _Collector(
+    trend = _Collector("test_trend_5m", emit=True)
+    breakout = _Collector("test_breakout_1m", emit=False)
+    mirror = _Collector(
         "test_mirror_1m",
         emit=False,
     )
@@ -510,9 +510,9 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
         config=config,
         fetch_bars=fetch,
         collectors={
-            hulk.strategy_id: hulk,
-            range_onset.strategy_id: range_onset,
-            source_follow.strategy_id: source_follow,
+            trend.strategy_id: trend,
+            breakout.strategy_id: breakout,
+            mirror.strategy_id: mirror,
             hype_breakout.strategy_id: hype_breakout,
         },
         canonical_regime_collector=_CanonicalCollector(config.symbols),
@@ -544,9 +544,9 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
         (99.0, 101.0, 98.0, 100.0, 10.0),
         (100.0, 102.0, 99.0, 101.0, 11.0),
     ]
-    _assert_startup_boundaries(hulk, symbols=4)
-    _assert_startup_boundaries(range_onset, symbols=4)
-    _assert_startup_boundaries(source_follow, symbols=1)
+    _assert_startup_boundaries(trend, symbols=4)
+    _assert_startup_boundaries(breakout, symbols=4)
+    _assert_startup_boundaries(mirror, symbols=1)
     _assert_startup_boundaries(hype_breakout, symbols=1)
     assert {(symbol, timeframe) for symbol, timeframe, _, _ in calls} == {
         (symbol, "1m") for symbol in config.symbols
@@ -558,7 +558,7 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
 def test_range_retired_profile_keeps_canonical_regime_outside_route_roster() -> None:
     """Retained routes remain exact while independent regime evidence weights intents."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/hype_compression_range_retired_current.toml",
+        "tests/fixtures/profiles/ten_asset_base.toml",
         mode="observe",
     )
     collectors = {

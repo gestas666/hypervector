@@ -1,4 +1,4 @@
-profile = "fixture_hype_compression_range_retired_current"
+profile = "fixture_ten_asset_base"
 network = "mainnet"
 margin_mode = "isolated"
 maximum_positions = 10
