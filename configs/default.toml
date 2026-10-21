@@ -5,7 +5,7 @@ lookback_days = 90
 # floor 30, promo 180 supported via CLI/config override
 backfill_priority = ["binance", "bybit"]
 strict_hl_only = false
-fee_model = "hl_taker_default"
+fee_model = "hl_base_taker"
 init_cash = 10000
 
 # Costs (research approx; Nautilus Phase 2 for full realism)

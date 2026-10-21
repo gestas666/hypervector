@@ -17,7 +17,7 @@ def build_registered_strategy_pair_signals(
     long_params: Mapping[str, object] | None = None,
     short_params: Mapping[str, object] | None = None,
 ) -> pd.DataFrame:
-    """Resolve two registered specialists into side-specific causal signals."""
+    """Resolve a registered long and short strategy into side-specific causal signals."""
     from hypervector.strategies import register_all_strategies
     from hypervector.strategies.registry import get_strategy
 

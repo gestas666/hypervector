@@ -6,12 +6,37 @@ import pandas as pd
 import pytest
 
 from hypervector.paper.conviction import (
+    DirectionalMetalabelConvictionProvider,
     FeatureBuilder,
     FeatureBuildError,
     FixedConvictionProvider,
     MetalabelConvictionProvider,
 )
 from hypervector.sweep.sizing import RiskConfig, risk_pct_from_conviction
+
+
+def test_directional_provider_routes_to_the_matching_side_model():
+    def provider(name: str, p: float) -> MetalabelConvictionProvider:
+        class FakeML:
+            root = type("R", (), {"name": name})()
+            feature_names = ["a"]
+
+            def predict_probability(self, features):
+                return p
+
+        return MetalabelConvictionProvider(
+            FakeML(), FeatureBuilder(), fixed_fallback=0.5, min_p=0.5
+        )
+
+    directional = DirectionalMetalabelConvictionProvider(
+        long_provider=provider("long_bundle", 0.9),
+        short_provider=provider("short_bundle", 0.6),
+    )
+    assert directional.bundle_id == "long=long_bundle;short=short_bundle"
+    assert directional.resolve(features={"a": 1.0}, direction="long").metalabel_p == 0.9
+    assert directional.resolve(features={"a": 1.0}, direction="short").metalabel_p == 0.6
+    with pytest.raises(ValueError, match="direction=long\\|short"):
+        directional.resolve(features={"a": 1.0}, direction=None)
 
 
 def test_fixed_provider():
