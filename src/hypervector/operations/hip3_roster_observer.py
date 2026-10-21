@@ -1,4 +1,9 @@
-"""Publish a durable report-only checkpoint for the qualified HIP-3 roster."""
+"""Publish a durable report-only checkpoint for a configured HIP-3 market roster.
+
+The markets come from a cohort profile's HIP-3 assets (``--config``, each with
+its ``venue_max_leverage``) or from explicit ``--market dex:ASSET=MAX_LEVERAGE``
+values. Only the public wallet address is loaded.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +17,7 @@ import math
 import os
 from pathlib import Path
 import signal
+import sys
 import threading
 import time
 from types import FrameType
@@ -25,6 +31,8 @@ from hypervector.live.hyperliquid_hip3_roster_factory import (
 )
 from hypervector.live.hyperliquid_sol_factory import SolSdkFactoryError
 from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
+from hypervector.live.perp_venue_identity import parse_perp_venue_identity
 from hypervector.research.checkpoint_storage import write_atomic_json
 from hypervector.research.hip3_context_history import (
     append_context_record,
@@ -32,7 +40,7 @@ from hypervector.research.hip3_context_history import (
     unavailable_context_record,
 )
 from hypervector.research.hip3_roster_observer import (
-    ACTIVE_HIP3_MARKETS,
+    Hip3MarketSpec,
     Hip3RosterObserver,
     unavailable_hip3_roster_checkpoint,
 )
@@ -57,21 +65,43 @@ class ObserverProtocol(Protocol):
 class ObserverConfig:
     """Validated boundaries for the no-submit observer process."""
 
+    markets: tuple[Hip3MarketSpec, ...]
     output: Path = _DEFAULT_OUTPUT
     poll_seconds: float = 120.0
     max_polls: int | None = None
     context_history: Path | None = None
 
     def __post_init__(self) -> None:
+        if not self.markets:
+            raise ValueError("HIP-3 observer requires at least one market")
+        symbols = [spec.symbol for spec in self.markets]
+        if len(set(symbols)) != len(symbols):
+            raise ValueError("HIP-3 observer markets must be unique")
         if not math.isfinite(self.poll_seconds) or self.poll_seconds <= 0.0:
             raise ValueError("HIP-3 observer poll_seconds must be positive")
         if self.max_polls is not None and self.max_polls <= 0:
             raise ValueError("HIP-3 observer max_polls must be positive")
 
+    @property
+    def symbols(self) -> tuple[str, ...]:
+        """Return the configured roster in order."""
+        return tuple(spec.symbol for spec in self.markets)
+
 
 def build_parser() -> argparse.ArgumentParser:
     """Build the read-only HIP-3 observer command."""
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--config",
+        type=Path,
+        help="cohort profile whose HIP-3 assets form the roster",
+    )
+    parser.add_argument(
+        "--market",
+        action="append",
+        default=[],
+        help="explicit roster market as dex:ASSET=MAX_LEVERAGE; repeatable",
+    )
     parser.add_argument("--output", type=Path, default=_DEFAULT_OUTPUT)
     parser.add_argument("--poll-seconds", type=float, default=120.0)
     parser.add_argument("--max-polls", type=int)
@@ -82,11 +112,41 @@ def build_parser() -> argparse.ArgumentParser:
 def config_from_args(args: argparse.Namespace) -> ObserverConfig:
     """Resolve command-line values into validated observer boundaries."""
     return ObserverConfig(
+        markets=roster_markets(args.config, tuple(args.market)),
         output=args.output,
         poll_seconds=args.poll_seconds,
         max_polls=args.max_polls,
         context_history=args.context_history,
     )
+
+
+def roster_markets(
+    config_path: Path | None, explicit: tuple[str, ...]
+) -> tuple[Hip3MarketSpec, ...]:
+    """Return the roster from exactly one of a cohort profile or explicit markets."""
+    if (config_path is None) == (not explicit):
+        raise ValueError("HIP-3 roster requires exactly one of --config or --market")
+    if config_path is not None:
+        config = load_multi_asset_live_config(config_path, mode="observe")
+        markets = tuple(
+            Hip3MarketSpec(asset.symbol, int(asset.venue_max_leverage))
+            for asset in config.assets
+            if parse_perp_venue_identity(asset.symbol).perp_dex
+        )
+        if not markets:
+            raise ValueError(f"cohort profile has no HIP-3 assets: {config_path}")
+        return markets
+    return tuple(_explicit_market(value) for value in explicit)
+
+
+def _explicit_market(value: str) -> Hip3MarketSpec:
+    symbol, separator, leverage = value.partition("=")
+    if not separator or not leverage.strip().isdigit():
+        raise ValueError(f"--market must be dex:ASSET=MAX_LEVERAGE: {value!r}")
+    identity = parse_perp_venue_identity(symbol.strip())
+    if not identity.perp_dex:
+        raise ValueError(f"--market must name a HIP-3 market: {value!r}")
+    return Hip3MarketSpec(identity.symbol, int(leverage))
 
 
 def run_observer(
@@ -119,6 +179,7 @@ def run_observer(
             latest = unavailable_hip3_roster_checkpoint(
                 observed_at=observed_at,
                 error=exc,
+                symbols=config.symbols,
             )
         polls += 1
         _publish(
@@ -200,19 +261,22 @@ def _reached_limit(config: ObserverConfig, polls: int) -> bool:
 
 
 def _build_observer(
-    *, context_history: Path | None = None
+    markets: tuple[Hip3MarketSpec, ...],
+    *,
+    context_history: Path | None = None,
 ) -> tuple[Hip3RosterObserver, Callable[[], bool]]:
     """Build the observer and a probe reporting whether this poll was archived."""
-    symbols = tuple(spec.symbol for spec in ACTIVE_HIP3_MARKETS)
     sources = create_read_only_hip3_roster_sources(
-        symbols=symbols,
+        symbols=tuple(spec.symbol for spec in markets),
         environ=os.environ,
     )
     funding = sources.funding
     source = funding.snapshot
     if context_history is not None:
         source = partial(funding.snapshot_with_capture, context_history)
-    observer = Hip3RosterObserver(readers=sources.readers, funding_source=source)
+    observer = Hip3RosterObserver(
+        readers=sources.readers, markets=markets, funding_source=source
+    )
     return observer, lambda: bool(getattr(funding, "last_capture_archived", False))
 
 
@@ -220,6 +284,7 @@ def _write_start_failure(config: ObserverConfig, error: Exception) -> int:
     payload = unavailable_hip3_roster_checkpoint(
         observed_at=datetime.now(UTC),
         error=error,
+        symbols=config.symbols,
     )
     _publish(config, payload, lifecycle="failed_start", polls=0)
     return 1
@@ -227,11 +292,15 @@ def _write_start_failure(config: ObserverConfig, error: Exception) -> int:
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Load only the public wallet identity and run the observer."""
-    config = config_from_args(build_parser().parse_args(argv))
+    try:
+        config = config_from_args(build_parser().parse_args(argv))
+    except (OSError, ValueError) as exc:
+        print(f"HIP-3 roster observer refused: {exc}", file=sys.stderr)
+        return 2
     load_wallet_env_if_present()
     try:
         observer, archived_poll = _build_observer(
-            context_history=config.context_history
+            config.markets, context_history=config.context_history
         )
     except (OSError, ValueError, SolSdkFactoryError) as exc:
         return _write_start_failure(config, exc)

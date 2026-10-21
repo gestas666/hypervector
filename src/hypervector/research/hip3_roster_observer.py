@@ -1,4 +1,8 @@
-"""Execution-incapable checkpoint projection for qualified HIP-3 markets."""
+"""Execution-incapable checkpoint projection for a configured HIP-3 market roster.
+
+The roster is supplied by the caller (a cohort profile's HIP-3 assets or an
+explicit operator list); nothing here names a market.
+"""
 
 from __future__ import annotations
 
@@ -20,20 +24,18 @@ from hypervector.research.hip3_fee_model import Hip3FeeInputs, effective_hip3_fe
 
 @dataclass(frozen=True)
 class Hip3MarketSpec:
-    """One exact active HIP-3 symbol and its venue leverage ceiling."""
+    """One exact HIP-3 symbol and the venue leverage ceiling it must report."""
 
     symbol: str
     expected_max_leverage: int
 
-
-ACTIVE_HIP3_MARKETS = (
-    Hip3MarketSpec("xyz:SP500", 50),
-    Hip3MarketSpec("xyz:SPCX", 20),
-    Hip3MarketSpec("xyz:SNDK", 10),
-    Hip3MarketSpec("xyz:GOLD", 25),
-    Hip3MarketSpec("xyz:BRENTOIL", 20),
-    Hip3MarketSpec("xyz:TSLA", 20),
-)
+    def __post_init__(self) -> None:
+        """Reject a malformed identity or leverage ceiling."""
+        if not isinstance(self.symbol, str) or ":" not in self.symbol:
+            raise ValueError("HIP-3 market symbol must be dex:ASSET")
+        leverage = self.expected_max_leverage
+        if isinstance(leverage, bool) or not isinstance(leverage, int) or leverage < 1:
+            raise ValueError("HIP-3 expected_max_leverage must be a positive integer")
 
 
 class Hip3ReaderProtocol(Protocol):
@@ -63,7 +65,7 @@ class Hip3RosterObserver:
         self,
         *,
         readers: Mapping[str, Hip3ReaderProtocol],
-        markets: tuple[Hip3MarketSpec, ...] = ACTIVE_HIP3_MARKETS,
+        markets: tuple[Hip3MarketSpec, ...],
         funding_source: Callable[[], Mapping[str, float | None]] | None = None,
     ) -> None:
         """Bind the exact reader roster and optional unsigned funding source."""
@@ -90,7 +92,6 @@ class Hip3RosterObserver:
             "observed_at_utc": timestamp,
             "active_symbols": [spec.symbol for spec in self._markets],
             "markets": rows,
-            "requested_aliases": _requested_aliases(),
             "execution_authority": "none",
             "report_only": True,
             "automatic_promotion": False,
@@ -147,6 +148,7 @@ def unavailable_hip3_roster_checkpoint(
     *,
     observed_at: datetime,
     error: Exception,
+    symbols: tuple[str, ...] = (),
 ) -> dict[str, object]:
     """Build an explicit unavailable state without numeric fallback values."""
     return {
@@ -154,9 +156,8 @@ def unavailable_hip3_roster_checkpoint(
         "mode": "hip3_roster_observer_checkpoint",
         "status": "unavailable",
         "observed_at_utc": _utc_timestamp(observed_at),
-        "active_symbols": [spec.symbol for spec in ACTIVE_HIP3_MARKETS],
+        "active_symbols": list(symbols),
         "markets": None,
-        "requested_aliases": _requested_aliases(),
         "error": {"type": type(error).__name__, "message": str(error)},
         "execution_authority": "none",
         "report_only": True,
@@ -287,18 +288,6 @@ def _account_payload(
         "position": asdict(preflight.position),
         "open_order_count": len(orders),
         "open_orders": [asdict(order) for order in orders],
-    }
-
-
-def _requested_aliases() -> dict[str, dict[str, object]]:
-    return {
-        "WTIOIL": {
-            "status": "historical_only",
-            "live_symbol": None,
-            "historical_symbol": "cash:WTI",
-            "active_alternative": "xyz:BRENTOIL",
-            "equivalence_assumed": False,
-        }
     }
 
 
