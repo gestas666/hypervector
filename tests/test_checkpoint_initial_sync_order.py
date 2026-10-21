@@ -69,7 +69,6 @@ def test_initial_sync_publishes_bounded_current_run_without_archive(
             publish_fn=lambda *_args, **_kwargs: {},
             sync_fn=lambda *_args: {},
             portfolio_fn=None,
-            funding_fn=None,
             sleep_fn=stop_after_wait,
         )
 

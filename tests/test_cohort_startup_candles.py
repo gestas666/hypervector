@@ -67,13 +67,14 @@ def test_poller_captures_full_initial_frames_once_without_changing_results() -> 
     assert requests[: 2 * len(config.symbols)] == requests[2 * len(config.symbols):]
 
 
-def test_archive_preserves_exact_frames_and_hourly_indicator_seeds(tmp_path: Path) -> None:
+def test_archive_preserves_exact_frames_and_indicator_seeds(tmp_path: Path) -> None:
     """Persisted evidence reproduces initialization beyond the chart tail."""
     from hypervector.live.cohort_startup_candles import (
         StartupCandleContext, load_startup_candles, write_startup_candles,
     )
-    from hypervector.live.multi_asset_market_bars import resample_one_minute_bars
-    from hypervector.research.hourly_band_reentry import build_hourly_band_reentry_signals
+    from hypervector.live.canonical_regime_components import (
+        build_regime_component_frame,
+    )
 
     context = StartupCandleContext(
         "fixture", "a" * 64, "b" * 64, "run-1", ("BTC", "xyz:BBB"),
@@ -86,10 +87,10 @@ def test_archive_preserves_exact_frames_and_hourly_indicator_seeds(tmp_path: Pat
     for symbol, original in frames.items():
         restored = loaded[symbol]
         pd.testing.assert_frame_equal(original, restored, check_exact=True)
-        before = build_hourly_band_reentry_signals(resample_one_minute_bars(original, minutes=15).set_index("timestamp"))
-        after = build_hourly_band_reentry_signals(resample_one_minute_bars(restored, minutes=15).set_index("timestamp"))
+        before = build_regime_component_frame(original.set_index("timestamp"))
+        after = build_regime_component_frame(restored.set_index("timestamp"))
         pd.testing.assert_frame_equal(before, after, check_exact=True)
-        assert after.atr.notna().sum() > 20
+        assert after.sma_100_200_gap_bps.notna().sum() > 20
 
 
 def test_observer_binding_is_fixed_before_activation() -> None:

@@ -21,29 +21,7 @@ _EXPECTATION = ConfigurationGenerationExpectation(
     source_path="configs/cohort.toml",
     source_modified_at_utc="2026-08-03T11:16:04+00:00",
     profile_fingerprint="current-profile",
-    entry_context_overrides=(
-        (
-            "test_breakout_1m",
-            "ETH",
-            "dual_mtf_not_opposed",
-        ),
-    ),
 )
-
-
-def test_current_profile_exposes_the_explicit_eth_entry_context_rule() -> None:
-    """The disk identity carries the exact pending rule without runtime authority."""
-    expectation = load_configuration_expectation(
-        Path("tests/fixtures/profiles/cohort_base.toml")
-    )
-
-    assert expectation.entry_context_overrides == (
-        (
-            "test_breakout_1m",
-            "ETH",
-            "dual_mtf_not_opposed",
-        ),
-    )
 
 
 def test_load_expectation_retains_provider_symbol_sizing() -> None:
@@ -53,8 +31,8 @@ def test_load_expectation_retains_provider_symbol_sizing() -> None:
     )
 
     assert expectation.provider_sizing_overrides == (
-        ("test_trend_5m", "SOL", 0.03, 25.0),
         ("test_breakout_1m", "SOL", 0.10, 75.0),
+        ("test_trend_5m", "SOL", 0.03, 25.0),
     )
 
 
@@ -160,8 +138,8 @@ def test_profile_b_expectation_exposes_exact_live_routes_without_authority() -> 
         "test_long_bias_1m": ("ETH",),
         "test_channel_short_15m": (
             "SOL",
-            "xyz:EEE",
             "xyz:CCC",
+            "xyz:EEE",
             "xyz:FFF",
         ),
         "test_long_target_1m": ("BTC",),
@@ -318,7 +296,7 @@ def test_generation_publishes_provider_routes_without_authority() -> None:
         _EXPECTATION,
         provider_execution_scopes=(
             ("test_breakout_1m", ("SOL",)),
-            ("hip3_breakout_pressure_v1", ("xyz:DDD", "xyz:CCC")),
+            ("test_band_a_15m", ("xyz:CCC", "xyz:DDD")),
         ),
     )
 
@@ -335,7 +313,7 @@ def test_generation_publishes_provider_routes_without_authority() -> None:
     )
 
     assert evidence["current_provider_execution_scopes"] == {
-        "hip3_breakout_pressure_v1": ["xyz:DDD", "xyz:CCC"],
+        "test_band_a_15m": ["xyz:CCC", "xyz:DDD"],
         "test_breakout_1m": ["SOL"],
     }
     assert evidence["blocking_assets"] == ["xyz:DDD"]
@@ -364,9 +342,7 @@ def test_stale_generation_waits_for_every_position_and_order_to_clear() -> None:
 
     assert evidence["restart_state"] == "wait_for_flat_and_no_orders"
     assert evidence["blocking_assets"] == ["BTC"]
-    assert evidence["current_entry_context_overrides"] == {
-        "test_breakout_1m|ETH": "dual_mtf_not_opposed"
-    }
+    assert "current_entry_context_overrides" not in evidence
 
 
 def test_generation_exposes_pending_provider_sizing_without_authority() -> None:
@@ -586,35 +562,6 @@ def test_generation_exposes_enabled_profit_lock_without_authority() -> None:
     }
     assert evidence["execution_authority"] == "none"
     assert evidence["automatic_restart"] is False
-
-
-def test_generation_exposes_btc_component_floor_without_authority() -> None:
-    """The checkpoint accepts only the exact staged BTC specialized policy."""
-    expectation = load_configuration_expectation(
-        _FIXTURE_PROFILES
-        / "eight_asset_btc_hulk_smart_exit.toml"
-    )
-
-    evidence = configuration_generation_evidence(
-        "runtime-profile",
-        expectation,
-        {
-            "BTC": {
-                "final_state": "FLAT",
-                "position_size_signed": 0.0,
-                "open_order_ids": [],
-            }
-        },
-    )
-
-    policy = evidence["current_provider_exit_policies"][
-        "test_short_trend_5m"
-    ]
-    assert policy["profit_lock_policy"] == "btc_hulk_delayed_component_floor_v1"
-    assert policy["profit_lock_activation_bps"] is None
-    assert policy["profit_lock_floor_bps"] is None
-    assert policy["profit_lock_giveback_bps"] is None
-    assert evidence["execution_authority"] == "none"
 
 
 def test_generation_exposes_directional_profit_lock_without_collapsing_scope(

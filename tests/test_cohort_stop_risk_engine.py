@@ -75,7 +75,7 @@ def test_adaptive_fingerprint_unchanged_and_risk_budget_changes_identity() -> No
     )
     assert (
         config.profile_fingerprint
-        == "217720aba4e61b7001471258522f03bb02cac8f42b660ba19a049981aa4d7ae6"
+        == "a458a0d66e9ab524ab13547cf772e72c5751880ea6abfe8c489f1468920aa325"
     )
     first = config.providers[0]
     changed = replace(

@@ -16,7 +16,6 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 
 _FIXTURE_PROFILES = Path("tests/fixtures/profiles")
 _RANGE_RETIRED = _FIXTURE_PROFILES / "hype_compression_range_retired_current.toml"
-_BTC_HULK_SMART_EXIT = _FIXTURE_PROFILES / "eight_asset_btc_hulk_smart_exit.toml"
 _PROFILE_B = Path("tests/fixtures/cohort_chain/profile_b.toml")
 
 
@@ -109,23 +108,14 @@ def test_directional_override_requests_history_when_base_lock_is_disabled() -> N
     assert profit_lock_history_limits((enabled,)) == {"BTC": 482}
 
 
-def test_btc_hulk_component_floor_retains_restart_stable_warmup() -> None:
-    """The specialized policy retains 24h seed plus its full 24h lifecycle."""
-    config = load_multi_asset_live_config(_BTC_HULK_SMART_EXIT, mode="observe")
-
-    limits = profit_lock_history_limits(config.providers)
-
-    assert limits["BTC"] == 2_882
-
-
-def test_profile_b_exit_policy_v2_requests_full_lifecycle_history_per_route() -> None:
+def test_profile_b_adaptive_exits_request_full_lifecycle_history_per_route() -> None:
     """Profile B's adaptive exits need terminal hold, boundary bars and warmup."""
     config = load_multi_asset_live_config(_PROFILE_B, mode="observe")
 
     assert all(
         provider.execution.profit_lock_policy == "none"
         and provider.execution.adaptive_exit_policy
-        == "regime_flip_floor_retention_v2"
+        == "regime_flip_floor_retention"
         for provider in config.providers
     )
     # 24h holds: 1440 bars + 2 boundary + 21 regime warmup; ETH holds 48h.

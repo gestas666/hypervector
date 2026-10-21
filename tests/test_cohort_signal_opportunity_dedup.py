@@ -35,11 +35,11 @@ def test_portfolio_opportunity_dedup_counts_shared_provider_path_once() -> None:
         {
             "group_count": 1,
             "providers": [
-                {"blocker": "awaiting_breakout", "strategy_id": STRATEGY},
                 {
                     "blocker": "awaiting_hourly_cross",
                     "strategy_id": "test_breakout_1m",
                 },
+                {"blocker": "awaiting_breakout", "strategy_id": STRATEGY},
             ],
         }
     ]
@@ -91,11 +91,11 @@ def _assert_attribution(row: dict[str, object]) -> None:
         "single_minute_episodes": 1,
     }
     assert row["providers"] == [
-        {"blocker": "awaiting_breakout", "strategy_id": STRATEGY},
         {
             "blocker": "awaiting_hourly_cross",
             "strategy_id": "test_breakout_1m",
         },
+        {"blocker": "awaiting_breakout", "strategy_id": STRATEGY},
     ]
     _assert_path(row["horizons"]["5"])
 

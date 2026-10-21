@@ -359,7 +359,6 @@ def test_checkpoint_discloses_stale_runtime_configuration() -> None:
         "current_asset_sizing": {},
         "current_asset_entry_slippage_caps": {},
         "current_asset_market_slippage_caps": {},
-        "current_entry_context_overrides": {},
         "current_provider_sizing_overrides": {},
         "current_provider_directional_sizing_overrides": {},
         "current_provider_exit_policies": {},

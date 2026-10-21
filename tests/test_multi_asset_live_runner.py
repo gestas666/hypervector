@@ -14,6 +14,7 @@ from multi_asset_live_runner_fixtures import (
     venue_snapshot as _venue,
 )
 
+from hypervector.live.canonical_regime_telemetry import CANONICAL_REGIME_TELEMETRY_STRATEGY
 from hypervector.live.bidirectional_intents import (
     BidirectionalIntentRouter,
     StrategyCapability,
@@ -891,7 +892,7 @@ def test_supported_soft_deadline_is_journaled_once(tmp_path: Path) -> None:
     opened_at_ms = observed_ms - 28_800_000
     evaluations = (
         _regime_evaluation("hulk", "HYPE", observed_ms),
-        _regime_evaluation("test_breakout_1m", "HYPE", observed_ms),
+        _regime_evaluation(CANONICAL_REGIME_TELEMETRY_STRATEGY, "HYPE", observed_ms),
     )
     runner, engines, telemetry = _runner(tmp_path, (), evaluations=evaluations)
     plan = ProviderExecutionContract(

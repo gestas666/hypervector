@@ -89,12 +89,7 @@ def test_changed_profile_seeds_current_run_without_full_history(
         config_path=tmp_path / "eee_retired.toml",
         once=False,
         venue_portfolio=None,
-        opportunity_matrix_path=None,
-        supplemental_opportunity_matrix_paths=(),
-        eligible_policy_forward=False,
-        funding_evidence_fn=None,
         portfolio_archive=None,
-        asymmetric_forward_journal_path=None,
     )
 
     assert len(forwarded) == 1
@@ -124,7 +119,7 @@ def test_once_flag_can_force_a_bounded_current_run_checkpoint(tmp_path: Path) ->
     )
 
     assert (
-        module._run_once(args, lambda *_args: {}, publish, None, None, lambda _: None)
+        module._run_once(args, lambda *_args: {}, publish, None, lambda _: None)
         == 0
     )
     assert forwarded[0]["current_run_only"] is True

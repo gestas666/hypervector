@@ -4,20 +4,76 @@ from hashlib import sha256
 import json
 from pathlib import Path
 
+import pandas as pd
 import pytest
 from test_native_replay_adapter import deny_external_ports
 from test_native_replay_sdk_engines import cohort_sdk
-from test_native_replay_sdk_runner import INPUTS
 
-from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
+from hypervector.live.multi_asset_live_config import (
+    MultiAssetLiveConfig,
+    load_multi_asset_live_config,
+)
 from hypervector.research.native_replay_packets import run_packet_scenario
 from hypervector.research.native_replay_sdk import ReplaySdk
 
 __all__ = ["deny_external_ports"]
 
 
+_PACKET_ROWS = 240
+_CUTOFF_DELAY_MS = 60_000
+
+
+def _recorded_packet(root: Path, config: MultiAssetLiveConfig, cutoff_ms: int) -> Path:
+    """Write one flat recorded cold poll covering every configured symbol."""
+    start = pd.Timestamp(cutoff_ms, unit="ms", tz="UTC") - pd.Timedelta(
+        minutes=_PACKET_ROWS
+    )
+    frame = pd.DataFrame(
+        {
+            "timestamp": pd.date_range(start, periods=_PACKET_ROWS, freq="1min"),
+            "open": 100.0,
+            "high": 100.0,
+            "low": 100.0,
+            "close": 100.0,
+            "volume": 1.0,
+        }
+    )
+    inputs = root / "profile_inputs" / "cold"
+    inputs.mkdir(parents=True)
+    frames = []
+    for symbol in config.symbols:
+        target = inputs / f"{symbol}.parquet"
+        frame.to_parquet(target, index=False)
+        frames.append(
+            {
+                "symbol": symbol,
+                "rows": _PACKET_ROWS,
+                "sha256": sha256(target.read_bytes()).hexdigest(),
+            }
+        )
+    record = {
+        "label": "cold",
+        "observed_cutoff_utc": pd.Timestamp(cutoff_ms, unit="ms", tz="UTC").isoformat(),
+        "elapsed_seconds_with_profiler": 0.01 * len(config.symbols),
+        "fetch_calls": [
+            {
+                "symbol": symbol,
+                "timeframe": "1m",
+                "lookback_days": float(config.lookback_days),
+                "end_ms": cutoff_ms,
+                "elapsed_seconds": 0.005,
+            }
+            for symbol in config.symbols
+        ],
+        "input_frames": frames,
+    }
+    path = root / "profile_cold.json"
+    path.write_text(json.dumps(record))
+    return path
+
+
 def scenario_file(tmp_path: Path) -> Path:
-    """Describe synthetic account quotes around original authenticated candle packets."""
+    """Describe synthetic account quotes around a synthetic authenticated candle packet."""
     config = load_multi_asset_live_config(
         "tests/fixtures/profiles/noncrypto_live.toml",
         mode="live",
@@ -25,7 +81,9 @@ def scenario_file(tmp_path: Path) -> Path:
         accepts_live_risk=True,
     )
     replay = cohort_sdk(config, {})
-    manifest = json.loads((INPUTS / "manifest.json").read_text())
+    packet = _recorded_packet(
+        tmp_path / "packets", config, replay.clock.now_ms + _CUTOFF_DELAY_MS
+    )
     body = {
         "schema": "native-packet-replay-v1",
         "economic_inputs": "declared_scenario",
@@ -53,9 +111,10 @@ def scenario_file(tmp_path: Path) -> Path:
             for s in config.symbols
         ],
         "packets": [
-            {"path": str((INPUTS / row["relative"]).resolve()), "sha256": row["sha256"]}
-            for row in manifest["files"]
-            if row["relative"].startswith("profile_") and row["relative"].endswith(".json")
+            {
+                "path": str(packet.resolve()),
+                "sha256": sha256(packet.read_bytes()).hexdigest(),
+            }
         ],
         "execution_sources": [],
         "maximum_book_delay_ms": 5000,
@@ -85,7 +144,7 @@ def test_scenario_runs_native_controls_and_retains_explicit_scope(tmp_path: Path
     path = scenario_file(tmp_path)
     output = tmp_path / "result"
     result = run_packet_scenario(path, output)
-    assert result["actions_per_poll"] == [0, 0, 0]
+    assert result["actions_per_poll"] == [0]
     assert result["filled_orders"] == 0 and result["equity_usd"] == "5000"
     assert (
         result["scope"] == "declared recorded polls; not continuous historical portfolio validation"

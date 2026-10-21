@@ -13,8 +13,10 @@ from types import SimpleNamespace
 import pytest
 
 from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
-from hypervector.research.hip3_roster_observer import ACTIVE_HIP3_MARKETS
-from test_hip3_roster_observer import _Reader
+from hypervector.research.hip3_roster_observer import Hip3MarketSpec
+from test_hip3_roster_observer import _MARKETS, _Reader
+
+_ONE_MARKET = (Hip3MarketSpec("xyz:AAA", 20),)
 
 
 def _load_module() -> ModuleType:
@@ -54,7 +56,9 @@ def test_once_writes_available_checkpoint_without_execution_authority(
     module = _load_module()
     output = tmp_path / "latest.json"
     observer = _Observer()
-    config = module.ObserverConfig(output=output, poll_seconds=1.0, max_polls=1)
+    config = module.ObserverConfig(
+        markets=_ONE_MARKET, output=output, poll_seconds=1.0, max_polls=1
+    )
 
     result = module.run_observer(
         config,
@@ -79,7 +83,9 @@ def test_failed_once_writes_unavailable_checkpoint_without_fake_market_values(
     module = _load_module()
     output = tmp_path / "latest.json"
     observer = _Observer(ValueError("xyz:DDD book unavailable"))
-    config = module.ObserverConfig(output=output, poll_seconds=1.0, max_polls=1)
+    config = module.ObserverConfig(
+        markets=_ONE_MARKET, output=output, poll_seconds=1.0, max_polls=1
+    )
 
     result = module.run_observer(
         config,
@@ -104,7 +110,9 @@ def test_typed_venue_schema_failure_publishes_unavailable_checkpoint(
     module = _load_module()
     output = tmp_path / "latest.json"
     observer = _Observer(HyperliquidAdapterError("perp dex schema is invalid"))
-    config = module.ObserverConfig(output=output, poll_seconds=1.0, max_polls=1)
+    config = module.ObserverConfig(
+        markets=_ONE_MARKET, output=output, poll_seconds=1.0, max_polls=1
+    )
 
     result = module.run_observer(
         config,
@@ -129,7 +137,7 @@ def test_default_observer_wires_shared_funding_into_real_projection(
     module = _load_module()
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
     calls: list[tuple[str, ...]] = []
 
@@ -152,7 +160,7 @@ def test_default_observer_wires_shared_funding_into_real_projection(
         lambda **_kwargs: readers,
         raising=False,
     )
-    observer, _archived = module._build_observer()
+    observer, _archived = module._build_observer(_MARKETS)
     result = observer.snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
     assert all(
         row["venue"]["funding_rate_hourly"] == 0.0000125 for row in result["markets"]
@@ -163,10 +171,51 @@ def test_default_observer_wires_shared_funding_into_real_projection(
 def test_parser_enables_durable_research_history_by_default() -> None:
     """The launched observer must enable capture without undocumented extra wiring."""
     module = _load_module()
-    config = module.config_from_args(module.build_parser().parse_args([]))
+    config = module.config_from_args(
+        module.build_parser().parse_args(["--market", "xyz:AAA=20"])
+    )
     assert getattr(config, "context_history", None) == Path(
         "data/research/hip3_asset_context"
     )
+
+
+def test_explicit_markets_form_the_roster_in_declared_order() -> None:
+    """Each --market names one HIP-3 symbol and its venue leverage ceiling."""
+    module = _load_module()
+    args = module.build_parser().parse_args(
+        ["--market", "xyz:BBB=10", "--market", "xyz:AAA=20"]
+    )
+    config = module.config_from_args(args)
+    assert config.markets == (
+        Hip3MarketSpec("xyz:BBB", 10),
+        Hip3MarketSpec("xyz:AAA", 20),
+    )
+
+
+def test_profile_hip3_assets_form_the_roster() -> None:
+    """--config takes every HIP-3 asset and its declared venue maximum leverage."""
+    module = _load_module()
+    profile = Path("tests/fixtures/profiles/noncrypto_live.toml")
+    markets = module.roster_markets(profile, ())
+    assert markets
+    assert all(":" in spec.symbol for spec in markets)
+    assert "BTC" not in {spec.symbol for spec in markets}
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        [],
+        ["--market", "xyz:AAA=20", "--config", "tests/fixtures/profiles/noncrypto_live.toml"],
+        ["--market", "BTC=40"],
+        ["--market", "xyz:AAA"],
+        ["--market", "xyz:AAA=20", "--market", "xyz:AAA=20"],
+    ],
+)
+def test_main_refuses_an_unresolvable_roster(argv: list[str]) -> None:
+    """No roster, both sources, a core perp, no leverage or a duplicate exits 2."""
+    module = _load_module()
+    assert module.main(argv) == 2
 
 
 def test_capture_wiring_reuses_one_request_for_telemetry_and_history(
@@ -180,7 +229,7 @@ def test_capture_wiring_reuses_one_request_for_telemetry_and_history(
     module = _load_module()
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
     response = [
         {"universe": [{"name": symbol} for symbol in readers]},
@@ -203,7 +252,7 @@ def test_capture_wiring_reuses_one_request_for_telemetry_and_history(
         module, "create_read_only_hip3_roster_sources", lambda **_: sources
     )
     assert "context_history" in module.ObserverConfig.__dataclass_fields__
-    observer, _archived = module._build_observer(context_history=tmp_path)
+    observer, _archived = module._build_observer(_MARKETS, context_history=tmp_path)
     result = observer.snapshot(datetime.now(UTC))
     assert result["status"] == "available"
     assert len(info.calls) == 1
@@ -217,6 +266,7 @@ def test_failed_poll_records_one_gap_without_repeating_it_at_shutdown(
     module = _load_module()
     assert "context_history" in module.ObserverConfig.__dataclass_fields__
     config = module.ObserverConfig(
+        markets=_ONE_MARKET,
         output=tmp_path / "latest.json",
         max_polls=1,
         context_history=tmp_path / "history",
@@ -249,7 +299,7 @@ def test_research_archive_failure_never_stops_roster_telemetry(
         '{"partial":'
     )
     config = module.ObserverConfig(
-        output=tmp_path / "roster.json", context_history=history
+        markets=_ONE_MARKET, output=tmp_path / "roster.json", context_history=history
     )
     payload = {"status": "unavailable", "error": {"type": "ServerError"}}
 
@@ -265,7 +315,7 @@ def test_an_archived_poll_is_not_also_recorded_as_a_gap(tmp_path: Path) -> None:
     module = _load_module()
     history = tmp_path / "history"
     config = module.ObserverConfig(
-        output=tmp_path / "roster.json", context_history=history
+        markets=_ONE_MARKET, output=tmp_path / "roster.json", context_history=history
     )
     payload = {"status": "unavailable", "error": {"type": "ServerError"}}
 

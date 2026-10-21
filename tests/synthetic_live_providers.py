@@ -59,6 +59,18 @@ SYNTHETIC_PROVIDERS: tuple[tuple[str, str, int, bool, bool], ...] = (
     ("test_session_f_15m", "15m", 16, True, False),
     ("test_session_g_15m", "15m", 16, True, False),
 )
+# Providers whose declared capability is narrower than the default, so the
+# loader's capability refusals can be exercised: id -> (timeframe, capability).
+CONSTRAINED_PROVIDERS: Mapping[str, tuple[str, ProviderCapability]] = {
+    "test_btc_long_only_15m": (
+        "15m",
+        ProviderCapability(
+            symbols=frozenset({"BTC"}),
+            sides=frozenset({"long"}),
+            position_policies=frozenset({"enter_and_close"}),
+        ),
+    ),
+}
 _BODY_FRACTION = 0.005
 _MINUTES = {"1m": 1, "5m": 5, "15m": 15}
 
@@ -185,17 +197,22 @@ def _registration(
     *,
     stop_anchor: bool = False,
     target_anchor: bool = False,
+    capability: ProviderCapability | None = None,
 ) -> ProviderRegistration:
+    declared = capability or ProviderCapability(
+        stop_anchor=stop_anchor, target_anchor=target_anchor
+    )
     return ProviderRegistration(
         strategy_id=strategy_id,
         signal_timeframe=timeframe,
         readiness_lookback_minutes=lookback,
         collector_factory=_factory(
-            strategy_id, timeframe, stop_anchor=stop_anchor, target_anchor=target_anchor
+            strategy_id,
+            timeframe,
+            stop_anchor=declared.stop_anchor,
+            target_anchor=declared.target_anchor,
         ),
-        capability=ProviderCapability(
-            stop_anchor=stop_anchor, target_anchor=target_anchor
-        ),
+        capability=declared,
     )
 
 
@@ -210,6 +227,9 @@ SYNTHETIC_REGISTRATIONS: Mapping[str, ProviderRegistration] = {
     for strategy_id, timeframe, lookback, stop_anchor, target_anchor in (
         SYNTHETIC_PROVIDERS
     )
+} | {
+    strategy_id: _registration(strategy_id, timeframe, 16, capability=capability)
+    for strategy_id, (timeframe, capability) in CONSTRAINED_PROVIDERS.items()
 }
 
 

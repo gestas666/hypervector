@@ -12,7 +12,6 @@ import time
 from types import ModuleType, SimpleNamespace
 
 import pytest
-from requests import RequestException
 
 from hypervector.research.cohort_checkpoint_history import (
     HistoricalProjectionStale,
@@ -103,148 +102,12 @@ def test_checkpoint_loop_refuses_a_second_writer_for_the_same_output(
             )
 
 
-def test_parser_accepts_repeated_supplemental_observer_paths() -> None:
-    """Each explicitly configured report-only observer remains addressable."""
-    module = _load_module()
-
-    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
-            "--supplemental-opportunity-matrix",
-            "btc.json",
-            "--supplemental-opportunity-matrix",
-            "eth.json",
-        ]
-    )
-
-    assert args.supplemental_opportunity_matrix == [
-        Path("btc.json"),
-        Path("eth.json"),
-    ]
-
-
-def test_parser_can_enable_exact_eligible_policy_forward_journal() -> None:
-    """The report-only ETH lifecycle observer is an explicit sidecar option."""
-    module = _load_module()
-
-    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--eligible-policy-forward"])
-
-    assert args.eligible_policy_forward is True
-
-
-def test_parser_can_disable_profile_specific_asymmetric_observer() -> None:
-    """A successor sidecar can refuse inheritance of a frozen asymmetric observer."""
-    module = _load_module()
-
-    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--disable-asymmetric-forward-observer"])
-
-    assert args.disable_asymmetric_forward_observer is True
-
-
-def test_real_publisher_receives_exact_policy_observer_flag(
-    tmp_path: Path,
-) -> None:
-    """The sidecar forwards the explicit observer request only to its real writer."""
-    module = _load_module()
-    forwarded: list[tuple[bool, object, object]] = []
-
-    def funding_fn(_symbol: str, _start_ms: int, _end_ms: int) -> None:
-        return None
-
-    def publish(
-        _root: Path,
-        _out: Path,
-        **kwargs: object,
-    ) -> dict[str, object]:
-        forwarded.append(
-            (
-                bool(kwargs.get("eligible_policy_forward")),
-                kwargs.get("funding_evidence_fn"),
-                kwargs.get("asymmetric_forward_journal_path"),
-            )
-        )
-        return {"status": "ready"}
-
-    module.publish_live_checkpoint = publish
-    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--eligible-policy-forward", "--once", "--out", str(tmp_path / "out.json")]
-    )
-
-    module._publish_snapshot(args, publish, None, funding_fn)
-
-    # No journal is given, so the asymmetric observer stays off (the default).
-    assert forwarded == [(True, funding_fn, None)]
-
-
-def test_real_publisher_forwards_an_explicit_asymmetric_journal(
-    tmp_path: Path,
-) -> None:
-    """The asymmetric observer runs only when its journal is named explicitly."""
-    module = _load_module()
-    forwarded: list[object] = []
-
-    def publish(_root: Path, _out: Path, **kwargs: object) -> dict[str, object]:
-        forwarded.append(kwargs.get("asymmetric_forward_journal_path"))
-        return {"status": "ready"}
-
-    module.publish_live_checkpoint = publish
-    journal = tmp_path / "asymmetric.json"
-    args = module.build_parser().parse_args(
-        _CHECKPOINT_CONFIG
-        + ["--asymmetric-forward-journal", str(journal), "--out", str(tmp_path / "o")]
-    )
-    module._publish_snapshot(args, publish, None, None)
-    assert forwarded == [journal]
-
-
 def test_checkpoint_requires_an_explicit_profile() -> None:
     """The deleted canary default is gone: a checkpoint names its exact profile."""
     module = _load_module()
     with pytest.raises(SystemExit) as exc:
         module.build_parser().parse_args(["--once"])
     assert exc.value.code == 2
-
-
-def test_real_publisher_omits_disabled_asymmetric_observer(tmp_path: Path) -> None:
-    """The profile-bound disable flag must reach the real checkpoint writer."""
-    module = _load_module()
-    forwarded: list[object] = []
-
-    def publish(
-        _root: Path,
-        _out: Path,
-        **kwargs: object,
-    ) -> dict[str, object]:
-        forwarded.append(kwargs.get("asymmetric_forward_journal_path"))
-        return {"status": "ready"}
-
-    module.publish_live_checkpoint = publish
-    args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + [
-            "--disable-asymmetric-forward-observer",
-            "--once",
-            "--out",
-            str(tmp_path / "out.json"),
-        ]
-    )
-
-    module._publish_snapshot(args, publish, None, None)
-
-    assert forwarded == [None]
-
-
-def test_public_funding_failure_does_not_suppress_core_checkpoint(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Funding transport failure returns unavailable evidence, never fake zero."""
-    module = _load_module()
-
-    class BrokenReader:
-        def read(self, _symbol: str, _start_ms: int, _end_ms: int) -> object:
-            raise RequestException("rate limited")
-
-    funding_fn = module._failure_isolated_funding_fn(BrokenReader())
-
-    assert funding_fn("ETH", 1, 60_000) is None
-    error = capsys.readouterr().err
-    assert "eligible-policy funding unavailable" in error
-    assert "RequestException" in error
 
 
 def test_once_syncs_cohort_evidence_when_database_is_explicit(tmp_path: Path) -> None:
@@ -480,7 +343,7 @@ def test_real_publisher_receives_durable_portfolio_archive(tmp_path: Path) -> No
         ]
     )
 
-    module._publish_snapshot(args, publish, None, None, archive)
+    module._publish_snapshot(args, publish, None, archive)
 
     assert forwarded == [archive]
 
@@ -515,7 +378,7 @@ def test_continuous_real_publisher_uses_cached_complete_history(
     module.publish_live_checkpoint = publish
     args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--out", str(output)])
 
-    module._publish_snapshot(args, publish, None, None, None)
+    module._publish_snapshot(args, publish, None, None)
 
     assert len(forwarded) == 1
     assert forwarded[0]["run_id"] == "run-current"
@@ -556,7 +419,7 @@ def test_continuous_publisher_refreshes_full_history_after_new_fill(
     module.publish_live_checkpoint = publish
     args = module.build_parser().parse_args(_CHECKPOINT_CONFIG + ["--out", str(output)])
 
-    module._publish_snapshot(args, publish, None, None, None)
+    module._publish_snapshot(args, publish, None, None)
 
     assert snapshot_modes == [True, False]
 

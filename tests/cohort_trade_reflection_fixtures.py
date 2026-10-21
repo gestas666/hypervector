@@ -7,8 +7,8 @@ from datetime import UTC, datetime
 
 from cohort_live_audit_trade_fixture import traded_asset_rows
 from test_multi_asset_live_audit import (
-    _HULK,
-    _RANGE,
+    _TREND,
+    _BREAKOUT,
     _RUN_ID,
     _cohort_rows_with_trade,
 )
@@ -48,7 +48,7 @@ def _with_canonical_copies(
         canonical = [
             deepcopy(value)
             for value in row["payload"]["evaluations"]
-            if value["strategy_id"] == _RANGE
+            if value["strategy_id"] == _BREAKOUT
         ]
         if canonical:
             rows.append(_canonical_event(row, canonical))
@@ -66,7 +66,7 @@ def independent_canonical_rows(
             row["payload"]["evaluations"] = [
                 value
                 for value in row["payload"]["evaluations"]
-                if value["strategy_id"] != _RANGE
+                if value["strategy_id"] != _BREAKOUT
             ]
     return source
 
@@ -222,7 +222,7 @@ def _configure_route(
         evaluation["reference_price"] = 100.0 if entering else 104.0
         if evaluation["symbol"] != "BTC":
             continue
-        if evaluation["strategy_id"] == _HULK:
+        if evaluation["strategy_id"] == _TREND:
             evaluation.update(
                 {
                     "decision_action": "enter_long" if entering else "hold",
@@ -235,7 +235,7 @@ def _configure_route(
                     "confidence": 0.8 if entering else 0.6,
                 }
             )
-        elif evaluation["strategy_id"] == _RANGE:
+        elif evaluation["strategy_id"] == _BREAKOUT:
             evaluation.update(
                 {
                     "primary_regime": "RANGE",
@@ -248,7 +248,7 @@ def _configure_route(
     payload["actions"] = [
         {
             "action": "enter" if entering else "close",
-            "strategy_id": _HULK if entering else "cohort_maximum_hold",
+            "strategy_id": _TREND if entering else "cohort_maximum_hold",
             "symbol": "BTC",
             "side": "long",
             "decision_time_ms": decision_time_ms,

@@ -94,7 +94,6 @@ def _retain_fetcher(
     *,
     config: MultiAssetLiveConfig,
     fetch_bars: CohortBarFetcherProtocol,
-    backtest_lab_root: Path,
 ) -> CohortBarFetcherProtocol:
     """Retain the actual wired callable for the simulated runner."""
     return fetch_bars
@@ -142,7 +141,7 @@ def test_one_candle_session_survives_multiple_assets_and_cycles_then_closes(
 
     monkeypatch.setattr(
         module.ConfiguredMultiAssetIntentPoller,
-        "with_default_collectors",
+        "with_registered_collectors",
         _retain_fetcher,
     )
     monkeypatch.setattr(module, "_run_locked", run)
@@ -170,7 +169,7 @@ def test_candle_session_closes_when_startup_or_runtime_fails(
 
     builder = fail if stage == "collector" else lambda **kwargs: object()
     monkeypatch.setattr(
-        module.ConfiguredMultiAssetIntentPoller, "with_default_collectors", builder
+        module.ConfiguredMultiAssetIntentPoller, "with_registered_collectors", builder
     )
     monkeypatch.setattr(module, "_run_locked", fail)
     with pytest.raises(requests.Timeout, match="bounded test failure"):

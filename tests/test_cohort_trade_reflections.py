@@ -20,7 +20,7 @@ from hypervector.research.cohort_trade_reflections import (
     build_trade_reflections,
 )
 from test_multi_asset_live_audit import (
-    _HULK,
+    _TREND,
     _RUN_ID,
     _SYMBOLS,
     _asset_rows,
@@ -80,7 +80,7 @@ def test_closed_trade_joins_entry_exit_regimes_and_post_exit_path() -> None:
         == (reflections["trades"][0]["lifecycle_id"])
     )
     trade = reflections["trades"][0]
-    assert trade["strategy_id"] == _HULK
+    assert trade["strategy_id"] == _TREND
     assert trade["source_profile_fingerprint"] == "cohort-profile-fingerprint"
     assert trade["side"] == "long"
     assert trade["entry_oid"] == 11
@@ -165,20 +165,20 @@ def test_closed_trade_joins_entry_exit_regimes_and_post_exit_path() -> None:
         "funding_usd": pytest.approx(-0.01),
     }
     assert {key: performance["total"][key] for key in expected_total} == expected_total
-    assert performance["by_strategy"][_HULK] == performance["total"]
+    assert performance["by_strategy"][_TREND] == performance["total"]
     assert performance["mixed_profile_history"] is False
     assert performance["profile_fingerprint_count"] == 1
     assert performance["current_profile"]["total"] == performance["total"]
     repeatability = reflections["repeatability"]
     assert repeatability["contract"]["trade_count_gate"] is False
-    repeatability_pair = repeatability["by_provider_symbol"][f"{_HULK}|BTC"]
+    repeatability_pair = repeatability["by_provider_symbol"][f"{_TREND}|BTC"]
     assert repeatability_pair["closed_trades"] == 1
     assert repeatability_pair["evidence_state"] == "single_trade_only"
     assert repeatability_pair["trades_per_24h_observed"] is None
     assert repeatability_pair["net_pnl_usd"] == pytest.approx(0.97)
     assert repeatability_pair["profit_forecast"] is None
     scorecard_repeatability = report["strategy_scorecard"]["by_provider_symbol"][
-        f"{_HULK}|BTC"
+        f"{_TREND}|BTC"
     ]["repeatability_evidence"]
     assert scorecard_repeatability == repeatability_pair
 
@@ -300,10 +300,10 @@ def test_trade_reflections_identify_cross_provider_exit_controller() -> None:
     )
 
     trade = report["trade_reflections"]["trades"][0]
-    assert trade["entry_strategy_id"] == _HULK
+    assert trade["entry_strategy_id"] == _TREND
     assert trade["exit_controller_strategy_id"] == "test_breakout_1m"
     assert trade["cross_provider_exit"] is True
-    assert trade["exit_context"]["signal_provider"]["strategy_id"] == _HULK
+    assert trade["exit_context"]["signal_provider"]["strategy_id"] == _TREND
     assert trade["exit_context"]["exit_controller"]["strategy_id"] == (
         "test_breakout_1m"
     )
@@ -311,7 +311,7 @@ def test_trade_reflections_identify_cross_provider_exit_controller() -> None:
     assert attribution["cross_provider_exits"] == 1
     assert attribution["same_provider_exits"] == 0
     route = attribution["by_entry_and_exit_controller"][
-        f"{_HULK}|test_breakout_1m"
+        f"{_TREND}|test_breakout_1m"
     ]
     assert route["closed_trades"] == 1
     assert route["net_pnl_usd"] == pytest.approx(0.97)
@@ -328,7 +328,7 @@ def test_restart_overlap_uses_the_trade_source_run_for_entry_context() -> None:
     hulk = next(
         evaluation
         for evaluation in duplicate["payload"]["evaluations"]
-        if evaluation["strategy_id"] == _HULK and evaluation["symbol"] == "BTC"
+        if evaluation["strategy_id"] == _TREND and evaluation["symbol"] == "BTC"
     )
     hulk.update({"primary_regime": "RANGE", "eligible": False})
     asset_rows = _reflection_asset_rows()
@@ -497,7 +497,7 @@ def test_open_exit_plan_prefers_the_bound_provider_contract() -> None:
         asset for asset in snapshot["payload"]["assets"] if asset["symbol"] == "BTC"
     )
     btc["execution_plan"] = {
-        "strategy_id": _HULK,
+        "strategy_id": _TREND,
         "maximum_hold_seconds": 28_800,
         "maximum_hold_policy": "extend_while_regime_supported",
         "hard_maximum_hold_seconds": 86_400,
@@ -537,7 +537,7 @@ def test_open_exit_plan_uses_persisted_runtime_timer_origin() -> None:
         asset for asset in snapshot["payload"]["assets"] if asset["symbol"] == "BTC"
     )
     btc["execution_plan"] = {
-        "strategy_id": _HULK,
+        "strategy_id": _TREND,
         "maximum_hold_seconds": 28_800,
         "maximum_hold_policy": "extend_while_regime_supported",
         "hard_maximum_hold_seconds": 86_400,

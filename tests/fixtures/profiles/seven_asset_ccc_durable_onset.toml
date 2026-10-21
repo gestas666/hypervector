@@ -102,7 +102,7 @@ priority = 20
 timeframe = "5m"
 maximum_entry_delay_seconds = 60
 execution_symbols = []
-execution = { entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", minimum_stop_bps = 20.0, maximum_stop_bps = 75.0, target_policy = "reward_risk", target_r_multiple = 3.0, maximum_hold_seconds = 86400, profit_lock_policy = "btc_hulk_delayed_component_exit_v2" }
+execution = { entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", minimum_stop_bps = 20.0, maximum_stop_bps = 75.0, target_policy = "reward_risk", target_r_multiple = 3.0, maximum_hold_seconds = 86400, profit_lock_policy = "none" }
 
 [[providers]]
 strategy_id = "test_short_drift_5m"

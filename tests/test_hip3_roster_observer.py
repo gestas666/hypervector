@@ -16,8 +16,18 @@ from hypervector.live.hyperliquid_protocol import (
     SolVenuePreflight,
 )
 from hypervector.research.hip3_roster_observer import (
-    ACTIVE_HIP3_MARKETS,
+    Hip3MarketSpec,
     Hip3RosterObserver,
+)
+
+# A declared roster of neutral fixture markets and their venue leverage ceilings.
+_MARKETS = (
+    Hip3MarketSpec("xyz:AAA", 20),
+    Hip3MarketSpec("xyz:BBB", 10),
+    Hip3MarketSpec("xyz:CCC", 10),
+    Hip3MarketSpec("xyz:DDD", 20),
+    Hip3MarketSpec("xyz:EEE", 20),
+    Hip3MarketSpec("xyz:FFF", 10),
 )
 
 
@@ -88,13 +98,13 @@ class _Reader:
         )
 
 
-def test_checkpoint_reports_exact_active_roster_and_historical_wti() -> None:
-    """Active Brent must not be mislabeled as live WTI."""
+def test_checkpoint_reports_exactly_the_declared_roster() -> None:
+    """The checkpoint lists the declared markets and claims no authority."""
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
-    observer = Hip3RosterObserver(readers=readers)
+    observer = Hip3RosterObserver(readers=readers, markets=_MARKETS)
 
     result = observer.snapshot(datetime(2026, 8, 6, 16, 0, tzinfo=UTC))
 
@@ -112,19 +122,17 @@ def test_checkpoint_reports_exact_active_roster_and_historical_wti() -> None:
     assert result["automatic_promotion"] is False
     assert result["runtime_strategy_changed"] is False
     assert result["signing_client_constructed"] is False
-    assert result["requested_aliases"]["WTIOIL"]["live_symbol"] is None
-    assert result["requested_aliases"]["WTIOIL"]["historical_symbol"] == "cash:WTI"
-    assert result["requested_aliases"]["WTIOIL"]["status"] == "historical_only"
+    assert "requested_aliases" not in result
 
 
 def test_checkpoint_exposes_depth_windows_and_account_truth() -> None:
     """The TUI boundary needs useful book and account data rather than zeros."""
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
 
-    result = Hip3RosterObserver(readers=readers).snapshot(
+    result = Hip3RosterObserver(readers=readers, markets=_MARKETS).snapshot(
         datetime(2026, 8, 6, 16, 0, tzinfo=UTC)
     )
     market = result["markets"][0]
@@ -144,7 +152,7 @@ def test_checkpoint_publishes_exact_hourly_funding_from_one_source_read() -> Non
     """The existing TUI funding field must receive signed hourly rates, including zero."""
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
     rates = dict(zip(readers, (0.0000125, -0.00002, 0.0, None, 0.00003, 0.00001)))
     calls = 0
@@ -155,7 +163,7 @@ def test_checkpoint_publishes_exact_hourly_funding_from_one_source_read() -> Non
         calls += 1
         return rates
 
-    result = Hip3RosterObserver(readers=readers, funding_source=funding).snapshot(
+    result = Hip3RosterObserver(readers=readers, markets=_MARKETS, funding_source=funding).snapshot(
         datetime(2026, 9, 11, 14, 0, tzinfo=UTC)
     )
 
@@ -173,24 +181,24 @@ def test_checkpoint_rejects_invalid_funding_source_values(value: object) -> None
     """Invalid funding cannot become a plausible number in the native display."""
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
     rates = dict.fromkeys(readers, value)
-    observer = Hip3RosterObserver(readers=readers, funding_source=lambda: rates)
+    observer = Hip3RosterObserver(readers=readers, markets=_MARKETS, funding_source=lambda: rates)
     with pytest.raises(ValueError, match="funding.*finite number"):
         observer.snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
 
 
-@pytest.mark.parametrize("rates", [{}, {"cash:WTI": 0.001}])
+@pytest.mark.parametrize("rates", [{}, {"xyz:ZZZ": 0.001}])
 def test_checkpoint_rejects_funding_roster_mismatch(
     rates: dict[str, float | None],
 ) -> None:
     """A missing or wrong namespace must not silently assign another market's rate."""
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
-    observer = Hip3RosterObserver(readers=readers, funding_source=lambda: rates)
+    observer = Hip3RosterObserver(readers=readers, markets=_MARKETS, funding_source=lambda: rates)
     with pytest.raises(ValueError, match="funding roster mismatch"):
         observer.snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
 
@@ -199,9 +207,9 @@ def test_checkpoint_explicitly_labels_unconfigured_funding() -> None:
     """Legacy callers remain compatible while exposing why funding is absent."""
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
-    result = Hip3RosterObserver(readers=readers).snapshot(
+    result = Hip3RosterObserver(readers=readers, markets=_MARKETS).snapshot(
         datetime(2026, 9, 11, 14, 0, tzinfo=UTC)
     )
     assert all(row["venue"]["funding_rate_hourly"] is None for row in result["markets"])
@@ -217,9 +225,9 @@ def test_configured_funding_source_cannot_silently_become_unconfigured(
     """A malformed configured source must not pass as a legacy optional omission."""
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
-    observer = Hip3RosterObserver(readers=readers, funding_source=lambda: response)
+    observer = Hip3RosterObserver(readers=readers, markets=_MARKETS, funding_source=lambda: response)
     with pytest.raises(ValueError, match="funding source must return a mapping"):
         observer.snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
 
@@ -228,7 +236,7 @@ def test_checkpoint_refreshes_funding_without_reusing_failed_previous_poll() -> 
     """A failed refresh propagates to the sidecar's unavailable-state publisher."""
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
     calls = 0
 
@@ -240,7 +248,7 @@ def test_checkpoint_refreshes_funding_without_reusing_failed_previous_poll() -> 
             raise ValueError("funding refresh failed")
         return dict.fromkeys(readers, 0.00001)
 
-    observer = Hip3RosterObserver(readers=readers, funding_source=funding)
+    observer = Hip3RosterObserver(readers=readers, markets=_MARKETS, funding_source=funding)
     observer.snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
     with pytest.raises(ValueError, match="funding refresh failed"):
         observer.snapshot(datetime(2026, 9, 11, 14, 2, tzinfo=UTC))
@@ -250,10 +258,10 @@ def test_checkpoint_exposes_effective_hip3_fees_not_raw_account_rates() -> None:
     """Growth-mode telemetry must not label base user fees as executable rates."""
     readers = {
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
 
-    result = Hip3RosterObserver(readers=readers).snapshot(
+    result = Hip3RosterObserver(readers=readers, markets=_MARKETS).snapshot(
         datetime(2026, 8, 6, 16, 0, tzinfo=UTC)
     )
     venue = result["markets"][0]["venue"]
@@ -276,10 +284,10 @@ def test_checkpoint_preserves_unresolved_growth_mode_without_fake_fee() -> None:
             spec.expected_max_leverage,
             growth_mode=None if spec.symbol == "xyz:DDD" else True,
         )
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
 
-    result = Hip3RosterObserver(readers=readers).snapshot(
+    result = Hip3RosterObserver(readers=readers, markets=_MARKETS).snapshot(
         datetime(2026, 8, 6, 16, 0, tzinfo=UTC)
     )
     ddd = next(row for row in result["markets"] if row["symbol"] == "xyz:DDD")
@@ -298,11 +306,11 @@ def test_checkpoint_rejects_reader_identity_mismatch() -> None:
             spec.expected_max_leverage,
             wrong_symbol=spec.symbol == "xyz:DDD",
         )
-        for spec in ACTIVE_HIP3_MARKETS
+        for spec in _MARKETS
     }
 
     with pytest.raises(ValueError, match="xyz:DDD reader returned xyz:WRONG"):
-        Hip3RosterObserver(readers=readers).snapshot(
+        Hip3RosterObserver(readers=readers, markets=_MARKETS).snapshot(
             datetime(2026, 8, 6, 16, 0, tzinfo=UTC)
         )
 

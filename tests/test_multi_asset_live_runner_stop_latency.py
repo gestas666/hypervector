@@ -643,7 +643,7 @@ def test_run_live_hands_one_latch_to_the_candle_reads_and_the_runner(
 
     monkeypatch.setattr(
         module.ConfiguredMultiAssetIntentPoller,
-        "with_default_collectors",
+        "with_registered_collectors",
         _retain_fetcher,
     )
     monkeypatch.setattr(module, "_run_locked", run)

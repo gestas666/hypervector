@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from hypervector.live.bidirectional_intents import StrategyIntent
+from hypervector.live.canonical_regime_telemetry import CANONICAL_REGIME_TELEMETRY_STRATEGY
 from hypervector.live.cohort_regime_routing import attach_regime_preferences
 from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
@@ -110,7 +111,7 @@ def _evaluation(
     context_15m: str,
     *,
     structural_direction: str = "neutral",
-    strategy_id: str = "test_breakout_1m",
+    strategy_id: str = CANONICAL_REGIME_TELEMETRY_STRATEGY,
     decision_time_ms: int = 1_785_600_000_000,
 ) -> ProviderEvaluation:
     return ProviderEvaluation(

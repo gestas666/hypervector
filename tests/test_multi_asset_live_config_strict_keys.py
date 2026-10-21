@@ -34,13 +34,13 @@ def test_fixture_profiles_keep_their_fingerprints() -> None:
         load_multi_asset_live_config(
             ADAPTIVE_EIGHT_ASSET, mode="observe"
         ).profile_fingerprint
-        == "217720aba4e61b7001471258522f03bb02cac8f42b660ba19a049981aa4d7ae6"
+        == "a458a0d66e9ab524ab13547cf772e72c5751880ea6abfe8c489f1468920aa325"
     )
     assert (
         load_multi_asset_live_config(
             EXIT_POLICY_V2, mode="observe"
         ).profile_fingerprint
-        == "b470ca1199fd14913af8e7b1c0d022b1bd3f1a24a263a041b5ad84dc542278c9"
+        == "4a7c74b468c7a2466a0d3b3150ce1b05db8e4ec0c70ee8f9453e1a78496f42be"
     )
 
 

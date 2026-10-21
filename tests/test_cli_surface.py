@@ -199,10 +199,6 @@ def exec_calls(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, list[str]]]:
         "hypervector.live.multi_asset_live_config.load_multi_asset_live_config",
         lambda path, mode: {"path": path, "mode": mode},
     )
-    monkeypatch.setattr(
-        "hypervector.live.cohort_process_commands.require_live_provider_dependencies",
-        lambda config: None,
-    )
     return calls
 
 

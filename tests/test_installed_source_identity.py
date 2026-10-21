@@ -14,9 +14,6 @@ def test_installed_identity_includes_lock_metadata_and_command_contract(
 ) -> None:
     """A wheel must bind the live entry point, declarative options and dependencies."""
     package = tmp_path / "hypervector"
-    provider = tmp_path / "provider"
-    provider.mkdir()
-    (provider / "__init__.py").write_text('"""fixture provider"""')
     for name in [
         "operations/multi_asset_bidirectional_live.py",
         "_build/pyproject.toml",
@@ -26,18 +23,16 @@ def test_installed_identity_includes_lock_metadata_and_command_contract(
         target = package / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("{}" if name.endswith("json") else "fixture")
-    sources = discover_installed_cohort_sources(provider, package_root=package)
+    sources = discover_installed_cohort_sources(package_root=package)
     assert set(sources.values()) == {
         path.resolve() for path in package.rglob("*") if path.is_file()
-    } | {provider / "__init__.py"}
+    }
 
 
 def test_installed_runtime_refuses_missing_dependency_lock(tmp_path: Path) -> None:
     """Missing wheel provenance must be a start failure, not an empty identity."""
-    provider = tmp_path / "provider"
-    provider.mkdir()
     with pytest.raises(ValueError, match="metadata|lock"):
-        discover_installed_cohort_sources(provider, package_root=tmp_path)
+        discover_installed_cohort_sources(package_root=tmp_path)
 
 
 def test_installed_identity_binds_independent_supervision_sources(
@@ -45,9 +40,6 @@ def test_installed_identity_binds_independent_supervision_sources(
 ) -> None:
     """A watcher/restart policy change must alter the implementation evidence."""
     package = tmp_path / "hypervector"
-    provider = tmp_path / "provider"
-    provider.mkdir()
-    (provider / "__init__.py").write_text('"""fixture provider"""')
     for name in [
         "operations/multi_asset_bidirectional_live.py",
         "_build/pyproject.toml",
@@ -59,5 +51,5 @@ def test_installed_identity_binds_independent_supervision_sources(
     supervisor = tmp_path / "hypervector_supervision/cohort_backend_supervisor.py"
     supervisor.parent.mkdir()
     supervisor.write_text('"""independent supervisor fixture"""')
-    sources = discover_installed_cohort_sources(provider, package_root=package)
+    sources = discover_installed_cohort_sources(package_root=package)
     assert supervisor.resolve() in sources.values()

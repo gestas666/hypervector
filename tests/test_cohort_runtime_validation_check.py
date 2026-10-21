@@ -23,7 +23,6 @@ PROFILE_A = CHAIN / "profile_a.toml"
 PROFILE_B = CHAIN / "profile_b.toml"
 ROLLBACK_B_TO_A = CHAIN / "rollback_b_to_a.toml"
 FIXTURE_PROFILES = Path("tests/fixtures/profiles")
-HULK_CANARY = FIXTURE_PROFILES / "cohort_base.toml"
 # Profile A keeps HYPE as a watch-only provider (execution_symbols = []) with a side
 # override: the observe-only shape whose leftover sizing table broke the
 # 2026-09-22 armed start.
@@ -232,59 +231,42 @@ def test_supervised_path_check_names_each_divergence() -> None:
     assert "cohort_ledger" not in message.split("; ")[-1]
 
 
-def test_a_strategy_id_without_a_default_collector_is_refused_in_live_mode(
+def test_an_unregistered_strategy_id_is_refused_in_live_mode(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """The armed start would refuse it only after the pre-arm checks had passed."""
+    """A misspelt provider id is refused before the armed start, by name."""
     profile = _write_variant(
         tmp_path,
         PROFILE_B,
         'strategy_id = "test_channel_short_15m"',
-        'strategy_id = "hourly_donchian_20_10_atr20_strong_shrot_v1"',
+        'strategy_id = "test_chanel_short_15m"',
     )
     monkeypatch.setattr("sys.argv", ["check", "--config", str(profile)])
 
     assert check.main() == 2
 
     assert (
-        "loader refused: default collector is not defined for provider: "
-        "hourly_donchian_20_10_atr20_strong_shrot_v1"
+        "loader refused: provider strategy_id is not registered: "
+        "test_chanel_short_15m"
     ) in capsys.readouterr().err
 
 
-def test_live_collectors_use_the_given_backtest_lab_root(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """A lab-backed provider needs the same dependency root the armed start uses."""
-    missing = tmp_path / "no-lab"
-    monkeypatch.setattr(
-        "sys.argv",
-        ["check", "--config", str(HULK_CANARY), "--backtest-lab-root", str(missing)],
-    )
-
-    assert check.main() == 2
-
-    assert f"backtest-lab dependency root not found: {missing}" in (
-        capsys.readouterr().err
-    )
-
-
-def test_the_default_backtest_lab_root_does_not_depend_on_the_working_directory(
+def test_live_check_builds_every_collector_from_the_registry(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The supervisor runs the entrypoint from the repository root; so does the check."""
-    roots: list[Path] = []
+    """The live check builds each provider's registered collector, as the start does."""
+    built: list[str] = []
     monkeypatch.setattr(
         check,
-        "build_default_collector",
-        lambda _provider, _config, root: roots.append(root),
+        "build_provider_collector",
+        lambda provider, _config: built.append(provider.strategy_id),
     )
     monkeypatch.chdir(tmp_path)
 
     assert check.check(REPOSITORY_ROOT / PROFILE_B, mode="live") == []
 
-    entrypoint_default = REPOSITORY_ROOT / ".." / "backtest-lab" / "backtest_lab"
-    assert set(roots) == {entrypoint_default.resolve()}
+    config = load_multi_asset_live_config(REPOSITORY_ROOT / PROFILE_B, mode="live")
+    assert built == [provider.strategy_id for provider in config.providers]
 
 
 @pytest.mark.parametrize(

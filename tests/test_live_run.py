@@ -200,34 +200,6 @@ def test_start_live_daemon_refuses_without_secrets_flag(tmp_path: Path):
     assert transport.calls == []
 
 
-def test_generic_live_daemon_refuses_hypervelocity_export(tmp_path: Path) -> None:
-    """Market-IOC live routing cannot execute the post-only strategy contract."""
-    from hypervector.live.runner import start_live_daemon
-
-    export = _write_strict_export(
-        tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
-    )
-    transport = RecordingTransport()
-
-    with pytest.raises(RuntimeError, match="use hypervelocity-live-run"):
-        start_live_daemon(
-            export_dir=export,
-            data_root=tmp_path / "data",
-            policy=_armed_policy(),
-            wallet_address="0xabc",
-            private_key="k",
-            transport=transport,
-            warm_ohlcv=fixture_ohlcv(n_bars=50, drift=5.0),
-            poll_fn=lambda after_ts=None: pd.DataFrame(),
-            max_live_bars=0,
-            install_signal_handlers=False,
-            sleep_fn=lambda _s: None,
-        )
-
-    assert transport.calls == []
-
-
 def test_start_live_daemon_writes_live_ledger_and_places_on_live_phase(
     tmp_path: Path,
 ):

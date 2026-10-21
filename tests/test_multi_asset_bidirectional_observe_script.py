@@ -187,7 +187,7 @@ def test_observer_ledger_override_refuses_configured_root() -> None:
 
 
 def test_observer_builds_hip3_only_poller_without_fake_core_route() -> None:
-    """A HIP-3 study must not need an unrelated core strategy provider."""
+    """A HIP-3-only profile needs no core-perp provider or canonical route."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
         "tests/fixtures/profiles/index_fresh15_pressure.toml",
@@ -196,7 +196,6 @@ def test_observer_builds_hip3_only_poller_without_fake_core_route() -> None:
 
     poller = module._build_observer_poller(
         config,
-        backtest_lab_root=Path("unused"),
         fetch_bars=lambda symbol, timeframe, days, *, end_ms=None: None,
     )
 

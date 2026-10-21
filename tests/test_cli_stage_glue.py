@@ -697,7 +697,7 @@ def test_live_check_reports_credential_presence_as_booleans_only(
     assert SIGNING_KEY not in os.environ
 
 
-def _fake_profile(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, *, deps_error=None):
+def _fake_profile(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     ledger = tmp_path / "live" / "bidirectional_cohort" / "cohort.jsonl"
     ledger.parent.mkdir(parents=True)
     config = SimpleNamespace(
@@ -712,16 +712,8 @@ def _fake_profile(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, *, deps_error
         modes.append(mode)
         return config
 
-    def deps(_config: object) -> None:
-        if deps_error is not None:
-            raise deps_error
-
     monkeypatch.setattr(
         "hypervector.live.multi_asset_live_config.load_multi_asset_live_config", load
-    )
-    monkeypatch.setattr(
-        "hypervector.live.cohort_process_commands.require_live_provider_dependencies",
-        deps,
     )
     return config, modes
 
@@ -741,7 +733,7 @@ def test_live_check_with_a_ready_profile_exits_zero(
     assert modes == ["observe"]
     profile = report["profile"]
     assert profile["profile_fingerprint"] == "f" * 64
-    assert profile["provider_dependencies_ok"] is True
+    assert "provider_dependencies_ok" not in profile
     assert profile["stop_file"]["present"] is False
 
     config.stop_file.write_text("stop\n")
@@ -752,19 +744,13 @@ def test_live_check_with_a_ready_profile_exits_zero(
     assert any("transition drain evidence remains" in b for b in blockers)
 
 
-def test_live_check_reports_profile_and_dependency_failures(
+def test_live_check_reports_a_profile_that_does_not_load(
     dotenv: Path,
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    _fake_profile(
-        monkeypatch, tmp_path, deps_error=RuntimeError("index observer stale")
-    )
-    assert main(["live", "check", "--config", "p.toml"]) == 1
-    report = json.loads(capsys.readouterr().out)
-    assert report["profile"]["provider_dependencies_ok"] is False
-    assert any("index observer stale" in b for b in report["blockers"])
+    _fake_profile(monkeypatch, tmp_path)
 
     def broken(path: Path, *, mode: str) -> None:
         raise ValueError("unknown key in [runtime]")

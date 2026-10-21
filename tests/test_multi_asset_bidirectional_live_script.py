@@ -54,7 +54,6 @@ def _load_module() -> ModuleType:
 def _args(**overrides: object) -> argparse.Namespace:
     values: dict[str, object] = {
         "config": Path("tests/fixtures/profiles/cohort_base.toml"),
-        "backtest_lab_root": Path("../backtest-lab/backtest_lab"),
         "enabled": False,
         "i_accept_live_risk": False,
         "resume_transition_drain": False,
@@ -314,7 +313,7 @@ def test_locked_start_refuses_before_adapter_when_backup_fails(
         raise AssertionError("adapter construction bypassed failed backup")
 
     monkeypatch.setattr(live_script, "_await_venue", lambda _config: None)
-    monkeypatch.setattr(live_script, "_implementation_sources", lambda _args: {"fixture.py": Path(__file__)})
+    monkeypatch.setattr(live_script, "_implementation_sources", lambda: {"fixture.py": Path(__file__)})
     monkeypatch.setattr(
         live_script,
         "create_cohort_prestart_backup",
@@ -864,16 +863,14 @@ def test_locked_start_snapshots_discovered_implementation_before_adapter(
         loaded,
         cohort_ledger=tmp_path / "data/live/bidirectional_cohort/decisions.jsonl",
     )
-    provider_root = tmp_path / "backtest_lab"
     expected = {"provider_0000": tmp_path / "provider.py"}
     # Discovery only returns existing files, and the start hashes them.
     expected["provider_0000"].write_text("SIGNAL = 1\n", encoding="utf-8")
     discovered: dict[str, Path] = {}
     adapter_constructed = False
 
-    def discover(repository: Path, provider: Path) -> dict[str, Path]:
+    def discover(repository: Path) -> dict[str, Path]:
         assert repository == SCRIPT.parents[3].resolve()
-        assert provider == provider_root.resolve()
         discovered.update(expected)
         return expected
 
@@ -901,11 +898,7 @@ def test_locked_start_snapshots_discovered_implementation_before_adapter(
 
     with pytest.raises(CohortPrestartBackupError, match="implementation capture"):
         live_script._run_locked(
-            _args(
-                backtest_lab_root=provider_root,
-                enabled=True,
-                i_accept_live_risk=True,
-            ),
+            _args(enabled=True, i_accept_live_risk=True),
             config,
             live_script.CredentialPresence(True, True),
             Mock(),
@@ -1101,7 +1094,7 @@ def test_configuration_refusal_precedes_the_backup_and_the_venue_client(
     monkeypatch.setattr(live_script, "create_armed_multi_asset_adapters", forbidden)
     monkeypatch.setattr(
         live_script.ConfiguredMultiAssetIntentPoller,
-        "with_default_collectors",
+        "with_registered_collectors",
         forbidden,
     )
     monkeypatch.setattr(

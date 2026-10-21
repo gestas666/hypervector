@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-_HULK = "test_trend_5m"
+_TREND = "test_trend_5m"
 
 
 def traded_asset_rows(run_id: str) -> list[dict[str, object]]:
@@ -34,7 +34,7 @@ def _entry_payloads() -> list[tuple[str, dict[str, object]]]:
         (
             "regime_decision",
             {
-                "strategy_id": _HULK,
+                "strategy_id": _TREND,
                 "decision_time_ms": 1_785_600_000_000,
                 "decision_action": "enter_long",
                 "primary_regime": "TREND_UP",
@@ -95,7 +95,7 @@ def _exit_payloads() -> list[tuple[str, dict[str, object]]]:
         (
             "regime_decision",
             {
-                "strategy_id": _HULK,
+                "strategy_id": _TREND,
                 "decision_time_ms": 1_785_600_020_000,
                 "decision_action": "long_exit",
                 "primary_regime": "TRANSITION",

@@ -125,7 +125,6 @@ def test_stage_preserves_provider_direction_overrides(tmp_path: Path) -> None:
         if row.strategy_id == "test_breakout_1m"
     )
     assert provider.execution_side_overrides == (("ETH", frozenset({"long"})),)
-    assert provider.entry_context_overrides == (("ETH", "dual_mtf_not_opposed"),)
 
 
 def test_stage_preserves_provider_symbol_sizing_overrides(tmp_path: Path) -> None:

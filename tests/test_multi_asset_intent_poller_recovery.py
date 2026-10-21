@@ -86,7 +86,7 @@ def test_recovery_fetch_bridges_an_outage_longer_than_incremental_window() -> No
     collectors = {
         provider.strategy_id: _ContiguousCollector(
             provider.strategy_id,
-            5 if provider.timeframe == "30m" else 1,
+            {"1m": 1, "5m": 5, "15m": 15}[provider.timeframe],
         )
         for provider in config.providers
     }

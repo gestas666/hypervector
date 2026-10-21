@@ -1,6 +1,6 @@
-"""A new profile reuses a live strategy provider with its own execution values.
+"""A new profile reuses a registered provider with its own execution values.
 
-Provider validators refuse only what a provider's signal cannot compute or
+Provider registrations refuse only what a provider's signal cannot compute or
 bind: the symbols it evaluates, its signal clock, the sides it emits, the
 position interaction it implements, the anchors its intents carry, and
 observer-only scope. Stops, targets, holds, entry delays, execution scope and
@@ -17,59 +17,14 @@ import re
 import pytest
 
 import hypervector.operations.cohort_runtime_validation_check as check
-from hypervector.live.btc_hulk_robust_short_provider import (
-    HULK_ROBUST_SHORT_STRATEGY,
-    HULK_TUNED_SHORT_STRATEGY,
-)
-from hypervector.live.btc_liquidity_sweep_long_provider import (
-    LIQUIDITY_SWEEP_LONG_STRATEGY,
-    LIQUIDITY_SWEEP_LONG_TARGET60_STRATEGY,
-)
-from hypervector.live.directional_range_onset_provider import (
-    ETH_RANGE_LONG_STRATEGY,
-    SOL_RANGE_SHORT_STRATEGY,
-)
-from hypervector.live.eth_breakout_transfer_provider import (
-    ETH_BREAKOUT_TRANSFER_STRATEGY,
-)
-from hypervector.live.hip3_cash_open_gap_provider import HIP3_BBB_CASH_OPEN_STRATEGY
-from hypervector.live.hip3_cohort_providers import (
-    HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
-)
-from hypervector.live.hip3_fresh15_journal_provider import (
-    HIP3_INDEX_FRESH15_V3_STRATEGY,
-    HIP3_CCC_FRESH15_V4_STRATEGY,
-)
-from hypervector.live.hourly_price_provider import (
-    DONCHIAN8_STRATEGY,
-    DONCHIAN20_STRATEGY,
-    PROTECTED_DONCHIAN20_STRATEGY,
-)
-from hypervector.live.hype_breakout_compression_provider import (
-    HYPE_COMPRESSION_BREAKOUT_STRATEGY,
-)
-from hypervector.live.hype_compression_alignment_provider import (
-    HYPE_COMPRESSION_ALIGNMENT_STRATEGY,
-)
-from hypervector.live.hype_native_breakout_provider import (
-    HYPE_NATIVE_BREAKOUT_LONG_STRATEGY,
-    HYPE_NATIVE_BREAKOUT_STRATEGY,
-)
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
     MultiAssetLiveConfigError,
     load_multi_asset_live_config,
 )
-from hypervector.live.multi_asset_route_contract_validation import (
-    HULK_BIDIRECTIONAL_STRATEGY,
-)
 from hypervector.live.research_pending_market_observer import (
     RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY,
 )
-from hypervector.live.bbb_cash_session_breakout_provider import (
-    BBB_CASH_SESSION_LONG_STRATEGY,
-)
-from hypervector.live.ltc_donchian_provider import LTC_DONCHIAN_LONG_STRATEGY
 
 PROFILE_B = Path("tests/fixtures/cohort_chain/profile_b.toml")
 _BOTH = ["long", "short"]
@@ -120,23 +75,23 @@ def _provider(
     }
 
 
-# Every provider with a dedicated validator, configured with values that none of
-# the removed profiles used: different stops, targets, holds, entry delays,
-# side and execution scope, exit-policy combinations and overrides.
+# Registered providers configured with deliberately varied execution values:
+# stops, targets, holds, entry delays, side and execution scope, exit-policy
+# combinations and overrides.
 _REUSED = {
-    "liquidity_sweep": _provider(
-        LIQUIDITY_SWEEP_LONG_STRATEGY,
+    "fixed_target_long": _provider(
+        "test_long_stop_1m",
         ["BTC"],
         ["long"],
-        "1h",
+        "1m",
         _fixed(90.0, 7_200, target_policy="fixed_bps", target_bps=150.0),
         maximum_entry_delay_seconds=45,
     ),
-    "liquidity_sweep_target60": _provider(
-        LIQUIDITY_SWEEP_LONG_TARGET60_STRATEGY,
+    "reward_risk_with_profit_lock": _provider(
+        "test_long_target_1m",
         ["BTC"],
         _BOTH,
-        "1h",
+        "1m",
         _fixed(
             45.0,
             3_600,
@@ -150,23 +105,23 @@ _REUSED = {
         ),
         maximum_entry_delay_seconds=120,
     ),
-    "ltc_donchian": _provider(
-        LTC_DONCHIAN_LONG_STRATEGY,
+    "safety_overlay": _provider(
+        "test_channel_long_15m",
         ["LTC"],
         ["long"],
         "15m",
         _fixed(150.0, 604_800, safety_stop_overlay=True),
     ),
-    "hourly_donchian": _provider(
-        DONCHIAN20_STRATEGY,
+    "fixed_target_two_markets": _provider(
+        "test_channel_15m",
         ["ETH", "xyz:AAA"],
         _BOTH,
         "15m",
         _fixed(120.0, 43_200, target_policy="fixed_bps", target_bps=240.0),
         maximum_entry_delay_seconds=300,
     ),
-    "hourly_donchian_protected": _provider(
-        PROTECTED_DONCHIAN20_STRATEGY,
+    "structural_with_profit_lock": _provider(
+        "test_channel_fast_15m",
         ["BTC", "HYPE"],
         _BOTH,
         "15m",
@@ -180,8 +135,8 @@ _REUSED = {
             profit_lock_giveback_bps=40.0,
         ),
     ),
-    "hourly_donchian_overrides": _provider(
-        DONCHIAN8_STRATEGY,
+    "side_and_stop_overrides": _provider(
+        "test_channel_short_15m",
         ["xyz:FFF"],
         _BOTH,
         "15m",
@@ -189,21 +144,14 @@ _REUSED = {
         execution_side_overrides={"xyz:FFF": ["short"]},
         stop_bps_overrides={"xyz:FFF": 150.0},
     ),
-    "eth_range_long": _provider(
-        ETH_RANGE_LONG_STRATEGY,
+    "recipe_exit_ignored": _provider(
+        "test_fade_1m",
         ["ETH"],
         ["long"],
         "1m",
         _fixed(90.0, 3_600, provider_recipe_exit_policy="ignore"),
     ),
-    "sol_range_short": _provider(
-        SOL_RANGE_SHORT_STRATEGY,
-        ["SOL"],
-        _BOTH,
-        "1m",
-        _fixed(70.0, 14_400, target_policy="fixed_bps", target_bps=140.0),
-    ),
-    "range_onset": _provider(
+    "short_hold_fixed_target": _provider(
         "test_breakout_1m",
         ["ETH", "SOL"],
         _BOTH,
@@ -211,18 +159,11 @@ _REUSED = {
         _fixed(45.0, 7_200, target_policy="fixed_bps", target_bps=90.0),
         maximum_entry_delay_seconds=30,
     ),
-    "hulk_bidirectional": _provider(
-        HULK_BIDIRECTIONAL_STRATEGY,
-        ["ETH", "SOL"],
-        _BOTH,
-        "30m",
-        _fixed(50.0, 3_600, target_policy="fixed_bps", target_bps=100.0),
-    ),
-    "hulk_robust_short": _provider(
-        HULK_ROBUST_SHORT_STRATEGY,
+    "structural_reward_risk_short": _provider(
+        "test_short_trend_5m",
         ["BTC"],
         ["short"],
-        "30m",
+        "5m",
         _structural(
             30.0,
             120.0,
@@ -230,40 +171,18 @@ _REUSED = {
             target_policy="reward_risk",
             target_r_multiple=2.0,
             provider_recipe_exit_policy="honor",
-            profit_lock_policy="btc_hulk_delayed_component_exit_v2",
         ),
     ),
-    "hulk_tuned_short": _provider(
-        HULK_TUNED_SHORT_STRATEGY,
-        ["BTC"],
-        _BOTH,
-        "30m",
-        _fixed(80.0, 7_200),
-    ),
-    "hype_native": _provider(
-        HYPE_NATIVE_BREAKOUT_STRATEGY,
-        ["HYPE"],
-        ["long"],
-        "1m",
-        _fixed(60.0, 3_600, target_policy="fixed_bps", target_bps=120.0),
-    ),
-    "hype_native_long": _provider(
-        HYPE_NATIVE_BREAKOUT_LONG_STRATEGY,
+    "execution_side_override": _provider(
+        "test_squeeze_1m",
         ["HYPE"],
         _BOTH,
         "1m",
         _fixed(100.0, 14_400, provider_recipe_exit_policy="ignore"),
         execution_side_overrides={"HYPE": ["short"]},
     ),
-    "hype_compression": _provider(
-        HYPE_COMPRESSION_BREAKOUT_STRATEGY,
-        ["HYPE"],
-        _BOTH,
-        "1m",
-        _fixed(60.0, 7_200),
-    ),
-    "hype_alignment": _provider(
-        HYPE_COMPRESSION_ALIGNMENT_STRATEGY,
+    "extended_hold": _provider(
+        "test_alignment_1m",
         ["HYPE"],
         _BOTH,
         "1m",
@@ -276,30 +195,30 @@ _REUSED = {
             provider_recipe_exit_policy="honor",
         ),
     ),
-    "eth_transfer": _provider(
-        ETH_BREAKOUT_TRANSFER_STRATEGY,
+    "reward_risk": _provider(
+        "test_continuation_1m",
         ["ETH"],
         _BOTH,
         "1m",
         _fixed(45.0, 3_600, target_policy="reward_risk", target_r_multiple=3.0),
     ),
-    "bbb_cash_open_observed": _provider(
-        HIP3_BBB_CASH_OPEN_STRATEGY,
+    "observed_absolute_target": _provider(
+        "test_anchor_target_15m",
         ["xyz:BBB"],
         _BOTH,
         "15m",
         _fixed(120.0, 7_200, target_policy="absolute_anchor"),
         execution_symbols=[],
     ),
-    "bbb_cash_session": _provider(
-        BBB_CASH_SESSION_LONG_STRATEGY,
-        ["xyz:BBB"],
+    "single_side_fixed_target": _provider(
+        "test_btc_long_only_15m",
+        ["BTC"],
         ["long"],
         "15m",
         _fixed(90.0, 7_200, target_policy="fixed_bps", target_bps=150.0),
     ),
-    "fresh15_commodity": _provider(
-        HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
+    "hip3_profit_lock": _provider(
+        "test_session_a_15m",
         ["xyz:DDD"],
         _BOTH,
         "15m",
@@ -311,27 +230,6 @@ _REUSED = {
             profit_lock_floor_bps=30.0,
             profit_lock_giveback_bps=60.0,
         ),
-    ),
-    "fresh15_index": _provider(
-        HIP3_INDEX_FRESH15_V3_STRATEGY,
-        ["xyz:AAA"],
-        _BOTH,
-        "15m",
-        _fixed(
-            60.0,
-            21_600,
-            profit_lock_policy="completed_bar_trailing",
-            profit_lock_activation_bps=80.0,
-            profit_lock_floor_bps=20.0,
-            profit_lock_giveback_bps=40.0,
-        ),
-    ),
-    "fresh15_ccc_both_sides": _provider(
-        HIP3_CCC_FRESH15_V4_STRATEGY,
-        ["xyz:CCC"],
-        _BOTH,
-        "15m",
-        _fixed(100.0, 43_200),
     ),
     "research_observer": _provider(
         RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY,
@@ -364,12 +262,8 @@ def _key(key: str) -> str:
 def _companion(provider: dict[str, object]) -> dict[str, object]:
     """A second executable market, since a live cohort needs two assets."""
     candidates = (
-        _provider(
-            LIQUIDITY_SWEEP_LONG_STRATEGY, ["BTC"], ["long"], "1h", _fixed(60.0, 3_600)
-        ),
-        _provider(
-            ETH_BREAKOUT_TRANSFER_STRATEGY, ["ETH"], _BOTH, "1m", _fixed(60.0, 3_600)
-        ),
+        _provider("test_mirror_1m", ["BTC"], ["long"], "1m", _fixed(60.0, 3_600)),
+        _provider("test_pullback_1m", ["ETH"], _BOTH, "1m", _fixed(60.0, 3_600)),
     )
     return next(
         candidate
@@ -441,12 +335,12 @@ def test_a_reused_provider_loads_with_its_own_execution_values(
     assert check.check(profile, mode="observe") == []
 
 
-def test_profile_b_reusing_sweep_and_donchian_with_new_exits_passes_live_validate(
+def test_profile_b_reusing_providers_with_new_exits_passes_live_validate(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """The armed-start gate accepts reused providers with different exits."""
     text = PROFILE_B.read_text(encoding="utf-8")
-    sweep_old = (
+    target_old = (
         "maximum_entry_delay_seconds = 30\n"
         'execution_symbols = ["BTC"]\n'
         'position_policy = "enter_and_close"\n'
@@ -454,7 +348,7 @@ def test_profile_b_reusing_sweep_and_donchian_with_new_exits_passes_live_validat
         'target_policy = "fixed_bps", maximum_hold_seconds = 86400, stop_bps = 60.0, '
         "target_bps = 60.0,"
     )
-    sweep_new = (
+    target_new = (
         "maximum_entry_delay_seconds = 90\n"
         'execution_symbols = ["BTC"]\n'
         'position_policy = "enter_and_close"\n'
@@ -462,29 +356,29 @@ def test_profile_b_reusing_sweep_and_donchian_with_new_exits_passes_live_validat
         'target_policy = "fixed_bps", maximum_hold_seconds = 21600, stop_bps = 95.0, '
         "target_bps = 210.0,"
     )
-    donchian_old = (
+    channel_old = (
         'stop_policy = "structural_clamped_bps", target_policy = "none", '
         "maximum_hold_seconds = 86400, minimum_stop_bps = 20.0, "
         "maximum_stop_bps = 250.0,"
     )
-    donchian_new = (
+    channel_new = (
         'stop_policy = "fixed_bps", target_policy = "fixed_bps", '
         "maximum_hold_seconds = 259200, stop_bps = 140.0, target_bps = 420.0,"
     )
-    range_old = (
+    bias_old = (
         'target_policy = "none", maximum_hold_seconds = 172800, stop_bps = 60.0, '
         'safety_stop_overlay = false, maximum_hold_policy = "fixed", '
         'provider_recipe_exit_policy = "honor"'
     )
-    range_new = (
+    bias_new = (
         'target_policy = "none", maximum_hold_seconds = 28800, stop_bps = 85.0, '
         'safety_stop_overlay = false, maximum_hold_policy = "fixed", '
         'provider_recipe_exit_policy = "ignore"'
     )
     for old, new in (
-        (sweep_old, sweep_new),
-        (donchian_old, donchian_new),
-        (range_old, range_new),
+        (target_old, target_new),
+        (channel_old, channel_new),
+        (bias_old, bias_new),
     ):
         assert text.count(old) == 1, old
         text = text.replace(old, new)
@@ -492,13 +386,13 @@ def test_profile_b_reusing_sweep_and_donchian_with_new_exits_passes_live_validat
     profile.write_text(text, encoding="utf-8")
 
     providers = {row.strategy_id: row for row in _load_live(profile).providers}
-    sweep = providers[LIQUIDITY_SWEEP_LONG_TARGET60_STRATEGY]
-    assert (sweep.execution.stop_bps, sweep.execution.target_bps) == (95.0, 210.0)
-    assert sweep.execution.maximum_hold_seconds == 21_600
-    assert sweep.maximum_entry_delay_seconds == 90
-    donchian = providers["test_channel_short_15m"]
-    assert donchian.execution.stop_policy == "fixed_bps"
-    assert donchian.execution.maximum_hold_seconds == 259_200
+    target = providers["test_long_target_1m"]
+    assert (target.execution.stop_bps, target.execution.target_bps) == (95.0, 210.0)
+    assert target.execution.maximum_hold_seconds == 21_600
+    assert target.maximum_entry_delay_seconds == 90
+    channel = providers["test_channel_short_15m"]
+    assert channel.execution.stop_policy == "fixed_bps"
+    assert channel.execution.maximum_hold_seconds == 259_200
     assert check.check(profile, mode="live") == []
 
     exit_code = check.main(
@@ -525,64 +419,44 @@ def _refused(case: str, **changes: object) -> dict[str, object]:
 
 # What a provider's signal cannot compute or bind stays a refusal.
 _REFUSED = {
-    "sweep on a market it does not compute": (
-        _refused("liquidity_sweep", symbols=["SOL"]),
-        "BTC-only",
+    "a market the signal does not compute": (
+        _refused("single_side_fixed_target", symbols=["SOL"]),
+        "evaluates only",
     ),
-    "sweep without the long side it emits": (
-        _refused("liquidity_sweep", sides=["short"]),
-        "emitted long",
+    "a side the signal does not emit": (
+        _refused("single_side_fixed_target", sides=_BOTH),
+        "emits only",
     ),
-    "sweep with a structural stop it has no anchor for": (
-        _refused("liquidity_sweep", execution=_structural(20.0, 80.0, 3_600)),
-        "fixed stop",
+    "a position interaction the signal does not implement": (
+        _refused("single_side_fixed_target", position_policy="flat_entry_only"),
+        "implements position policies",
     ),
-    "sweep on a mislabeled signal clock": (
-        _refused("liquidity_sweep", timeframe="15m"),
-        "1h",
+    "a structural stop without a stop anchor": (
+        _refused("fixed_target_long", execution=_structural(20.0, 80.0, 3_600)),
+        "anchors its intents do not carry",
     ),
-    "sweep without opposite-entry close": (
-        _refused("liquidity_sweep", position_policy="flat_entry_only"),
-        "opposite-entry close",
+    "a mislabeled signal clock": (
+        _refused("fixed_target_long", timeframe="15m"),
+        "reads the 1m signal clock",
     ),
-    "hourly Donchian without a side it emits": (
-        _refused("hourly_donchian", sides=["long"]),
-        "both emitted sides",
-    ),
-    "hourly Donchian on an uncomputed market": (
-        _refused("hourly_donchian", symbols=["xyz:DDD"]),
-        "qualified symbols",
-    ),
-    "LTC Donchian on another market": (
-        _refused("ltc_donchian", symbols=["SOL"]),
-        "LTC-only",
-    ),
-    "directional range with an absolute target": (
+    "an absolute target without a target anchor": (
         _refused(
-            "eth_range_long",
+            "recipe_exit_ignored",
             execution=_fixed(90.0, 3_600, target_policy="absolute_anchor"),
         ),
-        "no absolute target",
+        "anchors its intents do not carry",
     ),
-    "BBB cash-open without its target anchor": (
-        _refused("bbb_cash_open_observed", execution=_fixed(120.0, 7_200)),
-        "absolute target anchor",
+    "a target anchor without its absolute target": (
+        _refused("observed_absolute_target", execution=_fixed(120.0, 7_200)),
+        "anchors its intents do not carry",
     ),
-    "research observer with execution authority": (
+    "an observer with execution authority": (
         _refused("research_observer", execution_symbols=["xyz:FFF"]),
-        "execution-disabled",
+        "observe-only",
     ),
-    "CCC fresh15 on a journal it does not have": (
-        _refused("fresh15_ccc_both_sides", symbols=["xyz:AAA"]),
-        "symbols within",
-    ),
-    "HYPE native on another market": (
-        _refused("hype_native", symbols=["SOL"]),
-        "HYPE-only",
-    ),
-    "ETH transfer without a side it emits": (
-        _refused("eth_transfer", sides=["long"]),
-        "both emitted sides",
+    "an unregistered strategy id": (
+        _refused("fixed_target_long", strategy_id="test_unregistered_1m"),
+        "not registered",
     ),
 }
 

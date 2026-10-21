@@ -126,12 +126,7 @@ def test_historical_refresh_keeps_current_sync_status(tmp_path: Path) -> None:
         config_path=tmp_path / "config",
         once=True,
         venue_portfolio=None,
-        opportunity_matrix_path=None,
-        supplemental_opportunity_matrix_paths=(),
-        eligible_policy_forward=False,
-        funding_evidence_fn=None,
         portfolio_archive=None,
-        asymmetric_forward_journal_path=None,
         research_sync=status,
     )
     assert [row["research_sync"] for row in captured] == [status, status]

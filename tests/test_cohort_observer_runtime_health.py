@@ -97,13 +97,13 @@ def test_startup_unavailability_shares_the_preactivation_cycle_boundary() -> Non
 
 
 def test_timely_polling_status_covers_its_scheduled_boundary() -> None:
-    """An explicit bars-incomplete status proves a provider checked on time."""
+    """An explicit technical-unavailability status proves a provider checked on time."""
     identity = _row(
         "configuration_identity",
         {
             "providers": [
                 {
-                    "strategy_id": "cash-open-provider",
+                    "strategy_id": "session-provider",
                     "symbols": ["xyz:BBB"],
                     "timeframe": "15m",
                     "maximum_entry_delay_seconds": 30,
@@ -125,7 +125,7 @@ def test_late_polling_status_does_not_cover_its_scheduled_boundary() -> None:
         {
             "providers": [
                 {
-                    "strategy_id": "cash-open-provider",
+                    "strategy_id": "session-provider",
                     "symbols": ["xyz:BBB"],
                     "timeframe": "15m",
                     "maximum_entry_delay_seconds": 30,
@@ -143,11 +143,21 @@ def test_late_polling_status_does_not_cover_its_scheduled_boundary() -> None:
 
 
 def _polling_status(*, decision_offset: int, arrival_offset: int) -> dict[str, object]:
+    reason = "source_bars_incomplete"
     evaluation = {
-        "strategy_id": "cash-open-provider",
+        "strategy_id": "session-provider",
         "symbol": "xyz:BBB",
         "decision_time_ms": _milliseconds(decision_offset),
-        "backend_non_action_reason": "cash_open_trade_bars_incomplete",
+        "reference_price": 100.0,
+        "decision_action": "technical_unavailable",
+        "eligible": False,
+        "side": None,
+        "reason": reason,
+        "backend_non_action_reason": reason,
+        "readiness": {
+            "blockers": [reason],
+            "metrics": {"technical_availability": "unavailable"},
+        },
     }
     return _row(
         "intent_routing",

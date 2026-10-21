@@ -1,10 +1,15 @@
-"""Tests for official eligible-policy funding evidence."""
+"""Tests for official funding-history evidence and path funding cost."""
 
 from __future__ import annotations
 
 import pytest
 
-import hypervector.research.cohort_eligible_policy_funding as funding_module
+import hypervector.live.hyperliquid_funding_history as funding_module
+from hypervector.live.hyperliquid_funding_history import (
+    FundingHistoryEvidence,
+    FundingSettlement,
+    covered_funding_bps,
+)
 
 
 def test_official_history_parser_preserves_exact_settlement_rows() -> None:
@@ -39,3 +44,27 @@ def test_official_history_parser_preserves_exact_settlement_rows() -> None:
         [-0.0000025, 0.0000125]
     )
     assert evidence.symbol == "ETH"
+
+
+def test_covered_funding_bps_is_signed_by_position_side_and_requires_coverage() -> None:
+    """A long pays positive funding; an uncovered window reports no estimate."""
+    evidence = FundingHistoryEvidence(
+        symbol="ETH",
+        requested_start_ms=0,
+        requested_end_ms=10_000,
+        events=(FundingSettlement(5_000, 0.0001),),
+    )
+    assert covered_funding_bps(
+        evidence, symbol="ETH", side="long", start_ms=0, end_ms=10_000
+    ) == pytest.approx(-1.0)
+    assert covered_funding_bps(
+        evidence, symbol="ETH", side="short", start_ms=0, end_ms=10_000
+    ) == pytest.approx(1.0)
+    assert (
+        covered_funding_bps(
+            evidence, symbol="ETH", side="long", start_ms=0, end_ms=20_000
+        )
+        is None
+    )
+    with pytest.raises(ValueError, match="symbol"):
+        covered_funding_bps(evidence, symbol="BTC", side="long", start_ms=0, end_ms=1)

@@ -388,8 +388,6 @@ def _assert_open_lifecycle_delta(delta: dict[str, object]) -> None:
     assert btc["marked_net_pnl_usd_delta"] == pytest.approx(0.05)
     assert btc["current_directional_return_bps_delta"] == 10.0
     assert btc["maximum_favorable_excursion_bps_delta"] == 5.0
-    assert btc["ignored_signal_count_delta"] == 1
-    assert btc["newly_triggered_profit_locks"] == ["a25_floor15_trail10"]
 
 
 def _assert_episode_attribution_delta(episode_maturity: object) -> None:

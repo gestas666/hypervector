@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-import re
 import subprocess
 import sys
-import tomllib
 
 import pytest
 
@@ -24,24 +22,7 @@ _BREAKOUT_OBSERVER_PROFILE = Path(
 _COMPLETE_PROFILE = Path(
     "tests/fixtures/profiles/complete_portfolio.toml"
 )
-_SOURCE_FOLLOW_ID = "test_mirror_1m"
-_SOURCE_PROFILE_NAME = (
-    "hypervelocity_source_follow_bidirectional_minrange12_alloc10_lev5_shadow.toml"
-)
-_SOURCE_PROFILE_LINE = re.compile(
-    r'^source_profile = "[^"\n]*/' + re.escape(_SOURCE_PROFILE_NAME) + r'"\n',
-    re.MULTILINE,
-)
-
-
-def _configured_source_profile(profile: Path) -> str:
-    """Return the literal source_profile text the TOML pins for the 5m arm."""
-    raw = tomllib.loads(profile.read_text(encoding="utf-8"))
-    return next(
-        provider["source_profile"]
-        for provider in raw["providers"]
-        if provider["strategy_id"] == _SOURCE_FOLLOW_ID
-    )
+_SINGLE_SYMBOL_ID = "test_mirror_1m"
 
 
 def test_profile_enables_four_coins_with_both_directions() -> None:
@@ -120,13 +101,9 @@ def _assert_provider_contracts(
         "SOL",
         "HYPE",
     )
-    measured = providers[_SOURCE_FOLLOW_ID]
-    assert measured.symbols == ("BTC",)
-    assert measured.execution_symbols == ("BTC",)
-    # The loader keeps the pinned source profile verbatim; the pin itself is
-    # the exact measured minrange12/alloc10/lev5 shadow profile.
-    assert measured.source_profile == Path(_configured_source_profile(_PROFILE))
-    assert measured.source_profile.name == _SOURCE_PROFILE_NAME
+    single = providers[_SINGLE_SYMBOL_ID]
+    assert single.symbols == ("BTC",)
+    assert single.execution_symbols == ("BTC",)
     hype = providers["test_fade_1m"]
     assert hype.symbols == ("HYPE",)
     assert hype.timeframe == "1m"
@@ -137,11 +114,8 @@ def _assert_provider_contracts(
     range_contract = providers["test_breakout_1m"].execution
     assert range_contract.stop_bps == 60.0
     assert range_contract.maximum_hold_seconds == 172_800
-    assert providers["test_breakout_1m"].entry_context_overrides == (
-        ("ETH", "dual_mtf_not_opposed"),
-    )
-    hulk_contract = providers["test_trend_5m"].execution
-    assert hulk_contract.target_r_multiple == 3.0
+    trend_contract = providers["test_trend_5m"].execution
+    assert trend_contract.target_r_multiple == 3.0
 
 
 def test_staged_breakout_observer_expands_observation_without_authority() -> None:
@@ -164,10 +138,10 @@ def test_staged_breakout_observer_expands_observation_without_authority() -> Non
     assert provider.execution_symbols == ("HYPE",)
 
 
-def test_hype_breakout_provider_keeps_its_exact_source_contract(
+def test_provider_keeps_its_registered_signal_clock(
     tmp_path: Path,
 ) -> None:
-    """Execution authority cannot change the HYPE source clock or symbol."""
+    """A profile cannot relabel the completed-bar clock a provider reads."""
     old = (
         'strategy_id = "test_fade_1m"\n'
         'symbols = ["HYPE"]\n'
@@ -183,7 +157,7 @@ def test_hype_breakout_provider_keeps_its_exact_source_contract(
     profile = tmp_path / "hype-wrong-clock.toml"
     profile.write_text(text, encoding="utf-8")
 
-    with pytest.raises(MultiAssetLiveConfigError, match="1m source timeframe"):
+    with pytest.raises(MultiAssetLiveConfigError, match="reads the 1m signal clock"):
         load_multi_asset_live_config(profile, mode="observe")
 
 
@@ -209,21 +183,6 @@ def test_hype_breakout_can_observe_all_assets_but_execute_only_hype(
 
     assert provider.symbols == ("BTC", "ETH", "SOL", "HYPE")
     assert provider.execution_symbols == ("HYPE",)
-
-
-def test_hypervelocity_source_provider_requires_its_exact_profile(
-    tmp_path: Path,
-) -> None:
-    """The measured 5m arm cannot run without its pinned source profile."""
-    text, removed = _SOURCE_PROFILE_LINE.subn(
-        "", _PROFILE.read_text(encoding="utf-8"), count=1
-    )
-    assert removed == 1
-    profile = tmp_path / "source-profile-missing.toml"
-    profile.write_text(text, encoding="utf-8")
-
-    with pytest.raises(MultiAssetLiveConfigError, match="requires source_profile"):
-        load_multi_asset_live_config(profile, mode="observe")
 
 
 def test_observe_and_disarmed_live_refuse_execution_authority() -> None:
@@ -501,23 +460,12 @@ def test_provider_sizing_cap_cannot_exceed_asset_adapter_ceiling(
         load_multi_asset_live_config(profile, mode="observe")
 
 
-def test_entry_context_override_rejects_unknown_policy(tmp_path: Path) -> None:
-    """A misspelled entry-context rule cannot silently become permissive."""
-    text = _PROFILE.read_text(encoding="utf-8").replace(
-        'entry_context_overrides = { ETH = "dual_mtf_not_opposed" }',
-        'entry_context_overrides = { ETH = "maybe_trending" }',
-        1,
-    )
-    profile = tmp_path / "unknown-entry-context.toml"
-    profile.write_text(text, encoding="utf-8")
-
-    with pytest.raises(MultiAssetLiveConfigError, match="entry_context_overrides"):
-        load_multi_asset_live_config(profile, mode="observe")
-
-
 def test_profile_fingerprint_is_stable_across_python_hash_seeds() -> None:
     """Independent supervisor and backend processes must agree on identity."""
     program = (
+        "import sys; sys.path.insert(0, 'tests'); "
+        "from synthetic_live_providers import register_synthetic_providers; "
+        "register_synthetic_providers(); "
         "from hypervector.live.multi_asset_live_config import "
         "load_multi_asset_live_config as load; "
         "print(load('tests/fixtures/profiles/cohort_base.toml', "
