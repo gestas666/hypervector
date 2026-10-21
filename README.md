@@ -44,11 +44,11 @@ Nine pillars and four supporting groups. Each group has its own `--help`.
 | `data` | Hyperliquid bars, funding, L2 recording, HIP-3 roster | `hypervector data history --symbol BTC --timeframe 5m --lookback-days 90` |
 | `archive` | Bounded 0xArchive fetches, resumable backfill, coverage audit, trade repair | `hypervector archive audit --symbol BTC --start 2026-09-01T00:00:00Z --end 2026-09-02T00:00:00Z` |
 | `backtest` | VectorBT backtest, track sweep, trial board | `hypervector backtest run --strategy <strategy> --timeframe 5m` |
-| `tune` | Strategy and regime autotuning with a chronological holdout | `hypervector tune strategy --strategy <strategy> --objective net_pnl --train-fraction 0.7` |
+| `tune` | Strategy autotuning with a chronological holdout | `hypervector tune strategy --strategy <strategy> --objective net_pnl --train-fraction 0.7` |
 | `nautilus` | Event-driven validation of a bundle, Parquet catalog | `hypervector nautilus run --export latest --no-network` |
 | `paper` | Paper/shadow daemons, cohort observer, reports | `hypervector paper run --export latest --mode shadow --max-live-bars 60` |
 | `live` | Live readiness, execution, monitoring, transitions, supervision | `hypervector live check --config <profile.toml>` |
-| `regime` | Canonical regime classifier: classify, eval, export, challengers, align | `hypervector regime eval --symbol BTC --timeframe 1m --lookback-days 30` |
+| `regime` | Canonical regime classifier: classify, eval, export, challengers | `hypervector regime eval --symbol BTC --timeframe 1m --lookback-days 30` |
 | `model` | Walk-forward metalabel training | `hypervector model train --export latest` |
 | `export` | Strategy bundles: create, list, show, validate | `hypervector export validate --export latest` |
 | `db` | DuckDB research store: build, imports, reports | `hypervector db status` |
@@ -61,6 +61,65 @@ The `live` group lists its commands in four sections:
 - **observe:** `checkpoint`, `monitor`, `audit`, `audit-delta`, `report`, `economics`;
 - **transition:** `backup`, `backup-verify`, `validate`, `preflight`, `drain-archive`, `rollback-profile`;
 - **supervise:** `supervisor` (`status`, `watch`, `supervise`, `print-launchd`, `resume`).
+
+## Adding a strategy
+
+No strategy is built in. `backtest run`, `backtest sweep`, `tune strategy` and
+`pipeline run` take `--strategy` and have no default. When no strategy is
+registered under that name they exit 2, and the message says how to register
+one. A strategy plugs in at two places: a research strategy family and a live
+provider.
+
+**Research strategy family** (`src/hypervector/strategies/`). A family is a
+module that defines its signal builders and a `register_family()` function.
+That function calls `hypervector.strategies.registry.register()` once per
+`StrategySpec`, which holds:
+
+- `name`, `role` (`uptrend`, `downtrend`, `regime` or `other`), `param_grid`
+  and `build_signals`, which returns the entry signals, the exit signals and a
+  direction tag;
+- `supports_book_gate`, set only when the builder applies the orderbook gate;
+- `execution`, an `ExecutionProfile`. Its defaults are the standard path:
+  market IOC entries, conviction-scaled risk sizing, the configured stop,
+  target and trail exits, and the requested fee model. A strategy can declare
+  post-only maker entries (`post_only_entries`, `entry_ttl_seconds`), fixed
+  sizing (`fixed_margin_fraction` with `leverage`), strategy-managed exits
+  (`strategy_managed_exits`, which needs fixed sizing) or its own `fee_model`.
+
+Add the module's dotted path to `STRATEGY_FAMILY_MODULES` in
+`src/hypervector/strategies/__init__.py`. Backtests, sweeps, tuning, export
+validation, Nautilus and paper then read the declared options rather than the
+strategy's name. `backtest sweep` refuses (exit 2) a strategy whose role does
+not match `--track`. `live run` places market IOC orders only, so it refuses a
+strategy that declares post-only entries.
+
+**Live provider** (`src/hypervector/live/provider_registry.py`). Every
+`[[providers]]` row of a cohort profile names a `strategy_id`. The profile
+loader refuses an id that is not registered, so `live check` lists a blocker
+and `live validate` and `live start` refuse the profile. A provider module
+defines a collector, which returns an `IntentBatch` for unseen completed bars,
+and a module-level `ProviderRegistration` (`live/provider_registration.py`):
+
+- `strategy_id`;
+- `signal_timeframe`, the completed-bar clock the poller passes to the
+  collector (`1m`, `5m` or `15m`). The profile row's `timeframe` must equal it;
+- `readiness_lookback_minutes`, how far back startup readiness seeding replays;
+- `collector_factory`, which builds the collector from the validated profile
+  row;
+- `capability`, a `ProviderCapability`: the symbols the signal evaluates, the
+  sides it emits, the position policies it implements, whether it is
+  observe-only, and whether its intents carry a stop anchor or a target anchor.
+  A row that asks for more than this is refused.
+
+Add the registration to `_BUILTIN_REGISTRATIONS` in `provider_registry.py`.
+Stops, targets, holds, exit policies, sizing and execution scope belong to the
+profile row, not to the provider, and no preset supplies them. The one built-in
+provider is an observe-only market observer: it can watch any enabled asset and
+never emits an intent.
+
+Any edit under `src/` changes the live implementation identity, so the next
+armed start records a new pre-start bundle and needs an explicit operator
+go-ahead.
 
 ## End-to-end flow
 
@@ -75,8 +134,8 @@ The `live` group lists its commands in four sections:
 7. **paper**: hands off to shadow paper.
 
 It never starts a daemon, never builds a venue client and never reaches `live`.
-`<strategy>` in these examples is any name registered under
-`src/hypervector/strategies/`.
+`<strategy>` in these examples is the name of a registered strategy (see
+[Adding a strategy](#adding-a-strategy)).
 
 ```sh
 hypervector pipeline run --strategy <strategy> --timeframe 5m --dry-run   # print the plan, write nothing
@@ -161,7 +220,7 @@ A reference that resolves to nothing exits 2 and lists the places it looked.
 
 | Authority | Commands | Rule |
 | --- | --- | --- |
-| live | `live start`, `live run` | Arm only with both `--enabled --i-accept-live-risk`, plus credentials. `live start` checks both flags, loads the profile in observe mode and checks provider dependencies before it hands over to the backend. `live run` resolves `--export`, then checks both flags and credentials, and refuses with exit 2 before any side effect when one is missing. |
+| live | `live start`, `live run` | Arm only with both `--enabled --i-accept-live-risk`, plus credentials. `live start` checks both flags and loads the profile in observe mode (every provider must be registered) before it hands over to the backend. `live run` resolves `--export`, then checks both flags and credentials, and refuses with exit 2 before any side effect when one is missing. |
 | request | `live request` | Dry run by default. `--submit` publishes, and needs both authority flags for every action except `stage_profile`. Publishing is not execution. |
 | simulate | `live check` | The flags only change the readiness report (`would_arm`). It never arms anything. |
 | passthrough | `live supervisor` | `resume` is a dry run. `resume --yes` needs both authority flags, because it kickstarts the supervise agent, which starts the armed backend. |
@@ -176,9 +235,8 @@ A reference that resolves to nothing exits 2 and lists the places it looked.
   - model-aware commands load only the metalabel root variables.
   `live check` reports credential presence as booleans, and no command prints
   a secret value.
-- **Dry run unless confirmed:** `paper shadow-reset --yes`,
-  `live drain-archive --yes`, `live supervisor resume --yes` and
-  `archive repair-trades --apply`.
+- **Dry run unless confirmed:** `live drain-archive --yes`,
+  `live supervisor resume --yes` and `archive repair-trades --apply`.
 - **The STOP file** (`data/live/bidirectional_cohort/STOP` for the cohort) is
   the durable operator stop. It always wins.
 - Mainnet only. There are no testnet or sandbox flags.
@@ -252,11 +310,8 @@ Old command names still parse as hidden aliases. They never appear in help.
 | `research sweep-up`, `sweep-up` / `research sweep-down`, `sweep-down` | `backtest sweep --track uptrend` / `--track downtrend` |
 | `research report`, `report` | `backtest report` |
 | `research autotune`, `autotune` | `tune strategy` |
-| `regime autotune`, `hypervelocity-regime-autotune` | `tune regime` |
 | `phase2-check`, `phase2-run` | `nautilus check`, `nautilus run` |
 | `paper-run`, `paper-check`, `paper-report` | `paper run`, `paper check`, `paper report` |
-| `paper shadow-run`, `hypervelocity-shadow-run`, `hypervelocity-shadow-reset` | `paper shadow`, `paper shadow-reset` |
-| `research shadow-compare`, `hypervelocity-shadow-compare` | `paper compare` |
 | `cohort observe`, `cohort observer-checkpoint`, `cohort observer-audit`, `cohort-observe`, `cohort-observer-checkpoint`, `cohort-observer-audit` | `paper observe`, `paper checkpoint`, `paper audit` |
 | `cohort live`, `cohort-live` | `live start` |
 | `cohort request`, `cohort checkpoint`, `cohort monitor`, `cohort audit`, `cohort audit-delta`, `cohort supervisor` | `live request`, `live checkpoint`, `live monitor`, `live audit`, `live audit-delta`, `live supervisor` |
@@ -264,7 +319,6 @@ Old command names still parse as hidden aliases. They never appear in help.
 | `live-check`, `live-run`, `live-report` | `live check`, `live run`, `live report` |
 | `research economics`, `research-economics` | `live economics` |
 | `regime <options>`, `regime-eval`, `regime-export` | `regime classify`, `regime eval`, `regime export` |
-| `regime hypervelocity-eval`, `hypervelocity-regime-eval`, `hypervelocity-regime-challengers` | `regime align`, `regime challengers` |
 | `metalabel-train` | `model train` |
 | `research export`, `export <options>`, `research export-validate`, `export-validate` | `export create`, `export validate` |
 | `research db-build`, `research db-status`, `research db-live-event-import`, `research db-shadow-import`, `research db-shadow-trades`, `research hip3-liquidity-profile` | `db build`, `db status`, `db import-events`, `db import-paper`, `db paper-trades`, `db hip3-liquidity` |
@@ -286,11 +340,13 @@ Retired names exit 2 with a message that names the replacement:
 
 | Retired | Use instead |
 | --- | --- |
-| `research` (bare) | `backtest run/sweep/report`, `tune strategy`, `export create/validate`, `db …`, `paper compare`, `live economics` |
+| `research` (bare) | `backtest run/sweep/report`, `tune strategy`, `export create/validate`, `db …`, `live economics` |
 | `cohort` (bare) | `live start/request/checkpoint/monitor/audit/audit-delta/supervisor`, `paper observe/checkpoint/audit`, `db import-cohort` |
-| `cohort-tui`, `hypervelocity-tui` | `live monitor`, `live checkpoint` or `paper shadow` |
-| `cohort dependencies`, `cohort-dependencies` | nothing; `live start` checks provider dependencies itself |
-| `research archive-compare`, `research maker-replay`, `research db-journal-append`, `research db-journal-report`, `research db-regime-label-import`, `research db-regime-compare` (and their flat spellings) | nothing; removed (paper fills use `l2_walk_v1`) |
+| `cohort-tui` | `live monitor` or `live checkpoint` |
+| `research db-journal-append`, `research db-journal-report` (and their flat spellings) | nothing; decision journals are no longer kept |
+
+Any other `research <command>` or `cohort <command>` that is not listed as an
+alias exits 2 with the message of its bare group.
 
 ## Verification
 
