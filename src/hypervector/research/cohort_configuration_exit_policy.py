@@ -7,7 +7,10 @@ import math
 
 from hypervector.live.cohort_adaptive_exit_policy import (
     ADAPTIVE_EXIT_POLICIES,
+    ADAPTIVE_EXIT_POLICY,
     RETENTION_EXIT_POLICY,
+    AdaptiveExitParameters,
+    RetentionExitParameters,
 )
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.live.cohort_stop_risk_sizing import StopRiskBudget
@@ -30,6 +33,8 @@ class ProviderExitExpectation:
     adaptive_exit_policy: str = "none"
     stop_risk_budget: StopRiskBudget | None = None
     breakeven_stop_target: str = "entry_offset"
+    adaptive_exit: AdaptiveExitParameters | None = None
+    retention_exit: RetentionExitParameters | None = None
 
 
 @dataclass(frozen=True)
@@ -124,6 +129,8 @@ def _expectation(strategy_id: str, contract: object) -> ProviderExitExpectation:
         contract.adaptive_exit_policy,
         contract.stop_risk_budget,
         contract.breakeven_stop_target,
+        contract.adaptive_exit,
+        contract.retention_exit,
     )
 
 
@@ -142,6 +149,16 @@ def _policy_payload(row: ProviderExitExpectation) -> dict[str, object]:
         **(
             {"breakeven_stop_target": row.breakeven_stop_target}
             if row.breakeven_stop_target != "entry_offset"
+            else {}
+        ),
+        **(
+            {"adaptive_exit": row.adaptive_exit.as_payload()}
+            if row.adaptive_exit is not None
+            else {}
+        ),
+        **(
+            {"retention_exit": row.retention_exit.as_payload()}
+            if row.retention_exit is not None
             else {}
         ),
         "maximum_hold_seconds": row.maximum_hold_seconds,
@@ -187,9 +204,18 @@ def _validate_exit_policy(
         or row.provider_recipe_exit_policy not in {"ignore", "honor"}
         or not _profit_lock_valid(row)
         or row.adaptive_exit_policy not in ADAPTIVE_EXIT_POLICIES
+        or not _adaptive_parameters_valid(row)
         or not _breakeven_target_valid(row)
     ):
         raise ValueError("provider exit policy is invalid")
+
+
+def _adaptive_parameters_valid(row: ProviderExitExpectation) -> bool:
+    return (row.adaptive_exit is not None) == (
+        row.adaptive_exit_policy == ADAPTIVE_EXIT_POLICY
+    ) and (row.retention_exit is not None) == (
+        row.adaptive_exit_policy == RETENTION_EXIT_POLICY
+    )
 
 
 def _breakeven_target_valid(row: ProviderExitExpectation) -> bool:

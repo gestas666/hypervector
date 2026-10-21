@@ -1,4 +1,4 @@
-"""Frozen causal profit-lock policies shared by research and live execution."""
+"""Causal completed-bar profit-lock mechanism; policy values come from the profile."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ class CandleLike(Protocol):
 
 @dataclass(frozen=True)
 class ProfitLockPolicy:
-    """One predeclared activation, floor, and peak-giveback mechanism."""
+    """One activation, floor, and peak-giveback configuration."""
 
     policy_id: str
     activation_bps: float
@@ -52,13 +52,6 @@ class ProfitLockPathState:
     trigger: ProfitLockTrigger | None
 
 
-POLICIES = (
-    ProfitLockPolicy("a25_floor15_trail10", 25.0, 15.0, 10.0),
-    ProfitLockPolicy("a40_floor15_trail20", 40.0, 15.0, 20.0),
-    ProfitLockPolicy("a60_floor15_trail30", 60.0, 15.0, 30.0),
-)
-
-
 def evaluate_profit_lock_path(
     policy: ProfitLockPolicy,
     side: str,
@@ -67,7 +60,7 @@ def evaluate_profit_lock_path(
     *,
     activation_not_before_ms: int | None = None,
 ) -> ProfitLockPathState:
-    """Evaluate one frozen lock using only prior completed-bar state."""
+    """Evaluate one lock using only prior completed-bar state."""
     _validate_inputs(policy, side, bars, entry_price, activation_not_before_ms)
     best = entry_price
     stop: float | None = None

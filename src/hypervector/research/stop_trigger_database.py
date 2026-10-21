@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
+from typing import Literal
 
 import duckdb
 
 from hypervector.data.oxa_api import validate_symbol
-from hypervector.research.shared_portfolio_models import Direction
+
+Direction = Literal["long", "short"]
 
 
 @dataclass(frozen=True)
