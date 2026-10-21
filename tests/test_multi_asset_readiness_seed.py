@@ -8,7 +8,7 @@ from hypervector.live.directional_range_onset_provider import (
     ETH_RANGE_LONG_STRATEGY,
 )
 from hypervector.live.hip3_cash_open_gap_provider import (
-    HIP3_SPCX_CASH_OPEN_STRATEGY,
+    HIP3_BBB_CASH_OPEN_STRATEGY,
     Hip3CashOpenGapCollector,
 )
 from hypervector.live.multi_asset_readiness_seed import collect_readiness_seed
@@ -16,7 +16,7 @@ from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.research.hip3_cash_open_gap_reversal_signals import (
     cash_session_bar_opens,
-    spcx_cash_open_live_config,
+    bbb_cash_open_live_config,
 )
 
 
@@ -34,7 +34,7 @@ class _CashBarSource:
 
 
 def _prior_cash_sessions() -> pd.DataFrame:
-    config = spcx_cash_open_live_config()
+    config = bbb_cash_open_live_config()
     start = pd.Timestamp("2026-08-20T13:30:00Z")
     end = pd.Timestamp("2026-08-21T20:00:00Z")
     index = cash_session_bar_opens(
@@ -48,7 +48,7 @@ def _prior_cash_sessions() -> pd.DataFrame:
     return frame
 
 
-def test_spcx_readiness_seed_reaches_prior_session_across_weekend() -> None:
+def test_bbb_readiness_seed_reaches_prior_session_across_weekend() -> None:
     """A Monday pre-open startup must seed from Friday without retro-routing."""
     source = _CashBarSource(_prior_cash_sessions())
     collector = Hip3CashOpenGapCollector(source=source)
@@ -58,8 +58,8 @@ def test_spcx_readiness_seed_reaches_prior_session_across_weekend() -> None:
     seed = collect_readiness_seed(
         collector,
         pd.DataFrame(),
-        HIP3_SPCX_CASH_OPEN_STRATEGY,
-        "xyz:SPCX",
+        HIP3_BBB_CASH_OPEN_STRATEGY,
+        "xyz:BBB",
         observed,
         activation_ms,
         100.0,

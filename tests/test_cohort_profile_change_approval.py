@@ -27,9 +27,9 @@ _CHAIN = Path("tests/fixtures/cohort_chain")
 _PROFILE_A = _CHAIN / "profile_a.toml"
 _PROFILE_B = _CHAIN / "profile_b.toml"
 _ROLLBACK_B_TO_A = _CHAIN / "rollback_b_to_a.toml"
-_BTC_SWEEP = "liquidity_sweep_long_1h_stop60_target60_v2"
-_DONCHIAN = "hourly_donchian_20_10_atr20_strong_short_v1"
-_DONCHIAN_SYMBOLS = '["SOL", "xyz:SNDK", "xyz:BRENTOIL", "xyz:TSLA"]'
+_BTC_SWEEP = "test_long_target_1m"
+_DONCHIAN = "test_channel_short_15m"
+_DONCHIAN_SYMBOLS = '["SOL", "xyz:CCC", "xyz:EEE", "xyz:FFF"]'
 
 
 def _load(path: Path) -> MultiAssetLiveConfig:
@@ -262,15 +262,15 @@ def test_absent_asset_scopes_allow_explicit_terminal_removal(tmp_path: Path) -> 
     shared = _provider(previous, _DONCHIAN)
     narrowed = replace(
         shared,
-        symbols=tuple(row for row in shared.symbols if row != "xyz:TSLA"),
+        symbols=tuple(row for row in shared.symbols if row != "xyz:FFF"),
         execution_symbols=tuple(
-            row for row in shared.execution_symbols if row != "xyz:TSLA"
+            row for row in shared.execution_symbols if row != "xyz:FFF"
         ),
     )
     candidate = replace(
         _replace_provider(previous, shared, narrowed),
-        profile_id="candidate-tsla-terminal-removal",
-        assets=tuple(row for row in previous.assets if row.symbol != "xyz:TSLA"),
+        profile_id="candidate-fff-terminal-removal",
+        assets=tuple(row for row in previous.assets if row.symbol != "xyz:FFF"),
     )
     approval = _write_approval(
         tmp_path,
@@ -280,7 +280,7 @@ def test_absent_asset_scopes_allow_explicit_terminal_removal(tmp_path: Path) -> 
             {
                 "retired_scope": {
                     "strategy_id": _DONCHIAN,
-                    "symbol": "xyz:TSLA",
+                    "symbol": "xyz:FFF",
                     "side": side,
                 },
                 "replacement_scope": None,
@@ -292,8 +292,8 @@ def test_absent_asset_scopes_allow_explicit_terminal_removal(tmp_path: Path) -> 
     result = validate_profile_change_approval(previous, candidate, approval)
 
     assert result["retired_execution_scopes"] == [
-        f"{_DONCHIAN}|xyz:TSLA|long",
-        f"{_DONCHIAN}|xyz:TSLA|short",
+        f"{_DONCHIAN}|xyz:FFF|long",
+        f"{_DONCHIAN}|xyz:FFF|short",
     ]
     assert result["replacement_execution_scopes"] == []
 

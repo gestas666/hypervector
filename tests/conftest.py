@@ -11,6 +11,12 @@ pytest.register_assert_rewrite(
     "native_runner_partial_case_fixture", "native_runner_protective_case_fixture"
 )
 
+# Test-only live providers (tests/synthetic_live_providers.py) back the fixture
+# cohort profiles; src/ registers only the strategy-free market observer.
+from synthetic_live_providers import register_synthetic_providers  # noqa: E402
+
+register_synthetic_providers()
+
 
 @pytest.fixture(autouse=True)
 def forbid_cli_process_replacement(monkeypatch: pytest.MonkeyPatch) -> None:

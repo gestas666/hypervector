@@ -170,7 +170,7 @@ def test_completed_bar_profit_lock_round_trips_through_bound_plan() -> None:
         }
     )
 
-    plan = contract.bind(strategy_id="range_onset_bidirectional_v1", stop_anchor=None)
+    plan = contract.bind(strategy_id="test_breakout_1m", stop_anchor=None)
 
     assert BoundExecutionPlan.from_payload(plan.as_payload()) == plan
     assert plan.profit_lock_policy == "completed_bar_trailing"

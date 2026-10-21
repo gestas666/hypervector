@@ -12,7 +12,7 @@ from hypervector.live.sol_range_onset_state import SolLiveState
 from hypervector.live.sol_range_onset_live_journal import build_live_journal
 
 __all__ = ["deny_external_ports"]
-SYMBOLS = ["BTC", "ETH", "SOL", "HYPE", "xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL"]
+SYMBOLS = ["BTC", "ETH", "SOL", "HYPE", "xyz:BBB", "xyz:CCC", "xyz:EEE"]
 
 
 @pytest.mark.parametrize("symbol", SYMBOLS)

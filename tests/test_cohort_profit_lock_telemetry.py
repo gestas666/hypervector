@@ -43,7 +43,7 @@ def _payload() -> dict[str, object]:
     return {
         "decision_id": "SOL:7:profit_lock_exit",
         "lifecycle_id": "SOL:7",
-        "strategy_id": "range_onset_bidirectional_v1",
+        "strategy_id": "test_breakout_1m",
         "symbol": "SOL",
         "side": "long",
         "outcome": "exit",

@@ -11,7 +11,7 @@ from hypervector.live.entry_submission_deadline import (
     EntrySubmissionDeadline,
 )
 from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
-from hypervector.live.hyperliquid_sol_adapter import SolHyperliquidAdapter
+from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
 from hypervector.live.multi_asset_directional_adapter import (
     MultiAssetDirectionalAdapter,
 )
@@ -38,15 +38,7 @@ class DelayedInfo(_Info):
 
 def _adapter(
     info: DelayedInfo, exchange: _Exchange, symbol: str
-) -> SolHyperliquidAdapter | MultiAssetDirectionalAdapter:
-    if symbol == "standalone_SOL":
-        return SolHyperliquidAdapter(
-            info=info,
-            exchange=exchange,
-            account_address=_ADDRESS,
-            max_notional_usd=100,
-            slippage_fraction=0.002,
-        )
+) -> MultiAssetDirectionalAdapter:
     return MultiAssetDirectionalAdapter(
         BtcHyperliquidAdapter(
             info=info,
@@ -67,10 +59,9 @@ def _adapter(
         "ETH",
         "SOL",
         "HYPE",
-        "xyz:SPCX",
-        "xyz:SNDK",
-        "xyz:BRENTOIL",
-        "standalone_SOL",
+        "xyz:BBB",
+        "xyz:CCC",
+        "xyz:EEE",
     ],
 )
 @pytest.mark.parametrize("delay_ms", [0, 1_000, 2_000])
@@ -80,9 +71,9 @@ def test_sdk_dispatch_rechecks_after_market_metadata(
     delay_ms: int,
     side: str,
 ) -> None:
-    """Both adapter implementations reject expiry after their own blocking work."""
+    """The adapter rejects expiry after its own blocking work."""
     clock = Clock(29_000_000)
-    actual_symbol = "SOL" if symbol == "standalone_SOL" else symbol
+    actual_symbol = symbol
     info, exchange = DelayedInfo(clock, actual_symbol, delay_ms), _Exchange()
     adapter = _adapter(info, exchange, symbol)
     deadline = EntrySubmissionDeadline(DECISION_MS, 30_000, clock.milliseconds)

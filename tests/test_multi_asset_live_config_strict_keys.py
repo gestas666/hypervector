@@ -10,7 +10,7 @@ from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfi
 
 ADAPTIVE_EIGHT_ASSET = Path("tests/fixtures/profiles/adaptive_eight_asset.toml")
 EXIT_POLICY_V2 = Path("tests/fixtures/profiles/exit_policy_v2.toml")
-DONCHIAN = "hourly_donchian_20_10_atr20_bidirectional_v1"
+DONCHIAN = "test_channel_15m"
 
 
 def _variant(tmp_path: Path, old: str, new: str, count: int = 1) -> Path:

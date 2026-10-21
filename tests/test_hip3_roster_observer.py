@@ -100,12 +100,12 @@ def test_checkpoint_reports_exact_active_roster_and_historical_wti() -> None:
 
     assert result["status"] == "available"
     assert result["active_symbols"] == [
-        "xyz:SP500",
-        "xyz:SPCX",
-        "xyz:SNDK",
-        "xyz:GOLD",
-        "xyz:BRENTOIL",
-        "xyz:TSLA",
+        "xyz:AAA",
+        "xyz:BBB",
+        "xyz:CCC",
+        "xyz:DDD",
+        "xyz:EEE",
+        "xyz:FFF",
     ]
     assert result["execution_authority"] == "none"
     assert result["report_only"] is True
@@ -129,7 +129,7 @@ def test_checkpoint_exposes_depth_windows_and_account_truth() -> None:
     )
     market = result["markets"][0]
 
-    assert market["symbol"] == "xyz:SP500"
+    assert market["symbol"] == "xyz:AAA"
     assert market["venue"]["mark_price"] == 100.25
     assert market["book"]["level_count"] == {"bids": 20, "asks": 20}
     assert market["book"]["depth_5"]["bid_base"] == 15.0
@@ -274,7 +274,7 @@ def test_checkpoint_preserves_unresolved_growth_mode_without_fake_fee() -> None:
         spec.symbol: _Reader(
             spec.symbol,
             spec.expected_max_leverage,
-            growth_mode=None if spec.symbol == "xyz:GOLD" else True,
+            growth_mode=None if spec.symbol == "xyz:DDD" else True,
         )
         for spec in ACTIVE_HIP3_MARKETS
     }
@@ -282,12 +282,12 @@ def test_checkpoint_preserves_unresolved_growth_mode_without_fake_fee() -> None:
     result = Hip3RosterObserver(readers=readers).snapshot(
         datetime(2026, 8, 6, 16, 0, tzinfo=UTC)
     )
-    gold = next(row for row in result["markets"] if row["symbol"] == "xyz:GOLD")
+    ddd = next(row for row in result["markets"] if row["symbol"] == "xyz:DDD")
 
-    assert gold["venue"]["effective_fee_status"] == "unresolved_growth_mode"
-    assert gold["venue"]["maker_fee_rate"] is None
-    assert gold["venue"]["taker_fee_rate"] is None
-    assert gold["book"]["level_count"] == {"bids": 20, "asks": 20}
+    assert ddd["venue"]["effective_fee_status"] == "unresolved_growth_mode"
+    assert ddd["venue"]["maker_fee_rate"] is None
+    assert ddd["venue"]["taker_fee_rate"] is None
+    assert ddd["book"]["level_count"] == {"bids": 20, "asks": 20}
 
 
 def test_checkpoint_rejects_reader_identity_mismatch() -> None:
@@ -296,12 +296,12 @@ def test_checkpoint_rejects_reader_identity_mismatch() -> None:
         spec.symbol: _Reader(
             spec.symbol,
             spec.expected_max_leverage,
-            wrong_symbol=spec.symbol == "xyz:GOLD",
+            wrong_symbol=spec.symbol == "xyz:DDD",
         )
         for spec in ACTIVE_HIP3_MARKETS
     }
 
-    with pytest.raises(ValueError, match="xyz:GOLD reader returned xyz:WRONG"):
+    with pytest.raises(ValueError, match="xyz:DDD reader returned xyz:WRONG"):
         Hip3RosterObserver(readers=readers).snapshot(
             datetime(2026, 8, 6, 16, 0, tzinfo=UTC)
         )

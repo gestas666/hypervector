@@ -33,7 +33,7 @@ def test_restart_retains_compatible_fill_and_cost_history(tmp_path: Path) -> Non
     fills = snapshot["recent_fills"]
     assert [fill["trade_id"] for fill in fills] == [101, 102, 103]
     assert fills[1]["origin_run_id"] == "old-run"
-    assert fills[1]["strategy_id"] == "hype_breakout_onset_bidirectional_v1"
+    assert fills[1]["strategy_id"] == "test_fade_1m"
     assert fills[1]["exit_controller_id"] == "cohort_maximum_hold"
     assert fills[1]["exit_reason"] == "maximum_hold_seconds"
     assert fills[1]["lifecycle_fees_usd"] == pytest.approx(0.021)
@@ -61,7 +61,7 @@ def test_split_close_fills_keep_entry_and_exit_controller_attribution(
     asset = next(item for item in config.assets if item.symbol == "HYPE")
     ledger = _ledger(tmp_path, asset, "split-close-run")
     _append(
-        ledger, "regime_decision", 0, _decision("hype_breakout_onset_bidirectional_v1")
+        ledger, "regime_decision", 0, _decision("test_fade_1m")
     )
     _append(ledger, "order_intent", 1, _intent("entry", "entry-client", 100.0))
     _append(ledger, "order_acknowledgement", 2, _ack("entry-client", 11))
@@ -104,7 +104,7 @@ def test_split_close_fills_keep_entry_and_exit_controller_attribution(
 
     assert len(closes) == 2
     assert {fill["strategy_id"] for fill in closes} == {
-        "hype_breakout_onset_bidirectional_v1"
+        "test_fade_1m"
     }
     assert {fill["exit_controller_id"] for fill in closes} == {"cohort_maximum_hold"}
 
@@ -115,7 +115,7 @@ def test_target_fill_uses_exact_target_order_context(tmp_path: Path) -> None:
     asset = next(item for item in config.assets if item.symbol == "BTC")
     ledger = _ledger(tmp_path, asset, "target-run")
     _append(
-        ledger, "regime_decision", 0, _decision("hulk_expansion_bidirectional_tuned_v2")
+        ledger, "regime_decision", 0, _decision("test_trend_5m")
     )
     _append(ledger, "order_intent", 1, _intent("entry", "entry-client", 100.0))
     _append(ledger, "order_acknowledgement", 2, _ack("entry-client", 11))
@@ -162,8 +162,8 @@ def test_target_fill_uses_exact_target_order_context(tmp_path: Path) -> None:
 
     close = fill_payloads("BTC", ledger.read_all())[-1]
 
-    assert close["strategy_id"] == "hulk_expansion_bidirectional_tuned_v2"
-    assert close["exit_controller_id"] == "hulk_expansion_bidirectional_tuned_v2"
+    assert close["strategy_id"] == "test_trend_5m"
+    assert close["exit_controller_id"] == "test_trend_5m"
     assert close["operation"] == "target"
     assert close["expected_price"] == pytest.approx(103.0)
     assert close["acknowledgement_latency_ms"] == 1_000
@@ -224,7 +224,7 @@ def _ledger(
 
 def _append_hype_lifecycle(ledger: SolLiveLedger) -> None:
     _append(
-        ledger, "regime_decision", 0, _decision("hype_breakout_onset_bidirectional_v1")
+        ledger, "regime_decision", 0, _decision("test_fade_1m")
     )
     _append(ledger, "order_intent", 1, _intent("entry", "entry-client", 100.0))
     _append(ledger, "order_acknowledgement", 2, _ack("entry-client", 11))
@@ -252,7 +252,7 @@ def _append_hype_lifecycle(ledger: SolLiveLedger) -> None:
 
 def _append_new_hype_entry(ledger: SolLiveLedger) -> None:
     _append(
-        ledger, "regime_decision", 11, _decision("hype_breakout_onset_bidirectional_v1")
+        ledger, "regime_decision", 11, _decision("test_fade_1m")
     )
     _append(ledger, "order_intent", 12, _intent("entry", "new-entry", 102.0))
     _append(ledger, "order_acknowledgement", 13, _ack("new-entry", 13))

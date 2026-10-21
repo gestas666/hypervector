@@ -57,7 +57,7 @@ def test_seven_engines_recover_delayed_native_status_and_protection(
 
 
 @pytest.mark.parametrize(
-    "symbol", ["BTC", "ETH", "SOL", "HYPE", "xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL"]
+    "symbol", ["BTC", "ETH", "SOL", "HYPE", "xyz:BBB", "xyz:CCC", "xyz:EEE"]
 )
 @pytest.mark.parametrize("last_side", [False, True])
 def test_pending_entry_restart_retains_the_durable_decision_clock(
@@ -84,12 +84,12 @@ def test_pending_entry_restart_retains_the_durable_decision_clock(
 @pytest.mark.parametrize(
     "symbol,operation",
     [
-        ("xyz:SNDK", "stop"),
+        ("xyz:CCC", "stop"),
         ("BTC", "stop"),
         ("BTC", "target"),
-        ("xyz:SNDK", "close"),
+        ("xyz:CCC", "close"),
         ("BTC", "close"),
-        ("xyz:SNDK", "cancel"),
+        ("xyz:CCC", "cancel"),
         ("BTC", "cancel"),
     ],
 )

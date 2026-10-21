@@ -9,12 +9,12 @@ from hypervector.research.cohort_friction_contract_models import (
 from hypervector.research.cohort_friction_parity import build_friction_parity
 
 
-_SOURCE = "hypervelocity_source_follow_bidirectional_5m_v1"
-_HYPE = "hype_breakout_onset_bidirectional_v1"
-_HULK = "hulk_expansion_bidirectional_tuned_v2"
-_RANGE = "range_onset_bidirectional_v1"
-_HIP3_BREAKOUT_INDEX = "hip3_breakout_pressure_sp500_spcx_bidirectional_v1"
-_SPCX_CASH_OPEN = "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1"
+_SOURCE = "test_mirror_1m"
+_HYPE = "test_fade_1m"
+_HULK = "test_trend_5m"
+_RANGE = "test_breakout_1m"
+_HIP3_BREAKOUT_INDEX = "test_session_a_15m"
+_BBB_CASH_OPEN = "test_anchor_target_15m"
 
 
 def test_source_follow_uses_frozen_deployed_shape_without_claiming_edge(
@@ -279,8 +279,8 @@ def test_exact_symbol_contract_precedes_provider_fallback(
     _register(
         monkeypatch,
         _HIP3_BREAKOUT_INDEX,
-        "xyz:SP500",
-        _fixed_contract(80.0, 86_400, slippage_bps=1.4, source="evidence/sp500.json"),
+        "xyz:AAA",
+        _fixed_contract(80.0, 86_400, slippage_bps=1.4, source="evidence/aaa.json"),
     )
     _register(
         monkeypatch,
@@ -290,8 +290,8 @@ def test_exact_symbol_contract_precedes_provider_fallback(
     )
     identity = {
         "assets": [
-            {"symbol": "xyz:SP500"},
-            {"symbol": "xyz:SPCX"},
+            {"symbol": "xyz:AAA"},
+            {"symbol": "xyz:BBB"},
         ],
         "providers": [
             _provider(
@@ -302,21 +302,21 @@ def test_exact_symbol_contract_precedes_provider_fallback(
                 maximum_hold_seconds=86_400,
                 stop_bps=80.0,
             )
-            for symbol in ("xyz:SP500", "xyz:SPCX")
+            for symbol in ("xyz:AAA", "xyz:BBB")
         ],
     }
 
     report = build_friction_parity(identity, [])
-    sp500 = report["by_provider_symbol"][f"{_HIP3_BREAKOUT_INDEX}|xyz:SP500"]
-    spcx = report["by_provider_symbol"][f"{_HIP3_BREAKOUT_INDEX}|xyz:SPCX"]
+    aaa = report["by_provider_symbol"][f"{_HIP3_BREAKOUT_INDEX}|xyz:AAA"]
+    bbb = report["by_provider_symbol"][f"{_HIP3_BREAKOUT_INDEX}|xyz:BBB"]
 
-    assert sp500["parity_state"] == "runtime_shape_aligned"
-    assert sp500["mismatches"] == []
-    assert sp500["modeled_contract"]["entry_slippage_bps"] == pytest.approx(1.4)
-    assert sp500["modeled_contract"]["evidence_source"] == "evidence/sp500.json"
-    assert spcx["parity_state"] == "runtime_shape_aligned"
-    assert spcx["modeled_contract"]["entry_slippage_bps"] == pytest.approx(2.75)
-    assert spcx["modeled_contract"]["evidence_source"] == "evidence/index.json"
+    assert aaa["parity_state"] == "runtime_shape_aligned"
+    assert aaa["mismatches"] == []
+    assert aaa["modeled_contract"]["entry_slippage_bps"] == pytest.approx(1.4)
+    assert aaa["modeled_contract"]["evidence_source"] == "evidence/aaa.json"
+    assert bbb["parity_state"] == "runtime_shape_aligned"
+    assert bbb["modeled_contract"]["entry_slippage_bps"] == pytest.approx(2.75)
+    assert bbb["modeled_contract"]["evidence_source"] == "evidence/index.json"
 
 
 def test_symbol_stop_override_requires_its_own_modeled_contract(
@@ -360,14 +360,14 @@ def test_symbol_stop_override_requires_its_own_modeled_contract(
     assert rows[f"{_RANGE}|SOL"]["parity_state"] == "unsupported_contract"
 
 
-def test_spcx_cash_open_contract_matches_dynamic_target_and_session_hold(
+def test_bbb_cash_open_contract_matches_dynamic_target_and_session_hold(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Checkpoint friction telemetry must understand an absolute-anchor target."""
     _register(
         monkeypatch,
-        _SPCX_CASH_OPEN,
-        "xyz:SPCX",
+        _BBB_CASH_OPEN,
+        "xyz:BBB",
         ModeledExecutionContract(
             "taker",
             0.864,
@@ -383,15 +383,15 @@ def test_spcx_cash_open_contract_matches_dynamic_target_and_session_hold(
             "maker",
             None,
             None,
-            "evidence/spcx-cash-open.json",
+            "evidence/bbb-cash-open.json",
         ),
     )
     identity = {
-        "assets": [{"symbol": "xyz:SPCX"}],
+        "assets": [{"symbol": "xyz:BBB"}],
         "providers": [
             _provider(
-                _SPCX_CASH_OPEN,
-                "xyz:SPCX",
+                _BBB_CASH_OPEN,
+                "xyz:BBB",
                 stop_policy="fixed_bps",
                 stop_bps=80.0,
                 target_policy="absolute_anchor",
@@ -402,7 +402,7 @@ def test_spcx_cash_open_contract_matches_dynamic_target_and_session_hold(
     }
 
     row = build_friction_parity(identity, [])["by_provider_symbol"][
-        f"{_SPCX_CASH_OPEN}|xyz:SPCX"
+        f"{_BBB_CASH_OPEN}|xyz:BBB"
     ]
 
     assert row["parity_state"] == "runtime_shape_aligned"

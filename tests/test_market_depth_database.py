@@ -37,7 +37,7 @@ def _connection() -> duckdb.DuckDBPyConnection:
             [{"n": 1, "px": 102.0, "sz": 3.0}],
         ),
         (
-            "xyz:SPCX",
+            "xyz:BBB",
             2_005,
             [{"n": 1, "px": 4_999.0, "sz": 0.02}],
             [
@@ -92,7 +92,7 @@ def test_fill_preserves_exact_hip3_identity_when_family_is_explicit() -> None:
     with _connection() as connection:
         timed = market_fill_at_or_after(
             connection,
-            symbol="xyz:SPCX",
+            symbol="xyz:BBB",
             market_family="hip3",
             event_time_ms=2_000,
             side="buy",
@@ -111,7 +111,7 @@ def test_fill_rejects_market_family_identity_mismatch() -> None:
         with pytest.raises(ValueError, match="uppercase Hyperliquid asset"):
             market_fill_at_or_after(
                 connection,
-                symbol="xyz:SPCX",
+                symbol="xyz:BBB",
                 market_family="core",
                 event_time_ms=2_000,
                 side="buy",

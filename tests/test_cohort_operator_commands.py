@@ -27,7 +27,7 @@ def _write(root: Path, request_id: str, **updates: object) -> None:
         "created_at_utc": _NOW.isoformat(),
         "action": "manual_enter",
         "symbol": "BTC",
-        "provider": "hulk_expansion_bidirectional_tuned_v2",
+        "provider": "test_trend_5m",
         "side": "long",
         "settings": None,
     }
@@ -124,7 +124,7 @@ def test_manual_close_accepts_canonical_hip3_symbol(tmp_path: Path) -> None:
         tmp_path,
         request_id,
         action="manual_close",
-        symbol="xyz:BRENTOIL",
+        symbol="xyz:EEE",
         provider=None,
         side=None,
     )
@@ -139,7 +139,7 @@ def test_manual_close_accepts_canonical_hip3_symbol(tmp_path: Path) -> None:
 
     assert claim.issue is None
     assert claim.command is not None
-    assert claim.command.symbol == "xyz:BRENTOIL"
+    assert claim.command.symbol == "xyz:EEE"
 
 
 def test_transition_drain_requires_portfolio_scope_and_no_trade_fields(

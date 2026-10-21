@@ -25,7 +25,7 @@ _CONFIG = Path(
 )
 _OBSERVED = datetime(2026, 8, 15, 12, tzinfo=UTC)
 _OBSERVED_MS = int(_OBSERVED.timestamp() * 1_000)
-_HIP3_PROVIDER = "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3"
+_HIP3_PROVIDER = "test_session_c_15m"
 
 
 class _CanonicalCollector:
@@ -85,7 +85,7 @@ class _Collector:
 
 
 class _RecoveringHip3Collector(_Collector):
-    """Fail only SP500 once, then recover on the next portfolio cycle."""
+    """Fail only AAA once, then recover on the next portfolio cycle."""
 
     def __init__(self) -> None:
         super().__init__(_HIP3_PROVIDER)
@@ -101,7 +101,7 @@ class _RecoveringHip3Collector(_Collector):
     ) -> IntentBatch:
         """Raise the typed availability error only for the failed route."""
         self.boundaries.setdefault(symbol, []).append(after_decision_time_ms)
-        if symbol == "xyz:SP500" and self.unavailable:
+        if symbol == "xyz:AAA" and self.unavailable:
             raise Hip3ObserverUnavailableError("observer_status_stale")
         self.boundaries[symbol].pop()
         return super().__call__(
@@ -182,21 +182,21 @@ def test_one_stale_observer_does_not_stop_portfolio_polling() -> None:
     hip3.unavailable = False
     second = poller.poll(datetime(2026, 8, 15, 12, 0, 15, tzinfo=UTC))
 
-    unavailable = next(row for row in first.evaluations if row.symbol == "xyz:SP500")
+    unavailable = next(row for row in first.evaluations if row.symbol == "xyz:AAA")
     assert unavailable.decision_action == "technical_unavailable"
     assert unavailable.backend_non_action_reason == "observer_status_stale"
     assert unavailable.readiness.blockers == ("observer_status_stale",)
     assert len(first.evaluations) == 7
-    assert hip3.boundaries["xyz:SP500"] == [activation, activation]
+    assert hip3.boundaries["xyz:AAA"] == [activation, activation]
     seed_boundary = activation - (
         READINESS_SEED_LOOKBACK_MINUTES[_HIP3_PROVIDER] * 60 * 1_000
     )
-    assert hip3.boundaries["xyz:SPCX"] == [
+    assert hip3.boundaries["xyz:BBB"] == [
         activation,
         seed_boundary,
         activation + 1,
     ]
-    assert any(row.symbol == "xyz:SP500" for row in second.evaluations)
+    assert any(row.symbol == "xyz:AAA" for row in second.evaluations)
 
 
 def test_readiness_seed_unavailability_does_not_stop_portfolio_polling() -> None:
@@ -223,7 +223,7 @@ def test_readiness_seed_unavailability_does_not_stop_portfolio_polling() -> None
 
     result = poller.poll(_OBSERVED)
 
-    unavailable = next(row for row in result.evaluations if row.symbol == "xyz:SP500")
+    unavailable = next(row for row in result.evaluations if row.symbol == "xyz:AAA")
     assert unavailable.decision_action == "technical_unavailable"
     assert unavailable.reason == "cash_open_trade_bars_incomplete"
     assert unavailable.backend_non_action_reason == "cash_open_trade_bars_incomplete"

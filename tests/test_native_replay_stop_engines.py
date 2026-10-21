@@ -16,7 +16,7 @@ from hypervector.research.native_replay_depth import ExactLevel, RecordedBook
 
 __all__ = ["deny_external_ports"]
 D = Decimal
-SYMBOLS = ("BTC", "ETH", "SOL", "HYPE", "xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL")
+SYMBOLS = ("BTC", "ETH", "SOL", "HYPE", "xyz:BBB", "xyz:CCC", "xyz:EEE")
 
 
 @pytest.mark.parametrize("symbol", SYMBOLS)

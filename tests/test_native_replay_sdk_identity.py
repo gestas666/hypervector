@@ -22,7 +22,7 @@ def test_sdk_order_allocator_preserves_identity_in_account_ack_and_fills() -> No
     replay.advance_to(1400)
     view = replay.execution("order:1")
     assert view.applied and {fill.order_id for fill in view.fills} == {"41"}
-    assert replay.account.snapshot().positions["xyz:SNDK"].opening_order_id == "41"
+    assert replay.account.snapshot().positions["xyz:CCC"].opening_order_id == "41"
     assert replay.response("order:1")["response"]["data"]["statuses"][0]["filled"]["oid"] == 41
     replay.submit(order(), book(), timing(), maximum_book_delay_ms=50)
     assert next(ids) == 43, "idempotent request replay must not allocate another order ID"

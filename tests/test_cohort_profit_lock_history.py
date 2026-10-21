@@ -133,7 +133,7 @@ def test_profile_b_exit_policy_v2_requests_full_lifecycle_history_per_route() ->
         "BTC": 1_463,
         "ETH": 2_903,
         "SOL": 1_463,
-        "xyz:SNDK": 1_463,
-        "xyz:BRENTOIL": 1_463,
-        "xyz:TSLA": 1_463,
+        "xyz:CCC": 1_463,
+        "xyz:EEE": 1_463,
+        "xyz:FFF": 1_463,
     }

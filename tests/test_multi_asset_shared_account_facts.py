@@ -29,7 +29,7 @@ def _venue(margin: float, notional: float) -> SolReconciliationSnapshot:
 
 def test_shared_account_sums_one_total_per_perp_namespace() -> None:
     """Core and HIP-3 exposure combine without per-symbol duplication."""
-    symbols = ("BTC", "ETH", "HYPE", "xyz:SP500", "xyz:SPCX")
+    symbols = ("BTC", "ETH", "HYPE", "xyz:AAA", "xyz:BBB")
     venues = (
         _venue(472.0, 4_972.0),
         _venue(472.0, 4_972.0),
@@ -52,4 +52,4 @@ def test_shared_account_rejects_symbol_snapshot_mismatch() -> None:
         MultiAssetLiveRunnerError,
         match="symbols and venue snapshots must agree",
     ):
-        shared_account_facts(("BTC", "xyz:SP500"), (_venue(1.0, 10.0),))
+        shared_account_facts(("BTC", "xyz:AAA"), (_venue(1.0, 10.0),))

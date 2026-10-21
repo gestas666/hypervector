@@ -16,8 +16,8 @@ from cohort_observer_audit_assertions import assert_observer_audit_baseline
 from hypervector.research.cohort_observer_audit import audit_cohort_observer_run
 
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
-_HULK = "hulk_expansion_bidirectional_tuned_v2"
-_RANGE = "range_onset_bidirectional_v1"
+_HULK = "test_trend_5m"
+_RANGE = "test_breakout_1m"
 _RUN_ID = "observer-a"
 _SCRIPT = Path("src/hypervector/operations/multi_asset_bidirectional_observer_audit.py")
 

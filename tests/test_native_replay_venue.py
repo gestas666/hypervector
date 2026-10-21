@@ -18,15 +18,15 @@ D = Decimal
 def venue() -> RecordedIocVenue:
     """Start flat at an explicit observed mark, without constructing SDK clients."""
     clock = ReplayClock(1000)
-    account = ExactFillAccount(D(5000), ("xyz:SNDK",))
-    account.mark(clock.next_stamp(), source_time_ms=1000, prices={"xyz:SNDK": D(100)})
+    account = ExactFillAccount(D(5000), ("xyz:CCC",))
+    account.mark(clock.next_stamp(), source_time_ms=1000, prices={"xyz:CCC": D(100)})
     return RecordedIocVenue(account, clock)
 
 
 def order() -> IocOrder:
     """Prescribe a submitted limit/quantity and a separate arrival clock."""
     return IocOrder(
-        "order:1", "xyz:SNDK", "buy", D("0.25"), D("100.2"), D(10), D("0.0009"), 900, 1000, 1050, False
+        "order:1", "xyz:CCC", "buy", D("0.25"), D("100.2"), D(10), D("0.0009"), 900, 1000, 1050, False
     )
 
 
@@ -41,7 +41,7 @@ def test_execution_is_distinct_from_ack_fill_and_status_visibility() -> None:
     replay.submit(order(), book(), timing(), maximum_book_delay_ms=50)
     assert replay.account.snapshot().positions == {} and replay.response("order:1") is None
     replay.advance_to(1100)
-    assert replay.account.snapshot().positions["xyz:SNDK"].quantity_signed == D("0.25")
+    assert replay.account.snapshot().positions["xyz:CCC"].quantity_signed == D("0.25")
     assert replay.visible_fills() == () and replay.order_status("order:1") is None
     replay.advance_to(1200)
     ack = replay.response("order:1")
@@ -89,7 +89,7 @@ def test_zero_fill_has_no_economic_mutation_and_partial_remainder_is_canceled() 
     partial = venue()
     partial.submit(replace(order(), limit_price=D("100.1")), book(), timing(), maximum_book_delay_ms=50)
     partial.advance_to(1400)
-    assert partial.account.snapshot().positions["xyz:SNDK"].quantity_signed == D("0.1")
+    assert partial.account.snapshot().positions["xyz:CCC"].quantity_signed == D("0.1")
     assert partial.order_status("order:1") == "canceled"
     assert partial.response("order:1")["response"]["data"]["statuses"][0]["filled"]["totalSz"] == "0.1"
 
@@ -115,8 +115,8 @@ def test_partial_close_preserves_entry_origin_and_independent_cash() -> None:
     replay.submit(closing, closing_book, closing_timing, maximum_book_delay_ms=50)
     replay.advance_to(1600)
     view = replay.account.snapshot()
-    assert view.positions["xyz:SNDK"].quantity_signed == D("0.15")
-    assert view.positions["xyz:SNDK"].decision_time_ms == 900
+    assert view.positions["xyz:CCC"].quantity_signed == D("0.15")
+    assert view.positions["xyz:CCC"].decision_time_ms == 900
     gross = Fraction("0.1") * (Fraction("99.9") - Fraction("100.16"))
     assert Fraction(view.realized_gross_usd) == gross
     assert Fraction(view.cash_usd) == Fraction(5000) + gross - Fraction(view.fees_usd)

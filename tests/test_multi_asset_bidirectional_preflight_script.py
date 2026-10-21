@@ -96,7 +96,7 @@ def test_command_has_no_live_flags_and_writes_atomic_report(
     module = _load_module()
     checkpoint = tmp_path / "checkpoint.json"
     output = tmp_path / "preflight.json"
-    _checkpoint(checkpoint, _PROFILE_B, open_symbol="xyz:SNDK")
+    _checkpoint(checkpoint, _PROFILE_B, open_symbol="xyz:CCC")
     readers = {
         symbol: object()
         for symbol in load_multi_asset_live_config(_PROFILE_B, mode="observe").symbols
@@ -107,7 +107,7 @@ def test_command_has_no_live_flags_and_writes_atomic_report(
         assert set(kwargs["readers"]) == set(readers)
         assert kwargs["sizing_reference_equity_usd"] == pytest.approx(5_000.0)
         expectations = kwargs["ledger_expectations"]
-        assert expectations["xyz:SNDK"].owned_order_ids == frozenset({91})
+        assert expectations["xyz:CCC"].owned_order_ids == frozenset({91})
         return {
             "authority": {"execution_authority": "none"},
             "portfolio": {"technically_ready_for_profile_transition": True},
@@ -314,7 +314,7 @@ def test_additive_candidate_reconciles_new_asset_outside_active_checkpoint(
     def collect(**kwargs: object) -> dict[str, object]:
         assert set(kwargs["readers"]) == set(candidate.symbols)
         expectations = kwargs["ledger_expectations"]
-        for added in ("HYPE", "xyz:SPCX"):
+        for added in ("HYPE", "xyz:BBB"):
             assert expectations[added] == module.AssetLedgerExpectation(
                 0.0, frozenset()
             )
@@ -344,11 +344,11 @@ def test_removed_asset_remains_a_transition_blocker(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Profile B cannot hide active profile A SPCX exposure by removing the asset."""
+    """Profile B cannot hide active profile A BBB exposure by removing the asset."""
     module = _load_module()
     checkpoint = tmp_path / "checkpoint.json"
     output = tmp_path / "preflight.json"
-    _checkpoint(checkpoint, _PROFILE_A, open_symbol="xyz:SPCX")
+    _checkpoint(checkpoint, _PROFILE_A, open_symbol="xyz:BBB")
     readers = {
         symbol: object()
         for symbol in load_multi_asset_live_config(_PROFILE_A, mode="observe").symbols
@@ -384,9 +384,9 @@ def test_removed_asset_remains_a_transition_blocker(
     result = module.run_preflight(args)
 
     assert result == 3
-    assert sorted(retired) == ["HYPE", "xyz:SPCX"]
+    assert sorted(retired) == ["HYPE", "xyz:BBB"]
     portfolio = json.loads(output.read_text(encoding="utf-8"))["portfolio"]
-    assert portfolio["transition_blocking_assets"] == ["xyz:SPCX"]
+    assert portfolio["transition_blocking_assets"] == ["xyz:BBB"]
     assert portfolio["technically_ready_for_profile_transition"] is False
 
 

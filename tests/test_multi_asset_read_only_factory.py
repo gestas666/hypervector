@@ -20,7 +20,7 @@ def test_factory_builds_info_only_readers_without_forwarding_signing_material() 
             return Mock()
 
     readers = create_multi_asset_read_only_readers(
-        ("BTC", "xyz:GOLD"),
+        ("BTC", "xyz:DDD"),
         environ={
             SECRET_ENV_WALLET: "0x" + "1" * 40,
             SECRET_ENV_API_KEY: "must-not-be-forwarded",
@@ -28,5 +28,5 @@ def test_factory_builds_info_only_readers_without_forwarding_signing_material() 
         builder=Builder(),
     )
 
-    assert set(readers) == {"BTC", "xyz:GOLD"}
+    assert set(readers) == {"BTC", "xyz:DDD"}
     assert captured == {"perp_dexes": ("", "xyz")}

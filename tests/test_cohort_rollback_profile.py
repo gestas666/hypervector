@@ -262,7 +262,7 @@ def test_approval_document_binds_current_to_rollback(workspace: Path) -> None:
         "profile_fingerprint": current.profile_fingerprint,
         "sha256": _sha256(workspace / PROFILE_B),
     }
-    # Profile A's extra HYPE and xyz:SPCX providers are watch-only: no scope
+    # Profile A's extra HYPE and xyz:BBB providers are watch-only: no scope
     # retires.
     assert document["retirements"] == []
 
@@ -413,22 +413,22 @@ def test_scopes_the_target_lacks_are_retired_without_replacement(
     workspace: Path,
 ) -> None:
     text = (workspace / PROFILE_A).read_text()
-    marker = 'execution_symbols = ["SOL", "xyz:SNDK", "xyz:BRENTOIL", "xyz:TSLA"]\n'
+    marker = 'execution_symbols = ["SOL", "xyz:CCC", "xyz:EEE", "xyz:FFF"]\n'
     assert text.count(marker) == 1
-    narrowed = workspace / CHAIN / "tsla_watch_only_target.toml"
+    narrowed = workspace / CHAIN / "fff_watch_only_target.toml"
     narrowed.write_text(
         text.replace(
-            marker, 'execution_symbols = ["SOL", "xyz:SNDK", "xyz:BRENTOIL"]\n'
+            marker, 'execution_symbols = ["SOL", "xyz:CCC", "xyz:EEE"]\n'
         )
     )
 
-    assert _create(workspace, target=f"{CHAIN}/tsla_watch_only_target.toml") == 0
+    assert _create(workspace, target=f"{CHAIN}/fff_watch_only_target.toml") == 0
     _, approval = _outputs(workspace)
     assert json.loads(approval.read_text())["retirements"] == [
         {
             "retired_scope": {
-                "strategy_id": "hourly_donchian_20_10_atr20_strong_short_v1",
-                "symbol": "xyz:TSLA",
+                "strategy_id": "test_channel_short_15m",
+                "symbol": "xyz:FFF",
                 "side": side,
             },
             "replacement_scope": None,

@@ -15,7 +15,7 @@ def _metadata(growth_mode: str = "enabled") -> dict[str, object]:
         "collateralToken": 0,
         "universe": [
             {
-                "name": "xyz:SP500",
+                "name": "xyz:AAA",
                 "szDecimals": 3,
                 "maxLeverage": 50,
                 "growthMode": growth_mode,
@@ -32,7 +32,7 @@ def test_preserves_missing_growth_mode_as_unresolved() -> None:
     result = parse_hip3_market_fee_metadata(
         metadata=metadata,
         dexes=[None, {"name": "xyz", "deployerFeeScale": "1.0"}],
-        symbol="xyz:SP500",
+        symbol="xyz:AAA",
         perp_dex="xyz",
     )
 
@@ -44,7 +44,7 @@ def test_parses_exact_dex_and_market_fee_metadata() -> None:
     result = parse_hip3_market_fee_metadata(
         metadata=_metadata(),
         dexes=[None, {"name": "xyz", "deployerFeeScale": "1.0"}],
-        symbol="xyz:SP500",
+        symbol="xyz:AAA",
         perp_dex="xyz",
     )
 
@@ -61,7 +61,7 @@ def test_prefers_market_specific_deployer_fee_scale() -> None:
     result = parse_hip3_market_fee_metadata(
         metadata=metadata,
         dexes=[None, {"name": "xyz"}],
-        symbol="xyz:SP500",
+        symbol="xyz:AAA",
         perp_dex="xyz",
     )
 
@@ -73,7 +73,7 @@ def test_preserves_missing_deployer_fee_scale_as_unresolved() -> None:
     result = parse_hip3_market_fee_metadata(
         metadata=_metadata(),
         dexes=[None, {"name": "xyz"}],
-        symbol="xyz:SP500",
+        symbol="xyz:AAA",
         perp_dex="xyz",
     )
 
@@ -88,7 +88,7 @@ def test_rejects_unsupported_growth_mode(growth_mode: str) -> None:
         parse_hip3_market_fee_metadata(
             metadata=_metadata(growth_mode),
             dexes=[{"name": "xyz", "deployerFeeScale": "1.0"}],
-            symbol="xyz:SP500",
+            symbol="xyz:AAA",
             perp_dex="xyz",
         )
 
@@ -99,6 +99,6 @@ def test_rejects_missing_exact_dex_fee_scale() -> None:
         parse_hip3_market_fee_metadata(
             metadata=_metadata(),
             dexes=[{"name": "cash", "deployerFeeScale": "0.5"}],
-            symbol="xyz:SP500",
+            symbol="xyz:AAA",
             perp_dex="xyz",
         )

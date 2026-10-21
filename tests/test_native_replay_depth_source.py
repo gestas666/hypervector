@@ -1,4 +1,4 @@
-"""Independent rational reconstruction from retained raw SNDK source depth."""
+"""Independent rational reconstruction from retained raw source depth."""
 
 from decimal import Decimal
 from fractions import Fraction
@@ -9,7 +9,7 @@ import pytest
 
 from hypervector.research.native_replay_depth import BookLiquidity, ExactLevel, RecordedBook
 
-FIXTURE = Path(__file__).parent / "fixtures/native_replay_sndk_book_20260701.json"
+FIXTURE = Path(__file__).parent / "fixtures/native_replay_book_sample.json"
 
 
 @pytest.mark.parametrize("side", ["buy", "sell"])

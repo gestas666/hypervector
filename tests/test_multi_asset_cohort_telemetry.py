@@ -70,7 +70,7 @@ def _telemetry(
 
 def _intent(symbol: str, side: str) -> StrategyIntent:
     return StrategyIntent(
-        strategy_id="hulk_expansion_bidirectional_tuned_v2",
+        strategy_id="test_trend_5m",
         symbol=symbol,
         side=side,
         decision_time_ms=1_785_600_000_000,
@@ -104,7 +104,7 @@ def test_configuration_and_snapshot_expose_every_coin_and_both_sides(
     range_provider = next(
         provider
         for provider in identity["providers"]
-        if provider["strategy_id"] == "range_onset_bidirectional_v1"
+        if provider["strategy_id"] == "test_breakout_1m"
     )
     assert range_provider["entry_context_overrides"] == {"ETH": "dual_mtf_not_opposed"}
     assert snapshot["open_position_count"] == 1
@@ -203,7 +203,7 @@ def _snapshot_assets() -> tuple[AssetCohortSnapshot, ...]:
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk_expansion_bidirectional_tuned_v2", stop_anchor=None)
+    ).bind(strategy_id="test_trend_5m", stop_anchor=None)
     open_btc = AssetCohortSnapshot(
         "BTC",
         "OPEN",
@@ -234,7 +234,7 @@ def test_configuration_exposes_non_gating_strategy_evidence(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Every provider-symbol mapping carries an honest research-state record."""
-    hulk = "hulk_expansion_bidirectional_tuned_v2"
+    hulk = "test_trend_5m"
     monkeypatch.setitem(
         multi_asset_strategy_evidence._EVIDENCE,
         (hulk, "BTC"),
@@ -407,7 +407,7 @@ def test_routing_records_non_entry_provider_readiness(tmp_path: Path) -> None:
     """A healthy no-trade cycle carries progress and blockers to the TUI."""
     telemetry, ledger = _telemetry(tmp_path)
     evaluation = ProviderEvaluation(
-        strategy_id="hulk_expansion_bidirectional_tuned_v2",
+        strategy_id="test_trend_5m",
         symbol="BTC",
         decision_time_ms=1_785_600_000_000,
         reference_price=100.0,
@@ -440,7 +440,7 @@ def test_routing_records_non_entry_provider_readiness(tmp_path: Path) -> None:
         coverage["missing_provider_symbols"]
     )
     assert (
-        "hulk_expansion_bidirectional_tuned_v2|ETH"
+        "test_trend_5m|ETH"
         in coverage["missing_provider_symbols"]
     )
 
@@ -600,7 +600,7 @@ def test_provider_exit_decision_is_durable_and_restart_idempotent(
     payload = {
         "decision_id": "HYPE:99:provider_recipe_exit",
         "lifecycle_id": "HYPE:99",
-        "strategy_id": "hype_breakout_onset_bidirectional_v1",
+        "strategy_id": "test_fade_1m",
         "symbol": "HYPE",
         "side": "long",
         "outcome": "exit",
@@ -627,7 +627,7 @@ def test_provider_exit_decision_rejects_conflicting_stable_identity(
     payload = {
         "decision_id": "HYPE:99:provider_recipe_exit",
         "lifecycle_id": "HYPE:99",
-        "strategy_id": "hype_breakout_onset_bidirectional_v1",
+        "strategy_id": "test_fade_1m",
         "symbol": "HYPE",
         "side": "long",
         "outcome": "exit",

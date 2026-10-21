@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 from hypervector.live.bidirectional_cohort_factory import (
     AssetExecutionEnvelope,
-    BidirectionalCohortAdapters,
-    create_armed_bidirectional_adapters,
     create_armed_multi_asset_adapters,
 )
-from hypervector.live.hulk_smash_live_config import load_hulk_smash_live_config
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidExchangeProtocol,
     HyperliquidInfoProtocol,
@@ -21,10 +17,7 @@ from hypervector.live.hyperliquid_protocol import (
 )
 from hypervector.live.hyperliquid_sol_factory import SolSdkBuilderProtocol
 from hypervector.live.policy import SECRET_ENV_API_KEY, SECRET_ENV_WALLET
-from hypervector.live.sol_range_onset_config import load_sol_range_onset_config
 
-_HULK = Path("tests/fixtures/profiles/hulk_smash_short_robust.toml")
-_SOL = Path("tests/fixtures/profiles/sol_range_onset.toml")
 _ADDRESS = "0x1111111111111111111111111111111111111111"
 
 
@@ -46,56 +39,6 @@ class _Builder(SolSdkBuilderProtocol):
         """Return one inert SDK pair."""
         self.calls.append((account_address, private_key, perp_dexes))
         return self.info, self.exchange
-
-
-def _hulk(*, armed: bool) -> object:
-    return load_hulk_smash_live_config(
-        _HULK,
-        mode="live",
-        enabled=armed,
-        accepts_live_risk=armed,
-    )
-
-
-def _sol(*, armed: bool) -> object:
-    return load_sol_range_onset_config(
-        _SOL,
-        mode="live",
-        enabled=armed,
-        accepts_live_risk=armed,
-    )
-
-
-def test_one_sdk_build_creates_both_symbol_adapters() -> None:
-    """The cohort owns one authenticated identity rather than two clients."""
-    builder = _Builder()
-
-    adapters = create_armed_bidirectional_adapters(
-        _hulk(armed=True),
-        _sol(armed=True),
-        environ={SECRET_ENV_WALLET: _ADDRESS, SECRET_ENV_API_KEY: "private"},
-        builder=builder,
-    )
-
-    assert isinstance(adapters, BidirectionalCohortAdapters)
-    assert adapters.btc.symbol == "BTC"
-    assert adapters.sol.symbol == "SOL"
-    assert builder.calls == [(_ADDRESS, "private", ())]
-
-
-def test_either_disarmed_sleeve_refuses_before_sdk_build() -> None:
-    """One armed sleeve cannot smuggle authority into a disarmed cohort."""
-    builder = _Builder()
-
-    with pytest.raises(ValueError, match="--enabled"):
-        create_armed_bidirectional_adapters(
-            _hulk(armed=False),
-            _sol(armed=True),
-            environ={SECRET_ENV_WALLET: _ADDRESS, SECRET_ENV_API_KEY: "private"},
-            builder=builder,
-        )
-
-    assert builder.calls == []
 
 
 def test_one_sdk_build_constructs_every_configured_symbol() -> None:
@@ -135,8 +78,8 @@ def test_one_sdk_build_receives_exact_hip3_namespace_roster() -> None:
     builder = _Builder()
     assets = (
         AssetExecutionEnvelope("BTC", 25.0, 0.01),
-        AssetExecutionEnvelope("xyz:SP500", 25.0, 0.01),
-        AssetExecutionEnvelope("xyz:GOLD", 25.0, 0.01),
+        AssetExecutionEnvelope("xyz:AAA", 25.0, 0.01),
+        AssetExecutionEnvelope("xyz:DDD", 25.0, 0.01),
     )
 
     adapters = create_armed_multi_asset_adapters(
@@ -149,19 +92,19 @@ def test_one_sdk_build_receives_exact_hip3_namespace_roster() -> None:
 
     assert builder.calls == [(_ADDRESS, "private", ("", "xyz"))]
     assert adapters.by_symbol["BTC"].perp_dex == ""
-    assert adapters.by_symbol["xyz:SP500"].perp_dex == "xyz"
-    assert adapters.by_symbol["xyz:GOLD"].perp_dex == "xyz"
+    assert adapters.by_symbol["xyz:AAA"].perp_dex == "xyz"
+    assert adapters.by_symbol["xyz:DDD"].perp_dex == "xyz"
 
 
 def test_execution_envelope_preserves_exact_hip3_namespace() -> None:
     """An exact HIP-3 venue identity carries its perp-dex into the SDK layer."""
-    asset = AssetExecutionEnvelope("xyz:SP500", 25.0, 0.01)
+    asset = AssetExecutionEnvelope("xyz:AAA", 25.0, 0.01)
 
-    assert asset.symbol == "xyz:SP500"
+    assert asset.symbol == "xyz:AAA"
     assert asset.perp_dex == "xyz"
 
 
-@pytest.mark.parametrize("symbol", ["XYZ:SP500", "xyz:sp500", "xyz:", "BTC:USD"])
+@pytest.mark.parametrize("symbol", ["XYZ:AAA", "xyz:aaa", "xyz:", "BTC:USD"])
 def test_execution_envelope_rejects_malformed_namespaces(symbol: str) -> None:
     """Malformed or ambiguous namespaced symbols fail before SDK construction."""
     with pytest.raises(ValueError, match="venue identity"):

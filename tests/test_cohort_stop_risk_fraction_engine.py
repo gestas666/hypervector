@@ -13,7 +13,7 @@ from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
 from hypervector.live.sol_range_onset_execution_plan import entry_notional
 from hypervector.live.sol_range_onset_state import SolLiveState
 
-SYMBOL = "xyz:SNDK"
+SYMBOL = "xyz:CCC"
 
 
 def _engine(tmp_path: Path, budget: StopRiskBudget, side: str = "long"):

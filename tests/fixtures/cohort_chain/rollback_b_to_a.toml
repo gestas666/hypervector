@@ -65,7 +65,7 @@ maximum_hold_seconds = 86400
 entry_slippage_cap_fraction = 0.002
 
 [[assets]]
-symbol = "xyz:SPCX"
+symbol = "xyz:BBB"
 sides = ["long", "short"]
 leverage = 10.0
 venue_max_leverage = 20.0
@@ -77,7 +77,7 @@ maximum_hold_seconds = 86400
 entry_slippage_cap_fraction = 0.002
 
 [[assets]]
-symbol = "xyz:SNDK"
+symbol = "xyz:CCC"
 sides = ["long", "short"]
 leverage = 8.0
 venue_max_leverage = 10.0
@@ -89,7 +89,7 @@ maximum_hold_seconds = 86400
 entry_slippage_cap_fraction = 0.002
 
 [[assets]]
-symbol = "xyz:BRENTOIL"
+symbol = "xyz:EEE"
 sides = ["long", "short"]
 leverage = 8.0
 venue_max_leverage = 20.0
@@ -101,7 +101,7 @@ maximum_hold_seconds = 86400
 entry_slippage_cap_fraction = 0.002
 
 [[assets]]
-symbol = "xyz:TSLA"
+symbol = "xyz:FFF"
 sides = ["long", "short"]
 leverage = 8.0
 venue_max_leverage = 20.0
@@ -113,19 +113,19 @@ maximum_hold_seconds = 86400
 entry_slippage_cap_fraction = 0.002
 
 [[providers]]
-strategy_id = "liquidity_sweep_long_1h_stop60_target60_v2"
+strategy_id = "test_long_target_1m"
 symbols = ["BTC"]
 sides = ["long"]
 priority = 10
-timeframe = "1h"
+timeframe = "1m"
 maximum_entry_delay_seconds = 30
 execution_symbols = ["BTC"]
 position_policy = "enter_and_close"
-execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", target_policy = "fixed_bps", maximum_hold_seconds = 86400, stop_bps = 60.0, target_bps = 60.0, safety_stop_overlay = false, maximum_hold_policy = "fixed", provider_recipe_exit_policy = "ignore", adaptive_exit_policy = "regime_flip_floor_retention_v2", profit_lock_policy = "none", stop_risk_budget = { maximum_loss_usd = 25.0, cost_buffer_bps = 20.0 } }
+execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", target_policy = "fixed_bps", maximum_hold_seconds = 86400, stop_bps = 60.0, target_bps = 60.0, safety_stop_overlay = false, maximum_hold_policy = "fixed", provider_recipe_exit_policy = "ignore", adaptive_exit_policy = "regime_flip_floor_retention", retention_exit = { activation_r = 0.5, giveback_r = 0.5, opposed_alignment = -0.5, floor_activation_r = 2.0, floor_r = 0.5, breakeven_offset_bps = 25.0 }, profit_lock_policy = "none", stop_risk_budget = { maximum_loss_usd = 25.0, cost_buffer_bps = 20.0 } }
 sizing_overrides = { BTC = { margin_fraction = 0.011, max_notional_usd = 700.0 } }
 
 [[providers]]
-strategy_id = "eth_range_onset_long_dual_mtf_v2"
+strategy_id = "test_long_bias_1m"
 symbols = ["ETH"]
 sides = ["long", "short"]
 priority = 30
@@ -133,22 +133,22 @@ timeframe = "1m"
 maximum_entry_delay_seconds = 60
 execution_symbols = ["ETH"]
 position_policy = "enter_and_close"
-execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", target_policy = "none", maximum_hold_seconds = 172800, stop_bps = 60.0, safety_stop_overlay = false, maximum_hold_policy = "fixed", provider_recipe_exit_policy = "honor", adaptive_exit_policy = "regime_flip_floor_retention_v2", breakeven_stop_target = "floor", profit_lock_policy = "none", stop_risk_budget = { maximum_loss_usd = 25.0, cost_buffer_bps = 20.0 } }
+execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", target_policy = "none", maximum_hold_seconds = 172800, stop_bps = 60.0, safety_stop_overlay = false, maximum_hold_policy = "fixed", provider_recipe_exit_policy = "honor", adaptive_exit_policy = "regime_flip_floor_retention", retention_exit = { activation_r = 0.5, giveback_r = 0.5, opposed_alignment = -0.5, floor_activation_r = 2.0, floor_r = 0.5, breakeven_offset_bps = 25.0 }, breakeven_stop_target = "floor", profit_lock_policy = "none", stop_risk_budget = { maximum_loss_usd = 25.0, cost_buffer_bps = 20.0 } }
 execution_side_overrides = { ETH = ["long"] }
 
 [[providers]]
-strategy_id = "hourly_donchian_20_10_atr20_strong_short_v1"
-symbols = ["SOL", "xyz:SNDK", "xyz:BRENTOIL", "xyz:TSLA"]
+strategy_id = "test_channel_short_15m"
+symbols = ["SOL", "xyz:CCC", "xyz:EEE", "xyz:FFF"]
 sides = ["long", "short"]
 priority = 90
 timeframe = "15m"
 maximum_entry_delay_seconds = 30
-execution_symbols = ["SOL", "xyz:SNDK", "xyz:BRENTOIL", "xyz:TSLA"]
+execution_symbols = ["SOL", "xyz:CCC", "xyz:EEE", "xyz:FFF"]
 position_policy = "enter_and_close"
-execution = { entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", target_policy = "none", maximum_hold_seconds = 86400, minimum_stop_bps = 20.0, maximum_stop_bps = 250.0, safety_stop_overlay = false, maximum_hold_policy = "fixed", provider_recipe_exit_policy = "honor", adaptive_exit_policy = "regime_flip_floor_retention_v2", breakeven_stop_target = "floor", profit_lock_policy = "none", stop_risk_budget = { maximum_loss_fraction_of_equity = 0.006, cost_buffer_bps = 20.0 } }
+execution = { entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", target_policy = "none", maximum_hold_seconds = 86400, minimum_stop_bps = 20.0, maximum_stop_bps = 250.0, safety_stop_overlay = false, maximum_hold_policy = "fixed", provider_recipe_exit_policy = "honor", adaptive_exit_policy = "regime_flip_floor_retention", retention_exit = { activation_r = 0.5, giveback_r = 0.5, opposed_alignment = -0.5, floor_activation_r = 2.0, floor_r = 0.5, breakeven_offset_bps = 25.0 }, breakeven_stop_target = "floor", profit_lock_policy = "none", stop_risk_budget = { maximum_loss_fraction_of_equity = 0.006, cost_buffer_bps = 20.0 } }
 
 [[providers]]
-strategy_id = "hype_breakout_compression_alignment_bidirectional_v2"
+strategy_id = "test_alignment_1m"
 symbols = ["HYPE"]
 sides = ["long", "short"]
 priority = 45
@@ -156,16 +156,16 @@ timeframe = "1m"
 maximum_entry_delay_seconds = 60
 execution_symbols = []
 position_policy = "enter_and_close"
-execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", target_policy = "none", maximum_hold_seconds = 28800, stop_bps = 80.0, safety_stop_overlay = false, maximum_hold_policy = "extend_while_regime_supported", hard_maximum_hold_seconds = 86400, maximum_hold_evidence_maximum_age_seconds = 60, provider_recipe_exit_policy = "honor", adaptive_exit_policy = "regime_flip_floor_retention_v2", breakeven_stop_target = "floor", profit_lock_policy = "none", stop_risk_budget = { maximum_loss_usd = 25.0, cost_buffer_bps = 20.0 } }
+execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", target_policy = "none", maximum_hold_seconds = 28800, stop_bps = 80.0, safety_stop_overlay = false, maximum_hold_policy = "extend_while_regime_supported", hard_maximum_hold_seconds = 86400, maximum_hold_evidence_maximum_age_seconds = 60, provider_recipe_exit_policy = "honor", adaptive_exit_policy = "regime_flip_floor_retention", retention_exit = { activation_r = 0.5, giveback_r = 0.5, opposed_alignment = -0.5, floor_activation_r = 2.0, floor_r = 0.5, breakeven_offset_bps = 25.0 }, breakeven_stop_target = "floor", profit_lock_policy = "none", stop_risk_budget = { maximum_loss_usd = 25.0, cost_buffer_bps = 20.0 } }
 execution_side_overrides = { HYPE = ["long"] }
 
 [[providers]]
-strategy_id = "hourly_band20_reentry_atr20_bidirectional_v1"
-symbols = ["xyz:SPCX"]
+strategy_id = "test_reentry_15m"
+symbols = ["xyz:BBB"]
 sides = ["long", "short"]
 priority = 80
 timeframe = "15m"
 maximum_entry_delay_seconds = 30
 execution_symbols = []
 position_policy = "enter_and_close"
-execution = { entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", target_policy = "none", maximum_hold_seconds = 86400, minimum_stop_bps = 20.0, maximum_stop_bps = 250.0, safety_stop_overlay = false, maximum_hold_policy = "fixed", provider_recipe_exit_policy = "honor", adaptive_exit_policy = "regime_flip_floor_retention_v2", breakeven_stop_target = "floor", profit_lock_policy = "none", stop_risk_budget = { maximum_loss_usd = 25.0, cost_buffer_bps = 20.0 } }
+execution = { entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", target_policy = "none", maximum_hold_seconds = 86400, minimum_stop_bps = 20.0, maximum_stop_bps = 250.0, safety_stop_overlay = false, maximum_hold_policy = "fixed", provider_recipe_exit_policy = "honor", adaptive_exit_policy = "regime_flip_floor_retention", retention_exit = { activation_r = 0.5, giveback_r = 0.5, opposed_alignment = -0.5, floor_activation_r = 2.0, floor_r = 0.5, breakeven_offset_bps = 25.0 }, breakeven_stop_target = "floor", profit_lock_policy = "none", stop_risk_budget = { maximum_loss_usd = 25.0, cost_buffer_bps = 20.0 } }

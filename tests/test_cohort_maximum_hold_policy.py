@@ -25,7 +25,7 @@ def test_supported_position_extends_only_until_hard_deadline() -> None:
     plan = _plan(policy="extend_while_regime_supported", hard_seconds=86_400)
     provider = _evaluation("hype", "TREND_UP", "TREND_UP", "TREND_UP")
     canonical = _evaluation(
-        "range_onset_bidirectional_v1", "TREND_UP", "TREND_UP", "TREND_UP"
+        "test_breakout_1m", "TREND_UP", "TREND_UP", "TREND_UP"
     )
 
     assert (
@@ -149,7 +149,7 @@ def test_soft_deadline_exits_without_directional_support(
     canonical = (
         None
         if state is None
-        else _evaluation("range_onset_bidirectional_v1", state, state, state)
+        else _evaluation("test_breakout_1m", state, state, state)
     )
 
     assert (

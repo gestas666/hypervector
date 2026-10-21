@@ -65,7 +65,7 @@ def _supervise_one_refusal(tmp_path: Path, message: str) -> list[dict[str, objec
 
 
 def test_a_refused_start_journals_the_backend_reason(tmp_path: Path) -> None:
-    reason = "xyz:BRENTOIL max leverage mismatch: expected 20, observed 10"
+    reason = "xyz:EEE max leverage mismatch: expected 20, observed 10"
 
     decisions = _supervise_one_refusal(tmp_path, reason)
 

@@ -15,10 +15,6 @@ from cohort_trade_reflection_fixtures import (
 )
 from hypervector.live.sol_range_onset_live_journal import build_live_journal
 from hypervector.research.cohort_live_audit import audit_multi_asset_live_run
-from hypervector.research.cohort_entry_alignment_challenger import (
-    build_entry_component_alignment_challenger,
-    build_entry_alignment_challenger,
-)
 from hypervector.research.cohort_trade_reflections import (
     build_all_time_trade_reflections,
     build_trade_reflections,
@@ -56,20 +52,6 @@ def test_all_time_reflections_publish_user_history_without_compatibility_claim()
     timer = report["maximum_hold_context_journal"]
     assert timer["timer_exits"] == 0
     assert timer["non_timer_exits"] == 1
-    assert (
-        timer["regime_aware_extension_challenger"]["contract"]["execution_authority"]
-        == "none"
-    )
-    assert (
-        report["entry_alignment_challenger"]["provider_symbols"][0]["closed_trades"]
-        == 1
-    )
-    assert (
-        report["entry_component_alignment_challenger"]["provider_symbols"][0][
-            "closed_trades"
-        ]
-        == 1
-    )
 
 
 def test_closed_trade_joins_entry_exit_regimes_and_post_exit_path() -> None:
@@ -199,53 +181,10 @@ def test_closed_trade_joins_entry_exit_regimes_and_post_exit_path() -> None:
         f"{_HULK}|BTC"
     ]["repeatability_evidence"]
     assert scorecard_repeatability == repeatability_pair
-    challenger = reflections["entry_alignment_challenger"]
-    assert challenger["contract"] == {
-        "report_only": True,
-        "execution_authority": "none",
-        "runtime_strategy_changed": False,
-        "automatic_strategy_changes": False,
-    }
-    assert challenger["thresholds"] == [0.0, 0.25, 0.5, 0.75]
-    mapping = challenger["provider_symbols"][0]
-    assert mapping["strategy_id"] == _HULK
-    assert mapping["symbol"] == "BTC"
-    assert mapping["observed_entry_scores"] == 1
-    assert mapping["unavailable_entry_scores"] == 0
-    admitted = mapping["threshold_results"][1]
-    assert admitted["minimum_structure_support_score"] == 0.25
-    assert admitted["admitted_performance"]["closed_trades"] == 1
-    assert admitted["admitted_performance"]["net_pnl_usd"] == pytest.approx(0.97)
-    rejected = mapping["threshold_results"][2]
-    assert rejected["minimum_structure_support_score"] == 0.5
-    assert rejected["admitted_performance"]["closed_trades"] == 0
-
-    assert rejected["excluded_performance"]["closed_trades"] == 1
-    assert rejected["excluded_performance"]["net_pnl_usd"] == pytest.approx(0.97)
-    assert rejected["net_difference_if_excluded_had_zero_cost_usd"] == (
-        pytest.approx(-0.97)
-    )
-    component_challenger = reflections["entry_component_alignment_challenger"]
-    assert component_challenger["contract"] == challenger["contract"]
-    assert component_challenger["thresholds"] == [-0.5, 0.0, 0.5]
-    component_mapping = component_challenger["provider_symbols"][0]
-    assert component_mapping["strategy_id"] == _HULK
-    assert component_mapping["symbol"] == "BTC"
-    assert component_mapping["observed_entry_scores"] == 0
-    assert component_mapping["unavailable_entry_scores"] == 1
-    opposition_outcomes = reflections["regime_opposition_outcome_challenger"]
-    outcome_provider = opposition_outcomes["provider_symbols"][0]
-    five = outcome_provider["persistence_results"][2]
-    assert five["persistence_decisions"] == 5
-    assert five["triggered_performance"]["closed_trades"] == 0
-    assert five["not_triggered_performance"]["wins"] == 1
-    assert five["not_triggered_performance"]["net_pnl_usd"] == pytest.approx(0.97)
 
 
-def test_closed_trade_uses_independent_canonical_regime_after_range_retirement() -> (
-    None
-):
-    """A retired Range provider cannot erase entry and exit regime evidence."""
+def test_closed_trade_uses_independent_canonical_regime_evidence() -> None:
+    """Entry and exit regime context comes from the canonical telemetry rows."""
     cohort = _independent_canonical_rows(_reflection_cohort_rows())
     report = audit_multi_asset_live_run(
         cohort,
@@ -312,56 +251,6 @@ def test_trade_reflections_quantify_context_coverage() -> None:
     }
 
 
-def test_entry_alignment_challenger_rejects_boolean_thresholds() -> None:
-    """Boolean configuration cannot masquerade as a numerical threshold."""
-    with pytest.raises(ValueError, match="thresholds must be numeric"):
-        build_entry_alignment_challenger([], thresholds=[False, 0.5])
-
-
-def test_entry_component_challenger_partitions_exact_mapping_outcomes() -> None:
-    """Component opposition remains a separate report-only outcome comparison."""
-    trades = [
-        {
-            "strategy_id": "range_onset_bidirectional_v1",
-            "symbol": "ETH",
-            "entry_regime_assessment": {"component_alignment_score": -0.75},
-            "net_pnl_usd": -1.0,
-            "entry_margin_used_usd": 5.0,
-            "net_return_on_margin_pct": -20.0,
-            "fees_usd": 0.02,
-            "funding_usd": 0.0,
-        },
-        {
-            "strategy_id": "range_onset_bidirectional_v1",
-            "symbol": "ETH",
-            "entry_regime_assessment": {"component_alignment_score": 0.25},
-            "net_pnl_usd": 2.0,
-            "entry_margin_used_usd": 5.0,
-            "net_return_on_margin_pct": 40.0,
-            "fees_usd": 0.02,
-            "funding_usd": 0.0,
-        },
-    ]
-
-    challenger = build_entry_component_alignment_challenger(trades)
-
-    assert challenger["mode"] == (
-        "cohort_entry_component_alignment_threshold_challenger_v1"
-    )
-    assert challenger["thresholds"] == [-0.5, 0.0, 0.5]
-    assert challenger["contract"]["execution_authority"] == "none"
-    provider = challenger["provider_symbols"][0]
-    assert provider["strategy_id"] == "range_onset_bidirectional_v1"
-    assert provider["symbol"] == "ETH"
-    result = provider["threshold_results"][0]
-    assert result["minimum_component_alignment_score"] == -0.5
-    assert result["admitted_performance"]["net_pnl_usd"] == pytest.approx(2.0)
-    assert result["excluded_performance"]["net_pnl_usd"] == pytest.approx(-1.0)
-    assert result["net_difference_if_excluded_had_zero_cost_usd"] == (
-        pytest.approx(1.0)
-    )
-
-
 def test_trade_reflections_group_post_exit_evidence_by_exit_reason() -> None:
     """Exit-policy review separates continuation evidence from censored paths."""
     report = audit_multi_asset_live_run(
@@ -399,7 +288,7 @@ def test_trade_reflections_identify_cross_provider_exit_controller() -> None:
         if row["event_type"] == "regime_decision"
         and row["payload"].get("decision_action") == "long_exit"
     )
-    exit_decision["payload"]["strategy_id"] = "range_onset_bidirectional_v1"
+    exit_decision["payload"]["strategy_id"] = "test_breakout_1m"
 
     report = audit_multi_asset_live_run(
         _reflection_cohort_rows(),
@@ -412,17 +301,17 @@ def test_trade_reflections_identify_cross_provider_exit_controller() -> None:
 
     trade = report["trade_reflections"]["trades"][0]
     assert trade["entry_strategy_id"] == _HULK
-    assert trade["exit_controller_strategy_id"] == "range_onset_bidirectional_v1"
+    assert trade["exit_controller_strategy_id"] == "test_breakout_1m"
     assert trade["cross_provider_exit"] is True
     assert trade["exit_context"]["signal_provider"]["strategy_id"] == _HULK
     assert trade["exit_context"]["exit_controller"]["strategy_id"] == (
-        "range_onset_bidirectional_v1"
+        "test_breakout_1m"
     )
     attribution = report["trade_reflections"]["exit_controller_attribution"]
     assert attribution["cross_provider_exits"] == 1
     assert attribution["same_provider_exits"] == 0
     route = attribution["by_entry_and_exit_controller"][
-        f"{_HULK}|range_onset_bidirectional_v1"
+        f"{_HULK}|test_breakout_1m"
     ]
     assert route["closed_trades"] == 1
     assert route["net_pnl_usd"] == pytest.approx(0.97)
@@ -542,19 +431,6 @@ def test_open_lifecycle_joins_entry_regime_to_current_regime_and_mark() -> None:
         protection["estimated_exit_now_net_usd"] - protection["estimated_stop_net_usd"]
     )
     assert protection["protected_profit_fraction"] == pytest.approx(0.0)
-    lock = trade["open_profit_lock_challenger"]
-    assert lock["contract"] == {
-        "report_only": True,
-        "execution_authority": "none",
-        "runtime_strategy_changed": False,
-        "automatic_strategy_changes": False,
-        "automatic_promotion": False,
-    }
-    assert tuple(lock["policies"]) == (
-        "a25_floor15_trail10",
-        "a40_floor15_trail20",
-        "a60_floor15_trail30",
-    )
 
 
 def test_open_lifecycle_retains_exact_active_target_order() -> None:
@@ -649,11 +525,6 @@ def test_open_exit_plan_prefers_the_bound_provider_contract() -> None:
     assert path["boundary_timestamp_ms"] == plan["soft_deadline_timestamp_ms"]
     assert path["completed_bars"] == 0
     assert path["current_directional_return_bps"] is None
-    trail = trade["post_soft_trail_challenger"]
-    assert trail["contract"]["execution_authority"] == "none"
-    assert trail["contract"]["automatic_strategy_changes"] is False
-    assert trail["status"] == "pending_soft_deadline"
-    assert trail["policies"]["20bps"]["status"] == "pending_soft_deadline"
 
 
 def test_open_exit_plan_uses_persisted_runtime_timer_origin() -> None:

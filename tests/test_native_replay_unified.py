@@ -18,7 +18,7 @@ from hypervector.research.native_replay_unified import (
 )
 
 D = Decimal
-SYMBOLS = ("BTC", "ETH", "SOL", "HYPE", "xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL")
+SYMBOLS = ("BTC", "ETH", "SOL", "HYPE", "xyz:BBB", "xyz:CCC", "xyz:EEE")
 TIERS = (MaintenanceTier(D(0), D("0.05"), D(0)),)
 
 

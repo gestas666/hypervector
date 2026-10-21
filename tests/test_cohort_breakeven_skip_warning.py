@@ -60,11 +60,11 @@ class _Cycles:
             self.events.append({"event": event, **payload})
 
         return raise_breakeven_stops(
-            requests=frozenset({"xyz:SNDK"}),
+            requests=frozenset({"xyz:CCC"}),
             closed_symbols=set(),
-            symbols=("xyz:SNDK",),
+            symbols=("xyz:CCC",),
             venues={
-                "xyz:SNDK": _Venue(
+                "xyz:CCC": _Venue(
                     _Position(100.0, 1.0),
                     () if self.resting is None else (self.resting,),
                 )
@@ -73,12 +73,12 @@ class _Cycles:
                 self.sent.append(trigger) or self.outcome
             ),
             attempts=self.attempts,
-            lifecycle_oids={"xyz:SNDK": 41},
+            lifecycle_oids={"xyz:CCC": 41},
             emit=emit,
-            plans={"xyz:SNDK": _plan()},
-            books={"xyz:SNDK": book},
+            plans={"xyz:CCC": _plan()},
+            books={"xyz:CCC": book},
             observed_ms=NOW,
-            stop_oids={"xyz:SNDK": 77},
+            stop_oids={"xyz:CCC": 77},
             skips=self.skips,
         )
 
@@ -104,7 +104,7 @@ def test_an_hour_without_a_usable_quote_warns_once_and_journals_one_skip(
     assert skipped["reason"] == "executable_quote_unavailable"
     assert exhausted == {
         "event": RAISE_EXHAUSTED_EVENT,
-        "symbol": "xyz:SNDK",
+        "symbol": "xyz:CCC",
         "strategy_id": "hourly_donchian_20_10_atr20_v1",
         "entry_oid": 41,
         "reason": RAISE_EXHAUSTED_EVENT,
@@ -156,7 +156,7 @@ def test_a_sent_raise_resets_the_skip_streak() -> None:
         _ATTEMPT,
         BREAKEVEN_SKIPPED_EVENT,
     ]
-    assert cycles.attempts == {("xyz:SNDK", 41): 1}
+    assert cycles.attempts == {("xyz:CCC", 41): 1}
 
 
 def test_a_venue_stop_already_at_the_target_is_not_a_skip_warning() -> None:
@@ -184,13 +184,13 @@ def test_raise_after_the_warning_clears_the_protection_warning() -> None:
         "event_type": "cohort_snapshot",
         "payload": {
             "assets": [
-                {"symbol": "xyz:SNDK", "entry_oid": 41, "position_size_signed": 1.0}
+                {"symbol": "xyz:CCC", "entry_oid": 41, "position_size_signed": 1.0}
             ]
         },
     }
     assert protection_warnings(rows, snapshot) == [
         {
-            "symbol": "xyz:SNDK",
+            "symbol": "xyz:CCC",
             "strategy_id": "hourly_donchian_20_10_atr20_v1",
             "entry_oid": 41,
             "reason": "protective_stop_raise_exhausted",
@@ -221,10 +221,10 @@ def test_the_runner_keeps_the_skip_streak_across_polls() -> None:
     engine.latest_book = None
     engine.normalize_trigger_price.side_effect = lambda price: price
     events: list[str] = []
-    runner._symbols = ("xyz:SNDK",)  # type: ignore[attr-defined]
-    runner._engines = {"xyz:SNDK": engine}  # type: ignore[attr-defined]
+    runner._symbols = ("xyz:CCC",)  # type: ignore[attr-defined]
+    runner._engines = {"xyz:CCC": engine}  # type: ignore[attr-defined]
     runner._profit_lock_controller = SimpleNamespace(  # type: ignore[attr-defined]
-        breakeven_requests=frozenset({"xyz:SNDK"})
+        breakeven_requests=frozenset({"xyz:CCC"})
     )
     runner._telemetry = SimpleNamespace(  # type: ignore[attr-defined]
         emit_breakeven_stop_attempt=lambda event, _payload: events.append(event)

@@ -32,13 +32,13 @@ from hypervector.live.directional_range_onset_provider import (
 from hypervector.live.eth_breakout_transfer_provider import (
     ETH_BREAKOUT_TRANSFER_STRATEGY,
 )
-from hypervector.live.hip3_cash_open_gap_provider import HIP3_SPCX_CASH_OPEN_STRATEGY
+from hypervector.live.hip3_cash_open_gap_provider import HIP3_BBB_CASH_OPEN_STRATEGY
 from hypervector.live.hip3_cohort_providers import (
     HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
 )
 from hypervector.live.hip3_fresh15_journal_provider import (
     HIP3_INDEX_FRESH15_V3_STRATEGY,
-    HIP3_SNDK_FRESH15_V4_STRATEGY,
+    HIP3_CCC_FRESH15_V4_STRATEGY,
 )
 from hypervector.live.hourly_price_provider import (
     DONCHIAN8_STRATEGY,
@@ -66,10 +66,10 @@ from hypervector.live.multi_asset_route_contract_validation import (
 from hypervector.live.research_pending_market_observer import (
     RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY,
 )
-from hypervector.live.spcx_cash_session_breakout_provider import (
-    SPCX_CASH_SESSION_LONG_STRATEGY,
+from hypervector.live.bbb_cash_session_breakout_provider import (
+    BBB_CASH_SESSION_LONG_STRATEGY,
 )
-from hypervector.live.zec_donchian_provider import ZEC_DONCHIAN_LONG_STRATEGY
+from hypervector.live.ltc_donchian_provider import LTC_DONCHIAN_LONG_STRATEGY
 
 PROFILE_B = Path("tests/fixtures/cohort_chain/profile_b.toml")
 _BOTH = ["long", "short"]
@@ -150,16 +150,16 @@ _REUSED = {
         ),
         maximum_entry_delay_seconds=120,
     ),
-    "zec_donchian": _provider(
-        ZEC_DONCHIAN_LONG_STRATEGY,
-        ["ZEC"],
+    "ltc_donchian": _provider(
+        LTC_DONCHIAN_LONG_STRATEGY,
+        ["LTC"],
         ["long"],
         "15m",
         _fixed(150.0, 604_800, safety_stop_overlay=True),
     ),
     "hourly_donchian": _provider(
         DONCHIAN20_STRATEGY,
-        ["ETH", "xyz:SP500"],
+        ["ETH", "xyz:AAA"],
         _BOTH,
         "15m",
         _fixed(120.0, 43_200, target_policy="fixed_bps", target_bps=240.0),
@@ -182,12 +182,12 @@ _REUSED = {
     ),
     "hourly_donchian_overrides": _provider(
         DONCHIAN8_STRATEGY,
-        ["xyz:TSLA"],
+        ["xyz:FFF"],
         _BOTH,
         "15m",
         _fixed(200.0, 21_600, provider_recipe_exit_policy="honor"),
-        execution_side_overrides={"xyz:TSLA": ["short"]},
-        stop_bps_overrides={"xyz:TSLA": 150.0},
+        execution_side_overrides={"xyz:FFF": ["short"]},
+        stop_bps_overrides={"xyz:FFF": 150.0},
     ),
     "eth_range_long": _provider(
         ETH_RANGE_LONG_STRATEGY,
@@ -204,7 +204,7 @@ _REUSED = {
         _fixed(70.0, 14_400, target_policy="fixed_bps", target_bps=140.0),
     ),
     "range_onset": _provider(
-        "range_onset_bidirectional_v1",
+        "test_breakout_1m",
         ["ETH", "SOL"],
         _BOTH,
         "1m",
@@ -283,24 +283,24 @@ _REUSED = {
         "1m",
         _fixed(45.0, 3_600, target_policy="reward_risk", target_r_multiple=3.0),
     ),
-    "spcx_cash_open_observed": _provider(
-        HIP3_SPCX_CASH_OPEN_STRATEGY,
-        ["xyz:SPCX"],
+    "bbb_cash_open_observed": _provider(
+        HIP3_BBB_CASH_OPEN_STRATEGY,
+        ["xyz:BBB"],
         _BOTH,
         "15m",
         _fixed(120.0, 7_200, target_policy="absolute_anchor"),
         execution_symbols=[],
     ),
-    "spcx_cash_session": _provider(
-        SPCX_CASH_SESSION_LONG_STRATEGY,
-        ["xyz:SPCX"],
+    "bbb_cash_session": _provider(
+        BBB_CASH_SESSION_LONG_STRATEGY,
+        ["xyz:BBB"],
         ["long"],
         "15m",
         _fixed(90.0, 7_200, target_policy="fixed_bps", target_bps=150.0),
     ),
     "fresh15_commodity": _provider(
         HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
-        ["xyz:GOLD"],
+        ["xyz:DDD"],
         _BOTH,
         "15m",
         _fixed(
@@ -314,7 +314,7 @@ _REUSED = {
     ),
     "fresh15_index": _provider(
         HIP3_INDEX_FRESH15_V3_STRATEGY,
-        ["xyz:SP500"],
+        ["xyz:AAA"],
         _BOTH,
         "15m",
         _fixed(
@@ -326,16 +326,16 @@ _REUSED = {
             profit_lock_giveback_bps=40.0,
         ),
     ),
-    "fresh15_sndk_both_sides": _provider(
-        HIP3_SNDK_FRESH15_V4_STRATEGY,
-        ["xyz:SNDK"],
+    "fresh15_ccc_both_sides": _provider(
+        HIP3_CCC_FRESH15_V4_STRATEGY,
+        ["xyz:CCC"],
         _BOTH,
         "15m",
         _fixed(100.0, 43_200),
     ),
     "research_observer": _provider(
         RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY,
-        ["xyz:TSLA"],
+        ["xyz:FFF"],
         ["long"],
         "15m",
         _fixed(200.0, 3_600),
@@ -496,7 +496,7 @@ def test_profile_b_reusing_sweep_and_donchian_with_new_exits_passes_live_validat
     assert (sweep.execution.stop_bps, sweep.execution.target_bps) == (95.0, 210.0)
     assert sweep.execution.maximum_hold_seconds == 21_600
     assert sweep.maximum_entry_delay_seconds == 90
-    donchian = providers["hourly_donchian_20_10_atr20_strong_short_v1"]
+    donchian = providers["test_channel_short_15m"]
     assert donchian.execution.stop_policy == "fixed_bps"
     assert donchian.execution.maximum_hold_seconds == 259_200
     assert check.check(profile, mode="live") == []
@@ -550,12 +550,12 @@ _REFUSED = {
         "both emitted sides",
     ),
     "hourly Donchian on an uncomputed market": (
-        _refused("hourly_donchian", symbols=["xyz:GOLD"]),
+        _refused("hourly_donchian", symbols=["xyz:DDD"]),
         "qualified symbols",
     ),
-    "ZEC Donchian on another market": (
-        _refused("zec_donchian", symbols=["SOL"]),
-        "ZEC-only",
+    "LTC Donchian on another market": (
+        _refused("ltc_donchian", symbols=["SOL"]),
+        "LTC-only",
     ),
     "directional range with an absolute target": (
         _refused(
@@ -564,16 +564,16 @@ _REFUSED = {
         ),
         "no absolute target",
     ),
-    "SPCX cash-open without its target anchor": (
-        _refused("spcx_cash_open_observed", execution=_fixed(120.0, 7_200)),
+    "BBB cash-open without its target anchor": (
+        _refused("bbb_cash_open_observed", execution=_fixed(120.0, 7_200)),
         "absolute target anchor",
     ),
     "research observer with execution authority": (
-        _refused("research_observer", execution_symbols=["xyz:TSLA"]),
+        _refused("research_observer", execution_symbols=["xyz:FFF"]),
         "execution-disabled",
     ),
-    "SNDK fresh15 on a journal it does not have": (
-        _refused("fresh15_sndk_both_sides", symbols=["xyz:SP500"]),
+    "CCC fresh15 on a journal it does not have": (
+        _refused("fresh15_ccc_both_sides", symbols=["xyz:AAA"]),
         "symbols within",
     ),
     "HYPE native on another market": (

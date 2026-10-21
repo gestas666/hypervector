@@ -20,7 +20,7 @@ from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunne
 from hypervector.live.sol_range_onset_ledger import SOL_LIVE_EVENT_TYPES
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 
-_PROVIDER = "range_onset_bidirectional_v1"
+_PROVIDER = "test_breakout_1m"
 _SYMBOL = "SOL"
 _OPENED_MS = 10_000
 

@@ -19,7 +19,7 @@ def test_observer_advances_completed_bars_without_emitting_entry_intents() -> No
 
     result = collector(
         bars,
-        symbol="ZEC",
+        symbol="LTC",
         observed_at=pd.Timestamp("2026-09-01T00:45:00Z"),
         after_decision_time_ms=prior,
     )
@@ -32,7 +32,7 @@ def test_observer_advances_completed_bars_without_emitting_entry_intents() -> No
     assert {row.strategy_id for row in result.evaluations} == {
         RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY
     }
-    assert {row.symbol for row in result.evaluations} == {"ZEC"}
+    assert {row.symbol for row in result.evaluations} == {"LTC"}
     assert all(not row.eligible for row in result.evaluations)
     assert all(row.decision_action == "observe_only" for row in result.evaluations)
     assert all(
@@ -70,14 +70,14 @@ def test_observer_rejects_naive_or_incomplete_market_data() -> None:
     with pytest.raises(ValueError, match="aware, unique, and ordered"):
         collector(
             naive,
-            symbol="xyz:SPCX",
+            symbol="xyz:BBB",
             observed_at=pd.Timestamp("2026-09-01T00:45:00Z"),
             after_decision_time_ms=0,
         )
     with pytest.raises(ValueError, match="missing columns"):
         collector(
             _bars().drop(columns="volume"),
-            symbol="xyz:SPCX",
+            symbol="xyz:BBB",
             observed_at=pd.Timestamp("2026-09-01T00:45:00Z"),
             after_decision_time_ms=0,
         )

@@ -154,7 +154,7 @@ def _install_sessions(
     )
 
 
-_SYMBOLS = ("BTC", "SOL", "xyz:SNDK")
+_SYMBOLS = ("BTC", "SOL", "xyz:CCC")
 
 
 def test_reachable_venue_reads_every_dex_on_a_new_session(

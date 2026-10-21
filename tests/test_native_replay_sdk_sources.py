@@ -100,7 +100,7 @@ def test_missing_midpoint_does_not_hide_observed_prices_for_other_symbols() -> N
     )
     replay = cohort_sdk(config, {})
     replay.advance_to(replay.clock.now_ms + 1000)
-    replay.observe_prices("xyz:SPCX", source_time_ms=replay.clock.now_ms, mark=D(101), mid=None)
+    replay.observe_prices("xyz:BBB", source_time_ms=replay.clock.now_ms, mark=D(101), mid=None)
     observed = replay.info.all_mids("xyz")
-    assert "xyz:SPCX" not in observed
-    assert observed["xyz:BRENTOIL"] == "100" and observed["xyz:SNDK"] == "100"
+    assert "xyz:BBB" not in observed
+    assert observed["xyz:EEE"] == "100" and observed["xyz:CCC"] == "100"

@@ -26,7 +26,7 @@ def test_native_size_is_lot_rounded_below_budget_and_journaled(
     replay = EngineReplayFixture(
         tmp_path, partial_entry=False, initial_cash=Decimal(5000)
     )
-    symbol = "xyz:SNDK"
+    symbol = "xyz:CCC"
     engine = replay.engine(replay.assets[symbol])
     contract = ProviderExecutionContract(
         entry_liquidity="taker_ioc",
@@ -143,7 +143,7 @@ def test_structural_anchor_inside_slippage_interval_still_enters_and_protects(
     replay = EngineReplayFixture(
         tmp_path, partial_entry=False, initial_cash=Decimal(5000)
     )
-    symbol = "xyz:SNDK"
+    symbol = "xyz:CCC"
     engine = replay.engine(replay.assets[symbol])
     contract = ProviderExecutionContract(
         entry_liquidity="taker_ioc",

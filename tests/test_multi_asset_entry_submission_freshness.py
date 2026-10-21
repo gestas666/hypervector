@@ -42,9 +42,9 @@ class _Provider:
 
 def test_entry_delay_projection_excludes_observe_only_symbols() -> None:
     """Submission policy must cover executable routes without widening authority."""
-    provider = _Provider("index", ("xyz:SP500", "xyz:SPCX"), ("xyz:SP500",), 30)
+    provider = _Provider("index", ("xyz:AAA", "xyz:BBB"), ("xyz:AAA",), 30)
 
-    assert entry_delays_from_providers((provider,)) == {("index", "xyz:SP500"): 30_000}
+    assert entry_delays_from_providers((provider,)) == {("index", "xyz:AAA"): 30_000}
 
 
 def test_entry_at_exact_submission_deadline_remains_executable() -> None:
@@ -82,7 +82,7 @@ def test_fresh_entry_serializes_exact_submission_boundary_evidence() -> None:
 
 def test_ioc_no_fill_is_reported_and_does_not_abort_later_actions() -> None:
     """A definitive flat IOC no-fill must not terminate the cohort cycle."""
-    first = RoutingAction("enter", "zec", "ZEC", "long", 1_000, 100.0)
+    first = RoutingAction("enter", "ltc", "LTC", "long", 1_000, 100.0)
     second = RoutingAction("enter", "hulk", "BTC", "short", 1_000, 100.0)
     attempted: list[RoutingAction] = []
 
@@ -90,20 +90,20 @@ def test_ioc_no_fill_is_reported_and_does_not_abort_later_actions() -> None:
         action: RoutingAction, _deadline: EntrySubmissionDeadline | None
     ) -> None:
         attempted.append(action)
-        if action.symbol == "ZEC":
+        if action.symbol == "LTC":
             raise SolEntryNotFilledError("IOC entry not filled")
 
     submitted, withheld = execute_fresh_routed_actions(
         (first, second),
         now_ms=lambda: 2_000,
-        delays={("zec", "ZEC"): 30_000, ("hulk", "BTC"): 30_000},
+        delays={("ltc", "LTC"): 30_000, ("hulk", "BTC"): 30_000},
         execute=execute,
     )
 
-    assert [row.symbol for row in attempted] == ["ZEC", "BTC"]
+    assert [row.symbol for row in attempted] == ["LTC", "BTC"]
     assert [row.symbol for row in submitted] == ["BTC"]
     assert [(row.intent.symbol, row.reason) for row in withheld] == [
-        ("ZEC", "entry_ioc_no_fill")
+        ("LTC", "entry_ioc_no_fill")
     ]
 
 

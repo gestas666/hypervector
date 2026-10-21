@@ -1,30 +1,19 @@
-"""Construction barriers for the official-SDK SOL live adapter."""
+"""Construction barriers for the official mainnet Hyperliquid SDK clients."""
 
 from __future__ import annotations
 
-from pathlib import Path
 
 import pytest
 
-from hypervector.live.hyperliquid_sol_adapter import SolHyperliquidAdapter
 from hypervector.live.hyperliquid_sol_factory import (
     OfficialSolReadOnlySdkBuilder,
     OfficialSolSdkBuilder,
     SolReadOnlySdkBuilderProtocol,
     SolSdkBuilderProtocol,
     SolSdkFactoryError,
-    create_armed_sol_adapter,
-    create_read_only_sol_reader,
-)
-from hypervector.live.hyperliquid_sol_reader import SolHyperliquidReader
-from hypervector.live.policy import SECRET_ENV_API_KEY, SECRET_ENV_WALLET
-from hypervector.live.sol_range_onset_config import (
-    SolCanaryConfigError,
-    load_sol_range_onset_config,
 )
 
 
-PROFILE = Path("tests/fixtures/profiles/sol_range_onset.toml")
 ADDRESS = "0x1111111111111111111111111111111111111111"
 AGENT_ADDRESS = "0x2222222222222222222222222222222222222222"
 
@@ -145,54 +134,6 @@ def _env() -> dict[str, str]:
         SECRET_ENV_WALLET: ADDRESS,
         SECRET_ENV_API_KEY: "test-private-key",
     }
-
-
-def test_shadow_or_unarmed_live_refuses_before_sdk_construction() -> None:
-    """No authenticated client exists unless mode and both flags authorize it."""
-    builder = RecordingBuilder()
-    shadow = load_sol_range_onset_config(PROFILE, mode="shadow")
-    with pytest.raises(SolCanaryConfigError, match="mode is shadow"):
-        create_armed_sol_adapter(shadow, environ=_env(), builder=builder)
-
-    disarmed = load_sol_range_onset_config(
-        PROFILE,
-        mode="live",
-        enabled=True,
-    )
-    with pytest.raises(SolCanaryConfigError, match="i-accept-live-risk"):
-        create_armed_sol_adapter(disarmed, environ=_env(), builder=builder)
-    assert builder.calls == []
-
-
-def test_missing_credentials_refuses_before_sdk_construction() -> None:
-    """Flags cannot substitute for both configured credential fields."""
-    builder = RecordingBuilder()
-    config = load_sol_range_onset_config(
-        PROFILE,
-        mode="live",
-        enabled=True,
-        accepts_live_risk=True,
-    )
-
-    with pytest.raises(SolCanaryConfigError, match="credentials"):
-        create_armed_sol_adapter(config, environ={}, builder=builder)
-    assert builder.calls == []
-
-
-def test_explicitly_armed_factory_uses_frozen_cap_and_slippage() -> None:
-    """Only the fully armed path delegates once to the SDK builder."""
-    builder = RecordingBuilder()
-    config = load_sol_range_onset_config(
-        PROFILE,
-        mode="live",
-        enabled=True,
-        accepts_live_risk=True,
-    )
-
-    adapter = create_armed_sol_adapter(config, environ=_env(), builder=builder)
-
-    assert isinstance(adapter, SolHyperliquidAdapter)
-    assert builder.calls == [(ADDRESS, "test-private-key")]
 
 
 def test_official_builder_addresses_agent_signing_to_funded_account(
@@ -352,21 +293,6 @@ def test_official_builder_rejects_main_wallet_key_before_exchange_construction(
         )
 
     assert exchange_constructed is False
-
-
-def test_read_only_factory_needs_wallet_but_not_signing_key() -> None:
-    """Account preflight has no path for loading or receiving a private key."""
-    builder = RecordingReadBuilder()
-
-    with pytest.raises(SolSdkFactoryError, match="wallet address"):
-        create_read_only_sol_reader(environ={}, builder=builder)
-    reader = create_read_only_sol_reader(
-        environ={SECRET_ENV_WALLET: ADDRESS},
-        builder=builder,
-    )
-
-    assert isinstance(reader, SolHyperliquidReader)
-    assert builder.calls == 1
 
 
 def test_official_read_only_builder_uses_mainnet_without_websocket(monkeypatch) -> None:

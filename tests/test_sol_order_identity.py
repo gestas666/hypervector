@@ -8,14 +8,17 @@ from unittest.mock import Mock
 import pytest
 from requests import Timeout
 
-from hypervector.live.hyperliquid_sol_adapter import SolHyperliquidAdapter
+from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
 from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.multi_asset_directional_adapter import (
+    MultiAssetDirectionalAdapter,
+)
 
 
 _CLIENT_ORDER_ID = "0x0123456789abcdef0123456789abcdef"
 
 
-def _adapter() -> tuple[SolHyperliquidAdapter, Mock]:
+def _adapter() -> tuple[MultiAssetDirectionalAdapter, Mock]:
     info = Mock()
     info.meta.return_value = {
         "universe": [{"name": "SOL", "szDecimals": 2, "maxLeverage": 20}]
@@ -25,12 +28,15 @@ def _adapter() -> tuple[SolHyperliquidAdapter, Mock]:
     exchange.order.return_value = _resting_response(202)
     exchange.market_close.return_value = _filled_response(303)
     return (
-        SolHyperliquidAdapter(
-            info=info,
-            exchange=exchange,
-            account_address="0x1111111111111111111111111111111111111111",
-            max_notional_usd=22.50,
-            slippage_fraction=0.01,
+        MultiAssetDirectionalAdapter(
+            BtcHyperliquidAdapter(
+                symbol="SOL",
+                info=info,
+                exchange=exchange,
+                account_address="0x1111111111111111111111111111111111111111",
+                max_notional_usd=22.50,
+                slippage_fraction=0.01,
+            )
         ),
         exchange,
     )
@@ -139,7 +145,7 @@ def test_close_passes_exact_client_order_id_to_official_sdk() -> None:
 def test_order_status_is_reconciled_by_exact_client_order_id() -> None:
     """A lost mutation response can be resolved using only its durable identity."""
     adapter, _ = _adapter()
-    info = adapter._info  # noqa: SLF001 - boundary call identity is the contract here.
+    info = adapter._delegate._info  # noqa: SLF001 - boundary call identity is the contract here.
     info.query_order_by_oid.return_value = _order_status_response(_CLIENT_ORDER_ID)
 
     status = adapter.order_status_by_client_id(_CLIENT_ORDER_ID)
@@ -155,7 +161,7 @@ def test_order_status_is_reconciled_by_exact_client_order_id() -> None:
 def test_order_status_rejects_a_different_returned_client_order_id() -> None:
     """A status response for another order cannot be adopted as owned exposure."""
     adapter, _ = _adapter()
-    info = adapter._info  # noqa: SLF001 - boundary call identity is the contract here.
+    info = adapter._delegate._info  # noqa: SLF001 - boundary call identity is the contract here.
     different = "0xffffffffffffffffffffffffffffffff"
     info.query_order_by_oid.return_value = _order_status_response(different)
 
@@ -194,6 +200,6 @@ def test_entry_timeout_preserves_ambiguous_client_order_identity() -> None:
             client_order_id=_CLIENT_ORDER_ID,
         )
 
-    assert raised.value.operation == "entry"
+    assert raised.value.operation == "market_entry"
     assert raised.value.client_order_id == _CLIENT_ORDER_ID
     assert raised.value.ambiguous is True

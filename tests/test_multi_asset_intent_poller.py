@@ -18,9 +18,7 @@ from hypervector.live.multi_asset_intent_poller import (
 )
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
-from hypervector.live.multi_asset_polling_contract import (
-    READINESS_SEED_LOOKBACK_MINUTES,
-)
+from hypervector.live.provider_registry import provider_readiness_lookback_minutes
 from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
@@ -78,26 +76,6 @@ class _Collector:
                 blockers=("fixture_blocker",),
                 indicators=("FIXTURE 1/2",),
                 metrics={"structural_direction": "short"},
-            ),
-            primary_regime=(
-                "TREND_DOWN"
-                if self.strategy_id == "range_onset_bidirectional_v1"
-                else None
-            ),
-            state_1m=(
-                "TREND_DOWN"
-                if self.strategy_id == "range_onset_bidirectional_v1"
-                else None
-            ),
-            state_5m=(
-                "TREND_DOWN"
-                if self.strategy_id == "range_onset_bidirectional_v1"
-                else None
-            ),
-            context_15m=(
-                "TREND_DOWN"
-                if self.strategy_id == "range_onset_bidirectional_v1"
-                else None
             ),
         )
         return IntentBatch(intents, boundary, (evaluation,))
@@ -233,9 +211,10 @@ def _poller_evaluation(
 
 
 class _CanonicalCollector:
-    def __init__(self) -> None:
+    def __init__(self, symbols: tuple[str, ...] = ("BTC",)) -> None:
         self.activations: list[int] = []
         self.collections = 0
+        self.symbols = symbols
 
     def activate(self, activation_time_ms: int) -> None:
         self.activations.append(activation_time_ms)
@@ -247,10 +226,10 @@ class _CanonicalCollector:
     ) -> tuple[ProviderEvaluation, ...]:
         del bars, observed_at
         self.collections += 1
-        return (
+        return tuple(
             ProviderEvaluation(
                 strategy_id=CANONICAL_REGIME_TELEMETRY_STRATEGY,
-                symbol="BTC",
+                symbol=symbol,
                 decision_time_ms=_OBSERVED_MS - 999,
                 reference_price=100.0,
                 decision_action="regime_observation",
@@ -271,13 +250,14 @@ class _CanonicalCollector:
                 context_15m="RANGE",
                 confidence=0.8,
                 backend_non_action_reason="telemetry_only_no_execution_authority",
-            ),
+            )
+            for symbol in self.symbols
         )
 
 
 def _assert_startup_boundaries(collector: _Collector, *, symbols: int) -> None:
     activation_ms = _OBSERVED_MS - 1_000
-    lookback_ms = READINESS_SEED_LOOKBACK_MINUTES[collector.strategy_id] * 60 * 1_000
+    lookback_ms = provider_readiness_lookback_minutes(collector.strategy_id) * 60 * 1_000
     initial = [
         boundary
         for _ in range(symbols)
@@ -362,10 +342,10 @@ def test_poller_uses_one_minute_feed_and_incremental_refresh() -> None:
     assert {timeframe for _, timeframe, _, _ in calls} == {"1m"}
     assert {days for _, _, days, _ in calls[:4]} == {config.lookback_days}
     assert all(0.0 < days < 1.0 for _, _, days, _ in calls[4:])
-    hulk = collectors["hulk_expansion_bidirectional_tuned_v2"]
-    range_onset = collectors["range_onset_bidirectional_v1"]
-    source_follow = collectors["hypervelocity_source_follow_bidirectional_5m_v1"]
-    hype_breakout = collectors["hype_breakout_onset_bidirectional_v1"]
+    hulk = collectors["test_trend_5m"]
+    range_onset = collectors["test_breakout_1m"]
+    source_follow = collectors["test_mirror_1m"]
+    hype_breakout = collectors["test_fade_1m"]
     assert hulk.bar_counts == [2] * 12
     assert range_onset.bar_counts == [10] * 12
     assert source_follow.bar_counts == [10] * 3
@@ -516,14 +496,14 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
         calls.append((symbol, timeframe, lookback_days, end_ms))
         return _bars(symbol, timeframe)
 
-    hulk = _Collector("hulk_expansion_bidirectional_tuned_v2", emit=True)
-    range_onset = _Collector("range_onset_bidirectional_v1", emit=False)
+    hulk = _Collector("test_trend_5m", emit=True)
+    range_onset = _Collector("test_breakout_1m", emit=False)
     source_follow = _Collector(
-        "hypervelocity_source_follow_bidirectional_5m_v1",
+        "test_mirror_1m",
         emit=False,
     )
     hype_breakout = _Collector(
-        "hype_breakout_onset_bidirectional_v1",
+        "test_fade_1m",
         emit=False,
     )
     poller = ConfiguredMultiAssetIntentPoller(
@@ -535,6 +515,7 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
             source_follow.strategy_id: source_follow,
             hype_breakout.strategy_id: hype_breakout,
         },
+        canonical_regime_collector=_CanonicalCollector(config.symbols),
     )
     poller.activate(_OBSERVED_MS - 1_000)
 
@@ -546,7 +527,10 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
     assert set(first.reference_prices) == {"BTC", "ETH", "SOL", "HYPE"}
     assert set(first.reference_prices.values()) == {101.0}
     scores = {intent.symbol: intent.regime_alignment_score for intent in first.intents}
-    assert scores == {"BTC": -1.0, "ETH": 1.0, "SOL": -1.0, "HYPE": 1.0}
+    # 1m and 5m TREND_DOWN (weights 1 and 3) against a 15m RANGE (weight 2).
+    assert scores == pytest.approx(
+        {"BTC": -4 / 6, "ETH": 4 / 6, "SOL": -4 / 6, "HYPE": 4 / 6}
+    )
     assert all(intent.regime_decision_time_ms is not None for intent in first.intents)
     assert set(first.market_bars) == {"BTC", "ETH", "SOL", "HYPE"}
     btc_bars = first.market_bars["BTC"]
@@ -580,7 +564,7 @@ def test_range_retired_profile_keeps_canonical_regime_outside_route_roster() -> 
     collectors = {
         provider.strategy_id: _Collector(
             provider.strategy_id,
-            emit=provider.strategy_id == "hulk_expansion_bidirectional_tuned_v2",
+            emit=provider.strategy_id == "test_trend_5m",
         )
         for provider in config.providers
     }
@@ -641,40 +625,70 @@ def test_stale_completed_entries_are_visible_but_not_routable() -> None:
     assert len(result.all_intents) == 10
 
 
-def test_default_collectors_require_the_real_backtest_lab_root() -> None:
-    """Runtime construction fails before polling when Hulk dependencies are absent."""
+def test_registered_collectors_build_every_configured_provider() -> None:
+    """Runtime construction builds each provider from its registered factory."""
     config = load_multi_asset_live_config(
         "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
 
-    try:
-        ConfiguredMultiAssetIntentPoller.with_default_collectors(
-            config=config,
-            fetch_bars=lambda *_args, **_kwargs: pd.DataFrame(),
-            backtest_lab_root=Path("does-not-exist"),
-        )
-    except FileNotFoundError as exc:
-        assert "backtest-lab" in str(exc)
-    else:
-        raise AssertionError("missing Hulk dependency root was accepted")
-
-
-@pytest.mark.integration
-def test_default_collectors_support_the_staged_sol_aligned_provider() -> None:
-    """The next-flat profile must have a concrete causal runtime collector."""
-    config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/range_retired_hype75.toml",
-        mode="observe",
-    )
-
-    poller = ConfiguredMultiAssetIntentPoller.with_default_collectors(
+    poller = ConfiguredMultiAssetIntentPoller.with_registered_collectors(
         config=config,
         fetch_bars=lambda *_args, **_kwargs: pd.DataFrame(),
-        backtest_lab_root=Path("../backtest-lab/backtest_lab").resolve(),
     )
 
     assert poller is not None
+
+
+def test_poller_reads_each_provider_on_its_declared_signal_clock() -> None:
+    """A 5m provider receives 5m bars and a 1m provider receives 1m bars."""
+    config = load_multi_asset_live_config(
+        "tests/fixtures/profiles/cohort_base.toml",
+        mode="observe",
+    )
+    collectors = {
+        provider.strategy_id: _Collector(provider.strategy_id, emit=False)
+        for provider in config.providers
+    }
+    poller = ConfiguredMultiAssetIntentPoller(
+        config=config,
+        fetch_bars=lambda symbol, timeframe, days, *, end_ms=None: _one_minute_bars(
+            symbol
+        ),
+        collectors=collectors,
+    )
+    poller.activate(_OBSERVED_MS - 1_000)
+    poller.poll(_OBSERVED)
+
+    five_minute = collectors["test_trend_5m"].bar_times[-1]
+    one_minute = collectors["test_breakout_1m"].bar_times[-1]
+    assert {stamp.minute % 5 for stamp in five_minute} == {0}
+    assert len(one_minute) == 10
+
+
+def test_poller_refuses_a_provider_without_registration() -> None:
+    """A provider id with no registration has no signal clock to poll."""
+    from dataclasses import replace
+
+    from hypervector.live.multi_asset_market_bars import MultiAssetIntentPollerError
+
+    config = load_multi_asset_live_config(
+        "tests/fixtures/profiles/cohort_base.toml",
+        mode="observe",
+    )
+    unknown = replace(config.providers[0], strategy_id="unregistered_provider")
+    config = replace(config, providers=(unknown, *config.providers[1:]))
+    collectors = {
+        provider.strategy_id: _Collector(provider.strategy_id, emit=False)
+        for provider in config.providers
+    }
+
+    with pytest.raises(MultiAssetIntentPollerError, match="not registered"):
+        ConfiguredMultiAssetIntentPoller(
+            config=config,
+            fetch_bars=lambda *_args, **_kwargs: pd.DataFrame(),
+            collectors=collectors,
+        )
 
 
 def _assert_transient_fetch_failure_preserves_boundaries(

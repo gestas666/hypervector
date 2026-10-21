@@ -138,7 +138,7 @@ def test_projects_provider_symbol_override_against_asset_default() -> None:
     records = _records(max_notional_usd=50.0)
     records[0]["payload"]["providers"] = [
         {
-            "strategy_id": "range_onset_bidirectional_v1",
+            "strategy_id": "test_breakout_1m",
             "execution_symbols": ["BTC", "ETH"],
             "sizing_overrides": {
                 "BTC": {"margin_fraction": 0.06, "max_notional_usd": 40.0}
@@ -150,8 +150,8 @@ def test_projects_provider_symbol_override_against_asset_default() -> None:
 
     assert evidence["summary"]["provider_symbols"] == 2
     assert evidence["summary"]["provider_symbol_overrides"] == 1
-    btc = evidence["by_provider_symbol"]["range_onset_bidirectional_v1|BTC"]
-    eth = evidence["by_provider_symbol"]["range_onset_bidirectional_v1|ETH"]
+    btc = evidence["by_provider_symbol"]["test_breakout_1m|BTC"]
+    eth = evidence["by_provider_symbol"]["test_breakout_1m|ETH"]
     assert btc["sizing_source"] == "provider_override"
     assert btc["planned_notional_usd"] == pytest.approx(40.0)
     assert btc["effective_margin_fraction"] == pytest.approx(0.016)
@@ -164,12 +164,12 @@ def test_ignores_observe_only_provider_in_execution_risk_projection() -> None:
     records = _records(max_notional_usd=50.0)
     records[0]["payload"]["providers"] = [
         {
-            "strategy_id": "hulk_expansion_bidirectional_tuned_v2",
+            "strategy_id": "test_trend_5m",
             "execution_symbols": ["BTC"],
             "sizing_overrides": {},
         },
         {
-            "strategy_id": "range_onset_bidirectional_v1",
+            "strategy_id": "test_breakout_1m",
             "execution_symbols": [],
             "sizing_overrides": {},
         },
@@ -179,7 +179,7 @@ def test_ignores_observe_only_provider_in_execution_risk_projection() -> None:
 
     assert evidence["summary"]["provider_symbols"] == 1
     assert set(evidence["by_provider_symbol"]) == {
-        "hulk_expansion_bidirectional_tuned_v2|BTC"
+        "test_trend_5m|BTC"
     }
 
 
@@ -188,7 +188,7 @@ def test_portfolio_margin_uses_largest_provider_policy_per_asset() -> None:
     records = _records(max_notional_usd=75.0, account_value_usd=50.0)
     records[0]["payload"]["providers"] = [
         {
-            "strategy_id": "range_onset_bidirectional_v1",
+            "strategy_id": "test_breakout_1m",
             "execution_symbols": ["BTC", "ETH"],
             "sizing_overrides": {
                 "BTC": {"margin_fraction": 0.10, "max_notional_usd": 75.0}
@@ -209,7 +209,7 @@ def test_projects_directional_provider_sizing_without_hiding_either_side() -> No
     records = _records(max_notional_usd=75.0)
     records[0]["payload"]["providers"] = [
         {
-            "strategy_id": "range_onset_bidirectional_v1",
+            "strategy_id": "test_breakout_1m",
             "execution_symbols": ["BTC"],
             "sizing_overrides": {
                 "BTC": {"margin_fraction": 0.03, "max_notional_usd": 25.0}
@@ -226,8 +226,8 @@ def test_projects_directional_provider_sizing_without_hiding_either_side() -> No
     evidence = cohort_risk_utilization(records, run_id="live-a")
 
     sides = evidence["by_provider_symbol_side"]
-    long = sides["range_onset_bidirectional_v1|BTC|long"]
-    short = sides["range_onset_bidirectional_v1|BTC|short"]
+    long = sides["test_breakout_1m|BTC|long"]
+    short = sides["test_breakout_1m|BTC|short"]
     assert long["sizing_source"] == "provider_direction_override"
     assert long["planned_notional_usd"] == pytest.approx(60.0)
     assert short["sizing_source"] == "provider_direction_override"

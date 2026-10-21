@@ -44,9 +44,9 @@ class ReceiptPort:
         """Initialize explicit cash, source mark and a deterministic receipt clock."""
         self.price = price
         self.clock = ReplayClock(DECISION_MS)
-        self.account = ExactFillAccount(Decimal("5000"), ("xyz:SNDK",))
+        self.account = ExactFillAccount(Decimal("5000"), ("xyz:CCC",))
         self.account.mark(
-            self.clock.next_stamp(), source_time_ms=DECISION_MS, prices={"xyz:SNDK": Decimal("1630")}
+            self.clock.next_stamp(), source_time_ms=DECISION_MS, prices={"xyz:CCC": Decimal("1630")}
         )
         self.clock.advance_to(DECISION_MS + 1_000)
 
@@ -60,7 +60,7 @@ class ReceiptPort:
         cloid: object = None,
     ) -> object:
         """Return a synthetic fill receipt after economic mutation, without resizing."""
-        assert name == "xyz:SNDK" and px == 1630.0 and slippage == 0.01
+        assert name == "xyz:CCC" and px == 1630.0 and slippage == 0.01
         quantity = Decimal(str(sz))
         dispatch = self.clock.now_ms
         filled = dispatch + 20_000
@@ -101,7 +101,7 @@ def test_native_reference_sizing_survives_a_delayed_fill(side: str, price: Decim
     info = create_autospec(HyperliquidInfoProtocol, instance=True, spec_set=True)
     info.meta.return_value = {
         "universe": [
-            {"name": "xyz:SNDK", "szDecimals": 3, "maxLeverage": 20},
+            {"name": "xyz:CCC", "szDecimals": 3, "maxLeverage": 20},
         ]
     }
     exchange = create_autospec(HyperliquidExchangeProtocol, instance=True, spec_set=True)
@@ -114,7 +114,7 @@ def test_native_reference_sizing_survives_a_delayed_fill(side: str, price: Decim
             account_address=ADDRESS,
             max_notional_usd=500,
             slippage_fraction=0.01,
-            symbol="xyz:SNDK",
+            symbol="xyz:CCC",
             perp_dex="xyz",
         )
     )
@@ -122,7 +122,7 @@ def test_native_reference_sizing_survives_a_delayed_fill(side: str, price: Decim
         side=side, requested_notional_usd=500, mark_price=1630, client_order_id=CLIENT_ID
     )
     view = port.account.snapshot()
-    position = view.positions["xyz:SNDK"]
+    position = view.positions["xyz:CCC"]
     assert ack.filled_size == 0.306 and ack.average_price == float(price)
     assert abs(position.quantity_signed) == Decimal("0.306")
     assert position.quantity_signed > 0 if side == "long" else position.quantity_signed < 0

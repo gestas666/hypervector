@@ -25,7 +25,7 @@ PROFILE = Path("tests/fixtures/profiles/noncrypto_live.toml")
 REQUESTS = tuple(
     (symbol, "1m", 5 / 1440, cutoff)
     for cutoff in (1000, 2000)
-    for symbol in ("BTC", "xyz:SNDK")
+    for symbol in ("BTC", "xyz:CCC")
 )
 
 

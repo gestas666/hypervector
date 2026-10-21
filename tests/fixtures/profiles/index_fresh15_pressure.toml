@@ -10,7 +10,7 @@ poll_seconds = 15.0
 lookback_days = 14
 
 [[assets]]
-symbol = "xyz:SP500"
+symbol = "xyz:AAA"
 sides = ["long", "short"]
 leverage = 5.0
 venue_max_leverage = 50.0
@@ -21,7 +21,7 @@ stop_bps = 80.0
 maximum_hold_seconds = 86400
 
 [[assets]]
-symbol = "xyz:SPCX"
+symbol = "xyz:BBB"
 sides = ["long", "short"]
 leverage = 5.0
 venue_max_leverage = 20.0
@@ -32,8 +32,8 @@ stop_bps = 80.0
 maximum_hold_seconds = 86400
 
 [[providers]]
-strategy_id = "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v2"
-symbols = ["xyz:SP500", "xyz:SPCX"]
+strategy_id = "test_session_b_15m"
+symbols = ["xyz:AAA", "xyz:BBB"]
 sides = ["long", "short"]
 priority = 10
 timeframe = "15m"

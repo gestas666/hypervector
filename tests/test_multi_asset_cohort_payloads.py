@@ -17,6 +17,6 @@ def test_provider_payload_preserves_directional_authority() -> None:
         for provider in config.providers
     }
 
-    assert sides["hulk_expansion_short_robust_v3"] == ["short"]
-    assert sides["liquidity_sweep_long_1h_stop60_target60_v2"] == ["long"]
-    assert sides["range_onset_bidirectional_v1"] == ["long", "short"]
+    assert sides["test_short_trend_5m"] == ["short"]
+    assert sides["test_long_target_1m"] == ["long"]
+    assert sides["test_breakout_1m"] == ["long", "short"]

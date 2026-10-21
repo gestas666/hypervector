@@ -9,25 +9,18 @@ from pathlib import Path
 
 import pytest
 
-from hypervector.live.sol_range_onset_config import (
-    SolRangeOnsetConfig,
-    load_sol_range_onset_config,
-)
+from hypervector.live.sol_range_onset_config import SolRangeOnsetConfig
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger, SolLiveLedgerError
 from hypervector.live.sol_range_onset_live_telemetry import SolLiveTelemetry
+
+from engine_config_fixtures import engine_asset_config
 
 _OBSERVED = datetime(2026, 7, 31, 12, tzinfo=UTC)
 
 
 def _history(tmp_path: Path) -> tuple[SolRangeOnsetConfig, SolLiveLedger]:
     """Create a local-only ledger and configuration without an execution client."""
-    config = replace(
-        load_sol_range_onset_config(
-            Path('tests/fixtures/profiles/sol_range_onset.toml'),
-            mode='live', enabled=True, accepts_live_risk=True,
-        ),
-        live_ledger=tmp_path / 'live/sol_range_onset_canary/decisions.jsonl',
-    )
+    config = engine_asset_config(tmp_path / 'live/bidirectional_cohort/sol.jsonl')
     ledger = SolLiveLedger(
         path=config.live_ledger, profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,

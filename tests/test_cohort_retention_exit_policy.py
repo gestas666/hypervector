@@ -1,4 +1,4 @@
-"""Regime-flip ratchet and profit-floor retention policy (v2) contracts."""
+"""Regime-flip ratchet and profit-floor retention policy contracts."""
 
 import math
 
@@ -9,9 +9,18 @@ from hypervector.live.cohort_adaptive_exit_policy import (
     ADAPTIVE_EXIT_POLICY,
     RETENTION_EXIT_POLICY,
     RetentionExitObservation,
+    RetentionExitParameters,
     RetentionExitState,
-    advance_retention_exit,
+    advance_retention_exit as _advance,
 )
+
+from exit_parameter_fixtures import RETENTION_PARAMETERS
+
+
+def advance_retention_exit(
+    state: RetentionExitState, observation: RetentionExitObservation
+) -> RetentionExitState:
+    return _advance(state, observation, RETENTION_PARAMETERS)
 
 
 def _obs(ms: int, pnl: float, alignment: float | None = None, risk: float = 100.0):
@@ -21,7 +30,7 @@ def _obs(ms: int, pnl: float, alignment: float | None = None, risk: float = 100.
 
 
 def test_registry_holds_exactly_the_supported_names() -> None:
-    assert RETENTION_EXIT_POLICY == "regime_flip_floor_retention_v2"
+    assert RETENTION_EXIT_POLICY == "regime_flip_floor_retention"
     assert ADAPTIVE_EXIT_POLICIES == frozenset(
         {"none", ADAPTIVE_EXIT_POLICY, RETENTION_EXIT_POLICY}
     )
@@ -118,3 +127,62 @@ def test_invalid_observation_is_refused(kwargs: dict[str, object]) -> None:
     base = {"observed_ms": 1_000, "pnl_bps": 10.0, "risk_bps": 100.0, "alignment": None}
     with pytest.raises(ValueError):
         RetentionExitObservation(**{**base, **kwargs})
+
+
+def test_profile_parameters_drive_the_ratchet_and_floor() -> None:
+    """Different profile values move activation, floor and giveback accordingly."""
+    wide = RetentionExitParameters(
+        activation_r=1.0,
+        giveback_r=1.0,
+        opposed_alignment=-0.9,
+        floor_activation_r=3.0,
+        floor_r=1.0,
+        breakeven_offset_bps=10.0,
+    )
+    state = _advance(RetentionExitState(), _obs(1_000, 99.0), wide)
+    assert not state.armed
+    state = _advance(state, _obs(2_000, 300.0), wide)
+    assert state.armed and state.floor_armed and state.floor_bps == 100.0
+    held = _advance(state, _obs(3_000, 201.0, alignment=-0.5), wide)
+    assert held.exit_reason is None
+    flipped = _advance(state, _obs(3_000, 200.0, alignment=-0.9), wide)
+    assert flipped.exit_reason == "regime_flip_giveback"
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"activation_r": 0.0},
+        {"giveback_r": -1.0},
+        {"floor_r": 2.0},
+        {"opposed_alignment": 0.1},
+        {"breakeven_offset_bps": -1.0},
+        {"floor_activation_r": math.nan},
+    ],
+)
+def test_retention_parameters_reject_unusable_values(overrides: dict) -> None:
+    values = {
+        "activation_r": 0.5,
+        "giveback_r": 0.5,
+        "opposed_alignment": -0.5,
+        "floor_activation_r": 2.0,
+        "floor_r": 0.5,
+        "breakeven_offset_bps": 25.0,
+        **overrides,
+    }
+    with pytest.raises(ValueError):
+        RetentionExitParameters(**values)
+
+
+def test_retention_parameters_parse_strictly_from_a_profile_table() -> None:
+    table = RETENTION_PARAMETERS.as_payload()
+    assert RetentionExitParameters.from_payload(table) == RETENTION_PARAMETERS
+    assert RetentionExitParameters.from_payload(None) is None
+    with pytest.raises(ValueError, match="finite"):
+        RetentionExitParameters.from_payload({**table, "floor_r": None})
+    partial = dict(table)
+    partial.pop("floor_r")
+    with pytest.raises(ValueError, match="missing"):
+        RetentionExitParameters.from_payload(partial)
+    with pytest.raises(ValueError, match="unknown"):
+        RetentionExitParameters.from_payload({**table, "extra": 1.0})

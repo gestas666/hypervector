@@ -283,13 +283,13 @@ def test_namespaced_hip3_symbol_is_preserved_in_intent_and_position() -> None:
     """Portfolio routing preserves exact builder-perp venue identity."""
     intent = StrategyIntent(
         strategy_id="hip3_swing",
-        symbol="xyz:SP500",
+        symbol="xyz:AAA",
         side="long",
         decision_time_ms=1,
         reference_price=6_000.0,
         reason="alignment",
     )
-    position = PositionState("xyz:SP500", None)
+    position = PositionState("xyz:AAA", None)
 
-    assert intent.symbol == "xyz:SP500"
-    assert position.symbol == "xyz:SP500"
+    assert intent.symbol == "xyz:AAA"
+    assert position.symbol == "xyz:AAA"

@@ -113,7 +113,7 @@ def _live_expected_evaluations(evaluations: list[dict[str, object]]) -> list[dic
         readiness["readiness_fraction"] = (
             readiness["conditions_met"] / readiness["conditions_required"]
         )
-        if evaluation["strategy_id"] != "hype_breakout_compression_alignment_bidirectional_v2":
+        if evaluation["strategy_id"] != "test_alignment_1m":
             continue
         for key in ("candidate_authority", "entry_policy_authority"):
             assert readiness["metrics"][key] == "report_only"

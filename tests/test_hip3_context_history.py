@@ -13,7 +13,7 @@ from test_hip3_roster_funding import _Info
 
 def _response() -> list[object]:
     return [
-        {"universe": [{"name": "xyz:EXTRA"}, {"name": "xyz:SNDK"}]},
+        {"universe": [{"name": "xyz:EXTRA"}, {"name": "xyz:CCC"}]},
         [
             {"funding": "0", "premium": None, "oraclePx": "10", "markPx": "10.1"},
             {
@@ -31,7 +31,7 @@ def test_capture_preserves_entire_public_universe_with_one_request(
 ) -> None:
     """Research gets unrostered markets without adding endpoint requests."""
     info = _Info(_response())
-    reader = Hip3RosterFundingReader(info=info, symbols=("xyz:SNDK",))
+    reader = Hip3RosterFundingReader(info=info, symbols=("xyz:CCC",))
     assert hasattr(reader, "snapshot_with_capture")
     rates = reader.snapshot_with_capture(tmp_path)
     rows = [
@@ -39,13 +39,13 @@ def test_capture_preserves_entire_public_universe_with_one_request(
         for p in tmp_path.glob("*.jsonl")
         for line in p.read_text().splitlines()
     ]
-    assert rates == {"xyz:SNDK": -0.0001}
+    assert rates == {"xyz:CCC": -0.0001}
     assert len(info.calls) == 1
     assert len(rows) == 1
     by_symbol = {row["symbol"]: row for row in rows[0]["markets"]}
-    assert by_symbol["xyz:SNDK"]["premium"] == 0.002
-    assert by_symbol["xyz:SNDK"]["oracle_price"] == 100.0
-    assert by_symbol["xyz:SNDK"]["mark_price"] == 100.2
+    assert by_symbol["xyz:CCC"]["premium"] == 0.002
+    assert by_symbol["xyz:CCC"]["oracle_price"] == 100.0
+    assert by_symbol["xyz:CCC"]["mark_price"] == 100.2
     assert by_symbol["xyz:EXTRA"]["premium"] is None
     assert rows[0]["execution_authority"] == "none"
     assert rows[0]["timestamp_source"] == "local_receipt"
@@ -54,7 +54,7 @@ def test_capture_preserves_entire_public_universe_with_one_request(
 def test_capture_retains_history_across_reader_restarts(tmp_path: Path) -> None:
     """Independent reader lifetimes append instead of replacing earlier observations."""
     for _ in range(2):
-        reader = Hip3RosterFundingReader(info=_Info(_response()), symbols=("xyz:SNDK",))
+        reader = Hip3RosterFundingReader(info=_Info(_response()), symbols=("xyz:CCC",))
         assert hasattr(reader, "snapshot_with_capture")
         reader.snapshot_with_capture(tmp_path)
     rows = [
@@ -75,7 +75,7 @@ def test_invalid_context_does_not_publish_success(
     """Invalid prices and nonfinite premiums cannot enter the historical dataset."""
     response = _response()
     response[1][1][field] = value
-    reader = Hip3RosterFundingReader(info=_Info(response), symbols=("xyz:SNDK",))
+    reader = Hip3RosterFundingReader(info=_Info(response), symbols=("xyz:CCC",))
     assert hasattr(reader, "snapshot_with_capture")
     with pytest.raises(ValueError):
         reader.snapshot_with_capture(tmp_path)
@@ -86,7 +86,7 @@ def test_incomplete_tail_is_not_silently_overwritten(tmp_path: Path) -> None:
     """Crash damage stays intact and forces an actionable storage failure."""
     path = tmp_path / (datetime.now(UTC).date().isoformat() + ".jsonl")
     path.write_text('{"partial":')
-    reader = Hip3RosterFundingReader(info=_Info(_response()), symbols=("xyz:SNDK",))
+    reader = Hip3RosterFundingReader(info=_Info(_response()), symbols=("xyz:CCC",))
     assert hasattr(reader, "snapshot_with_capture")
     with pytest.raises(ValueError, match="incomplete.*tail"):
         reader.snapshot_with_capture(tmp_path)
@@ -105,7 +105,7 @@ def test_one_unparseable_market_does_not_blank_the_whole_universe(
     response = [
         {
             "universe": [
-                {"name": "xyz:SNDK", "growthMode": True, "maxLeverage": 10},
+                {"name": "xyz:CCC", "growthMode": True, "maxLeverage": 10},
                 {"name": "xyz:JUNK", "growthMode": True, "maxLeverage": 10},
             ]
         },
@@ -121,7 +121,7 @@ def test_one_unparseable_market_does_not_blank_the_whole_universe(
 
     markets = {row["symbol"]: row for row in record["markets"]}
     assert record["status"] == "available"
-    assert markets["xyz:SNDK"]["oracle_price"] == 10.0
+    assert markets["xyz:CCC"]["oracle_price"] == 10.0
     assert markets["xyz:JUNK"]["parse_error"]
     assert record["unparsed_market_count"] == 1
 

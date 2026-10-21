@@ -44,12 +44,12 @@ from hypervector.live.sol_range_onset_state import SolLiveState
 from hypervector.research.cohort_protection_warnings import protection_warnings
 
 _ATTEMPT = "breakeven_stop_attempt"
-_SNDK_SIZE_DECIMALS = 3  # the replay fixture's xyz:SNDK szDecimals
+_CCC_SIZE_DECIMALS = 3  # the replay fixture's xyz:CCC szDecimals
 _VENUE_ROWS = {"order_intent", "stop_order", "protective_stop_raised"}
 
 
 def _wire(price: float) -> float:
-    return normalize_perp_price(price, _SNDK_SIZE_DECIMALS)
+    return normalize_perp_price(price, _CCC_SIZE_DECIMALS)
 
 
 def _grid(_symbol: str, price: float) -> float:
@@ -200,23 +200,23 @@ class _Polls:
 
         extra = {} if self.normalize is None else {"normalize": self.normalize}
         return raise_breakeven_stops(
-            requests=frozenset({"xyz:SNDK"}),
+            requests=frozenset({"xyz:CCC"}),
             closed_symbols=set(),
-            symbols=("xyz:SNDK",),
+            symbols=("xyz:CCC",),
             venues={
-                "xyz:SNDK": _Venue(
+                "xyz:CCC": _Venue(
                     _Position(self.entry, self.size),
                     () if self.resting is None else (self.resting,),
                 )
             },
             raise_stop=raise_stop,  # type: ignore[arg-type]
             attempts=self.attempts,
-            lifecycle_oids={"xyz:SNDK": 41},
+            lifecycle_oids={"xyz:CCC": 41},
             emit=emit,
-            plans={"xyz:SNDK": self.plan},
-            books={"xyz:SNDK": book},  # type: ignore[dict-item]
+            plans={"xyz:CCC": self.plan},
+            books={"xyz:CCC": book},  # type: ignore[dict-item]
             observed_ms=NOW,
-            stop_oids={"xyz:SNDK": 77},
+            stop_oids={"xyz:CCC": 77},
             skips=self.skips,
             **extra,  # type: ignore[arg-type]
         )
@@ -291,20 +291,20 @@ def test_already_at_target_clears_an_earlier_protection_warning() -> None:
         "event_type": "cohort_snapshot",
         "payload": {
             "assets": [
-                {"symbol": "xyz:SNDK", "entry_oid": 41, "position_size_signed": 1.0}
+                {"symbol": "xyz:CCC", "entry_oid": 41, "position_size_signed": 1.0}
             ]
         },
     }
     exhausted = {
         "event_type": RAISE_EXHAUSTED_EVENT,
         "observed_at_utc": "2026-09-24T18:00:00+00:00",
-        "payload": {"symbol": "xyz:SNDK", "entry_oid": 41, "attempts": 3},
+        "payload": {"symbol": "xyz:CCC", "entry_oid": 41, "attempts": 3},
     }
     at_target = {
         "event_type": _ATTEMPT,
         "observed_at_utc": "2026-09-24T18:05:00+00:00",
         "payload": {
-            "symbol": "xyz:SNDK",
+            "symbol": "xyz:CCC",
             "entry_oid": 41,
             "attempt": 0,
             "raised": False,
@@ -328,12 +328,12 @@ def test_already_at_target_clears_an_earlier_protection_warning() -> None:
 def _runner(engine: Mock) -> tuple[MultiAssetLiveRunner, list[str]]:
     runner = object.__new__(MultiAssetLiveRunner)
     events: list[str] = []
-    runner._symbols = ("xyz:SNDK",)  # type: ignore[attr-defined]
-    runner._engines = {"xyz:SNDK": engine}  # type: ignore[attr-defined]
+    runner._symbols = ("xyz:CCC",)  # type: ignore[attr-defined]
+    runner._engines = {"xyz:CCC": engine}  # type: ignore[attr-defined]
     runner._breakeven_attempts = {}  # type: ignore[attr-defined]
     runner._breakeven_skips = {}  # type: ignore[attr-defined]
     runner._profit_lock_controller = SimpleNamespace(  # type: ignore[attr-defined]
-        breakeven_requests=frozenset({"xyz:SNDK"})
+        breakeven_requests=frozenset({"xyz:CCC"})
     )
     runner._telemetry = SimpleNamespace(  # type: ignore[attr-defined]
         emit_breakeven_stop_attempt=lambda event, _payload: events.append(event)

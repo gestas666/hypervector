@@ -53,7 +53,7 @@ def test_unattributed_partial_entry_keeps_the_original_intent_retryable(
     assert recovered.target_oid is not None and replay.mutations.count("entry") == 1
 
 
-@pytest.mark.parametrize("symbol", ["BTC", "xyz:SNDK"])
+@pytest.mark.parametrize("symbol", ["BTC", "xyz:CCC"])
 def test_long_delayed_canceled_entry_restart_uses_owned_partial_fill(
     tmp_path: Path, symbol: str
 ) -> None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
-_HULK = "hulk_expansion_bidirectional_tuned_v2"
+_HULK = "test_trend_5m"
 _RUN_ID = "observer-a"
 
 

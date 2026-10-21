@@ -9,7 +9,7 @@ import pytest
 
 from cohort_live_audit_delta_fixtures import audit as _audit
 
-_PROVIDER = "hype_breakout_onset_bidirectional_v1|BTC"
+_PROVIDER = "test_fade_1m|BTC"
 
 
 def test_delta_reports_newly_resolved_executable_bbo_episode() -> None:

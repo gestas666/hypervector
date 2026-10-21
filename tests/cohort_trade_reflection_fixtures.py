@@ -33,27 +33,42 @@ def reflection_cohort_rows() -> list[dict[str, object]]:
                 "close": close,
             }
         )
+    return _with_canonical_copies(rows)
+
+
+def _with_canonical_copies(
+    source: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Publish each cycle's regime context as a telemetry-only canonical event."""
+    rows: list[dict[str, object]] = []
+    for row in source:
+        rows.append(row)
+        if row["event_type"] != "intent_routing":
+            continue
+        canonical = [
+            deepcopy(value)
+            for value in row["payload"]["evaluations"]
+            if value["strategy_id"] == _RANGE
+        ]
+        if canonical:
+            rows.append(_canonical_event(row, canonical))
+    for sequence, row in enumerate(rows, start=1):
+        row["sequence"] = sequence
     return rows
 
 
 def independent_canonical_rows(
     source: list[dict[str, object]],
 ) -> list[dict[str, object]]:
-    """Move synthetic Range evaluations to causal telemetry-only events."""
-    rows: list[dict[str, object]] = []
+    """Drop the provider rows that share the regime context, keeping canonical events."""
     for row in source:
-        if row["event_type"] != "intent_routing":
-            rows.append(row)
-            continue
-        evaluations = row["payload"]["evaluations"]
-        canonical = [value for value in evaluations if value["strategy_id"] == _RANGE]
-        row["payload"]["evaluations"] = [
-            value for value in evaluations if value not in canonical
-        ]
-        rows.extend((row, _canonical_event(row, canonical)))
-    for sequence, row in enumerate(rows, start=1):
-        row["sequence"] = sequence
-    return rows
+        if row["event_type"] == "intent_routing":
+            row["payload"]["evaluations"] = [
+                value
+                for value in row["payload"]["evaluations"]
+                if value["strategy_id"] != _RANGE
+            ]
+    return source
 
 
 def _canonical_event(

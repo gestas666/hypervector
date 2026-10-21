@@ -51,11 +51,11 @@ def _write_healthy_files(paths: sup.SupervisorPaths, *, fee_bps: float = 0.864) 
             {
                 "generated_at_utc": datetime.now(UTC).isoformat(),
                 "audit": {
-                    "run": {"executable_provider_symbols": ["donchian|xyz:SNDK"]},
+                    "run": {"executable_provider_symbols": ["donchian|xyz:CCC"]},
                     "execution": {
                         "fill_details": [
                             {
-                                "symbol": "xyz:SNDK",
+                                "symbol": "xyz:CCC",
                                 "price": 100.0,
                                 "size": 5.0,
                                 "fee_usd": notional * fee_bps / 10_000.0,
@@ -81,10 +81,10 @@ def _write_healthy_files(paths: sup.SupervisorPaths, *, fee_bps: float = 0.864) 
                 "status": "available",
                 "lifecycle": "running",
                 "observed_at_utc": datetime.now(UTC).isoformat(),
-                "active_symbols": ["xyz:SNDK", "xyz:GOLD"],
+                "active_symbols": ["xyz:CCC", "xyz:DDD"],
                 "markets": [
                     {
-                        "symbol": "xyz:SNDK",
+                        "symbol": "xyz:CCC",
                         "venue": {
                             "growth_mode": True,
                             "deployer_fee_scale": 1.0,
@@ -92,7 +92,7 @@ def _write_healthy_files(paths: sup.SupervisorPaths, *, fee_bps: float = 0.864) 
                         },
                     },
                     {
-                        "symbol": "xyz:GOLD",
+                        "symbol": "xyz:DDD",
                         "venue": {
                             "growth_mode": None,
                             "deployer_fee_scale": 1.0,
@@ -243,7 +243,7 @@ def test_every_failure_is_named(tmp_path: Path) -> None:
         "hip3_fee_regime_changed",
         "hip3_fill_fee_above_threshold",
     }
-    assert report.hip3_fee_regime == {"xyz:SNDK": "growth_mode=False"}
+    assert report.hip3_fee_regime == {"xyz:CCC": "growth_mode=False"}
 
 
 def test_unresolved_growth_mode_is_not_reported_as_a_regime_change(

@@ -37,7 +37,7 @@ def contradictory_close(
     monkeypatch.setattr(adapter, "close_position", rejected)
 
 
-@pytest.mark.parametrize("symbol", ["BTC", "xyz:SNDK"])
+@pytest.mark.parametrize("symbol", ["BTC", "xyz:CCC"])
 def test_rejected_receipt_with_reduced_exposure_faults_before_new_mutation(
     tmp_path: Path, symbol: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:

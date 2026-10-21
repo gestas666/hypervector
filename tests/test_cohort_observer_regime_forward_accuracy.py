@@ -9,7 +9,7 @@ from hypervector.research.cohort_observer_regime_forward_accuracy import (
 )
 
 _RUN = "observer-a"
-_STRATEGY = "range_onset_bidirectional_v1"
+_STRATEGY = "test_breakout_1m"
 
 
 def _envelope(

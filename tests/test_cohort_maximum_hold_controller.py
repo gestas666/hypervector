@@ -161,7 +161,7 @@ def _open_snapshot(opened_at_ms: int) -> SolLiveSnapshot:
 def _supported_evaluations(observed_ms: int) -> dict[EvaluationKey, ProviderEvaluation]:
     return {
         (strategy, "HYPE"): _evaluation(strategy, observed_ms)
-        for strategy in ("hype", "range_onset_bidirectional_v1")
+        for strategy in ("hype", "test_breakout_1m")
     }
 
 

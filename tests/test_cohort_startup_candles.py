@@ -76,7 +76,7 @@ def test_archive_preserves_exact_frames_and_hourly_indicator_seeds(tmp_path: Pat
     from hypervector.research.hourly_band_reentry import build_hourly_band_reentry_signals
 
     context = StartupCandleContext(
-        "fixture", "a" * 64, "b" * 64, "run-1", ("BTC", "xyz:SPCX"),
+        "fixture", "a" * 64, "b" * 64, "run-1", ("BTC", "xyz:BBB"),
         OBSERVED_MS - 60_000, OBSERVED_MS, 14.0,
     )
     frames = {symbol: candle_frame() for symbol in context.symbols}

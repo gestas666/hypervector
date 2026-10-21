@@ -42,8 +42,8 @@ def fill(
 
 def account() -> ExactFillAccount:
     """Start one shared account with explicit opening marks."""
-    result = ExactFillAccount(Decimal("1000"), ("BTC", "xyz:SNDK"))
-    result.mark(Stamp(1, 0), source_time_ms=1, prices={"BTC": Decimal("100"), "xyz:SNDK": Decimal("200")})
+    result = ExactFillAccount(Decimal("1000"), ("BTC", "xyz:CCC"))
+    result.mark(Stamp(1, 0), source_time_ms=1, prices={"BTC": Decimal("100"), "xyz:CCC": Decimal("200")})
     return result
 
 
@@ -52,9 +52,9 @@ def test_exact_fills_share_cash_equity_and_keep_decision_origin() -> None:
     book = account()
     assert book.apply_fill(fill())
     assert book.apply_fill(
-        fill("short", symbol="xyz:SNDK", side="sell", quantity="1", price="200", observed=31)
+        fill("short", symbol="xyz:CCC", side="sell", quantity="1", price="200", observed=31)
     )
-    book.mark(Stamp(40, 0), source_time_ms=39, prices={"BTC": Decimal("110"), "xyz:SNDK": Decimal("180")})
+    book.mark(Stamp(40, 0), source_time_ms=39, prices={"BTC": Decimal("110"), "xyz:CCC": Decimal("180")})
     view = book.snapshot()
     assert view.cash_usd == Decimal("998")
     assert view.unrealized_pnl_usd == Decimal("40")
@@ -137,7 +137,7 @@ def test_exact_duplicates_are_idempotent_and_conflicting_duplicates_atomic() -> 
     [
         ({"side": "buy"}, "opposite"),
         ({"quantity": "3"}, "exceeds"),
-        ({"symbol": "xyz:SNDK"}, "open position"),
+        ({"symbol": "xyz:CCC"}, "open position"),
     ],
 )
 def test_invalid_reductions_do_not_mutate_account(change: dict[str, str], message: str) -> None:
@@ -198,7 +198,7 @@ def test_bad_marks_do_not_partially_update_valid_assets() -> None:
     book.apply_fill(fill())
     before = book.snapshot()
     with pytest.raises(ValueError, match="price"):
-        book.mark(Stamp(40, 0), source_time_ms=39, prices={"BTC": Decimal("200"), "xyz:SNDK": Decimal("NaN")})
+        book.mark(Stamp(40, 0), source_time_ms=39, prices={"BTC": Decimal("200"), "xyz:CCC": Decimal("NaN")})
     assert book.snapshot() == before
     with pytest.raises(ValueError, match="source"):
         book.mark(Stamp(40, 0), source_time_ms=41, prices={"BTC": Decimal("200")})
@@ -211,5 +211,5 @@ def test_fill_requires_explicit_mark_and_configured_symbol() -> None:
     with pytest.raises(ValueError, match="mark"):
         book.apply_fill(fill())
     with pytest.raises(ValueError, match="configured"):
-        book.apply_fill(fill(symbol="xyz:SNDK"))
+        book.apply_fill(fill(symbol="xyz:CCC"))
     assert book.snapshot().cash_usd == Decimal("1000")

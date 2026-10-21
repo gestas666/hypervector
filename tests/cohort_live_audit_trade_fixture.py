@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-_HULK = "hulk_expansion_bidirectional_tuned_v2"
+_HULK = "test_trend_5m"
 
 
 def traded_asset_rows(run_id: str) -> list[dict[str, object]]:

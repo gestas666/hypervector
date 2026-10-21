@@ -27,8 +27,8 @@ _OBSERVED = datetime(2026, 8, 2, 6, tzinfo=UTC)
 _OBSERVED_MS = int(_OBSERVED.timestamp() * 1_000)
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 _PROVIDERS = (
-    "hulk_expansion_bidirectional_tuned_v2",
-    "range_onset_bidirectional_v1",
+    "test_trend_5m",
+    "test_breakout_1m",
 )
 _EXPECTED = frozenset(
     (provider, symbol) for provider in _PROVIDERS for symbol in _SYMBOLS

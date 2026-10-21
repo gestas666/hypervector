@@ -19,7 +19,7 @@ def _database(
     *,
     market_family: str = "hip3",
     book_only: bool = True,
-    symbol: str = "xyz:SPCX",
+    symbol: str = "xyz:BBB",
 ) -> None:
     connection = duckdb.connect(str(path))
     connection.execute(
@@ -76,7 +76,7 @@ def _book(
     timestamp: datetime,
     bid: float,
     ask: float,
-    symbol: str = "xyz:SPCX",
+    symbol: str = "xyz:BBB",
 ) -> tuple[object, ...]:
     return (
         symbol,
@@ -96,7 +96,7 @@ def test_profile_uses_first_timely_snapshot_and_finite_depth(tmp_path: Path) -> 
 
     profile = build_liquidity_profile(
         database,
-        symbol="xyz:SPCX",
+        symbol="xyz:BBB",
         notionals_usd=(50.0, 200.0),
         sample_interval_minutes=5,
         maximum_boundary_delay_ms=15_000,
@@ -145,7 +145,7 @@ def test_profile_rejects_non_hip3_provenance(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="HIP-3 provenance"):
         build_liquidity_profile(
             database,
-            symbol="xyz:SPCX",
+            symbol="xyz:BBB",
             notionals_usd=(50.0,),
         )
 
@@ -157,7 +157,7 @@ def test_profile_accepts_checksum_paired_hip3_provenance(tmp_path: Path) -> None
 
     profile = build_liquidity_profile(
         database,
-        symbol="xyz:SPCX",
+        symbol="xyz:BBB",
         notionals_usd=(50.0,),
     )
 
@@ -182,7 +182,7 @@ def test_profile_adds_explicit_taker_fee_sensitivity(tmp_path: Path) -> None:
 
     profile = build_liquidity_profile(
         database,
-        symbol="xyz:SPCX",
+        symbol="xyz:BBB",
         notionals_usd=(50.0,),
         fee_inputs=fee_inputs,
     )
@@ -206,7 +206,7 @@ def test_profile_rejects_invalid_notional_contract(
     with pytest.raises(ValueError, match="notionals_usd"):
         build_liquidity_profile(
             database,
-            symbol="xyz:SPCX",
+            symbol="xyz:BBB",
             notionals_usd=notionals,
         )
 
@@ -227,7 +227,7 @@ def test_cli_writes_report_only_profile_without_overwriting(
         "--database",
         str(database),
         "--symbol",
-        "xyz:SPCX",
+        "xyz:BBB",
         "--notional-usd",
         "50",
         "--account-maker-rate",
@@ -254,7 +254,7 @@ def test_cli_writes_report_only_profile_without_overwriting(
     assert rendered == persisted
     assert rendered["report_only"] is True
     assert rendered["execution_authority"] == "none"
-    assert rendered["profile"]["symbol"] == "xyz:SPCX"
+    assert rendered["profile"]["symbol"] == "xyz:BBB"
     assert rendered["profile"]["fee_status"] == "modeled_current_inputs"
     assert rendered["profile"]["fees"]["round_trip_taker_fee_bps"] == pytest.approx(
         1.728

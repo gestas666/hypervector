@@ -15,8 +15,8 @@ from hypervector.research.cohort_live_audit import audit_multi_asset_live_run
 from hypervector.research.cohort_live_audit_execution import _merge_fill
 
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
-_HULK = "hulk_expansion_bidirectional_tuned_v2"
-_RANGE = "range_onset_bidirectional_v1"
+_HULK = "test_trend_5m"
+_RANGE = "test_breakout_1m"
 _RUN_ID = "cohort-live-a"
 _SCRIPT = Path("src/hypervector/operations/multi_asset_bidirectional_live_audit.py")
 
@@ -26,7 +26,7 @@ def test_exact_fill_placeholders_do_not_erase_projected_attribution() -> None:
     projected = {
         "symbol": "BTC",
         "trade_id": 202,
-        "strategy_id": "hulk_expansion_short_tuned_v2",
+        "strategy_id": "test_short_drift_5m",
         "operation": "protective_stop",
         "exit_controller_id": "cohort_protective_stop",
         "price": 103.98,
@@ -43,7 +43,7 @@ def test_exact_fill_placeholders_do_not_erase_projected_attribution() -> None:
 
     merged = _merge_fill(projected, {("BTC", 202): exact_fill})
 
-    assert merged["strategy_id"] == "hulk_expansion_short_tuned_v2"
+    assert merged["strategy_id"] == "test_short_drift_5m"
     assert merged["operation"] == "protective_stop"
     assert merged["exit_controller_id"] == "cohort_protective_stop"
     assert merged["fee_usd"] == pytest.approx(0.01)
@@ -560,14 +560,14 @@ def test_audit_script_preserves_namespaced_asset_identity(tmp_path: Path) -> Non
     cohort = root / "decisions.jsonl"
     cohort.write_text("", encoding="utf-8")
     (root / "btc.jsonl").write_text("", encoding="utf-8")
-    (root / "xyz:gold.jsonl").write_text("", encoding="utf-8")
+    (root / "xyz:ddd.jsonl").write_text("", encoding="utf-8")
     module = _load_script()
 
-    paths = module._asset_paths(root, cohort, ("BTC", "xyz:GOLD"))
+    paths = module._asset_paths(root, cohort, ("BTC", "xyz:DDD"))
 
     assert paths == {
         "BTC": root / "btc.jsonl",
-        "xyz:GOLD": root / "xyz:gold.jsonl",
+        "xyz:DDD": root / "xyz:ddd.jsonl",
     }
 
 

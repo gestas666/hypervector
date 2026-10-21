@@ -42,9 +42,9 @@ SIZE_DECIMALS = {
     "ETH": 4,
     "SOL": 2,
     "HYPE": 2,
-    "xyz:SPCX": 2,
-    "xyz:SNDK": 3,
-    "xyz:BRENTOIL": 2,
+    "xyz:BBB": 2,
+    "xyz:CCC": 3,
+    "xyz:EEE": 2,
 }
 FEE_RATE = D("0.0009")
 RECEIPT_LATENCY_MS = 500

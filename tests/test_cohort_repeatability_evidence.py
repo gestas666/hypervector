@@ -10,7 +10,7 @@ from hypervector.research.cohort_repeatability_evidence import (
 
 _BASE_MS = 1_700_000_000_000
 _HOUR_MS = 3_600_000
-_PAIR = "hype_breakout_onset_bidirectional_v1|HYPE"
+_PAIR = "test_fade_1m|HYPE"
 
 
 def test_repeatability_discloses_cadence_and_winner_concentration() -> None:
@@ -77,7 +77,7 @@ def _trade(
     exit_hour: int,
 ) -> dict[str, object]:
     return {
-        "strategy_id": "hype_breakout_onset_bidirectional_v1",
+        "strategy_id": "test_fade_1m",
         "symbol": "HYPE",
         "side": side,
         "net_pnl_usd": net_pnl_usd,

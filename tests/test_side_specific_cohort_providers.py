@@ -25,31 +25,31 @@ from hypervector.live.multi_asset_polling_contract import (
 
 _BASE = Path("tests/fixtures/profiles/focused_growth_5000.toml")
 _HULK_BLOCK = """[[providers]]
-strategy_id = "hulk_expansion_bidirectional_tuned_v2"
+strategy_id = "test_trend_5m"
 symbols = ["BTC"]
 sides = ["long", "short"]
 priority = 10
-timeframe = "30m"
+timeframe = "5m"
 maximum_entry_delay_seconds = 60
 execution_symbols = ["BTC"]
 execution = { entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", minimum_stop_bps = 20.0, maximum_stop_bps = 75.0, target_policy = "reward_risk", target_r_multiple = 3.0, maximum_hold_seconds = 86400 }
 """
 _SPECIALIST_BLOCKS = """[[providers]]
-strategy_id = "hulk_expansion_short_robust_v3"
+strategy_id = "test_short_trend_5m"
 symbols = ["BTC"]
 sides = ["short"]
 priority = 20
-timeframe = "30m"
+timeframe = "5m"
 maximum_entry_delay_seconds = 60
 execution_symbols = ["BTC"]
 execution = { entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", minimum_stop_bps = 20.0, maximum_stop_bps = 75.0, target_policy = "reward_risk", target_r_multiple = 3.0, maximum_hold_seconds = 86400 }
 
 [[providers]]
-strategy_id = "liquidity_sweep_long_1h_stop60_v1"
+strategy_id = "test_long_stop_1m"
 symbols = ["BTC"]
 sides = ["long"]
 priority = 10
-timeframe = "1h"
+timeframe = "1m"
 maximum_entry_delay_seconds = 60
 execution_symbols = ["BTC"]
 execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", stop_bps = 60.0, target_policy = "fixed_bps", target_bps = 26.666666666666668, maximum_hold_seconds = 86400 }
@@ -70,15 +70,15 @@ def test_side_specialists_may_jointly_supply_btc_bidirectional_coverage(
     config = load_multi_asset_live_config(profile, mode="observe")
     providers = {provider.strategy_id: provider for provider in config.providers}
 
-    assert providers["hulk_expansion_short_robust_v3"].sides == {"short"}
-    assert providers["liquidity_sweep_long_1h_stop60_v1"].sides == {"long"}
+    assert providers["test_short_trend_5m"].sides == {"short"}
+    assert providers["test_long_stop_1m"].sides == {"long"}
     assert (
-        "hulk_expansion_short_robust_v3",
+        "test_short_trend_5m",
         "BTC",
         "short",
     ) in config.executable_provider_directions
     assert (
-        "liquidity_sweep_long_1h_stop60_v1",
+        "test_long_stop_1m",
         "BTC",
         "long",
     ) in config.executable_provider_directions
@@ -116,7 +116,7 @@ def test_default_collector_builds_the_frozen_robust_short_provider(
     provider = next(
         row
         for row in config.providers
-        if row.strategy_id == "hulk_expansion_short_robust_v3"
+        if row.strategy_id == "test_short_trend_5m"
     )
 
     collector = build_default_collector(provider, config, tmp_path)
@@ -138,7 +138,7 @@ def test_default_collector_builds_the_liquidity_sweep_long_provider(
     provider = next(
         row
         for row in config.providers
-        if row.strategy_id == "liquidity_sweep_long_1h_stop60_v1"
+        if row.strategy_id == "test_long_stop_1m"
     )
 
     collector = build_default_collector(provider, config, tmp_path)
@@ -189,9 +189,9 @@ def test_robust_short_collector_emits_only_the_frozen_short_identity(
 
     assert observed_args["allowed_sides"] == frozenset({"short"})
     assert [(intent.strategy_id, intent.side) for intent in batch.intents] == [
-        ("hulk_expansion_short_robust_v3", "short")
+        ("test_short_trend_5m", "short")
     ]
-    assert batch.evaluations[0].strategy_id == "hulk_expansion_short_robust_v3"
+    assert batch.evaluations[0].strategy_id == "test_short_trend_5m"
     assert batch.latest_decision_time_ms == decision.decision_time_ms
 
 
@@ -229,7 +229,7 @@ def test_liquidity_sweep_long_uses_only_completed_hourly_decisions() -> None:
 
     decision_ms = int((times[-1] + pd.Timedelta(minutes=1)).timestamp() * 1_000)
     assert [(intent.strategy_id, intent.side) for intent in batch.intents] == [
-        ("liquidity_sweep_long_1h_stop60_v1", "long")
+        ("test_long_stop_1m", "long")
     ]
     assert batch.intents[0].decision_time_ms == decision_ms
     assert batch.intents[0].reference_price == 100.25
@@ -243,13 +243,13 @@ def test_robust_short_uses_five_minute_source_and_completed_thirty_minute_seed()
     None
 ):
     """Polling preserves the standalone provider's causal source-clock contract."""
-    assert SOURCE_TIMEFRAMES["hulk_expansion_short_robust_v3"] == "5m"
-    assert READINESS_SEED_LOOKBACK_MINUTES["hulk_expansion_short_robust_v3"] == 31
+    assert SOURCE_TIMEFRAMES["test_short_trend_5m"] == "5m"
+    assert READINESS_SEED_LOOKBACK_MINUTES["test_short_trend_5m"] == 31
 
 
 def test_liquidity_sweep_uses_minute_source_and_completed_hourly_seed() -> None:
     """The sweep builder receives minute bars and seeds one completed hour."""
-    strategy = "liquidity_sweep_long_1h_stop60_v1"
+    strategy = "test_long_stop_1m"
 
     assert SOURCE_TIMEFRAMES[strategy] == "1m"
     assert READINESS_SEED_LOOKBACK_MINUTES[strategy] == 61

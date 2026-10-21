@@ -24,7 +24,7 @@ _BREAKOUT_OBSERVER_PROFILE = Path(
 _COMPLETE_PROFILE = Path(
     "tests/fixtures/profiles/complete_portfolio.toml"
 )
-_SOURCE_FOLLOW_ID = "hypervelocity_source_follow_bidirectional_5m_v1"
+_SOURCE_FOLLOW_ID = "test_mirror_1m"
 _SOURCE_PROFILE_NAME = (
     "hypervelocity_source_follow_bidirectional_minrange12_alloc10_lev5_shadow.toml"
 )
@@ -52,10 +52,10 @@ def test_profile_enables_four_coins_with_both_directions() -> None:
     assert config.maximum_positions == 4
     assert all(asset.sides == frozenset({"long", "short"}) for asset in config.assets)
     assert {provider.strategy_id for provider in config.providers} == {
-        "hulk_expansion_bidirectional_tuned_v2",
-        "range_onset_bidirectional_v1",
-        "hypervelocity_source_follow_bidirectional_5m_v1",
-        "hype_breakout_onset_bidirectional_v1",
+        "test_trend_5m",
+        "test_breakout_1m",
+        "test_mirror_1m",
+        "test_fade_1m",
     }
     assert all(
         provider.sides == frozenset({"long", "short"}) for provider in config.providers
@@ -65,13 +65,13 @@ def test_profile_enables_four_coins_with_both_directions() -> None:
     _assert_provider_contracts(providers)
     sol_asset = next(asset for asset in config.assets if asset.symbol == "SOL")
     assert sol_asset.max_notional_usd == 75.0
-    assert providers["hulk_expansion_bidirectional_tuned_v2"].entry_sizing(
+    assert providers["test_trend_5m"].entry_sizing(
         "SOL"
     ).as_payload() == {
         "margin_fraction": 0.03,
         "max_notional_usd": 25.0,
     }
-    assert providers["range_onset_bidirectional_v1"].entry_sizing(
+    assert providers["test_breakout_1m"].entry_sizing(
         "SOL"
     ).as_payload() == {
         "margin_fraction": 0.10,
@@ -84,19 +84,19 @@ def test_exact_hip3_asset_namespaces_are_accepted() -> None:
     config = load_multi_asset_live_config(_COMPLETE_PROFILE, mode="observe")
 
     assert config.symbols[-5:] == (
-        "xyz:SP500",
-        "xyz:SPCX",
-        "xyz:SNDK",
-        "xyz:GOLD",
-        "xyz:BRENTOIL",
+        "xyz:AAA",
+        "xyz:BBB",
+        "xyz:CCC",
+        "xyz:DDD",
+        "xyz:EEE",
     )
 
 
 def test_malformed_hip3_asset_namespace_is_rejected(tmp_path: Path) -> None:
     """A display alias cannot become an ambiguous venue execution identity."""
     text = _COMPLETE_PROFILE.read_text(encoding="utf-8").replace(
-        "xyz:SP500",
-        "XYZ:SP500",
+        "xyz:AAA",
+        "XYZ:AAA",
     )
     profile = tmp_path / "malformed-hip3.toml"
     profile.write_text(text, encoding="utf-8")
@@ -108,13 +108,13 @@ def test_malformed_hip3_asset_namespace_is_rejected(tmp_path: Path) -> None:
 def _assert_provider_contracts(
     providers: dict[str, StrategyProviderConfig],
 ) -> None:
-    assert providers["hulk_expansion_bidirectional_tuned_v2"].execution_symbols == (
+    assert providers["test_trend_5m"].execution_symbols == (
         "BTC",
         "ETH",
         "SOL",
         "HYPE",
     )
-    assert providers["range_onset_bidirectional_v1"].execution_symbols == (
+    assert providers["test_breakout_1m"].execution_symbols == (
         "BTC",
         "ETH",
         "SOL",
@@ -127,20 +127,20 @@ def _assert_provider_contracts(
     # the exact measured minrange12/alloc10/lev5 shadow profile.
     assert measured.source_profile == Path(_configured_source_profile(_PROFILE))
     assert measured.source_profile.name == _SOURCE_PROFILE_NAME
-    hype = providers["hype_breakout_onset_bidirectional_v1"]
+    hype = providers["test_fade_1m"]
     assert hype.symbols == ("HYPE",)
     assert hype.timeframe == "1m"
     assert hype.execution_symbols == ("HYPE",)
     assert hype.execution.maximum_hold_seconds == 28_800
     assert hype.execution.maximum_hold_policy == "extend_while_regime_supported"
     assert hype.execution.hard_maximum_hold_seconds == 86_400
-    range_contract = providers["range_onset_bidirectional_v1"].execution
+    range_contract = providers["test_breakout_1m"].execution
     assert range_contract.stop_bps == 60.0
     assert range_contract.maximum_hold_seconds == 172_800
-    assert providers["range_onset_bidirectional_v1"].entry_context_overrides == (
+    assert providers["test_breakout_1m"].entry_context_overrides == (
         ("ETH", "dual_mtf_not_opposed"),
     )
-    hulk_contract = providers["hulk_expansion_bidirectional_tuned_v2"].execution
+    hulk_contract = providers["test_trend_5m"].execution
     assert hulk_contract.target_r_multiple == 3.0
 
 
@@ -155,7 +155,7 @@ def test_staged_breakout_observer_expands_observation_without_authority() -> Non
     provider = next(
         row
         for row in config.providers
-        if row.strategy_id == "hype_breakout_onset_bidirectional_v1"
+        if row.strategy_id == "test_fade_1m"
     )
 
     assert len(observed) == 13
@@ -169,7 +169,7 @@ def test_hype_breakout_provider_keeps_its_exact_source_contract(
 ) -> None:
     """Execution authority cannot change the HYPE source clock or symbol."""
     old = (
-        'strategy_id = "hype_breakout_onset_bidirectional_v1"\n'
+        'strategy_id = "test_fade_1m"\n'
         'symbols = ["HYPE"]\n'
         'sides = ["long", "short"]\n'
         "priority = 40\n"
@@ -192,8 +192,8 @@ def test_hype_breakout_can_observe_all_assets_but_execute_only_hype(
 ) -> None:
     """Cross-asset observation cannot silently widen live execution scope."""
     text = _PROFILE.read_text(encoding="utf-8").replace(
-        'strategy_id = "hype_breakout_onset_bidirectional_v1"\nsymbols = ["HYPE"]\n',
-        'strategy_id = "hype_breakout_onset_bidirectional_v1"\n'
+        'strategy_id = "test_fade_1m"\nsymbols = ["HYPE"]\n',
+        'strategy_id = "test_fade_1m"\n'
         'symbols = ["BTC", "ETH", "SOL", "HYPE"]\n',
         1,
     )
@@ -204,7 +204,7 @@ def test_hype_breakout_can_observe_all_assets_but_execute_only_hype(
     provider = next(
         row
         for row in config.providers
-        if row.strategy_id == "hype_breakout_onset_bidirectional_v1"
+        if row.strategy_id == "test_fade_1m"
     )
 
     assert provider.symbols == ("BTC", "ETH", "SOL", "HYPE")
@@ -331,8 +331,8 @@ def test_provider_execution_side_override_is_direction_specific(
 ) -> None:
     """One provider-symbol side can observe without receiving auto authority."""
     text = _PROFILE.read_text(encoding="utf-8").replace(
-        'strategy_id = "range_onset_bidirectional_v1"\n',
-        'strategy_id = "range_onset_bidirectional_v1"\n'
+        'strategy_id = "test_breakout_1m"\n',
+        'strategy_id = "test_breakout_1m"\n'
         'execution_side_overrides = { ETH = ["long"] }\n',
         1,
     )
@@ -343,22 +343,22 @@ def test_provider_execution_side_override_is_direction_specific(
     provider = next(
         row
         for row in config.providers
-        if row.strategy_id == "range_onset_bidirectional_v1"
+        if row.strategy_id == "test_breakout_1m"
     )
 
     assert provider.execution_side_overrides == (("ETH", frozenset({"long"})),)
     assert (
-        "range_onset_bidirectional_v1",
+        "test_breakout_1m",
         "ETH",
         "long",
     ) in config.executable_provider_directions
     assert (
-        "range_onset_bidirectional_v1",
+        "test_breakout_1m",
         "ETH",
         "short",
     ) not in config.executable_provider_directions
     assert (
-        "range_onset_bidirectional_v1",
+        "test_breakout_1m",
         "SOL",
         "short",
     ) in config.executable_provider_directions
@@ -369,8 +369,8 @@ def test_provider_execution_side_override_must_be_executable(
 ) -> None:
     """A direction override cannot silently grant a new provider-symbol pair."""
     text = _PROFILE.read_text(encoding="utf-8").replace(
-        'strategy_id = "hypervelocity_source_follow_bidirectional_5m_v1"\n',
-        'strategy_id = "hypervelocity_source_follow_bidirectional_5m_v1"\n'
+        'strategy_id = "test_mirror_1m"\n',
+        'strategy_id = "test_mirror_1m"\n'
         'execution_side_overrides = { ETH = ["long"] }\n',
         1,
     )
@@ -402,7 +402,7 @@ def test_provider_symbol_sizing_override_is_explicit_and_typed(
     provider = next(
         row
         for row in config.providers
-        if row.strategy_id == "range_onset_bidirectional_v1"
+        if row.strategy_id == "test_breakout_1m"
     )
     sizing = provider.entry_sizing("SOL")
 
@@ -410,7 +410,7 @@ def test_provider_symbol_sizing_override_is_explicit_and_typed(
     assert sizing.margin_fraction == pytest.approx(0.06)
     assert sizing.max_notional_usd == pytest.approx(20.0)
     assert (
-        config.provider_entry_sizing[("range_onset_bidirectional_v1", "SOL")] == sizing
+        config.provider_entry_sizing[("test_breakout_1m", "SOL")] == sizing
     )
 
 
@@ -433,16 +433,16 @@ def test_provider_directional_sizing_is_explicit_and_typed(tmp_path: Path) -> No
     provider = next(
         row
         for row in config.providers
-        if row.strategy_id == "range_onset_bidirectional_v1"
+        if row.strategy_id == "test_breakout_1m"
     )
 
     assert provider.entry_sizing("SOL").max_notional_usd == pytest.approx(75.0)
     assert provider.entry_sizing("SOL", "long").max_notional_usd == pytest.approx(60.0)
     assert provider.entry_sizing("SOL", "short").max_notional_usd == pytest.approx(15.0)
     assert config.provider_directional_entry_sizing[
-        ("range_onset_bidirectional_v1", "SOL", "long")
+        ("test_breakout_1m", "SOL", "long")
     ].margin_fraction == pytest.approx(0.08)
-    assert ("range_onset_bidirectional_v1", "SOL", "short") in (
+    assert ("test_breakout_1m", "SOL", "short") in (
         config.executable_provider_directions
     )
 
@@ -470,8 +470,8 @@ def test_provider_sizing_override_must_reference_execution_scope(
 ) -> None:
     """Sizing cannot silently widen a provider's executable symbol set."""
     text = _PROFILE.read_text(encoding="utf-8").replace(
-        'strategy_id = "hypervelocity_source_follow_bidirectional_5m_v1"\n',
-        'strategy_id = "hypervelocity_source_follow_bidirectional_5m_v1"\n'
+        'strategy_id = "test_mirror_1m"\n',
+        'strategy_id = "test_mirror_1m"\n'
         "sizing_overrides = { ETH = { margin_fraction = 0.06, "
         "max_notional_usd = 20.0 } }\n",
         1,

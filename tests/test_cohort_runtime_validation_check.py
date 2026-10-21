@@ -239,7 +239,7 @@ def test_a_strategy_id_without_a_default_collector_is_refused_in_live_mode(
     profile = _write_variant(
         tmp_path,
         PROFILE_B,
-        'strategy_id = "hourly_donchian_20_10_atr20_strong_short_v1"',
+        'strategy_id = "test_channel_short_15m"',
         'strategy_id = "hourly_donchian_20_10_atr20_strong_shrot_v1"',
     )
     monkeypatch.setattr("sys.argv", ["check", "--config", str(profile)])
@@ -332,7 +332,7 @@ def test_a_stop_beyond_liquidation_at_a_tolerated_venue_cut_is_refused(
     assert check.main() == 2
 
     assert capsys.readouterr().err == (
-        "loader refused: hourly_donchian_20_10_atr20_strong_short_v1 SOL stop 250 "
+        "loader refused: test_channel_short_15m SOL stop 250 "
         "bps plus cost buffer 20 bps reaches its 256 bps liquidation distance at "
         "19x once the venue maximum is 19x\n"
     )

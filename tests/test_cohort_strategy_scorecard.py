@@ -13,8 +13,8 @@ from hypervector.research.cohort_strategy_scorecard import (
     build_strategy_scorecard,
 )
 
-_HYPE = "hype_breakout_onset_bidirectional_v1"
-_RANGE = "range_onset_bidirectional_v1"
+_HYPE = "test_fade_1m"
+_RANGE = "test_breakout_1m"
 
 
 def test_scorecard_separates_adverse_signal_paths_from_edge_claims() -> None:

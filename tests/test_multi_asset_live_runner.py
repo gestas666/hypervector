@@ -891,7 +891,7 @@ def test_supported_soft_deadline_is_journaled_once(tmp_path: Path) -> None:
     opened_at_ms = observed_ms - 28_800_000
     evaluations = (
         _regime_evaluation("hulk", "HYPE", observed_ms),
-        _regime_evaluation("range_onset_bidirectional_v1", "HYPE", observed_ms),
+        _regime_evaluation("test_breakout_1m", "HYPE", observed_ms),
     )
     runner, engines, telemetry = _runner(tmp_path, (), evaluations=evaluations)
     plan = ProviderExecutionContract(

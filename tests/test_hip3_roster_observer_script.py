@@ -37,8 +37,8 @@ class _Observer:
             "mode": "hip3_roster_observer_checkpoint",
             "status": "available",
             "observed_at_utc": observed_at.isoformat(),
-            "active_symbols": ["xyz:SP500"],
-            "markets": [{"symbol": "xyz:SP500"}],
+            "active_symbols": ["xyz:AAA"],
+            "markets": [{"symbol": "xyz:AAA"}],
             "execution_authority": "none",
             "report_only": True,
             "automatic_promotion": False,
@@ -78,7 +78,7 @@ def test_failed_once_writes_unavailable_checkpoint_without_fake_market_values(
     """A failed venue read must be visible and must not become zero telemetry."""
     module = _load_module()
     output = tmp_path / "latest.json"
-    observer = _Observer(ValueError("xyz:GOLD book unavailable"))
+    observer = _Observer(ValueError("xyz:DDD book unavailable"))
     config = module.ObserverConfig(output=output, poll_seconds=1.0, max_polls=1)
 
     result = module.run_observer(
@@ -93,7 +93,7 @@ def test_failed_once_writes_unavailable_checkpoint_without_fake_market_values(
     assert payload["status"] == "unavailable"
     assert payload["markets"] is None
     assert payload["error"]["type"] == "ValueError"
-    assert payload["error"]["message"] == "xyz:GOLD book unavailable"
+    assert payload["error"]["message"] == "xyz:DDD book unavailable"
     assert payload["execution_authority"] == "none"
 
 

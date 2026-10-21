@@ -20,8 +20,8 @@ from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 
-_PROVIDER = "hip3_swing_ha_sndk_gold_brent_bidirectional_v1"
-_SYMBOL = "xyz:GOLD"
+_PROVIDER = "test_band_b_15m"
+_SYMBOL = "xyz:DDD"
 _OPENED_MS = 1_785_584_600_000
 _DECISION_MS = 1_785_585_600_000
 

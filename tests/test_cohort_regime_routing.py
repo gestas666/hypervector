@@ -95,7 +95,7 @@ def test_telemetry_only_canonical_identity_replaces_retired_range_provider() -> 
 
 def _intent(side: str) -> StrategyIntent:
     return StrategyIntent(
-        strategy_id="hulk_expansion_bidirectional_tuned_v2",
+        strategy_id="test_trend_5m",
         symbol="BTC",
         side=side,
         decision_time_ms=1_785_600_000_000,
@@ -110,7 +110,7 @@ def _evaluation(
     context_15m: str,
     *,
     structural_direction: str = "neutral",
-    strategy_id: str = "range_onset_bidirectional_v1",
+    strategy_id: str = "test_breakout_1m",
     decision_time_ms: int = 1_785_600_000_000,
 ) -> ProviderEvaluation:
     return ProviderEvaluation(

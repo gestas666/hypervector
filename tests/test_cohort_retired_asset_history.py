@@ -15,7 +15,7 @@ from test_multi_asset_live_audit import _RUN_ID, _SYMBOLS, _asset_rows
 def test_all_time_reflections_retain_a_retired_asset_ledger() -> None:
     """Removing route authority must not delete that asset's closed history."""
     current = reflection_asset_rows()
-    retired = _retired_gold_rows(current)
+    retired = _retired_ddd_rows(current)
 
     report = audit_multi_asset_live_run(
         reflection_cohort_rows(),
@@ -26,7 +26,7 @@ def test_all_time_reflections_retain_a_retired_asset_ledger() -> None:
         all_time_asset_records={
             "BTC": current,
             **{symbol: _asset_rows(symbol) for symbol in _SYMBOLS if symbol != "BTC"},
-            "xyz:GOLD": retired,
+            "xyz:DDD": retired,
         },
         run_id=_RUN_ID,
     )
@@ -35,12 +35,12 @@ def test_all_time_reflections_retain_a_retired_asset_ledger() -> None:
     assert all_time["closed_trades"] == 2
     assert {trade["symbol"] for trade in all_time["trades"]} == {
         "BTC",
-        "xyz:GOLD",
+        "xyz:DDD",
     }
     assert report["trade_reflections"]["closed_trades"] == 1
 
 
-def _retired_gold_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+def _retired_ddd_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     """Return a distinct retired-asset ledger with the same causal lifecycle."""
     output = deepcopy(rows)
     for row in output:
@@ -53,7 +53,7 @@ def _replace_symbol(value: object) -> None:
     if isinstance(value, dict):
         for key, item in value.items():
             if item == "BTC" and key == "symbol":
-                value[key] = "xyz:GOLD"
+                value[key] = "xyz:DDD"
             else:
                 _replace_symbol(item)
     elif isinstance(value, list):

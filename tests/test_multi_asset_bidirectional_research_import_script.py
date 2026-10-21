@@ -354,7 +354,7 @@ def _attributed_close_snapshot(sequence: int) -> dict[str, object]:
             {
                 "trade_id": 10,
                 "symbol": "HYPE",
-                "strategy_id": "hype_breakout_onset_bidirectional_v1",
+                "strategy_id": "test_fade_1m",
                 "origin_run_id": "run-1",
                 "operation": "entry",
                 "oid": 10,
@@ -367,7 +367,7 @@ def _attributed_close_snapshot(sequence: int) -> dict[str, object]:
             {
                 "trade_id": 11,
                 "symbol": "HYPE",
-                "strategy_id": "hype_breakout_onset_bidirectional_v1",
+                "strategy_id": "test_fade_1m",
                 "origin_run_id": "run-1",
                 "operation": "reduce_only_close",
                 "oid": 11,

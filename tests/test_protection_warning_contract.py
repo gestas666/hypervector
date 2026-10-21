@@ -15,7 +15,7 @@ import multi_asset_bidirectional_live_checkpoint as checkpoint_job
 from hypervector.live.cohort_breakeven_events import RAISE_EXHAUSTED_EVENT
 from hypervector.research.cohort_protection_warnings import protection_warnings
 
-STRONG_SHORT = "hourly_donchian_20_10_atr20_strong_short_v1"
+STRONG_SHORT = "test_channel_short_15m"
 
 
 def _snapshot(size: float) -> dict[str, object]:
@@ -23,7 +23,7 @@ def _snapshot(size: float) -> dict[str, object]:
         "event_type": "cohort_snapshot",
         "payload": {
             "assets": [
-                {"symbol": "xyz:SNDK", "entry_oid": 41, "position_size_signed": size}
+                {"symbol": "xyz:CCC", "entry_oid": 41, "position_size_signed": size}
             ]
         },
     }
@@ -34,7 +34,7 @@ def _exhausted(strategy_id: str | None) -> dict[str, object]:
         "event_type": RAISE_EXHAUSTED_EVENT,
         "observed_at_utc": "2026-09-24T18:00:00+00:00",
         "payload": {
-            "symbol": "xyz:SNDK",
+            "symbol": "xyz:CCC",
             "strategy_id": strategy_id,
             "entry_oid": 41,
             "reason": RAISE_EXHAUSTED_EVENT,

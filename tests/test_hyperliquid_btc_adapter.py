@@ -297,7 +297,7 @@ def test_hip3_adapter_preserves_namespace_across_reads_and_mutations() -> None:
                 "collateralToken": 0,
                 "universe": [
                     {
-                        "name": "xyz:SP500",
+                        "name": "xyz:AAA",
                         "szDecimals": 3,
                         "maxLeverage": 50,
                         "growthMode": "disabled",
@@ -311,7 +311,7 @@ def test_hip3_adapter_preserves_namespace_across_reads_and_mutations() -> None:
 
         def all_mids(self, dex: str = "") -> object:
             self.dex_calls.append(("all_mids", dex))
-            return {"xyz:SP500": "7750.0"}
+            return {"xyz:AAA": "7750.0"}
 
         def user_state(self, address: str, dex: str = "") -> object:
             self.dex_calls.append(("user_state", dex))
@@ -331,7 +331,7 @@ def test_hip3_adapter_preserves_namespace_across_reads_and_mutations() -> None:
         account_address=_ADDRESS,
         max_notional_usd=75.0,
         slippage_fraction=0.01,
-        symbol="xyz:SP500",
+        symbol="xyz:AAA",
         perp_dex="xyz",
     )
 
@@ -355,16 +355,16 @@ def test_hip3_adapter_preserves_namespace_across_reads_and_mutations() -> None:
     )
     adapter.reconcile()
 
-    assert adapter.symbol == "xyz:SP500"
+    assert adapter.symbol == "xyz:AAA"
     assert adapter.perp_dex == "xyz"
     assert preflight.market.max_leverage == 50
     assert entry.accepted and stop.accepted and close.accepted
     assert {dex for _, dex in info.dex_calls} == {"xyz"}
     assert [payload["name"] for _, payload in exchange.calls] == [
-        "xyz:SP500",
-        "xyz:SP500",
-        "xyz:SP500",
-        "xyz:SP500",
+        "xyz:AAA",
+        "xyz:AAA",
+        "xyz:AAA",
+        "xyz:AAA",
     ]
 
 

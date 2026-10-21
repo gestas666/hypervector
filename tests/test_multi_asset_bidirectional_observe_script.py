@@ -234,11 +234,11 @@ def test_observer_cache_bypasses_completed_bar_profit_lock_symbols() -> None:
 
     cached = module._observer_candle_fetcher(config, fetch)
     end_ms = int(pd.Timestamp("2026-08-21T06:01:15Z").timestamp() * 1_000)
-    for symbol in ("BTC", "xyz:SP500"):
+    for symbol in ("BTC", "xyz:AAA"):
         cached(symbol, "1m", 1.0, end_ms=end_ms)
         cached(symbol, "1m", 1.0, end_ms=end_ms + 10_000)
 
-    assert calls == ["BTC", "xyz:SP500", "xyz:SP500"]
+    assert calls == ["BTC", "xyz:AAA", "xyz:AAA"]
 
 
 @pytest.mark.parametrize("root", [Path("/"), Path.home(), Path.cwd()])

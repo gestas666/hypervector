@@ -104,7 +104,7 @@ def test_timely_polling_status_covers_its_scheduled_boundary() -> None:
             "providers": [
                 {
                     "strategy_id": "cash-open-provider",
-                    "symbols": ["xyz:SPCX"],
+                    "symbols": ["xyz:BBB"],
                     "timeframe": "15m",
                     "maximum_entry_delay_seconds": 30,
                 }
@@ -126,7 +126,7 @@ def test_late_polling_status_does_not_cover_its_scheduled_boundary() -> None:
             "providers": [
                 {
                     "strategy_id": "cash-open-provider",
-                    "symbols": ["xyz:SPCX"],
+                    "symbols": ["xyz:BBB"],
                     "timeframe": "15m",
                     "maximum_entry_delay_seconds": 30,
                 }
@@ -145,7 +145,7 @@ def test_late_polling_status_does_not_cover_its_scheduled_boundary() -> None:
 def _polling_status(*, decision_offset: int, arrival_offset: int) -> dict[str, object]:
     evaluation = {
         "strategy_id": "cash-open-provider",
-        "symbol": "xyz:SPCX",
+        "symbol": "xyz:BBB",
         "decision_time_ms": _milliseconds(decision_offset),
         "backend_non_action_reason": "cash_open_trade_bars_incomplete",
     }

@@ -103,12 +103,12 @@ def test_active_route_cannot_lose_fee_evidence_silently(
     paths = _paths(tmp_path)
     _write_healthy_files(paths)
     checkpoint = json.loads(paths.checkpoint.read_text())
-    checkpoint["audit"]["run"] = {"executable_provider_symbols": ["donchian|xyz:SNDK"]}
+    checkpoint["audit"]["run"] = {"executable_provider_symbols": ["donchian|xyz:CCC"]}
     paths.checkpoint.write_text(json.dumps(checkpoint))
     roster = json.loads(paths.roster.read_text())
     if missing:
         roster["markets"] = roster["markets"][1:]
-        roster["active_symbols"] = ["xyz:GOLD"]
+        roster["active_symbols"] = ["xyz:DDD"]
     else:
         roster["markets"][0]["venue"].update(
             {"growth_mode": None, "effective_fee_status": "unresolved_growth_mode"},

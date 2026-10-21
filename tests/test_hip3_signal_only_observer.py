@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 
 from hypervector.live.cohort_pressure_dependencies import pressure_dependency_commands
-from hypervector.live.hip3_breakout_shadow_specs import SPCX_SHADOW_SPEC
+from hypervector.live.hip3_breakout_shadow_specs import BBB_SHADOW_SPEC
 from hypervector.live.hip3_breakout_shadow_observer import (
     ObserverDefaults,
     build_parser,
@@ -37,7 +37,7 @@ class _LaggingAuxiliarySource:
 
     def book_snapshot(self) -> BookSnapshot:
         """Return an unsigned book with exact route identity."""
-        return replace(_book(_OBSERVED - 100, _OBSERVED - 50), symbol="xyz:SPCX")
+        return replace(_book(_OBSERVED - 100, _OBSERVED - 50), symbol="xyz:BBB")
 
     def completed_candle_history(
         self, *, observed_at_ms: int, timeframe: str = "15m"
@@ -56,7 +56,7 @@ class _LaggingAuxiliarySource:
 
 def _paths(root: Path) -> MuHip3ShadowPaths:
     return MuHip3ShadowPaths(
-        root / "xyz:spcx.jsonl",
+        root / "xyz:bbb.jsonl",
         root / "cohort.jsonl",
         root / "cursor.json",
         root / "journal.jsonl",
@@ -73,7 +73,7 @@ def test_explicit_signal_only_mode_keeps_primary_source_available(
     runner = MuHip3BreakoutShadowRunner(
         source=source,
         paths=paths,
-        spec=SPCX_SHADOW_SPEC,
+        spec=BBB_SHADOW_SPEC,
         capture_profit_lock_candles=False,
     )
     result = runner.poll(observed_at_ms=_OBSERVED)
@@ -88,25 +88,25 @@ def test_legacy_default_preserves_auxiliary_capture_requirement(tmp_path: Path) 
     """Existing index observer launches retain their explicitly captured exit data."""
     source = _LaggingAuxiliarySource()
     runner = MuHip3BreakoutShadowRunner(
-        source=source, paths=_paths(tmp_path), spec=SPCX_SHADOW_SPEC
+        source=source, paths=_paths(tmp_path), spec=BBB_SHADOW_SPEC
     )
     with pytest.raises(TransientCohortMarketDataError, match="latest_completed_minute"):
         runner.poll(observed_at_ms=_OBSERVED)
     assert source.timeframes == ["1m"]
 
 
-def test_only_signal_only_candidate_removes_unused_spcx_auxiliary_dependency() -> None:
+def test_only_signal_only_candidate_removes_unused_bbb_auxiliary_dependency() -> None:
     """The proposed deployment declares the reduced source dependency explicitly."""
     names = (
         "seven_asset_failed_routes_retired",
-        "seven_asset_sndk_durable_onset",
+        "seven_asset_ccc_durable_onset",
     )
     commands = [
         pressure_dependency_commands(
             load_multi_asset_live_config(
                 _FIXTURE_PROFILES / f"{name}.toml", mode="observe"
             )
-        )["xyz:SPCX"]
+        )["xyz:BBB"]
         for name in names
     ]
     assert "--signal-only" not in commands[0]
@@ -131,7 +131,7 @@ def test_configured_profit_lock_keeps_its_auxiliary_dependency() -> None:
     """A future exit policy cannot silently lose the minute source it consumes."""
     config = load_multi_asset_live_config(
         _FIXTURE_PROFILES
-        / "seven_asset_sndk_durable_onset.toml",
+        / "seven_asset_ccc_durable_onset.toml",
         mode="observe",
     )
     providers = tuple(
@@ -145,12 +145,12 @@ def test_configured_profit_lock_keeps_its_auxiliary_dependency() -> None:
                 profit_lock_giveback_bps=80.0,
             ),
         )
-        if "xyz:SPCX" in p.execution_symbols
+        if "xyz:BBB" in p.execution_symbols
         else p
         for p in config.providers
     )
     commands = pressure_dependency_commands(replace(config, providers=providers))
-    assert "--signal-only" not in commands["xyz:SPCX"]
+    assert "--signal-only" not in commands["xyz:BBB"]
 
 
 @pytest.mark.parametrize("candidate,active_capture", [(True, True), (False, False)])
@@ -165,7 +165,7 @@ def test_dependency_reuse_rejects_wrong_capture_mode(
     from hypervector.live.hip3_fresh15_journal_contracts import DEFAULT_OBSERVER_STATES
 
     name = (
-        "seven_asset_sndk_durable_onset"
+        "seven_asset_ccc_durable_onset"
         if candidate
         else "seven_asset_failed_routes_retired"
     )
@@ -173,9 +173,9 @@ def test_dependency_reuse_rejects_wrong_capture_mode(
         _FIXTURE_PROFILES / f"{name}.toml", mode="observe"
     )
     monkeypatch.chdir(tmp_path)
-    path = DEFAULT_OBSERVER_STATES["xyz:SPCX"][0]
+    path = DEFAULT_OBSERVER_STATES["xyz:BBB"][0]
     path.parent.mkdir(parents=True)
     path.write_text(json.dumps({"profit_lock_capture_enabled": active_capture}))
     monkeypatch.setattr(dependencies, "require_fresh_index_observer", lambda *a: None)
     with pytest.raises(ValueError, match="capture mode"):
-        dependencies._require_symbol_health("xyz:SPCX", config)
+        dependencies._require_symbol_health("xyz:BBB", config)

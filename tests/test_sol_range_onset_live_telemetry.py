@@ -22,9 +22,10 @@ from hypervector.live.hyperliquid_protocol import (
     SolReconciliationSnapshot,
     SolVenuePreflight,
 )
-from hypervector.live.sol_range_onset_config import load_sol_range_onset_config
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
 from hypervector.live.sol_range_onset_live_telemetry import SolLiveTelemetry
+
+from engine_config_fixtures import engine_asset_config
 
 
 def _now() -> datetime:
@@ -35,16 +36,8 @@ def test_reconciliation_emits_each_venue_fill_and_fee_exactly_once(
     tmp_path: Path,
 ) -> None:
     """Repeated account polling cannot duplicate a fill in the live ledger."""
-    path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
-    config = replace(
-        load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset.toml"),
-            mode="live",
-            enabled=True,
-            accepts_live_risk=True,
-        ),
-        live_ledger=path,
-    )
+    path = tmp_path / "data" / "live" / "bidirectional_cohort" / "sol.jsonl"
+    config = engine_asset_config(path)
     ledger = SolLiveLedger(
         path=path,
         profile_id=config.profile_id,
@@ -127,16 +120,8 @@ def test_reconciliation_emits_each_venue_fill_and_fee_exactly_once(
 
 def test_distinct_partial_fills_emit_distinct_fill_and_fee_rows(tmp_path: Path) -> None:
     """Venue trade IDs prevent same-order same-time partial fills from collapsing."""
-    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
-    config = replace(
-        load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset.toml"),
-            mode="live",
-            enabled=True,
-            accepts_live_risk=True,
-        ),
-        live_ledger=path,
-    )
+    path = tmp_path / "data/live/bidirectional_cohort/sol.jsonl"
+    config = engine_asset_config(path)
     ledger = SolLiveLedger(
         path=path,
         profile_id=config.profile_id,
@@ -182,16 +167,8 @@ def test_distinct_partial_fills_emit_distinct_fill_and_fee_rows(tmp_path: Path) 
 
 def test_exact_funding_payment_is_restart_deduplicated(tmp_path: Path) -> None:
     """Hourly user-funding ledger updates remain exact and idempotent."""
-    path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
-    config = replace(
-        load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset.toml"),
-            mode="live",
-            enabled=True,
-            accepts_live_risk=True,
-        ),
-        live_ledger=path,
-    )
+    path = tmp_path / "data" / "live" / "bidirectional_cohort" / "sol.jsonl"
+    config = engine_asset_config(path)
     ledger = SolLiveLedger(
         path=path,
         profile_id=config.profile_id,
@@ -228,16 +205,8 @@ def test_preflight_identity_contains_complete_read_only_tui_contract(
     tmp_path: Path,
 ) -> None:
     """Live configuration identity exposes settings but no credential values."""
-    path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
-    config = replace(
-        load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset.toml"),
-            mode="live",
-            enabled=True,
-            accepts_live_risk=True,
-        ),
-        live_ledger=path,
-    )
+    path = tmp_path / "data" / "live" / "bidirectional_cohort" / "sol.jsonl"
+    config = engine_asset_config(path)
     ledger = SolLiveLedger(
         path=path,
         profile_id=config.profile_id,
@@ -289,17 +258,8 @@ def _hip3_fee_event(
     growth_mode: bool | None,
     deployer_fee_scale: float | None = 1.0,
 ) -> dict[str, object]:
-    path = tmp_path / "data/live/bidirectional_cohort/xyz:sndk.jsonl"
-    config = replace(
-        load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset.toml"),
-            mode="live",
-            enabled=True,
-            accepts_live_risk=True,
-        ),
-        symbol="xyz:SNDK",
-        live_ledger=path,
-    )
+    path = tmp_path / "data/live/bidirectional_cohort/xyz:ccc.jsonl"
+    config = engine_asset_config(path, symbol="xyz:CCC")
     ledger = SolLiveLedger(
         path=path,
         profile_id=config.profile_id,
@@ -309,7 +269,7 @@ def _hip3_fee_event(
     )
     flat = SolPositionSnapshot(0.0, None, None, 0.0, 0.0, 0.0, None, None)
     preflight = SolVenuePreflight(
-        market=SolMarketMetadata("xyz:SNDK", 3, 10),
+        market=SolMarketMetadata("xyz:CCC", 3, 10),
         mark_price=1_255.0,
         price_tick=0.1,
         size_step=0.001,
@@ -374,16 +334,8 @@ def test_hip3_missing_deployer_scale_is_explicitly_unresolved(
 
 def test_book_snapshot_is_projected_for_read_only_tui(tmp_path: Path) -> None:
     """Venue L2 depth and pressure are persisted without becoming strategy logic."""
-    path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
-    config = replace(
-        load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset.toml"),
-            mode="live",
-            enabled=True,
-            accepts_live_risk=True,
-        ),
-        live_ledger=path,
-    )
+    path = tmp_path / "data" / "live" / "bidirectional_cohort" / "sol.jsonl"
+    config = engine_asset_config(path)
     ledger = SolLiveLedger(
         path=path,
         profile_id=config.profile_id,

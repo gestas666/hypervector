@@ -18,7 +18,7 @@ from hypervector.research.native_runner_recorded_fetch import RecordedRunnerFetc
 
 CASES = [
     (symbol, "stop")
-    for symbol in ("BTC", "ETH", "SOL", "HYPE", "xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL")
+    for symbol in ("BTC", "ETH", "SOL", "HYPE", "xyz:BBB", "xyz:CCC", "xyz:EEE")
 ]
 CASES.append(("BTC", "target"))
 HISTORY_DELAY_MS = 500

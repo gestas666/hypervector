@@ -54,7 +54,7 @@ stop_bps = 60.0
 maximum_hold_seconds = 172800
 
 [[providers]]
-strategy_id = "eth_breakout_precompression_pullback_bidirectional_v1"
+strategy_id = "test_pullback_1m"
 symbols = ["ETH"]
 sides = ["long", "short"]
 priority = 10
@@ -64,7 +64,7 @@ execution_symbols = ["ETH"]
 execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", stop_bps = 60.0, target_policy = "none", maximum_hold_seconds = 43200 }
 
 [[providers]]
-strategy_id = "range_onset_bidirectional_v1"
+strategy_id = "test_breakout_1m"
 symbols = ["BTC", "SOL", "HYPE"]
 sides = ["long", "short"]
 priority = 20

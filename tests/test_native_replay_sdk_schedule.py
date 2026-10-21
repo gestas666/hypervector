@@ -16,7 +16,7 @@ D = Decimal
 def _fund(replay: ReplaySdk) -> None:
     replay.settle_funding(
         f"settlement:{replay.clock.now_ms}",
-        "xyz:SNDK",
+        "xyz:CCC",
         rate=D(".001"),
         oracle_price=D(101),
         effective_time_ms=replay.clock.now_ms,
@@ -31,9 +31,9 @@ def test_funding_inside_entry_latency_uses_exact_economic_exposure(
 ) -> None:
     """Pre-fill funding is flat; post-fill funding applies before the entry response."""
     replay = sdk()
-    replay.exchange.update_leverage(3, "xyz:SNDK", is_cross=False)
+    replay.exchange.update_leverage(3, "xyz:CCC", is_cross=False)
     replay.schedule(replay.clock.now_ms + offset, f"fund:{offset}", _fund)
-    replay.exchange.market_open("xyz:SNDK", True, 1, 100, 0.01, Cloid.from_int(1))
+    replay.exchange.market_open("xyz:CCC", True, 1, 100, 0.01, Cloid.from_int(1))
     assert replay.account.snapshot().funding_usd == D(expected)
     assert len(replay.funding_rows) == (1 if offset > 100 else 0)
 
@@ -41,11 +41,11 @@ def test_funding_inside_entry_latency_uses_exact_economic_exposure(
 def test_funding_inside_close_response_does_not_charge_already_flat_account() -> None:
     """The native close fill precedes subsequent funding even when receipts remain pending."""
     replay = sdk()
-    replay.exchange.update_leverage(3, "xyz:SNDK", is_cross=False)
-    replay.exchange.market_open("xyz:SNDK", True, 1, 100, 0.01, Cloid.from_int(1))
+    replay.exchange.update_leverage(3, "xyz:CCC", is_cross=False)
+    replay.exchange.market_open("xyz:CCC", True, 1, 100, 0.01, Cloid.from_int(1))
     replay.schedule(replay.clock.now_ms + 50, "before-close", _fund)
     replay.schedule(replay.clock.now_ms + 150, "after-close", _fund)
-    replay.exchange.market_close("xyz:SNDK", 1, 100, 0.01, Cloid.from_int(2))
+    replay.exchange.market_close("xyz:CCC", 1, 100, 0.01, Cloid.from_int(2))
     assert replay.account.snapshot().funding_usd == D("-.101")
     assert len(replay.funding_rows) == 1 and not replay.account.snapshot().positions
 

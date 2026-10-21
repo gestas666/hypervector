@@ -23,6 +23,7 @@ from hypervector.live.canonical_regime_telemetry import (
 )
 from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
+from exit_parameter_fixtures import ADAPTIVE_PARAMETERS, RETENTION_PARAMETERS
 
 
 def engine(side: str = "long") -> _Engine:
@@ -34,7 +35,7 @@ def engine(side: str = "long") -> _Engine:
             opened_at_ms=1_200_000,
             position_size_signed=1.0 if side == "long" else -1.0,
             execution_plan=replace(
-                current.execution_plan, adaptive_exit_policy=RETENTION_EXIT_POLICY
+                current.execution_plan, adaptive_exit_policy=RETENTION_EXIT_POLICY, retention_exit=RETENTION_PARAMETERS
             ),
         )
     )
@@ -167,7 +168,7 @@ def test_recovery_refuses_a_v1_row_for_the_same_lifecycle() -> None:
             engine().snapshot,
             execution_plan=replace(
                 engine().snapshot.execution_plan,
-                adaptive_exit_policy=ADAPTIVE_EXIT_POLICY,
+                adaptive_exit_policy=ADAPTIVE_EXIT_POLICY, adaptive_exit=ADAPTIVE_PARAMETERS, retention_exit=None,
             ),
         )
     )
