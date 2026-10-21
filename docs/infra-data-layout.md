@@ -44,7 +44,7 @@ data/
     metalabel/                             # installed metalabel bundle (model train --install)
       wf_<strategy>_<time>/                # model train output
   logs/
-    research/                              # tune boards (autotune_*.json, regime_autotune_*.json)
+    research/                              # tune boards (autotune_*.json)
     nautilus/                              # engine logs
   nautilus/
     backtest/                              # Nautilus reports
@@ -69,7 +69,6 @@ data/
   runtime/
     bidirectional_cohort/
       latest_checkpoint.json               # live checkpoint (live monitor, live preflight default)
-      latest_opportunity_matrix.json
       supervisor_events.jsonl              # supervisor journal
       supervisor_events_restart_state.json # restart journal (hold state)
       supervisor_alerts.jsonl
@@ -140,7 +139,8 @@ data/
     and restore-verifies an immutable pre-start bundle. Any of these aborts the
     start:
     - partial ledger sets;
-    - prior strategy sources missing during a profile change;
+    - during a profile change, a previous profile that is missing or no longer
+      matches its recorded fingerprint;
     - gzip corruption;
     - a checksum mismatch.
     The bundle never includes `.env` or credential files.
@@ -179,8 +179,7 @@ failure.
   `metalabel_calibrator.joblib` and `metalabel_metadata.json`.
 - **Selection.** `--metalabel-bundle REF` selects a directory, a name under
   `models/metalabel/`, or `latest`, for that process only.
-- **Override.** `HYPERVECTOR_METALABEL_ROOT` (or `HYPERVECTOR_IMPULSE_BTC_ROOT`)
-  points elsewhere.
+- **Override.** `HYPERVECTOR_METALABEL_ROOT` points elsewhere.
 - **Probe.** `system status --probe-model` and `paper check` report readiness.
 
 ## Commands
@@ -193,7 +192,7 @@ hypervector archive backfill --symbol BTC --start 2026-09-01T00:00:00Z --end 202
 hypervector archive audit    --symbol BTC --start 2026-09-01T00:00:00Z --end 2026-10-01T00:00:00Z
 hypervector db build         --symbol BTC --start 2026-09-01T00:00:00Z --end 2026-10-01T00:00:00Z
 hypervector db build --database data/research/hip3_market.duckdb --market-family hip3 --books-only \
-  --symbol 'xyz:SPCX' --start 2026-09-01T00:00:00Z --end 2026-10-01T00:00:00Z
+  --symbol 'xyz:AAA' --start 2026-09-01T00:00:00Z --end 2026-10-01T00:00:00Z
 hypervector db status
 hypervector db import-events --symbol BTC
 hypervector db import-paper
