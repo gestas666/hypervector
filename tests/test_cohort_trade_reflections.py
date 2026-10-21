@@ -13,7 +13,7 @@ from cohort_trade_reflection_fixtures import (
     reflection_asset_rows as _reflection_asset_rows,
     reflection_cohort_rows as _reflection_cohort_rows,
 )
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
+from hypervector.live.asset_live_journal import build_live_journal
 from hypervector.research.cohort_live_audit import audit_multi_asset_live_run
 from hypervector.research.cohort_trade_reflections import (
     build_all_time_trade_reflections,

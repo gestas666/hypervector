@@ -5,18 +5,18 @@ from __future__ import annotations
 import pytest
 
 from hypervector.live.hyperliquid_protocol import (
-    SolAccountSnapshot,
-    SolPositionSnapshot,
-    SolReconciliationSnapshot,
+    HyperliquidAccountSnapshot,
+    HyperliquidPositionSnapshot,
+    HyperliquidReconciliationSnapshot,
 )
 from hypervector.live.multi_asset_live_runner_support import asset_snapshot
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 from hypervector.research.cohort_live_audit_open import open_position_summary
 
 
-def _position() -> SolPositionSnapshot:
+def _position() -> HyperliquidPositionSnapshot:
     """Return an account position whose synchronous mark is exactly 101."""
-    return SolPositionSnapshot(
+    return HyperliquidPositionSnapshot(
         size_signed=2.0,
         entry_price=100.0,
         liquidation_price=80.0,
@@ -28,18 +28,18 @@ def _position() -> SolPositionSnapshot:
     )
 
 
-def _venue() -> SolReconciliationSnapshot:
+def _venue() -> HyperliquidReconciliationSnapshot:
     """Wrap the deterministic position in a reconciliation snapshot."""
-    account = SolAccountSnapshot(500.0, 450.0, 40.4, 202.0, _position())
-    return SolReconciliationSnapshot(account, (), ())
+    account = HyperliquidAccountSnapshot(500.0, 450.0, 40.4, 202.0, _position())
+    return HyperliquidReconciliationSnapshot(account, (), ())
 
 
 def test_asset_snapshot_uses_venue_synchronous_mark_for_open_position() -> None:
     """A later market poll cannot be paired with earlier account PnL."""
     snapshot = asset_snapshot(
         "BTC",
-        SolLiveSnapshot(
-            state=SolLiveState.OPEN,
+        AssetLiveSnapshot(
+            state=AssetLiveState.OPEN,
             entry_oid=1,
             stop_oid=2,
             position_size_signed=2.0,

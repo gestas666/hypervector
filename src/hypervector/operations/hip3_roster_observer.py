@@ -29,8 +29,8 @@ from requests import RequestException
 from hypervector.live.hyperliquid_hip3_roster_factory import (
     create_read_only_hip3_roster_sources,
 )
-from hypervector.live.hyperliquid_sol_factory import SolSdkFactoryError
-from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.hyperliquid_sdk_factory import HyperliquidSdkFactoryError
+from hypervector.live.hyperliquid_parsing import HyperliquidAdapterError
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.perp_venue_identity import parse_perp_venue_identity
 from hypervector.research.checkpoint_storage import write_atomic_json
@@ -173,7 +173,7 @@ def run_observer(
             RequestException,
             ClientError,
             ServerError,
-            SolSdkFactoryError,
+            HyperliquidSdkFactoryError,
             HyperliquidAdapterError,
         ) as exc:
             latest = unavailable_hip3_roster_checkpoint(
@@ -302,7 +302,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         observer, archived_poll = _build_observer(
             config.markets, context_history=config.context_history
         )
-    except (OSError, ValueError, SolSdkFactoryError) as exc:
+    except (OSError, ValueError, HyperliquidSdkFactoryError) as exc:
         return _write_start_failure(config, exc)
     stopping = threading.Event()
 

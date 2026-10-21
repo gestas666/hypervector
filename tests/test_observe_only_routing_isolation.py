@@ -14,10 +14,10 @@ from hypervector.live.bidirectional_intents import (
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
 from hypervector.live.cohort_funding_window import CohortFundingWindow
 from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 _OBSERVED_AT = datetime(2026, 8, 5, 12, tzinfo=UTC)
 _OBSERVED_MS = int(_OBSERVED_AT.timestamp() * 1_000)
@@ -26,19 +26,19 @@ _OBSERVED_MS = int(_OBSERVED_AT.timestamp() * 1_000)
 class _Engine:
     """Record executions while exposing one deterministic venue lifecycle."""
 
-    def __init__(self, snapshot: SolLiveSnapshot | None = None) -> None:
-        self.current = snapshot or SolLiveSnapshot(state=SolLiveState.FLAT)
+    def __init__(self, snapshot: AssetLiveSnapshot | None = None) -> None:
+        self.current = snapshot or AssetLiveSnapshot(state=AssetLiveState.FLAT)
         self.entries: list[str] = []
         self.exits: list[str] = []
 
     @property
-    def snapshot(self) -> SolLiveSnapshot:
+    def snapshot(self) -> AssetLiveSnapshot:
         """Return the current deterministic lifecycle."""
         return self.current
 
-    def start(self) -> SolLiveSnapshot:
+    def start(self) -> AssetLiveSnapshot:
         """Start flat for the entry-isolation scenario."""
-        self.current = SolLiveSnapshot(state=SolLiveState.FLAT)
+        self.current = AssetLiveSnapshot(state=AssetLiveState.FLAT)
         return self.current
 
     def reconcile_telemetry(
@@ -46,7 +46,7 @@ class _Engine:
         *,
         funding_start_time_ms: int,
         funding_end_time_ms: int,
-    ) -> SolReconciliationSnapshot:
+    ) -> HyperliquidReconciliationSnapshot:
         """Return venue facts matching the current signed position."""
         del funding_start_time_ms, funding_end_time_ms
         return venue_snapshot(self.current.position_size_signed)
@@ -63,7 +63,7 @@ class _Engine:
         decision_time_ms: int | None = None,
         entry_sizing: CohortEntrySizing | None = None,
         entry_deadline: EntrySubmissionDeadline | None = None,
-    ) -> SolLiveSnapshot:
+    ) -> AssetLiveSnapshot:
         """Record the selected entry and project an open position."""
         del mark_price, entry_sizing
         if decision_time_ms is None:
@@ -72,8 +72,8 @@ class _Engine:
             entry_deadline.check("adapter_dispatch")
         self.entries.append(side)
         signed = 1.0 if side == "long" else -1.0
-        self.current = SolLiveSnapshot(
-            state=SolLiveState.OPEN,
+        self.current = AssetLiveSnapshot(
+            state=AssetLiveState.OPEN,
             entry_oid=1,
             stop_oid=2,
             position_size_signed=signed,
@@ -81,18 +81,18 @@ class _Engine:
         )
         return self.current
 
-    def exit(self, *, mark_price: float, reason: str) -> SolLiveSnapshot:
+    def exit(self, *, mark_price: float, reason: str) -> AssetLiveSnapshot:
         """Record an exit so an unauthorized close is observable."""
         del mark_price
         self.exits.append(reason)
-        self.current = SolLiveSnapshot(state=SolLiveState.FLAT)
+        self.current = AssetLiveSnapshot(state=AssetLiveState.FLAT)
         return self.current
 
-    def stop(self, reason: str) -> SolLiveSnapshot:
+    def stop(self, reason: str) -> AssetLiveSnapshot:
         """Project a stopped lifecycle at bounded-test completion."""
         self.current = replace(
             self.current,
-            state=SolLiveState.STOPPED,
+            state=AssetLiveState.STOPPED,
             stop_reason=reason,
         )
         return self.current
@@ -221,8 +221,8 @@ def test_observe_only_opposite_signal_cannot_close_open_position(
 ) -> None:
     """An observe-only opposite intent cannot close an executable lifecycle."""
     engine = _Engine(
-        SolLiveSnapshot(
-            state=SolLiveState.OPEN,
+        AssetLiveSnapshot(
+            state=AssetLiveState.OPEN,
             entry_oid=1,
             stop_oid=2,
             position_size_signed=1.0,

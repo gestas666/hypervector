@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from hypervector.live.hyperliquid_sol_parsing import (
+from hypervector.live.hyperliquid_parsing import (
     HyperliquidAdapterError,
     parse_fill,
 )

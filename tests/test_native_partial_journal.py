@@ -8,9 +8,9 @@ import pytest
 from native_replay_scheduled_fixture import ScheduledEngineFixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_order_submission import SolOrderRecoveryError
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_order_submission import AssetOrderRecoveryError
+from hypervector.live.asset_live_journal import build_live_journal
+from hypervector.live.asset_state import AssetLiveState
 
 __all__ = ["deny_external_ports"]
 
@@ -34,7 +34,7 @@ def test_partial_then_final_close_journal_matches_shared_account_economics(
     replay.prepare_close(symbol)
     assert (
         replay.engines[symbol].exit(mark_price=100, reason="first_partial").state
-        is SolLiveState.OPEN
+        is AssetLiveState.OPEN
     )
     journal = build_live_journal(records(tmp_path, symbol))
     assert not journal["trades"] and len(journal["open_lifecycles"]) == 1
@@ -45,7 +45,7 @@ def test_partial_then_final_close_journal_matches_shared_account_economics(
     replay.prepare_close(symbol)
     assert (
         replay.engines[symbol].exit(mark_price=100, reason="remaining_close").state
-        is SolLiveState.FLAT
+        is AssetLiveState.FLAT
     )
     journal = build_live_journal(records(tmp_path, symbol))
     assert not journal["open_lifecycles"] and len(journal["trades"]) == 1
@@ -69,10 +69,10 @@ def test_recovered_entry_is_present_once_in_the_native_journal(tmp_path: Path) -
         partial_status="canceled",
     )
     asset = replay.assets["BTC"]
-    with pytest.raises(SolOrderRecoveryError):
+    with pytest.raises(AssetOrderRecoveryError):
         replay.enter_current(asset)
     replay.clock.advance_to(replay.clock.now_ms + 6000)
-    assert replay.engine(asset).start().state is SolLiveState.OPEN
+    assert replay.engine(asset).start().state is AssetLiveState.OPEN
     journal = build_live_journal(records(tmp_path, asset.symbol))
     assert not journal["trades"] and len(journal["open_lifecycles"]) == 1
     trade = journal["open_lifecycles"][0]

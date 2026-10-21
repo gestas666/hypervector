@@ -9,10 +9,10 @@ from hyperliquid.exchange import Exchange
 from hyperliquid.utils.types import Cloid
 import pytest
 
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.hyperliquid_protocol import HyperliquidExchangeProtocol, HyperliquidInfoProtocol
 from hypervector.live.multi_asset_directional_adapter import MultiAssetDirectionalAdapter
-from hypervector.live.sol_order_transport import SolOrderTransportError
+from hypervector.live.asset_order_transport import AssetOrderTransportError
 from hypervector.research.native_replay_depth import ExactLevel
 from hypervector.research.native_replay_venue import IocOrder, ReceiptTiming
 from test_native_replay_adapter import ADDRESS, CLIENT_ID, deny_external_ports
@@ -37,7 +37,7 @@ class NativeIocPort:
         exchange.market_open.side_effect = self.market_open
         exchange.market_close.side_effect = self.market_close
         self.adapter = MultiAssetDirectionalAdapter(
-            BtcHyperliquidAdapter(
+            HyperliquidPerpAdapter(
                 info=info,
                 exchange=exchange,
                 account_address=ADDRESS,
@@ -106,7 +106,7 @@ def test_actual_ioc_adapter_preserves_cap_quantity_and_transport_identity(side: 
     port = NativeIocPort(lost=mode == "lost", cap=0 if mode == "no_fill" else 0.002)
     kwargs = dict(side=side, requested_notional_usd=500, mark_price=100, client_order_id=CLIENT_ID)
     if mode == "lost":
-        with pytest.raises(SolOrderTransportError) as failure:
+        with pytest.raises(AssetOrderTransportError) as failure:
             port.adapter.submit_entry(**kwargs)
         assert failure.value.client_order_id == CLIENT_ID and failure.value.ambiguous
     else:

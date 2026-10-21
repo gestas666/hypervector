@@ -5,14 +5,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from hypervector.live.hyperliquid_protocol import (
-    SolAccountSnapshot,
-    SolBookLevel,
-    SolBookSnapshot,
-    SolFundingPayment,
-    SolMarketMetadata,
-    SolPositionSnapshot,
+    HyperliquidAccountSnapshot,
+    HyperliquidBookLevel,
+    HyperliquidBookSnapshot,
+    HyperliquidFundingPayment,
+    HyperliquidMarketMetadata,
+    HyperliquidPositionSnapshot,
 )
-from hypervector.live.hyperliquid_sol_parsing import (
+from hypervector.live.hyperliquid_parsing import (
     HyperliquidAdapterError,
     mapping,
     nonnegative_integer,
@@ -28,7 +28,7 @@ from hypervector.live.hyperliquid_sol_parsing import (
 _PERP_MAX_DECIMALS = 6
 
 
-def parse_market_for_symbol(value: object, symbol: str) -> SolMarketMetadata:
+def parse_market_for_symbol(value: object, symbol: str) -> HyperliquidMarketMetadata:
     """Parse exactly one requested perpetual market metadata record."""
     universe = sequence(
         mapping(value, "market metadata").get("universe"), "market universe"
@@ -47,7 +47,7 @@ def parse_market_for_symbol(value: object, symbol: str) -> SolMarketMetadata:
     if decimals > _PERP_MAX_DECIMALS:
         raise HyperliquidAdapterError(f"{symbol} szDecimals exceeds perp precision")
     leverage = positive_integer(market.get("maxLeverage"), f"{symbol} maxLeverage")
-    return SolMarketMetadata(symbol, decimals, leverage)
+    return HyperliquidMarketMetadata(symbol, decimals, leverage)
 
 
 def parse_mid_for_symbol(value: object, symbol: str) -> float:
@@ -60,7 +60,7 @@ def parse_book_for_symbol(
     *,
     symbol: str,
     depth_levels: int,
-) -> SolBookSnapshot:
+) -> HyperliquidBookSnapshot:
     """Parse one strict two-sided L2 snapshot for a requested market."""
     depth = positive_integer(depth_levels, "depth_levels")
     book = mapping(value, f"{symbol} L2 book")
@@ -79,7 +79,7 @@ def parse_book_for_symbol(
     mid = (bids[0].price + asks[0].price) / 2.0
     bid_depth = sum(level.size for level in bids)
     ask_depth = sum(level.size for level in asks)
-    return SolBookSnapshot(
+    return HyperliquidBookSnapshot(
         exchange_timestamp_ms=timestamp,
         bids=bids,
         asks=asks,
@@ -91,7 +91,7 @@ def parse_book_for_symbol(
     )
 
 
-def parse_account_for_symbol(value: object, symbol: str) -> SolAccountSnapshot:
+def parse_account_for_symbol(value: object, symbol: str) -> HyperliquidAccountSnapshot:
     """Parse clearinghouse totals and only the requested symbol position."""
     state = mapping(value, "clearinghouse state")
     summary = mapping(state.get("marginSummary"), "margin summary")
@@ -100,7 +100,7 @@ def parse_account_for_symbol(value: object, symbol: str) -> SolAccountSnapshot:
     if len(matches) > 1:
         raise HyperliquidAdapterError(f"duplicate {symbol} positions returned")
     position = _position(matches[0], symbol) if matches else _flat_position()
-    return SolAccountSnapshot(
+    return HyperliquidAccountSnapshot(
         account_value_usd=number(summary.get("accountValue"), "accountValue"),
         withdrawable_usd=number(state.get("withdrawable"), "withdrawable"),
         total_margin_used_usd=nonnegative_number(
@@ -120,7 +120,7 @@ def parse_account_mode_for_symbol(
     perp_state: object,
     spot_state: object | None,
     symbol: str,
-) -> SolAccountSnapshot:
+) -> HyperliquidAccountSnapshot:
     """Parse legacy or unified equity while selecting one symbol position."""
     legacy = parse_account_for_symbol(perp_state, symbol)
     if mode != "unifiedAccount":
@@ -136,7 +136,7 @@ def parse_account_mode_for_symbol(
         nonnegative_number(item.get("positionValue"), "positionValue")
         for item in positions
     )
-    return SolAccountSnapshot(
+    return HyperliquidAccountSnapshot(
         account_value_usd=total,
         withdrawable_usd=max(0.0, total - hold),
         total_margin_used_usd=margin,
@@ -148,9 +148,9 @@ def parse_account_mode_for_symbol(
 
 def parse_funding_for_symbol(
     value: object, symbol: str
-) -> tuple[SolFundingPayment, ...]:
+) -> tuple[HyperliquidFundingPayment, ...]:
     """Parse only funding ledger entries for the requested market."""
-    payments: list[SolFundingPayment] = []
+    payments: list[HyperliquidFundingPayment] = []
     for item in sequence(value, "user funding history"):
         record = mapping(item, "funding record")
         delta = mapping(record.get("delta"), "funding delta")
@@ -159,7 +159,7 @@ def parse_funding_for_symbol(
         if delta.get("type") != "funding":
             raise HyperliquidAdapterError(f"{symbol} funding delta type is invalid")
         payments.append(
-            SolFundingPayment(
+            HyperliquidFundingPayment(
                 timestamp_ms=nonnegative_integer(record.get("time"), "funding time"),
                 usdc_delta=number(delta.get("usdc"), "funding usdc"),
                 position_size_signed=number(delta.get("szi"), "funding szi"),
@@ -170,12 +170,12 @@ def parse_funding_for_symbol(
     return tuple(payments)
 
 
-def _book_side(value: object, label: str, depth: int) -> tuple[SolBookLevel, ...]:
+def _book_side(value: object, label: str, depth: int) -> tuple[HyperliquidBookLevel, ...]:
     rows = sequence(value, f"L2 {label} levels")
     if not rows:
         raise HyperliquidAdapterError(f"L2 {label} side must not be empty")
     return tuple(
-        SolBookLevel(
+        HyperliquidBookLevel(
             price=positive_number(mapping(item, label).get("px"), f"{label} px"),
             size=positive_number(mapping(item, label).get("sz"), f"{label} sz"),
             order_count=nonnegative_integer(
@@ -187,7 +187,7 @@ def _book_side(value: object, label: str, depth: int) -> tuple[SolBookLevel, ...
 
 
 def _ordered(
-    levels: tuple[SolBookLevel, ...],
+    levels: tuple[HyperliquidBookLevel, ...],
     *,
     descending: bool,
     label: str,
@@ -208,13 +208,13 @@ def _position_records(state: Mapping[str, object]) -> tuple[Mapping[str, object]
     )
 
 
-def _position(value: Mapping[str, object], symbol: str) -> SolPositionSnapshot:
+def _position(value: Mapping[str, object], symbol: str) -> HyperliquidPositionSnapshot:
     size = number(value.get("szi"), f"{symbol} position size")
     leverage = mapping(value.get("leverage"), f"{symbol} leverage")
     leverage_type = text(leverage.get("type"), f"{symbol} leverage type")
     if size != 0.0 and leverage_type != "isolated":
         raise HyperliquidAdapterError(f"nonzero {symbol} position must be isolated")
-    return SolPositionSnapshot(
+    return HyperliquidPositionSnapshot(
         size_signed=size,
         entry_price=optional_number(value.get("entryPx"), "entryPx"),
         liquidation_price=optional_number(value.get("liquidationPx"), "liquidationPx"),
@@ -228,8 +228,8 @@ def _position(value: Mapping[str, object], symbol: str) -> SolPositionSnapshot:
     )
 
 
-def _flat_position() -> SolPositionSnapshot:
-    return SolPositionSnapshot(0.0, None, None, 0.0, 0.0, 0.0, None, None)
+def _flat_position() -> HyperliquidPositionSnapshot:
+    return HyperliquidPositionSnapshot(0.0, None, None, 0.0, 0.0, 0.0, None, None)
 
 
 def _usdc_balance(value: object) -> tuple[float, float]:

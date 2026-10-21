@@ -9,7 +9,7 @@ from datetime import datetime
 from functools import partial
 from pathlib import Path
 
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
+from hypervector.live.asset_live_journal import build_live_journal
 from hypervector.research.checkpoint_ledger_projection import compact_asset_ledger_rows
 from hypervector.research.cohort_live_audit_history import select_asset_evidence
 from hypervector.research.cohort_live_audit_summaries import rebased

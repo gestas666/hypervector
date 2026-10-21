@@ -9,11 +9,11 @@ import pytest
 
 from hypervector.live.hyperliquid_protocol import (
     Hip3MarketFeeMetadata,
-    SolBookLevel,
-    SolBookSnapshot,
-    SolMarketMetadata,
-    SolPositionSnapshot,
-    SolVenuePreflight,
+    HyperliquidBookLevel,
+    HyperliquidBookSnapshot,
+    HyperliquidMarketMetadata,
+    HyperliquidPositionSnapshot,
+    HyperliquidVenuePreflight,
 )
 from hypervector.research.hip3_roster_observer import (
     Hip3MarketSpec,
@@ -47,11 +47,11 @@ class _Reader:
         self.wrong_symbol = wrong_symbol
         self.growth_mode = growth_mode
 
-    def preflight(self, *, expected_max_leverage: int) -> SolVenuePreflight:
+    def preflight(self, *, expected_max_leverage: int) -> HyperliquidVenuePreflight:
         assert expected_max_leverage == self.leverage
         symbol = "xyz:WRONG" if self.wrong_symbol else self.symbol
-        return SolVenuePreflight(
-            market=SolMarketMetadata(symbol, 3, self.leverage),
+        return HyperliquidVenuePreflight(
+            market=HyperliquidMarketMetadata(symbol, 3, self.leverage),
             mark_price=100.25,
             price_tick=0.01,
             size_step=0.001,
@@ -66,17 +66,17 @@ class _Reader:
             account_abstraction_mode="unifiedAccount",
         )
 
-    def book_snapshot(self, *, depth_levels: int) -> SolBookSnapshot:
+    def book_snapshot(self, *, depth_levels: int) -> HyperliquidBookSnapshot:
         assert depth_levels == 20
         bids = tuple(
-            SolBookLevel(100.0 - index * 0.01, float(index + 1), index + 1)
+            HyperliquidBookLevel(100.0 - index * 0.01, float(index + 1), index + 1)
             for index in range(20)
         )
         asks = tuple(
-            SolBookLevel(100.5 + index * 0.01, float(index + 2), index + 1)
+            HyperliquidBookLevel(100.5 + index * 0.01, float(index + 2), index + 1)
             for index in range(20)
         )
-        return SolBookSnapshot(
+        return HyperliquidBookSnapshot(
             exchange_timestamp_ms=1_786_000_000_000,
             bids=bids,
             asks=asks,
@@ -315,8 +315,8 @@ def test_checkpoint_rejects_reader_identity_mismatch() -> None:
         )
 
 
-def _position() -> SolPositionSnapshot:
-    return SolPositionSnapshot(
+def _position() -> HyperliquidPositionSnapshot:
+    return HyperliquidPositionSnapshot(
         size_signed=0.0,
         entry_price=None,
         liquidation_price=None,

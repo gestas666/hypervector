@@ -10,14 +10,14 @@ from hypervector.live.hyperliquid_protocol import (
     HyperliquidInfoProtocol,
     HyperliquidOrderStatus,
     HyperliquidReadCacheProtocol,
-    SolAccountSnapshot,
-    SolBookSnapshot,
-    SolFill,
-    SolFundingPayment,
-    SolMarketMetadata,
-    SolOpenOrder,
-    SolReconciliationSnapshot,
-    SolVenuePreflight,
+    HyperliquidAccountSnapshot,
+    HyperliquidBookSnapshot,
+    HyperliquidFill,
+    HyperliquidFundingPayment,
+    HyperliquidMarketMetadata,
+    HyperliquidOpenOrder,
+    HyperliquidReconciliationSnapshot,
+    HyperliquidVenuePreflight,
 )
 from hypervector.live.hyperliquid_hip3_fee_parsing import (
     parse_hip3_market_fee_metadata,
@@ -29,8 +29,8 @@ from hypervector.live.hyperliquid_perp_parsing import (
     parse_market_for_symbol,
     parse_mid_for_symbol,
 )
-from hypervector.live.hyperliquid_sol_account import parse_account_mode
-from hypervector.live.hyperliquid_sol_parsing import (
+from hypervector.live.hyperliquid_account import parse_account_mode
+from hypervector.live.hyperliquid_parsing import (
     HyperliquidAdapterError,
     mapping,
     parse_fees,
@@ -43,7 +43,7 @@ from hypervector.live.hyperliquid_sol_parsing import (
     validate_address,
 )
 from hypervector.live.hyperliquid_user_funding_history import read_user_funding_history
-from hypervector.live.sol_order_identity import validate_client_order_id
+from hypervector.live.asset_order_identity import validate_client_order_id
 
 logger = logging.getLogger(__name__)
 # Stable prefix of the warning for a tolerated venue maximum-leverage change.
@@ -127,7 +127,7 @@ class HyperliquidPerpReader:
         self._info = info
         self._address = validate_address(account_address)
         self._symbol, self._perp_dex = _venue_identity(symbol, perp_dex)
-        self._market_cache: SolMarketMetadata | None = None
+        self._market_cache: HyperliquidMarketMetadata | None = None
         self._market_metadata_cache: object | None = None
         self._account_mode_cache: str | None = None
 
@@ -136,7 +136,7 @@ class HyperliquidPerpReader:
         *,
         expected_max_leverage: int,
         requested_leverage: int | None = None,
-    ) -> SolVenuePreflight:
+    ) -> HyperliquidVenuePreflight:
         """Read metadata, fees, account state, and current mark.
 
         Without ``requested_leverage`` the venue maximum must equal the expected
@@ -170,7 +170,7 @@ class HyperliquidPerpReader:
             self._info.all_mids(self._perp_dex),
             self._symbol,
         )
-        return SolVenuePreflight(
+        return HyperliquidVenuePreflight(
             market=market,
             mark_price=mark,
             price_tick=price_tick(mark, market.size_decimals),
@@ -183,7 +183,7 @@ class HyperliquidPerpReader:
             hip3_fee_metadata=(self.hip3_fee_metadata() if self._perp_dex else None),
         )
 
-    def book_snapshot(self, *, depth_levels: int) -> SolBookSnapshot:
+    def book_snapshot(self, *, depth_levels: int) -> HyperliquidBookSnapshot:
         """Return one strict public L2 snapshot."""
         return parse_book_for_symbol(
             self._info.l2_snapshot(self._symbol),
@@ -214,11 +214,11 @@ class HyperliquidPerpReader:
             )
         return self._account_mode_cache
 
-    def account_snapshot(self) -> SolAccountSnapshot:
+    def account_snapshot(self) -> HyperliquidAccountSnapshot:
         """Return account totals and exposure for only this symbol."""
         return self._account_snapshot(self.account_abstraction_mode())
 
-    def _account_snapshot(self, mode: str) -> SolAccountSnapshot:
+    def _account_snapshot(self, mode: str) -> HyperliquidAccountSnapshot:
         return parse_account_mode_for_symbol(
             mode=mode,
             perp_state=self._info.user_state(self._address, self._perp_dex),
@@ -230,7 +230,7 @@ class HyperliquidPerpReader:
             symbol=self._symbol,
         )
 
-    def open_orders(self) -> tuple[SolOpenOrder, ...]:
+    def open_orders(self) -> tuple[HyperliquidOpenOrder, ...]:
         """Return venue-reported open orders for only this symbol."""
         raw = sequence(
             self._info.frontend_open_orders(self._address, self._perp_dex),
@@ -242,7 +242,7 @@ class HyperliquidPerpReader:
             if mapping(item, "open order").get("coin") == self._symbol
         )
 
-    def fills(self) -> tuple[SolFill, ...]:
+    def fills(self) -> tuple[HyperliquidFill, ...]:
         """Return recent account fills for only this symbol."""
         raw = sequence(self._info.user_fills(self._address), "user fills")
         return tuple(
@@ -251,9 +251,9 @@ class HyperliquidPerpReader:
             if mapping(item, "fill").get("coin") == self._symbol
         )
 
-    def reconcile(self) -> SolReconciliationSnapshot:
+    def reconcile(self) -> HyperliquidReconciliationSnapshot:
         """Return account, open orders, and fills from venue truth."""
-        return SolReconciliationSnapshot(
+        return HyperliquidReconciliationSnapshot(
             account=self.account_snapshot(),
             open_orders=self.open_orders(),
             fills=self.fills(),
@@ -269,7 +269,7 @@ class HyperliquidPerpReader:
         *,
         start_time_ms: int,
         end_time_ms: int,
-    ) -> tuple[SolFundingPayment, ...]:
+    ) -> tuple[HyperliquidFundingPayment, ...]:
         """Return exact bounded funding rows for only this symbol."""
         response = read_user_funding_history(
             self._info, self._address, start_time_ms, end_time_ms
@@ -288,7 +288,7 @@ class HyperliquidPerpReader:
         response = self._info.query_order_by_oid(self._address, identity)
         return parse_order_status(response, expected_client_order_id=identity)
 
-    def _market(self, *, refresh: bool = False) -> SolMarketMetadata:
+    def _market(self, *, refresh: bool = False) -> HyperliquidMarketMetadata:
         if self._market_cache is None or refresh:
             self._market_metadata_cache = self._info.meta(self._perp_dex)
             self._market_cache = parse_market_for_symbol(

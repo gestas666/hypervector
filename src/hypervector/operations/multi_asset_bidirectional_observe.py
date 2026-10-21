@@ -38,13 +38,13 @@ from hypervector.live.cohort_profit_lock_history import profit_lock_history_limi
 from hypervector.live.completed_candle_snapshot_cache import (
     CompletedCandleSnapshotCache,
 )
-from hypervector.live.hyperliquid_sol_factory import (
-    OfficialSolReadOnlySdkBuilder,
-    SolSdkFactoryError,
+from hypervector.live.hyperliquid_sdk_factory import (
+    OfficialHyperliquidReadOnlySdkBuilder,
+    HyperliquidSdkFactoryError,
 )
 from hypervector.live.process_signal_stop import install_process_signal_stop
 from hypervector.live.perp_venue_identity import configured_perp_dexes
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger, SolLiveLedgerError
+from hypervector.live.asset_ledger import AssetLiveLedger, AssetLiveLedgerError
 from hypervector.runtime_lock import (
     RuntimeLockError,
     bidirectional_observer_runtime_lock,
@@ -130,7 +130,7 @@ def _observer_candle_fetcher(
 
 
 def _build_public_books(config: MultiAssetLiveConfig) -> MultiAssetPublicBookCollector:
-    info = OfficialSolReadOnlySdkBuilder().build(
+    info = OfficialHyperliquidReadOnlySdkBuilder().build(
         perp_dexes=configured_perp_dexes(config.symbols)
     )
     return MultiAssetPublicBookCollector(info=info, symbols=config.symbols)
@@ -140,9 +140,9 @@ def _build_observer_ledger(
     config: MultiAssetLiveConfig,
     resume_run_id: str | None,
     now: datetime,
-) -> SolLiveLedger:
+) -> AssetLiveLedger:
     run_id = resume_run_id or f"bidirectional-observe-{int(now.timestamp() * 1_000)}"
-    ledger = SolLiveLedger(
+    ledger = AssetLiveLedger(
         path=config.cohort_ledger,
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,
@@ -153,10 +153,10 @@ def _build_observer_ledger(
     rows = ledger.read_all()
     if not rows:
         if resume_run_id is not None:
-            raise SolLiveLedgerError("observer resume requires an existing ledger")
+            raise AssetLiveLedgerError("observer resume requires an existing ledger")
         return ledger
     if resume_run_id is None:
-        raise SolLiveLedgerError("existing observer ledger requires explicit resume")
+        raise AssetLiveLedgerError("existing observer ledger requires explicit resume")
     _require_resume_identity(rows, config, run_id)
     return ledger
 
@@ -180,13 +180,13 @@ def _require_resume_identity(
         any(row.get(field) != value for field, value in expected.items())
         for row in rows
     ):
-        raise SolLiveLedgerError("observer resume identity mismatch")
+        raise AssetLiveLedgerError("observer resume identity mismatch")
     run_ids = [row.get("run_id") for row in rows]
     if run_ids[-1] != run_id:
-        raise SolLiveLedgerError("observer resume identity mismatch")
+        raise AssetLiveLedgerError("observer resume identity mismatch")
     first = run_ids.index(run_id)
     if any(value != run_id for value in run_ids[first:]):
-        raise SolLiveLedgerError("observer resume identity mismatch")
+        raise AssetLiveLedgerError("observer resume identity mismatch")
 
 
 _with_observer_ledger_root = with_observer_ledger_root
@@ -219,8 +219,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         MultiAssetObserverRunnerError,
         requests.RequestException,
         RuntimeLockError,
-        SolLiveLedgerError,
-        SolSdkFactoryError,
+        AssetLiveLedgerError,
+        HyperliquidSdkFactoryError,
         CohortOperatorInboxError,
         ValueError,
     ) as exc:

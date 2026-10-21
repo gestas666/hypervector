@@ -6,8 +6,8 @@ import pytest
 from native_replay_scheduled_fixture import ScheduledEngineFixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_order_submission import SolOrderRecoveryError
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_order_submission import AssetOrderRecoveryError
+from hypervector.live.asset_state import AssetLiveState
 
 __all__ = ["deny_external_ports"]
 
@@ -23,7 +23,7 @@ def test_partial_entry_waits_for_its_delayed_fill_history(tmp_path: Path) -> Non
         lambda address: fills(address) if replay.clock.now_ms >= original + 1000 else []
     )
     state = replay.enter_current(replay.assets["BTC"])
-    assert state.state is SolLiveState.OPEN and state.opened_at_ms == original
+    assert state.state is AssetLiveState.OPEN and state.opened_at_ms == original
     assert replay.clock.now_ms >= original + 1000
     assert replay.mutations.count("entry") == 1
 
@@ -44,12 +44,12 @@ def test_unattributed_partial_entry_keeps_the_original_intent_retryable(
     )
     asset = replay.assets["BTC"]
     original = replay.clock.now_ms
-    with pytest.raises(SolOrderRecoveryError):
+    with pytest.raises(AssetOrderRecoveryError):
         replay.enter_current(asset)
     assert not replay.orders and replay.mutations.count("entry") == 1
     replay._info.user_fills.side_effect = fills
     recovered = replay.engine(asset).start()
-    assert recovered.state is SolLiveState.OPEN and recovered.opened_at_ms == original
+    assert recovered.state is AssetLiveState.OPEN and recovered.opened_at_ms == original
     assert recovered.target_oid is not None and replay.mutations.count("entry") == 1
 
 
@@ -66,9 +66,9 @@ def test_long_delayed_canceled_entry_restart_uses_owned_partial_fill(
         recovery_delay_ms=5000,
     )
     original = replay.clock.now_ms
-    with pytest.raises(SolOrderRecoveryError):
+    with pytest.raises(AssetOrderRecoveryError):
         replay.enter_current(replay.assets[symbol])
     replay.clock.advance_to(original + 6000)
     recovered = replay.engine(replay.assets[symbol]).start()
-    assert recovered.state is SolLiveState.OPEN and recovered.opened_at_ms == original
+    assert recovered.state is AssetLiveState.OPEN and recovered.opened_at_ms == original
     assert replay.mutations.count("entry") == 1

@@ -9,7 +9,7 @@ from test_native_partial_protective_recovery import restart
 from test_native_protective_execution_progress import _partial_fixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
 
 __all__ = ["deny_external_ports"]
 
@@ -43,6 +43,6 @@ def test_restart_rejects_corrupt_credit_even_after_receipt_ages_out(
         row for row in replay._visible_fills(address) if row["oid"] != original.target_oid
     ]
     before = list(replay.mutations)
-    with pytest.raises(SolLiveEngineError, match="checkpoint"):
+    with pytest.raises(AssetLiveEngineError, match="checkpoint"):
         restart(replay, "BTC")
     assert replay.mutations == before

@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.hyperliquid_parsing import HyperliquidAdapterError
 from hypervector.research.hip3_roster_observer import Hip3MarketSpec
 from test_hip3_roster_observer import _MARKETS, _Reader
 

@@ -14,11 +14,11 @@ from hypervector.live.cohort_breakeven_events import (
 )
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
 from hypervector.live.hyperliquid_protocol import (
-    SolBookSnapshot,
-    SolReconciliationSnapshot,
+    HyperliquidBookSnapshot,
+    HyperliquidReconciliationSnapshot,
 )
 from hypervector.live.multi_asset_live_runner_support import entry_provider_strategy_id
-from hypervector.live.sol_range_onset_engine_contract import (
+from hypervector.live.asset_engine_contract import (
     STOP_ALREADY_AT_TARGET,
     StopRaiseOutcome,
     stop_rests_at_or_beyond,
@@ -71,7 +71,7 @@ def breakeven_target_price(
 
 
 def executable_exit_price(
-    book: SolBookSnapshot | None, position_size_signed: float, observed_ms: int | None
+    book: HyperliquidBookSnapshot | None, position_size_signed: float, observed_ms: int | None
 ) -> float | None:
     """Return the fresh top-of-book price a reduce-only exit would trade at, if known."""
     if book is None or observed_ms is None or not book.bids or not book.asks:
@@ -91,13 +91,13 @@ def raise_breakeven_stops(
     requests: frozenset[str],
     closed_symbols: set[str],
     symbols: tuple[str, ...],
-    venues: Mapping[str, SolReconciliationSnapshot],
+    venues: Mapping[str, HyperliquidReconciliationSnapshot],
     raise_stop: Callable[[str, float], bool | StopRaiseOutcome],
     attempts: MutableMapping[tuple[str, int], int],
     lifecycle_oids: Mapping[str, int | None],
     emit: Callable[[str, Mapping[str, object]], None],
     plans: Mapping[str, BoundExecutionPlan | None] | None = None,
-    books: Mapping[str, SolBookSnapshot | None] | None = None,
+    books: Mapping[str, HyperliquidBookSnapshot | None] | None = None,
     observed_ms: int | None = None,
     stop_oids: Mapping[str, int | None] | None = None,
     skips: SkipStreaks | None = None,
@@ -233,7 +233,7 @@ def _wire_price(normalize: WirePrice | None, symbol: str, price: float) -> float
 
 
 def _stop_rests_at_target(
-    venue: SolReconciliationSnapshot, stop_oid: int | None, target: float, size: float
+    venue: HyperliquidReconciliationSnapshot, stop_oid: int | None, target: float, size: float
 ) -> bool:
     """Return whether the owned stop rests at or beyond ``target`` (a wire price)."""
     if stop_oid is None:

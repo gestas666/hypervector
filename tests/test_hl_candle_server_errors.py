@@ -126,8 +126,8 @@ def test_gateway_degradation_preserves_required_deadline_exit(
 
 def test_gateway_mutation_failure_remains_ambiguous_without_retry() -> None:
     """A lost signed response must retain identity instead of becoming a read."""
-    from hypervector.live.sol_order_transport import (
-        SolOrderTransportError,
+    from hypervector.live.asset_order_transport import (
+        AssetOrderTransportError,
         call_ambiguous_order_mutation,
     )
     from hypervector.live.transient_transport import transient_read_failure_reason
@@ -136,7 +136,7 @@ def test_gateway_mutation_failure_remains_ambiguous_without_retry() -> None:
     mutation = Mock(side_effect=error)
     identity = "0x11111111111111111111111111111111"
 
-    with pytest.raises(SolOrderTransportError) as caught:
+    with pytest.raises(AssetOrderTransportError) as caught:
         call_ambiguous_order_mutation(
             operation="entry", client_order_id=identity, mutation=mutation
         )

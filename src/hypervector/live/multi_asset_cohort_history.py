@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from datetime import datetime
 import math
 
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
-from hypervector.live.sol_protective_order import QUANTITY_TOLERANCE
+from hypervector.live.asset_live_journal import build_live_journal
+from hypervector.live.asset_ledger import AssetLiveLedger
+from hypervector.live.asset_protective_order import QUANTITY_TOLERANCE
 
 
 @dataclass(frozen=True)
@@ -22,7 +22,7 @@ class _ExecutionContext:
     exit_reason: str | None
 
 
-def compatible_execution_rows(ledger: SolLiveLedger) -> list[dict[str, object]]:
+def compatible_execution_rows(ledger: AssetLiveLedger) -> list[dict[str, object]]:
     """Return armed rows matching the current profile and execution contract."""
     # The journal and markouts read this profile's books, positions and
     # reconciliations, so the selection is declared by profile only.
@@ -34,7 +34,7 @@ def compatible_execution_rows(ledger: SolLiveLedger) -> list[dict[str, object]]:
 
 def execution_row_is_compatible(
     row: Mapping[str, object],
-    ledger: SolLiveLedger,
+    ledger: AssetLiveLedger,
 ) -> bool:
     """Return whether one row belongs to the ledger's exact live contract."""
     return (

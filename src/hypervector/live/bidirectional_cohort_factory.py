@@ -7,13 +7,13 @@ from dataclasses import dataclass, field
 import os
 from types import MappingProxyType
 
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.hyperliquid_perp_reader import require_requested_leverage
-from hypervector.live.hyperliquid_sol_factory import (
-    OfficialSolSdkBuilder,
-    SolSdkBuilderProtocol,
+from hypervector.live.hyperliquid_sdk_factory import (
+    OfficialHyperliquidSdkBuilder,
+    HyperliquidSdkBuilderProtocol,
 )
-from hypervector.live.hyperliquid_sol_parsing import validate_address
+from hypervector.live.hyperliquid_parsing import validate_address
 from hypervector.live.multi_asset_directional_adapter import (
     MultiAssetDirectionalAdapter,
 )
@@ -69,7 +69,7 @@ def create_armed_multi_asset_adapters(
     enabled: bool,
     accepts_live_risk: bool,
     environ: Mapping[str, str] | None = None,
-    builder: SolSdkBuilderProtocol | None = None,
+    builder: HyperliquidSdkBuilderProtocol | None = None,
     read_coalesce_seconds: float = 0.0,
 ) -> MultiAssetCohortAdapters:
     """Construct every enabled symbol adapter from one authenticated SDK pair."""
@@ -88,7 +88,7 @@ def create_armed_multi_asset_adapters(
     if not address or not private_key:
         raise ValueError("live start requires configured Hyperliquid credentials")
     validated_address = validate_address(address)
-    sdk_builder = builder if builder is not None else OfficialSolSdkBuilder()
+    sdk_builder = builder if builder is not None else OfficialHyperliquidSdkBuilder()
     perp_dexes = configured_perp_dexes(symbols)
     if perp_dexes:
         raw_info, raw_exchange = sdk_builder.build(
@@ -108,7 +108,7 @@ def create_armed_multi_asset_adapters(
     )
     adapters = {
         asset.symbol: MultiAssetDirectionalAdapter(
-            BtcHyperliquidAdapter(
+            HyperliquidPerpAdapter(
                 info=info,
                 exchange=exchange,
                 account_address=validated_address,

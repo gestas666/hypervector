@@ -5,19 +5,19 @@ from pathlib import Path
 
 import pytest
 from entry_deadline_fixtures import DECISION_MS, Case, reconciliations, scenario
-from test_sol_range_onset_live_engine import FakeSolAdapter, _runtime, _venue
+from test_asset_live_engine import FakeVenueAdapter, _runtime, _venue
 
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidOrderAck,
     HyperliquidOrderStatus,
 )
 from hypervector.live.multi_asset_cohort_payloads import routing_action_payload
-from hypervector.live.sol_order_restart import (
+from hypervector.live.asset_order_restart import (
     interrupted_lifecycle_intent,
     pending_order_intent,
 )
-from hypervector.live.sol_range_onset_engine import SolRangeOnsetLiveEngine
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_engine import AssetLiveEngine
+from hypervector.live.asset_state import AssetLiveState
 
 
 @pytest.mark.parametrize(
@@ -59,7 +59,7 @@ def test_configured_deadline_holds_at_dispatch(
     assert pending_order_intent(records) is None
     assert interrupted_lifecycle_intent(records) is None
     if not expected_entries:
-        assert state.engine.snapshot.state is SolLiveState.FLAT
+        assert state.engine.snapshot.state is AssetLiveState.FLAT
         report = state.telemetry.routings[0][1]
         assert [item.reason for item in report.withheld] == ["stale_before_submission"]
     else:
@@ -74,12 +74,12 @@ def test_expired_entry_does_not_poison_the_next_cycle(tmp_path: Path) -> None:
     """A subsequent fresh signal can enter, reconcile and protect normally."""
     state = scenario(tmp_path, Case("expires", 29_000_000, 0, 2_000_000))
     assert state.runner.poll_once() == 0
-    assert state.engine.snapshot.state is SolLiveState.FLAT
+    assert state.engine.snapshot.state is AssetLiveState.FLAT
     state.adapter.reconciliations = reconciliations()[1:]
     state.clock.offset_us = 60_000_000
     state.poller.decision_ms = DECISION_MS + 60_000
     assert state.runner.poll_once() == 1
-    assert state.engine.snapshot.state is SolLiveState.OPEN
+    assert state.engine.snapshot.state is AssetLiveState.OPEN
     assert state.engine.snapshot.stop_oid == 202
     assert pending_order_intent(state.ledger.read_all()) is None
 
@@ -103,7 +103,7 @@ def test_expiry_during_reconciliation_retries_is_withheld(tmp_path: Path) -> Non
     assert state.runner.poll_once() == 0
     assert state.clock.offset_us == 30_100_000
     assert state.adapter.entry_times_ms == []
-    assert state.engine.snapshot.state is SolLiveState.FLAT
+    assert state.engine.snapshot.state is AssetLiveState.FLAT
 
 
 def test_response_loss_after_dispatch_keeps_recovery_and_protection(
@@ -123,7 +123,7 @@ def test_response_loss_after_dispatch_keeps_recovery_and_protection(
     assert state.runner.poll_once() == 1
     assert state.adapter.entry_times_ms == [DECISION_MS + 29_000]
     assert state.clock.offset_us == 31_000_000
-    assert state.engine.snapshot.state is SolLiveState.OPEN
+    assert state.engine.snapshot.state is AssetLiveState.OPEN
     assert state.engine.snapshot.stop_oid == 202
     records = state.ledger.read_all()
     assert not [row for row in records if row["event_type"] == "entry_not_submitted"]
@@ -162,8 +162,8 @@ def test_restart_after_unsent_marker_performs_no_order_lookup_or_dispatch(
         b"".join(original.splitlines(keepends=True)[: index + 1])
     )
     config, ledger = _runtime(tmp_path)
-    adapter = FakeSolAdapter([_venue(0)])
-    restarted = SolRangeOnsetLiveEngine(
+    adapter = FakeVenueAdapter([_venue(0)])
+    restarted = AssetLiveEngine(
         config=config,
         adapter=adapter,
         ledger=ledger,
@@ -171,7 +171,7 @@ def test_restart_after_unsent_marker_performs_no_order_lookup_or_dispatch(
         now_fn=state.clock.now,
         sleep_fn=state.clock.sleep,
     )
-    assert restarted.start().state is SolLiveState.FLAT
+    assert restarted.start().state is AssetLiveState.FLAT
     assert not [
         name
         for name, _ in adapter.calls
@@ -191,7 +191,7 @@ def test_guarded_ioc_no_fill_remains_a_submitted_no_fill(tmp_path: Path) -> None
     state.adapter.reconciliations = [_venue(0), _venue(0), _venue(0)]
     assert state.runner.poll_once() == 0
     assert state.adapter.entry_times_ms == [DECISION_MS + 29_000]
-    assert state.engine.snapshot.state is SolLiveState.FLAT
+    assert state.engine.snapshot.state is AssetLiveState.FLAT
     report = state.telemetry.routings[0][1]
     assert [item.reason for item in report.withheld] == ["entry_ioc_no_fill"]
     assert report.withheld[0].submission_boundary == "sdk_dispatch"

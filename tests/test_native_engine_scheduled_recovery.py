@@ -6,12 +6,12 @@ import pytest
 from native_replay_scheduled_fixture import ScheduledEngineFixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_order_submission import (
-    SolCancelRecoveryError,
-    SolOrderRecoveryError,
+from hypervector.live.asset_order_submission import (
+    AssetCancelRecoveryError,
+    AssetOrderRecoveryError,
 )
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
+from hypervector.live.asset_state import AssetLiveState
 
 __all__ = ["deny_external_ports"]
 
@@ -28,7 +28,7 @@ def test_seven_engines_recover_delayed_native_status_and_protection(
     for asset in replay.config.assets:
         result = replay.enter_current(asset, last_side=last_side)
         assert (
-            result.state is SolLiveState.OPEN
+            result.state is AssetLiveState.OPEN
             and result.opened_at_ms == replay.decisions[asset.symbol]
         )
         assert replay.clock.now_ms >= replay.order_visible_at[result.stop_oid]
@@ -40,12 +40,12 @@ def test_seven_engines_recover_delayed_native_status_and_protection(
     for asset in reversed(replay.config.assets):
         engine = replay.engine(asset)
         mutations = len(replay.mutations)
-        assert engine.start().state is SolLiveState.OPEN
+        assert engine.start().state is AssetLiveState.OPEN
         assert len(replay.mutations) == mutations
         replay.prepare_close(asset.symbol)
         assert (
             engine.exit(mark_price=100, reason="scheduled_native_recovery_check").state
-            is SolLiveState.FLAT
+            is AssetLiveState.FLAT
         )
         replay.assert_native_account_agreement()
     assert not replay.orders
@@ -69,12 +69,12 @@ def test_pending_entry_restart_retains_the_durable_decision_clock(
     replay = ScheduledEngineFixture(tmp_path, lost="entry", recovery_delay_ms=5000)
     asset = replay.assets[symbol]
     decision = replay.clock.now_ms
-    with pytest.raises(SolOrderRecoveryError):
+    with pytest.raises(AssetOrderRecoveryError):
         replay.enter_current(asset, last_side=last_side)
     assert symbol in replay.account.snapshot().positions and not replay.orders
     replay.clock.advance_to(decision + 6000)
     result = replay.engine(asset).start()
-    assert result.state is SolLiveState.OPEN and result.opened_at_ms == decision
+    assert result.state is AssetLiveState.OPEN and result.opened_at_ms == decision
     assert sum(name == "entry" for name in replay.mutations) == 1
     assert result.execution_plan is not None
     assert replay.account.snapshot().positions[symbol].decision_time_ms == decision
@@ -103,13 +103,13 @@ def test_restart_after_exhausted_protection_or_exit_lookup(
     asset = replay.assets[symbol]
     if operation in {"stop", "target"}:
         replay.lost = operation
-        with pytest.raises(SolOrderRecoveryError):
+        with pytest.raises(AssetOrderRecoveryError):
             replay.enter_current(asset)
     else:
         replay.enter_current(asset)
         replay.lost = operation
         replay.prepare_close(symbol)
-        failure = SolCancelRecoveryError if operation == "cancel" else SolOrderRecoveryError
+        failure = AssetCancelRecoveryError if operation == "cancel" else AssetOrderRecoveryError
         with pytest.raises(failure):
             replay.engines[symbol].exit(mark_price=100, reason="restart_failure_injection")
     original_decision = replay.engines[symbol].snapshot.opened_at_ms
@@ -118,19 +118,19 @@ def test_restart_after_exhausted_protection_or_exit_lookup(
     before = len(replay.mutations)
     result = replay.engine(asset).start()
     if operation in {"stop", "target"}:
-        assert result.state is SolLiveState.OPEN and result.opened_at_ms == original_decision
+        assert result.state is AssetLiveState.OPEN and result.opened_at_ms == original_decision
         assert result.execution_plan is not None
         requires_target = result.execution_plan.target_policy != "none"
         assert (result.target_oid is not None) == requires_target
         expected_new_target = int(operation == "stop" and requires_target)
         assert len(replay.mutations) == before + expected_new_target
     elif operation == "cancel" and symbol == "BTC":
-        assert result.state is SolLiveState.OPEN and result.opened_at_ms == original_decision
+        assert result.state is AssetLiveState.OPEN and result.opened_at_ms == original_decision
         assert result.target_oid is not None and len(replay.orders) == 2
         assert sum(name == "close" for name in replay.mutations) == 0
         assert replay.mutations[before:] == ["target"]
     else:
-        assert result.state is SolLiveState.FLAT
+        assert result.state is AssetLiveState.FLAT
         assert symbol not in replay.account.snapshot().positions and not replay.orders
         assert sum(name == "close" for name in replay.mutations) == 1
     replay.assert_native_account_agreement()
@@ -145,7 +145,7 @@ def test_ambiguous_cancel_restart_requires_consistent_exact_venue_status(
     asset = replay.assets["BTC"]
     original = replay.enter_current(asset)
     replay.lost = "cancel"
-    with pytest.raises(SolCancelRecoveryError):
+    with pytest.raises(AssetCancelRecoveryError):
         replay.engines[asset.symbol].exit(mark_price=100, reason="cancel_status_check")
     replay.clock.advance_to(replay.clock.now_ms + 6000)
     replay.lost = None
@@ -161,7 +161,7 @@ def test_ambiguous_cancel_restart_requires_consistent_exact_venue_status(
 
     replay._info.query_order_by_oid.side_effect = inconsistent
     before = len(replay.mutations)
-    expected = SolCancelRecoveryError if status == "unknownOid" else SolLiveEngineError
+    expected = AssetCancelRecoveryError if status == "unknownOid" else AssetLiveEngineError
     with pytest.raises(expected):
         replay.engine(asset).start()
     assert len(replay.mutations) == before
@@ -173,16 +173,16 @@ def test_cancel_restart_can_retry_after_a_second_bounded_lookup_failure(tmp_path
     asset = replay.assets["BTC"]
     original = replay.enter_current(asset)
     replay.lost = "cancel"
-    with pytest.raises(SolCancelRecoveryError):
+    with pytest.raises(AssetCancelRecoveryError):
         replay.engines[asset.symbol].exit(mark_price=100, reason="repeated_cancel_timeout")
     replay.lost = None
     before = len(replay.mutations)
-    with pytest.raises(SolCancelRecoveryError):
+    with pytest.raises(AssetCancelRecoveryError):
         replay.engine(asset).start()
     assert len(replay.mutations) == before
     replay.clock.advance_to(replay.clock.now_ms + 6000)
     result = replay.engine(asset).start()
-    assert result.state is SolLiveState.OPEN
+    assert result.state is AssetLiveState.OPEN
     assert result.opened_at_ms == original.opened_at_ms and result.stop_oid == original.stop_oid
     assert result.target_oid != original.target_oid
     assert replay.mutations[before:] == ["target"]

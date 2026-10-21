@@ -21,7 +21,7 @@ from hypervector.live.cohort_entry_submission import (
 )
 from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
-from hypervector.live.sol_range_onset_engine_contract import SolEntryNotFilledError
+from hypervector.live.asset_engine_contract import AssetEntryNotFilledError
 
 
 class _ThirtySecondPoller(_Poller):
@@ -91,7 +91,7 @@ def test_ioc_no_fill_is_reported_and_does_not_abort_later_actions() -> None:
     ) -> None:
         attempted.append(action)
         if action.symbol == "LTC":
-            raise SolEntryNotFilledError("IOC entry not filled")
+            raise AssetEntryNotFilledError("IOC entry not filled")
 
     submitted, withheld = execute_fresh_routed_actions(
         (first, second),

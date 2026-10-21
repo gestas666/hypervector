@@ -9,7 +9,7 @@ import pytest
 from native_replay_engine_fixture import SIZE_DECIMALS
 from test_native_replay_adapter import ADDRESS, deny_external_ports
 
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.multi_asset_directional_adapter import MultiAssetDirectionalAdapter
 from hypervector.live.multi_asset_live_config import (
     AssetLiveConfig,
@@ -17,9 +17,9 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 from hypervector.live.multi_asset_live_runner_support import shared_account_facts
-from hypervector.live.sol_range_onset_engine import SolRangeOnsetLiveEngine
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_engine import AssetLiveEngine
+from hypervector.live.asset_ledger import AssetLiveLedger
+from hypervector.live.asset_state import AssetLiveState
 from hypervector.research.native_replay_clock import ReplayClock
 from hypervector.research.native_replay_depth import ExactLevel, RecordedBook
 from hypervector.research.native_replay_sdk import ReplaySdk, ReplaySdkTiming
@@ -92,11 +92,11 @@ def source_book(symbol: str, arrival_ms: int, step: Decimal) -> RecordedBook:
     )
 
 
-def engine(replay: ReplaySdk, asset: AssetLiveConfig, root: Path) -> SolRangeOnsetLiveEngine:
+def engine(replay: ReplaySdk, asset: AssetLiveConfig, root: Path) -> AssetLiveEngine:
     """Construct the real execution engine with isolated ledgers and offline clocks."""
     asset = replace(asset, live_ledger=root / "live/bidirectional_cohort" / f"{asset.symbol}.jsonl")
     adapter = MultiAssetDirectionalAdapter(
-        BtcHyperliquidAdapter(
+        HyperliquidPerpAdapter(
             info=replay.info,
             exchange=replay.exchange,
             account_address=ADDRESS,
@@ -107,14 +107,14 @@ def engine(replay: ReplaySdk, asset: AssetLiveConfig, root: Path) -> SolRangeOns
             perp_dex="xyz" if ":" in asset.symbol else "",
         )
     )
-    ledger = SolLiveLedger(
+    ledger = AssetLiveLedger(
         path=asset.live_ledger,
         profile_id=asset.profile_id,
         profile_fingerprint=asset.profile_fingerprint,
         run_fingerprint=asset.run_fingerprint,
         run_id="offline-sdk-native-engines",
     )
-    return SolRangeOnsetLiveEngine(
+    return AssetLiveEngine(
         config=asset,
         adapter=adapter,
         ledger=ledger,
@@ -155,11 +155,11 @@ def test_all_configured_assets_complete_native_engine_lifecycles_with_shared_sdk
     _assert_shared_account(replay, engines)
     for asset in reversed(config.assets):
         restored = engine(replay, asset, tmp_path)
-        assert restored.start().state is SolLiveState.OPEN
+        assert restored.start().state is AssetLiveState.OPEN
         assert restored.snapshot.opened_at_ms == decisions[asset.symbol]
         assert (
             restored.exit(mark_price=100, reason="offline_sdk_qualification").state
-            is SolLiveState.FLAT
+            is AssetLiveState.FLAT
         )
         engines[asset.symbol] = restored
         _assert_shared_account(replay, engines)
@@ -174,10 +174,10 @@ def _enter_configured(
     root: Path,
     last_sides: bool,
     decisions: dict[str, int],
-) -> SolRangeOnsetLiveEngine:
+) -> AssetLiveEngine:
     """Preserve a configured provider's exact decision, plan and sizing through the real engine."""
     machine = engine(replay, asset, root)
-    assert machine.start().state is SolLiveState.FLAT
+    assert machine.start().state is AssetLiveState.FLAT
     provider = next(p for p in config.providers if asset.symbol in p.execution_symbols)
     side = sorted(provider.executable_sides(asset.symbol))[-1 if last_sides else 0]
     decisions[asset.symbol] = replay.clock.now_ms - 1000
@@ -193,7 +193,7 @@ def _enter_configured(
         decision_time_ms=decisions[asset.symbol],
         entry_sizing=provider.entry_sizing(asset.symbol, side),
     )
-    assert opened.state is SolLiveState.OPEN and opened.opened_at_ms == decisions[asset.symbol]
+    assert opened.state is AssetLiveState.OPEN and opened.opened_at_ms == decisions[asset.symbol]
     assert (
         replay.account.snapshot().positions[asset.symbol].decision_time_ms
         == decisions[asset.symbol]
@@ -201,7 +201,7 @@ def _enter_configured(
     return machine
 
 
-def _assert_shared_account(replay: ReplaySdk, engines: dict[str, SolRangeOnsetLiveEngine]) -> None:
+def _assert_shared_account(replay: ReplaySdk, engines: dict[str, AssetLiveEngine]) -> None:
     snapshots = tuple(machine._adapter.reconcile() for machine in engines.values())
     facts = shared_account_facts(tuple(engines), snapshots)
     assert facts.account_value_usd == pytest.approx(float(replay.account.snapshot().equity_usd))

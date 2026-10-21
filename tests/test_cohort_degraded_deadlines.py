@@ -16,11 +16,11 @@ from test_multi_asset_live_runner import (
 )
 
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 NOW = datetime(2026, 9, 13, 5, 30, tzinfo=UTC)
 NOW_MS = int(NOW.timestamp() * 1_000)
@@ -46,16 +46,16 @@ class OwnedEngine(_Engine):
 
     flatten_on_refresh = False
 
-    def start(self) -> SolLiveSnapshot:
+    def start(self) -> AssetLiveSnapshot:
         """Preserve the explicitly supplied recovered lifecycle."""
         return self.current
 
     def reconcile_telemetry(
         self, *, funding_start_time_ms: int, funding_end_time_ms: int
-    ) -> SolReconciliationSnapshot:
+    ) -> HyperliquidReconciliationSnapshot:
         """Model a protective fill becoming visible only after acquisition fails."""
         if self.flatten_on_refresh and self.reconciliations:
-            self.current = SolLiveSnapshot(state=SolLiveState.FLAT)
+            self.current = AssetLiveSnapshot(state=AssetLiveState.FLAT)
         venue = super().reconcile_telemetry(
             funding_start_time_ms=funding_start_time_ms,
             funding_end_time_ms=funding_end_time_ms,
@@ -84,8 +84,8 @@ def runner_fixture(
     plan: BoundExecutionPlan | None = (
         None if planless else contract.bind(strategy_id="test_trend_provider", stop_anchor=None)
     )
-    owned.current = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    owned.current = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=91,
         stop_oid=92,
         position_size_signed=side,
@@ -129,7 +129,7 @@ def test_failed_acquisition_executes_original_fixed_deadline(
         runner.poll_once()
     assert error.value is FailingPoller.failure
     assert engine.exits == [(REFERENCE_PRICE, "maximum_hold_seconds")]
-    assert engine.snapshot.state is SolLiveState.FLAT
+    assert engine.snapshot.state is AssetLiveState.FLAT
     assert telemetry.maximum_hold_events[0]["opened_at_ms"] == NOW_MS - age_ms
     assert len(engine.reconciliations) == 3
     assert len(telemetry.snapshots) == len(telemetry.funding_windows) == 1
@@ -173,7 +173,7 @@ def test_protection_observed_after_data_failure_prevents_duplicate_close(
     runner.start(activation_time_ms=NOW_MS)
     with pytest.raises(TransientCohortMarketDataError):
         runner.poll_once()
-    assert engine.snapshot.state is SolLiveState.FLAT
+    assert engine.snapshot.state is AssetLiveState.FLAT
     assert engine.exits == [] and len(engine.reconciliations) == 2
     assert telemetry.maximum_hold_events == [] and telemetry.heartbeats == 0
 
@@ -221,7 +221,7 @@ def test_failed_deadline_close_is_never_reported_as_a_degraded_poll(
 
     def failing_exit(
         *, mark_price: float, reason: str, **_kwargs: object
-    ) -> SolLiveSnapshot:
+    ) -> AssetLiveSnapshot:
         attempted.append((mark_price, reason))
         raise ServerError(502, "Bad Gateway")
 

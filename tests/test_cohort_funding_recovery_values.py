@@ -16,14 +16,14 @@ from hypervector.live.cohort_funding_window import (
     committed_funding_window,
     funding_window_from_payload,
 )
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 DAY_MS = 86_400_000
 
 
-def ledger(tmp_path: Path, fingerprint: str = "owned") -> SolLiveLedger:
+def ledger(tmp_path: Path, fingerprint: str = "owned") -> AssetLiveLedger:
     """Create a local ledger using the actual persistence validator."""
-    return SolLiveLedger(
+    return AssetLiveLedger(
         path=tmp_path / "live/bidirectional_cohort/decisions.jsonl",
         profile_id="test",
         profile_fingerprint=fingerprint,
@@ -33,7 +33,7 @@ def ledger(tmp_path: Path, fingerprint: str = "owned") -> SolLiveLedger:
 
 
 def append(
-    source: SolLiveLedger, event: str, payload: dict[str, object], clock: int = 1_000
+    source: AssetLiveLedger, event: str, payload: dict[str, object], clock: int = 1_000
 ) -> None:
     """Append one explicitly timed source record without a network boundary."""
     source.append(

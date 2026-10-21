@@ -16,7 +16,7 @@ from hypervector.live.entry_submission_deadline import (
     EntrySubmissionDeadline,
     EntrySubmissionObservation,
 )
-from hypervector.live.sol_range_onset_engine_contract import SolEntryNotFilledError
+from hypervector.live.asset_engine_contract import AssetEntryNotFilledError
 
 EntryDelayMap = Mapping[tuple[str, str], int]
 
@@ -111,7 +111,7 @@ def execute_fresh_routed_actions(
                 )
             )
             continue
-        except SolEntryNotFilledError:
+        except AssetEntryNotFilledError:
             withheld.append(
                 _ioc_no_fill(_annotate_submission(action, deadline.last_observation))
             )

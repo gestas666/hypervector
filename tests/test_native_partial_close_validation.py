@@ -4,16 +4,16 @@ from dataclasses import replace
 from unittest.mock import Mock
 
 import pytest
-from test_sol_range_onset_live_engine import _order, _stop_fill, _venue
+from test_asset_live_engine import _order, _stop_fill, _venue
 
-from hypervector.live.sol_partial_close import acknowledge_protected_partial_close
-from hypervector.live.sol_range_onset_engine_events import SolLiveEngineEvents
-from hypervector.live.sol_range_onset_state import SolLiveStateError, SolLiveStateMachine
+from hypervector.live.asset_partial_close import acknowledge_protected_partial_close
+from hypervector.live.asset_engine_events import AssetLiveEngineEvents
+from hypervector.live.asset_state import AssetLiveStateError, AssetLiveStateMachine
 
 
-def pending_close() -> SolLiveStateMachine:
+def pending_close() -> AssetLiveStateMachine:
     """Build a real state machine with owned protection and one acknowledged close."""
-    machine = SolLiveStateMachine()
+    machine = AssetLiveStateMachine()
     machine.begin_preflight()
     machine.restore_protected_position(
         entry_oid=101,
@@ -31,7 +31,7 @@ def test_partial_state_rejects_non_reductions_atomically(remaining: float) -> No
     """Partial acknowledgement cannot enlarge, flip, erase or corrupt a position."""
     machine = pending_close()
     before = machine.snapshot
-    with pytest.raises(SolLiveStateError):
+    with pytest.raises(AssetLiveStateError):
         machine.acknowledge_partial_close(position_size_signed=remaining)
     assert machine.snapshot == before
 
@@ -41,7 +41,7 @@ def test_partial_recovery_cannot_accept_unknown_or_insufficient_protection(case:
     """The helper changes no state or telemetry when remaining ownership is unverified."""
     machine = pending_close()
     before = machine.snapshot
-    events = Mock(spec=SolLiveEngineEvents)
+    events = Mock(spec=AssetLiveEngineEvents)
     stop = _order(202, size=0.3, reduce_only=True, trigger=True)
     fill = replace(_stop_fill(oid=303, size=0.1), timestamp_ms=2000)
     orders = (stop,)

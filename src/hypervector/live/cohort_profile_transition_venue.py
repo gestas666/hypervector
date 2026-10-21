@@ -9,7 +9,7 @@ from hypervector.live.bidirectional_cohort_factory import MultiAssetCohortAdapte
 from hypervector.live.cohort_prestart_backup import CohortPrestartBackupResult
 from hypervector.live.cohort_profile_change_approval import previous_profile_config
 from hypervector.live.cohort_transition_drain import CohortTransitionDrainError
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.live.multi_asset_read_only_factory import (
     create_multi_asset_read_only_readers,
@@ -19,7 +19,7 @@ from hypervector.live.multi_asset_read_only_factory import (
 class ReconciliationReader(Protocol):
     """Minimum venue surface required by the transition boundary."""
 
-    def reconcile(self) -> SolReconciliationSnapshot:
+    def reconcile(self) -> HyperliquidReconciliationSnapshot:
         """Return current position and open-order truth."""
 
 
@@ -54,7 +54,7 @@ def require_profile_transition_venue_boundary(
 
 def _require_flat(
     symbol: str,
-    venue: SolReconciliationSnapshot,
+    venue: HyperliquidReconciliationSnapshot,
     *,
     retired: bool,
 ) -> None:

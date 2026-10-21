@@ -11,7 +11,7 @@ from native_replay_engine_fixture import EngineReplayFixture
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
 from hypervector.live.cohort_stop_risk_sizing import StopRiskBudget
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_state import AssetLiveState
 from hypervector.live.cohort_profile_stage import _toml
 from hypervector.research.cohort_configuration_exit_policy import (
     provider_exit_expectation,
@@ -49,7 +49,7 @@ def test_native_size_is_lot_rounded_below_budget_and_journaled(
     result = engine.enter(
         side=side, mark_price=100, decision_time_ms=replay.clock.now_ms
     )
-    assert result.state is SolLiveState.OPEN
+    assert result.state is AssetLiveState.OPEN
     assert result.stop_oid is not None
     assert result.execution_plan is not None
     assert result.execution_plan.stop_risk_budget == contract.stop_risk_budget
@@ -167,7 +167,7 @@ def test_structural_anchor_inside_slippage_interval_still_enters_and_protects(
     result = engine.enter(
         side=side, mark_price=100, decision_time_ms=replay.clock.now_ms
     )
-    assert result.state is SolLiveState.OPEN
+    assert result.state is AssetLiveState.OPEN
     assert result.stop_oid is not None
     ledger = tmp_path / "live/bidirectional_cohort" / f"{symbol}.jsonl"
     rows = [json.loads(line) for line in ledger.read_text().splitlines()]

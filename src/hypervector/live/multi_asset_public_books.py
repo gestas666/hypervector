@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from hypervector.live.hyperliquid_perp_parsing import parse_book_for_symbol
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidInfoProtocol,
-    SolBookSnapshot,
+    HyperliquidBookSnapshot,
 )
 
 
@@ -29,7 +29,7 @@ class MultiAssetPublicBookCollector:
         self._symbols = symbols
         self._depth_levels = depth_levels
 
-    def collect(self) -> Mapping[str, SolBookSnapshot]:
+    def collect(self) -> Mapping[str, HyperliquidBookSnapshot]:
         """Return one validated two-sided snapshot for every configured symbol."""
         return {
             symbol: parse_book_for_symbol(

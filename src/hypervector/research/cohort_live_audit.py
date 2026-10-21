@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
+from hypervector.live.asset_live_journal import build_live_journal
 from hypervector.research.cohort_canonical_regime_telemetry import (
     build_canonical_regime_telemetry_summary,
 )

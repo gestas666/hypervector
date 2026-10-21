@@ -10,7 +10,7 @@ from test_cohort_profit_lock_controller import _snapshot, _bar, _Engine
 from hypervector.live.cohort_adaptive_exit_controller import adaptive_exit_action
 from hypervector.live.cohort_adaptive_exit_journal import AdaptiveExitJournal
 from hypervector.live.cohort_adaptive_exit_policy import ADAPTIVE_EXIT_POLICY
-from hypervector.live.hyperliquid_protocol import SolBookLevel, SolBookSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidBookLevel, HyperliquidBookSnapshot
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
 from exit_parameter_fixtures import ADAPTIVE_PARAMETERS
 
@@ -23,10 +23,10 @@ def engine(side: str = "long") -> _Engine:
                           execution_plan=replace(current.execution_plan, adaptive_exit_policy=ADAPTIVE_EXIT_POLICY, adaptive_exit=ADAPTIVE_PARAMETERS)))
 
 
-def book(now: int, price: float) -> SolBookSnapshot:
+def book(now: int, price: float) -> HyperliquidBookSnapshot:
     """Build a small uncrossed executable snapshot."""
-    return SolBookSnapshot(now, (SolBookLevel(price, 10, 1),),
-                           (SolBookLevel(price + .001, 10, 1),),
+    return HyperliquidBookSnapshot(now, (HyperliquidBookLevel(price, 10, 1),),
+                           (HyperliquidBookLevel(price + .001, 10, 1),),
                            price + .0005, .1, 10, 10, 0)
 
 

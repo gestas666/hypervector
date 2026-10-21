@@ -4,11 +4,11 @@ from dataclasses import replace
 from unittest.mock import Mock
 
 import pytest
-from test_sol_range_onset_live_engine import _order, _stop_fill, _venue
+from test_asset_live_engine import _order, _stop_fill, _venue
 
 from hypervector.live.hyperliquid_protocol import HyperliquidOrderAck
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
-from hypervector.live.sol_range_onset_verification import verify_canceled_entry_exposure
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
+from hypervector.live.asset_verification import verify_canceled_entry_exposure
 
 
 @pytest.mark.parametrize(
@@ -26,7 +26,7 @@ def test_incomplete_canceled_ack_cannot_authorize_protection(change: dict[str, o
     ack = HyperliquidOrderAck(True, 101, "canceled", filled_size=0.1, venue_timestamp_ms=2000)
     fill = replace(_stop_fill(101, 0.1), side="B", direction="Open Long", timestamp_ms=2000)
     fault = Mock()
-    with pytest.raises(SolLiveEngineError, match="conflicts with current exposure"):
+    with pytest.raises(AssetLiveEngineError, match="conflicts with current exposure"):
         verify_canceled_entry_exposure(replace(ack, **change), _venue(0.1, fills=(fill,)), fault)
     fault.assert_called_once()
 
@@ -42,5 +42,5 @@ def test_changed_reconciliation_invalidates_earlier_canceled_fill_proof(case: st
         orders=(stop,) if case == "order" else (),
         fills=() if case == "missing" else (fill,),
     )
-    with pytest.raises(SolLiveEngineError):
+    with pytest.raises(AssetLiveEngineError):
         verify_canceled_entry_exposure(ack, venue, Mock())

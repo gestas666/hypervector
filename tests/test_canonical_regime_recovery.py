@@ -14,7 +14,7 @@ from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTeleme
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 _OBSERVED = datetime(2026, 8, 11, 4, 3, tzinfo=UTC)
 
@@ -50,12 +50,12 @@ def test_rejects_unordered_recovery_batch(tmp_path: Path) -> None:
         telemetry.emit_canonical_regimes((_evaluation(2_000), _evaluation(1_000)))
 
 
-def _telemetry(tmp_path: Path) -> tuple[MultiAssetCohortTelemetry, SolLiveLedger]:
+def _telemetry(tmp_path: Path) -> tuple[MultiAssetCohortTelemetry, AssetLiveLedger]:
     config = load_multi_asset_live_config(
         "tests/fixtures/profiles/ten_asset_base.toml",
         mode="observe",
     )
-    ledger = SolLiveLedger(
+    ledger = AssetLiveLedger(
         path=tmp_path / "observe" / "canonical" / "decisions.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,

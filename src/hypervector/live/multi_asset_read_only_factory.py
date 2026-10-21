@@ -7,11 +7,11 @@ import os
 from threading import RLock
 
 from hypervector.live.hyperliquid_perp_reader import HyperliquidPerpReader
-from hypervector.live.hyperliquid_sol_factory import (
-    OfficialSolReadOnlySdkBuilder,
-    SolReadOnlySdkBuilderProtocol,
+from hypervector.live.hyperliquid_sdk_factory import (
+    OfficialHyperliquidReadOnlySdkBuilder,
+    HyperliquidReadOnlySdkBuilderProtocol,
 )
-from hypervector.live.hyperliquid_sol_parsing import validate_address
+from hypervector.live.hyperliquid_parsing import validate_address
 from hypervector.live.perp_venue_identity import (
     configured_perp_dexes,
     parse_perp_venue_identity,
@@ -24,14 +24,14 @@ def create_multi_asset_read_only_readers(
     symbols: tuple[str, ...],
     *,
     environ: Mapping[str, str] | None = None,
-    builder: SolReadOnlySdkBuilderProtocol | None = None,
+    builder: HyperliquidReadOnlySdkBuilderProtocol | None = None,
 ) -> dict[str, HyperliquidPerpReader]:
     """Create exact mainnet Info-only readers sharing one serialized client."""
     if not symbols or len(set(symbols)) != len(symbols):
         raise ValueError("read-only perpetual symbols must be unique and non-empty")
     env = os.environ if environ is None else environ
     address = validate_address((env.get(SECRET_ENV_WALLET) or "").strip())
-    sdk_builder = builder if builder is not None else OfficialSolReadOnlySdkBuilder()
+    sdk_builder = builder if builder is not None else OfficialHyperliquidReadOnlySdkBuilder()
     raw = sdk_builder.build(perp_dexes=configured_perp_dexes(symbols))
     info = SerializedHyperliquidInfo(raw, RLock())
     return {

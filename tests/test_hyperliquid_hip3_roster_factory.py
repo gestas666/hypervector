@@ -7,7 +7,7 @@ import pytest
 from hypervector.live.hyperliquid_hip3_roster_factory import (
     create_read_only_hip3_roster_readers,
 )
-from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.hyperliquid_parsing import HyperliquidAdapterError
 from hypervector.live.policy import SECRET_ENV_WALLET
 
 _ADDRESS = "0x1111111111111111111111111111111111111111"

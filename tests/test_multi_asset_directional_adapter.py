@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.multi_asset_directional_adapter import (
     MultiAssetDirectionalAdapter,
 )
@@ -12,7 +12,7 @@ from hypervector.live.multi_asset_directional_adapter import (
 
 def test_generic_entry_routes_to_symbol_adapter_market_entry() -> None:
     """The shared engine uses IOC entry without changing legacy post-only calls."""
-    delegate = Mock(spec=BtcHyperliquidAdapter)
+    delegate = Mock(spec=HyperliquidPerpAdapter)
     delegate.symbol = "ETH"
     delegate.submit_market_entry.return_value = "ack"
     adapter = MultiAssetDirectionalAdapter(delegate)
@@ -35,7 +35,7 @@ def test_generic_entry_routes_to_symbol_adapter_market_entry() -> None:
 
 def test_consistency_retry_invalidates_delegate_read_cache() -> None:
     """The generic adapter exposes fresh venue truth to bounded retries."""
-    delegate = Mock(spec=BtcHyperliquidAdapter)
+    delegate = Mock(spec=HyperliquidPerpAdapter)
     delegate.symbol = "BTC"
     adapter = MultiAssetDirectionalAdapter(delegate)
 
@@ -46,7 +46,7 @@ def test_consistency_retry_invalidates_delegate_read_cache() -> None:
 
 def test_preflight_forwards_requested_leverage_only_when_configured() -> None:
     """Live adapters relax the venue maximum check; others keep exact equality."""
-    delegate = Mock(spec=BtcHyperliquidAdapter)
+    delegate = Mock(spec=HyperliquidPerpAdapter)
     delegate.symbol = "SOL"
     delegate.preflight.return_value = "preflight"
 

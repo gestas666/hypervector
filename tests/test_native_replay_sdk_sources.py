@@ -6,7 +6,7 @@ import pytest
 from test_native_replay_adapter import deny_external_ports
 from test_native_replay_sdk import SYMBOL, adapter, sdk
 
-from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.hyperliquid_parsing import HyperliquidAdapterError
 
 __all__ = ["deny_external_ports"]
 D = Decimal

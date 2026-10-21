@@ -10,7 +10,7 @@ from types import ModuleType
 
 import pytest
 
-from hypervector.live.hyperliquid_sol_factory import SolSdkFactoryError
+from hypervector.live.hyperliquid_sdk_factory import HyperliquidSdkFactoryError
 from hypervector.live.multi_asset_live_config import (
     AssetLiveConfig,
     load_multi_asset_live_config,
@@ -394,7 +394,7 @@ def test_main_reports_missing_public_wallet_without_traceback(
     monkeypatch.setattr(
         module,
         "run_preflight",
-        lambda args: (_ for _ in ()).throw(SolSdkFactoryError("wallet missing")),
+        lambda args: (_ for _ in ()).throw(HyperliquidSdkFactoryError("wallet missing")),
     )
     result = module.main(
         ["--config", str(_PROFILE_B), "--active-config", str(_PROFILE_A)]

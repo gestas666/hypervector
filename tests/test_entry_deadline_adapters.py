@@ -4,19 +4,18 @@ from pathlib import Path
 
 import pytest
 from entry_deadline_fixtures import DECISION_MS, Case, Clock, scenario
-from test_hyperliquid_btc_adapter import _ADDRESS, _CLOID, _Exchange, _Info
+from test_hyperliquid_perp_adapter import _ADDRESS, _CLOID, _Exchange, _Info
 
 from hypervector.live.entry_submission_deadline import (
     EntryDeadlineExpired,
     EntrySubmissionDeadline,
 )
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.multi_asset_directional_adapter import (
     MultiAssetDirectionalAdapter,
 )
-from hypervector.live.sol_order_restart import pending_order_intent
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_order_restart import pending_order_intent
+from hypervector.live.asset_state import AssetLiveState
 
 
 class DelayedInfo(_Info):
@@ -40,7 +39,7 @@ def _adapter(
     info: DelayedInfo, exchange: _Exchange, symbol: str
 ) -> MultiAssetDirectionalAdapter:
     return MultiAssetDirectionalAdapter(
-        BtcHyperliquidAdapter(
+        HyperliquidPerpAdapter(
             info=info,
             exchange=exchange,
             account_address=_ADDRESS,
@@ -116,7 +115,7 @@ def test_adapter_preparation_expiry_restores_real_engine_state(
     )
     assert state.runner.poll_once() == 0
     assert exchange.calls == []
-    assert state.engine.snapshot.state is SolLiveState.FLAT
+    assert state.engine.snapshot.state is AssetLiveState.FLAT
     records = state.ledger.read_all()
     marker = next(
         row["payload"] for row in records if row["event_type"] == "entry_not_submitted"

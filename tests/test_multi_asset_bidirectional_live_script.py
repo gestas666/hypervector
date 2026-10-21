@@ -927,7 +927,7 @@ def test_live_engines_refresh_coalesced_truth_during_consistency_retries(
         captured[asset.symbol] = kwargs
         return object()
 
-    monkeypatch.setattr(live_script, "SolRangeOnsetLiveEngine", capture_engine)
+    monkeypatch.setattr(live_script, "AssetLiveEngine", capture_engine)
     monkeypatch.setattr(live_script, "_ledger", lambda *_args: object())
 
     live_script._create_engines(

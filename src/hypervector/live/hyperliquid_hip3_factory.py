@@ -8,8 +8,8 @@ from typing import Protocol
 from hypervector.data.oxa_api import validate_hip3_symbol
 from hypervector.live.hyperliquid_perp_reader import HyperliquidPerpReader
 from hypervector.live.hyperliquid_protocol import HyperliquidInfoProtocol
-from hypervector.live.hyperliquid_sol_factory import OfficialSolReadOnlySdkBuilder
-from hypervector.live.hyperliquid_sol_parsing import (
+from hypervector.live.hyperliquid_sdk_factory import OfficialHyperliquidReadOnlySdkBuilder
+from hypervector.live.hyperliquid_parsing import (
     HyperliquidAdapterError,
     validate_address,
 )
@@ -38,7 +38,7 @@ def create_read_only_hip3_reader(
     address = (environ.get(SECRET_ENV_WALLET) or "").strip()
     if not address:
         raise HyperliquidAdapterError("read-only HIP-3 telemetry requires a wallet")
-    sdk_builder = builder if builder is not None else OfficialSolReadOnlySdkBuilder()
+    sdk_builder = builder if builder is not None else OfficialHyperliquidReadOnlySdkBuilder()
     return HyperliquidPerpReader(
         info=sdk_builder.build(perp_dexes=(dex,)),
         account_address=validate_address(address),

@@ -51,7 +51,7 @@ def test_observer_requires_explicit_resume_for_existing_ledger(
     config = _observer_config(module, tmp_path)
     _seed_observer_ledger(module, config, "bidirectional-observe-1")
 
-    with pytest.raises(module.SolLiveLedgerError, match="explicit resume"):
+    with pytest.raises(module.AssetLiveLedgerError, match="explicit resume"):
         module._build_observer_ledger(config, None, module.datetime.now(module.UTC))
 
 
@@ -95,7 +95,7 @@ def test_observer_resume_rejects_mismatched_existing_run(tmp_path: Path) -> None
     config = _observer_config(module, tmp_path)
     _seed_observer_ledger(module, config, "bidirectional-observe-1")
 
-    with pytest.raises(module.SolLiveLedgerError, match="identity mismatch"):
+    with pytest.raises(module.AssetLiveLedgerError, match="identity mismatch"):
         module._build_observer_ledger(
             config,
             "bidirectional-observe-2",
@@ -266,7 +266,7 @@ def _seed_observer_ledger(
     config: MultiAssetLiveConfig,
     run_id: str,
 ) -> None:
-    ledger = module.SolLiveLedger(
+    ledger = module.AssetLiveLedger(
         path=config.cohort_ledger,
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,

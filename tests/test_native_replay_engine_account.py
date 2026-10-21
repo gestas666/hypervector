@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_state import AssetLiveState
 from hypervector.live.multi_asset_live_config import AssetLiveConfig
 from native_replay_engine_fixture import EngineReplayFixture, SIZE_DECIMALS
 from test_native_replay_adapter import deny_external_ports as deny_external_ports
@@ -30,12 +30,12 @@ def test_seven_native_engines_size_protect_restart_and_close_shared_cash(
         symbol = asset.symbol
         restarted = replay.engine(asset)
         mutations = len(replay.mutations)
-        assert restarted.start().state is SolLiveState.OPEN
+        assert restarted.start().state is AssetLiveState.OPEN
         assert restarted.snapshot.opened_at_ms == decisions[symbol]
         assert len(replay.mutations) == mutations
         replay.prepare_close(symbol)
         assert (
-            restarted.exit(mark_price=100, reason="synthetic_account_bridge_check").state is SolLiveState.FLAT
+            restarted.exit(mark_price=100, reason="synthetic_account_bridge_check").state is AssetLiveState.FLAT
         )
         assert symbol not in replay.account.snapshot().positions
         replay.assert_native_account_agreement()
@@ -72,7 +72,7 @@ def _open_verified(replay: EngineReplayFixture, asset: AssetLiveConfig, last_sid
     sides = sorted(provider.executable_sides(symbol))
     side = sides[-1] if last_side else sides[0]
     engine = replay.engine(asset)
-    assert engine.start().state is SolLiveState.FLAT
+    assert engine.start().state is AssetLiveState.FLAT
     decision = replay.clock.now_ms
     replay.prepare_entry(symbol, side, decision)
     stop = 98.0 if side == "long" else 102.0
@@ -81,7 +81,7 @@ def _open_verified(replay: EngineReplayFixture, asset: AssetLiveConfig, last_sid
     before = replay.account.snapshot()
     sizing = provider.entry_sizing(symbol, side)
     result = engine.enter(side=side, mark_price=100, decision_time_ms=decision, entry_sizing=sizing)
-    assert result.state is SolLiveState.OPEN
+    assert result.state is AssetLiveState.OPEN
     assert result.opened_at_ms == decision
     assert result.execution_plan == plan
     position = replay.account.snapshot().positions[symbol]

@@ -29,7 +29,7 @@ from hypervector.live.multi_asset_live_protocols import (
     CohortTelemetryProtocol,
     MultiAssetEngineProtocol,
 )
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll
 from hypervector.live.bidirectional_intents import PositionState
 from hypervector.live.multi_asset_live_runner_support import (
@@ -195,7 +195,7 @@ def configured_exit_batch(
     symbols: tuple[str, ...],
     observed_ms: int,
     poll: CohortIntentPoll,
-    venues: tuple[SolReconciliationSnapshot, ...],
+    venues: tuple[HyperliquidReconciliationSnapshot, ...],
     evaluations: EvaluationMap,
     maximum_hold: CohortMaximumHoldController,
     recipe_exit: CohortProviderExitController,
@@ -241,7 +241,7 @@ def route_cycle(
     poll: CohortIntentPoll,
     observed_ms: int,
     operator_symbols: set[str],
-    venues: tuple[SolReconciliationSnapshot, ...],
+    venues: tuple[HyperliquidReconciliationSnapshot, ...],
     evaluations: EvaluationMap,
     maximum_hold: CohortMaximumHoldController,
     recipe_exit: CohortProviderExitController,

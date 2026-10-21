@@ -24,7 +24,7 @@ from hypervector.live.multi_asset_intent_poller import (
 from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
 from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.cohort_operator_commands import CohortProfileSettings
-from hypervector.live.hyperliquid_protocol import SolBookSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidBookSnapshot
 from hypervector.live.multi_asset_operator_runtime import (
     ObserverProfileCommandProcessor,
     OperatorCommandSourceProtocol,
@@ -71,7 +71,7 @@ class ObserverTelemetryProtocol(Protocol):
 
     def emit_market_books(
         self,
-        books: Mapping[str, SolBookSnapshot],
+        books: Mapping[str, HyperliquidBookSnapshot],
     ) -> None:
         """Persist current public venue depth for every enabled symbol."""
         ...
@@ -109,7 +109,7 @@ class MultiAssetObserverRunner:
         symbols: tuple[str, ...],
         expected_provider_symbols: frozenset[ProviderSymbol],
         intent_poller: ObserverIntentPollerProtocol,
-        book_source: Callable[[], Mapping[str, SolBookSnapshot]],
+        book_source: Callable[[], Mapping[str, HyperliquidBookSnapshot]],
         telemetry: ObserverTelemetryProtocol,
         stop_file: Path,
         now_fn: Callable[[], datetime],

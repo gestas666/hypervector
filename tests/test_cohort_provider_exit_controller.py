@@ -18,7 +18,7 @@ from hypervector.live.cohort_provider_exit_controller import (
 from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunnerError
 from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 _PROVIDER = "test_band_b_15m"
 _SYMBOL = "xyz:DDD"
@@ -28,10 +28,10 @@ _DECISION_MS = 1_785_585_600_000
 
 @dataclass
 class _Engine:
-    current: SolLiveSnapshot
+    current: AssetLiveSnapshot
 
     @property
-    def snapshot(self) -> SolLiveSnapshot:
+    def snapshot(self) -> AssetLiveSnapshot:
         return self.current
 
 
@@ -72,9 +72,9 @@ def _snapshot(
     *,
     side: str = "long",
     strategy_id: str = _PROVIDER,
-) -> SolLiveSnapshot:
-    return SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+) -> AssetLiveSnapshot:
+    return AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=1,
         stop_oid=2,
         position_size_signed=1.0 if side == "long" else -1.0,
@@ -112,7 +112,7 @@ def _evaluation(
 
 
 def _actions(
-    snapshot: SolLiveSnapshot,
+    snapshot: AssetLiveSnapshot,
     evaluation: ProviderEvaluation | None,
     *,
     observed_ms: int = _DECISION_MS,
@@ -165,7 +165,7 @@ def test_manual_provider_entry_retains_automatic_recipe_exit() -> None:
     ),
 )
 def test_unbound_wrong_side_or_preentry_exit_cannot_close(
-    snapshot: SolLiveSnapshot,
+    snapshot: AssetLiveSnapshot,
     evaluation: ProviderEvaluation,
 ) -> None:
     assert _actions(snapshot, evaluation) == (set(), ())
@@ -186,8 +186,8 @@ def test_recipe_exit_requires_current_execution_reference() -> None:
 
 def test_recipe_exit_is_telemetry_only_without_explicit_plan_authority() -> None:
     """The selected deployed default must keep rejected signal exits inactive."""
-    snapshot = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    snapshot = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=1,
         stop_oid=2,
         position_size_signed=1.0,

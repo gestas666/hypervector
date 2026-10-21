@@ -24,7 +24,7 @@ from hypervector.live.multi_asset_live_config import (
     AssetLiveConfig,
     MultiAssetLiveConfig,
 )
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
 
 
@@ -103,12 +103,12 @@ def _create_operator_inbox(
 
 def _create_telemetry(
     config: MultiAssetLiveConfig,
-    asset_ledgers: dict[str, SolLiveLedger],
+    asset_ledgers: dict[str, AssetLiveLedger],
     run_id: str,
     backup: CohortPrestartBackupResult,
     transition_drain: CohortTransitionDrain,
 ) -> MultiAssetCohortTelemetry:
-    cohort_ledger = SolLiveLedger(
+    cohort_ledger = AssetLiveLedger(
         path=config.cohort_ledger,
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,
@@ -125,8 +125,8 @@ def _create_telemetry(
     )
 
 
-def _ledger(path: Path, config: AssetLiveConfig, run_id: str) -> SolLiveLedger:
-    return SolLiveLedger(
+def _ledger(path: Path, config: AssetLiveConfig, run_id: str) -> AssetLiveLedger:
+    return AssetLiveLedger(
         path=path,
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,

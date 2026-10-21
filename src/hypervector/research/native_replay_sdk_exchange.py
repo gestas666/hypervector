@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils.types import Cloid
 
-from hypervector.live.hyperliquid_sol_parsing import mapping
+from hypervector.live.hyperliquid_parsing import mapping
 from hypervector.research.native_replay_events import require_amount
 from hypervector.research.native_replay_receipts import IocOrder, ReceiptTiming
 from hypervector.research.native_replay_sdk_models import ReplayOrderRecord

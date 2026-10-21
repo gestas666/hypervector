@@ -21,7 +21,7 @@ from hypervector.live.multi_asset_observer_runner import (
 )
 from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
-from hypervector.live.hyperliquid_protocol import SolBookLevel, SolBookSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidBookLevel, HyperliquidBookSnapshot
 
 _OBSERVED = datetime(2026, 8, 2, 6, tzinfo=UTC)
 _OBSERVED_MS = int(_OBSERVED.timestamp() * 1_000)
@@ -94,7 +94,7 @@ class _TransientBookSource:
     def __init__(self) -> None:
         self.attempts = 0
 
-    def __call__(self) -> dict[str, SolBookSnapshot]:
+    def __call__(self) -> dict[str, HyperliquidBookSnapshot]:
         self.attempts += 1
         if self.attempts == 1:
             raise ReadTimeout("public L2 deadline")
@@ -136,12 +136,12 @@ def _market_bars() -> dict[str, tuple[CohortMarketBar, ...]]:
     }
 
 
-def _books() -> dict[str, SolBookSnapshot]:
+def _books() -> dict[str, HyperliquidBookSnapshot]:
     return {
-        symbol: SolBookSnapshot(
+        symbol: HyperliquidBookSnapshot(
             _OBSERVED_MS,
-            (SolBookLevel(99.9, 2.0, 1),),
-            (SolBookLevel(100.1, 2.0, 1),),
+            (HyperliquidBookLevel(99.9, 2.0, 1),),
+            (HyperliquidBookLevel(100.1, 2.0, 1),),
             100.0,
             20.0,
             2.0,
@@ -328,13 +328,13 @@ def test_observer_samples_intent_clock_after_book_capture(tmp_path: Path) -> Non
     poller = _Poller(_poll())
     telemetry = _Telemetry()
 
-    def books() -> dict[str, SolBookSnapshot]:
+    def books() -> dict[str, HyperliquidBookSnapshot]:
         assert next(clock) == before_book
         return {
-            symbol: SolBookSnapshot(
+            symbol: HyperliquidBookSnapshot(
                 _OBSERVED_MS,
-                (SolBookLevel(99.9, 2.0, 1),),
-                (SolBookLevel(100.1, 2.0, 1),),
+                (HyperliquidBookLevel(99.9, 2.0, 1),),
+                (HyperliquidBookLevel(100.1, 2.0, 1),),
                 100.0,
                 20.0,
                 2.0,

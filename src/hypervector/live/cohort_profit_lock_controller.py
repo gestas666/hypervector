@@ -29,7 +29,7 @@ from hypervector.live.multi_asset_live_runner_support import (
     position_side,
 )
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_state import AssetLiveState
 
 _MINUTE_MS = 60_000
 _EXIT_REASON = "completed_bar_profit_lock"
@@ -175,7 +175,7 @@ class CohortProfitLockController:
     ) -> tuple[BoundExecutionPlan, str, str, int, int] | None:
         snapshot = self._engines[symbol].snapshot
         plan = snapshot.execution_plan
-        if snapshot.state is not SolLiveState.OPEN:
+        if snapshot.state is not AssetLiveState.OPEN:
             return None
         if plan is None:
             if symbol in self._required_plan_symbols:

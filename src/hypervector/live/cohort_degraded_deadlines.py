@@ -16,7 +16,7 @@ from hypervector.live.multi_asset_live_runner_support import (
 from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
 
 if TYPE_CHECKING:
-    from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+    from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
     from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 
 
@@ -63,7 +63,7 @@ def _finish_unconditional_deadlines(
 
 
 def reconciled_position_prices(
-    symbols: tuple[str, ...], venues: tuple[SolReconciliationSnapshot, ...]
+    symbols: tuple[str, ...], venues: tuple[HyperliquidReconciliationSnapshot, ...]
 ) -> dict[str, float]:
     """Derive explicit account marks only from valid nonzero native position facts."""
     prices: dict[str, float] = {}

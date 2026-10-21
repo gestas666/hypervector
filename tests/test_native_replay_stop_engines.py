@@ -10,8 +10,8 @@ from test_native_replay_adapter import deny_external_ports
 from test_native_replay_sdk_engines import _enter_configured, cohort_sdk, engine
 
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_live_journal import build_live_journal
+from hypervector.live.asset_state import AssetLiveState
 from hypervector.research.native_replay_depth import ExactLevel, RecordedBook
 
 __all__ = ["deny_external_ports"]
@@ -62,7 +62,7 @@ def test_native_stop_reconciles_engine_cleanup_journal_and_exact_cash(
         funding_start_time_ms=original.opened_at_ms,
         funding_end_time_ms=replay.clock.now_ms,
     )
-    assert machine.snapshot.state is SolLiveState.FLAT and venue.is_flat
+    assert machine.snapshot.state is AssetLiveState.FLAT and venue.is_flat
     assert not replay.account.snapshot().positions and len(replay.fill_rows) == 2
     assert {fill["oid"] for _, fill in replay.fill_rows} == {original.entry_oid, original.stop_oid}
     _assert_cash_and_journal(replay.fill_rows, replay.account.snapshot().cash_usd, tmp_path, symbol)

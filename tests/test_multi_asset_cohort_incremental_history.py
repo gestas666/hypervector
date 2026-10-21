@@ -17,8 +17,8 @@ from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTeleme
 from hypervector.live.multi_asset_live_config import AssetLiveConfig
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
-from hypervector.live.sol_range_onset_ledger import SolLiveLedgerError
+from hypervector.live.asset_ledger import AssetLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedgerError
 
 _RUN_ID = "incremental-history-test"
 
@@ -53,7 +53,7 @@ def test_incremental_snapshot_rejects_asset_ledger_truncation(
 
     assets["BTC"].path.write_bytes(b"")
 
-    with pytest.raises(SolLiveLedgerError, match="truncated"):
+    with pytest.raises(AssetLiveLedgerError, match="truncated"):
         _emit_flat_snapshot(telemetry, config)
 
 
@@ -109,7 +109,7 @@ def test_initial_history_projection_does_not_materialize_complete_ledgers(
 
 def _runtime(
     tmp_path: Path,
-) -> tuple[MultiAssetLiveConfig, SolLiveLedger, dict[str, SolLiveLedger]]:
+) -> tuple[MultiAssetLiveConfig, AssetLiveLedger, dict[str, AssetLiveLedger]]:
     config = load_multi_asset_live_config(
         "tests/fixtures/profiles/cohort_base.toml",
         mode="live",
@@ -121,7 +121,7 @@ def _runtime(
         asset.symbol: _ledger(root / f"{asset.symbol.lower()}.jsonl", asset)
         for asset in config.assets
     }
-    cohort = SolLiveLedger(
+    cohort = AssetLiveLedger(
         path=root / "decisions.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,
@@ -131,8 +131,8 @@ def _runtime(
     return config, cohort, assets
 
 
-def _ledger(path: Path, asset: AssetLiveConfig) -> SolLiveLedger:
-    return SolLiveLedger(
+def _ledger(path: Path, asset: AssetLiveConfig) -> AssetLiveLedger:
+    return AssetLiveLedger(
         path=path,
         profile_id=asset.profile_id,
         profile_fingerprint=asset.profile_fingerprint,
@@ -143,8 +143,8 @@ def _ledger(path: Path, asset: AssetLiveConfig) -> SolLiveLedger:
 
 def _telemetry(
     config: MultiAssetLiveConfig,
-    cohort: SolLiveLedger,
-    assets: dict[str, SolLiveLedger],
+    cohort: AssetLiveLedger,
+    assets: dict[str, AssetLiveLedger],
 ) -> MultiAssetCohortTelemetry:
     return MultiAssetCohortTelemetry(
         config=config,
@@ -168,7 +168,7 @@ def _emit_flat_snapshot(
 
 
 def _count_complete_reads(
-    assets: dict[str, SolLiveLedger],
+    assets: dict[str, AssetLiveLedger],
     monkeypatch: pytest.MonkeyPatch,
 ) -> dict[str, int]:
     counts = {symbol: 0 for symbol in assets}
@@ -190,7 +190,7 @@ def _count_complete_reads(
 
 
 def _append_book(
-    ledger: SolLiveLedger,
+    ledger: AssetLiveLedger,
     *,
     sequence_time: int,
     mid_price: float,
@@ -208,7 +208,7 @@ def _append_book(
     )
 
 
-def _append_entry_and_fill(ledger: SolLiveLedger) -> None:
+def _append_entry_and_fill(ledger: AssetLiveLedger) -> None:
     _append(
         ledger,
         "regime_decision",
@@ -229,7 +229,7 @@ def _append_entry_and_fill(ledger: SolLiveLedger) -> None:
     _append_fill_acknowledgement(ledger)
 
 
-def _append_fill_acknowledgement(ledger: SolLiveLedger) -> None:
+def _append_fill_acknowledgement(ledger: AssetLiveLedger) -> None:
     client_id = "0x11111111111111111111111111111111"
     _append(
         ledger,
@@ -256,7 +256,7 @@ def _append_fill_acknowledgement(ledger: SolLiveLedger) -> None:
 
 
 def _append(
-    ledger: SolLiveLedger,
+    ledger: AssetLiveLedger,
     event_type: str,
     payload: dict[str, object],
     *,

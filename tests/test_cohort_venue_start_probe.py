@@ -26,7 +26,7 @@ from hypervector.live.hyperliquid_perp_reader import (
     HyperliquidPerpReader,
     VenueMetadataMismatchError,
 )
-from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.hyperliquid_parsing import HyperliquidAdapterError
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfigError,
     load_multi_asset_live_config,

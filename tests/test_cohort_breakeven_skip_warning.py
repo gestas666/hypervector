@@ -32,7 +32,7 @@ from hypervector.live.cohort_breakeven_stop import (
     RAISE_EXHAUSTED_EVENT,
     raise_breakeven_stops,
 )
-from hypervector.live.hyperliquid_protocol import SolBookSnapshot, SolOpenOrder
+from hypervector.live.hyperliquid_protocol import HyperliquidBookSnapshot, HyperliquidOpenOrder
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from hypervector.research.cohort_protection_warnings import protection_warnings
 
@@ -46,7 +46,7 @@ class _Cycles:
     """Drive one floor-armed long through successive polls with shared state."""
 
     def __init__(
-        self, resting: SolOpenOrder | None = None, outcome: bool = True
+        self, resting: HyperliquidOpenOrder | None = None, outcome: bool = True
     ) -> None:
         self.attempts: dict[tuple[str, int], int] = {}
         self.skips: dict[tuple[str, int], tuple[str, int]] = {}
@@ -55,7 +55,7 @@ class _Cycles:
         self.resting = resting
         self.outcome = outcome
 
-    def poll(self, book: SolBookSnapshot | None) -> bool:
+    def poll(self, book: HyperliquidBookSnapshot | None) -> bool:
         def emit(event: str, payload: Mapping[str, object]) -> None:
             self.events.append({"event": event, **payload})
 
@@ -92,7 +92,7 @@ def test_skip_bound_matches_the_attempt_bound() -> None:
 
 @pytest.mark.parametrize("book", [None, _AHEAD_OF_LOCAL_CLOCK])
 def test_an_hour_without_a_usable_quote_warns_once_and_journals_one_skip(
-    book: SolBookSnapshot | None,
+    book: HyperliquidBookSnapshot | None,
 ) -> None:
     """The reviewed case: 240 polls (1 h at 15 s) of a floor-armed long."""
     cycles = _Cycles()

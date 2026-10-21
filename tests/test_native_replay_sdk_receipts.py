@@ -11,7 +11,7 @@ from hypervector.live.hyperliquid_protocol import (
     HyperliquidExchangeProtocol,
     HyperliquidInfoProtocol,
 )
-from hypervector.live.sol_order_transport import SolOrderTransportError
+from hypervector.live.asset_order_transport import AssetOrderTransportError
 from hypervector.research.native_replay_account import ReplayPosition
 from hypervector.research.native_replay_depth import ExactLevel, RecordedBook
 from hypervector.research.native_replay_events import FillEvent
@@ -71,7 +71,7 @@ def test_lost_response_keeps_exact_exposure_and_recoverable_client_identity() ->
     replay.response_losses.add(ENTRY_ID)
     client = adapter(replay)
     client.configure_isolated_leverage(10)
-    with pytest.raises(SolOrderTransportError):
+    with pytest.raises(AssetOrderTransportError):
         client.submit_entry(
             side="short", requested_notional_usd=500, mark_price=100, client_order_id=ENTRY_ID
         )

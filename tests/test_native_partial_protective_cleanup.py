@@ -8,8 +8,8 @@ from test_native_partial_protective_recovery import assert_closed_economics, res
 from test_native_protective_execution_progress import _partial_fixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_order_submission import SolCancelRecoveryError
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
+from hypervector.live.asset_order_submission import AssetCancelRecoveryError
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
 
 __all__ = ["deny_external_ports"]
 CLEANUP_DELAY_MS = 10_000
@@ -41,7 +41,7 @@ def test_completed_partial_stop_recovers_leftover_target_cleanup_without_another
 
             replay.lost = None
             replay._exchange.cancel.side_effect = delayed_cancel
-    with pytest.raises((SolLiveEngineError, SolCancelRecoveryError)):
+    with pytest.raises((AssetLiveEngineError, AssetCancelRecoveryError)):
         replay.engines["BTC"].reconcile_telemetry(
             funding_start_time_ms=original.opened_at_ms, funding_end_time_ms=replay.clock.now_ms
         )
@@ -49,7 +49,7 @@ def test_completed_partial_stop_recovers_leftover_target_cleanup_without_another
     assert replay.mutations.count("close") == 1
     if failure != "rejected":
         for _ in range(2):
-            with pytest.raises((SolLiveEngineError, SolCancelRecoveryError)):
+            with pytest.raises((AssetLiveEngineError, AssetCancelRecoveryError)):
                 restart(replay, "BTC")
     replay.clock.advance_to(replay.clock.now_ms + CLEANUP_DELAY_MS)
     replay._exchange.cancel.side_effect = original_cancel

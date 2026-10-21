@@ -7,8 +7,8 @@ from native_replay_protective_fixture import ProtectiveEngineFixture
 from test_native_protective_observation import assert_current_flat_ledger, assert_exact_cash
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
+from hypervector.live.asset_state import AssetLiveState
 
 __all__ = ["deny_external_ports"]
 CASES = [
@@ -30,24 +30,24 @@ def test_late_protective_history_recovers_after_repeated_startup_failures(
     assert oid is not None
     replay.fill_owned_order(oid, history_delay_ms=10000)
     before_mutations = tuple(replay.mutations)
-    with pytest.raises(SolLiveEngineError):
+    with pytest.raises(AssetLiveEngineError):
         replay.engines[symbol].reconcile_telemetry(
             funding_start_time_ms=original.opened_at_ms,
             funding_end_time_ms=replay.clock.now_ms,
         )
     for _ in range(2):
-        with pytest.raises(SolLiveEngineError):
+        with pytest.raises(AssetLiveEngineError):
             replay.engine(replay.assets[symbol]).start()
         assert tuple(replay.mutations) == before_mutations
     replay.clock.advance_to(replay.clock.now_ms + 10000)
     restarted = replay.engine(replay.assets[symbol])
-    assert restarted.start().state is SolLiveState.FLAT
+    assert restarted.start().state is AssetLiveState.FLAT
     assert not replay.orders and not replay.account.snapshot().positions
     assert replay.mutations.count("close") == 0
     assert replay.mutations.count("entry") == 1
     assert_exact_cash(replay)
     assert_current_flat_ledger(replay, symbol)
     after_mutations = tuple(replay.mutations)
-    assert replay.engine(replay.assets[symbol]).start().state is SolLiveState.FLAT
+    assert replay.engine(replay.assets[symbol]).start().state is AssetLiveState.FLAT
     assert tuple(replay.mutations) == (*after_mutations, "configure")
     assert_current_flat_ledger(replay, symbol)

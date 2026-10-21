@@ -10,13 +10,13 @@ from test_native_partial_protective_cleanup_compound import _rejected_cancel
 from test_native_protective_execution_progress import _partial_fixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_order_restart import SolOrderRestartError
-from hypervector.live.sol_protective_cleanup_checkpoint import (
+from hypervector.live.asset_order_restart import AssetOrderRestartError
+from hypervector.live.asset_protective_cleanup_checkpoint import (
     CLEANUP_PHASE,
     pending_protective_cleanup,
 )
-from hypervector.live.sol_protective_cleanup_suffix import validate_cleanup_suffix
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
+from hypervector.live.asset_protective_cleanup_suffix import validate_cleanup_suffix
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
 
 __all__ = ["deny_external_ports"]
 
@@ -26,7 +26,7 @@ def pending_records(tmp_path: Path) -> list[dict[str, object]]:
     """Produce a genuine native-engine completion checkpoint and rejected cleanup attempt."""
     replay, original = _partial_fixture(tmp_path, "BTC", "stop", False, Decimal("0.5"))
     replay._exchange.cancel.side_effect = _rejected_cancel
-    with pytest.raises(SolLiveEngineError, match="cancel rejected"):
+    with pytest.raises(AssetLiveEngineError, match="cancel rejected"):
         replay.engines["BTC"].reconcile_telemetry(
             funding_start_time_ms=original.opened_at_ms, funding_end_time_ms=replay.clock.now_ms
         )
@@ -63,7 +63,7 @@ def test_cleanup_checkpoint_rejects_corrupted_completion_proof(
     marker = next(row for row in records if row["payload"].get("phase") == CLEANUP_PHASE)
     body = marker["payload"]
     _corrupt(records, marker, body, corruption)
-    with pytest.raises(SolOrderRestartError):
+    with pytest.raises(AssetOrderRestartError):
         pending_protective_cleanup(records)
 
 
@@ -131,7 +131,7 @@ def test_cleanup_rejects_unrelated_later_mutations_and_states(
     )
     context = pending_protective_cleanup(records)
     assert context is not None
-    with pytest.raises(SolOrderRestartError, match="contradictory"):
+    with pytest.raises(AssetOrderRestartError, match="contradictory"):
         validate_cleanup_suffix(records, context)
 
 
@@ -150,7 +150,7 @@ def test_completed_proof_rejects_later_owned_fill_evidence(
     else:
         row["payload"]["trade_id"] += 99999
     records.append({**row, "sequence": len(records) + 1})
-    with pytest.raises(SolOrderRestartError, match="contradictory"):
+    with pytest.raises(AssetOrderRestartError, match="contradictory"):
         validate_cleanup_suffix(records, context)
 
 
@@ -184,5 +184,5 @@ def test_cleanup_rejects_malformed_status_acknowledgements(
             "payload": body,
         }
     )
-    with pytest.raises(SolOrderRestartError, match="contradictory"):
+    with pytest.raises(AssetOrderRestartError, match="contradictory"):
         validate_cleanup_suffix(records, context)

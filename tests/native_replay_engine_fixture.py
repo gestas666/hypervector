@@ -10,7 +10,7 @@ from decimal import Decimal, ROUND_DOWN
 from pathlib import Path
 from unittest.mock import create_autospec
 
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidExchangeProtocol,
     HyperliquidInfoProtocol,
@@ -23,8 +23,8 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 from hypervector.live.multi_asset_live_runner_support import shared_account_facts
-from hypervector.live.sol_range_onset_engine import SolRangeOnsetLiveEngine
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_engine import AssetLiveEngine
+from hypervector.live.asset_ledger import AssetLiveLedger
 from hypervector.research.native_replay_account import ExactFillAccount
 from hypervector.research.native_replay_clock import ReplayClock
 from hypervector.research.native_replay_events import FillEvent
@@ -75,7 +75,7 @@ class EngineReplayFixture:
         self.orders: dict[int, dict[str, object]] = {}
         self.fills: list[dict[str, object]] = []
         self.collateral: dict[str, IsolatedCollateral] = {}
-        self.engines: dict[str, SolRangeOnsetLiveEngine] = {}
+        self.engines: dict[str, AssetLiveEngine] = {}
         self.adapters: dict[str, MultiAssetDirectionalAdapter] = {}
         self.decisions: dict[str, int] = {}
         self.prices: dict[str, Decimal] = {}
@@ -155,7 +155,7 @@ class EngineReplayFixture:
             observed_time_ms=self.clock.now_ms,
         )
 
-    def engine(self, asset: AssetLiveConfig) -> SolRangeOnsetLiveEngine:
+    def engine(self, asset: AssetLiveConfig) -> AssetLiveEngine:
         """Construct the real engine around fake SDK ports, without its armed factory."""
         config = replace(
             asset,
@@ -164,7 +164,7 @@ class EngineReplayFixture:
             / f"{asset.symbol}.jsonl",
         )
         adapter = MultiAssetDirectionalAdapter(
-            BtcHyperliquidAdapter(
+            HyperliquidPerpAdapter(
                 info=self._info,
                 exchange=self._exchange,
                 account_address=ADDRESS,
@@ -176,14 +176,14 @@ class EngineReplayFixture:
             )
         )
         self.adapters[asset.symbol] = adapter
-        ledger = SolLiveLedger(
+        ledger = AssetLiveLedger(
             path=config.live_ledger,
             profile_id=config.profile_id,
             profile_fingerprint=config.profile_fingerprint,
             run_fingerprint=config.run_fingerprint,
             run_id="offline-native-account",
         )
-        return SolRangeOnsetLiveEngine(
+        return AssetLiveEngine(
             config=config,
             adapter=adapter,
             ledger=ledger,

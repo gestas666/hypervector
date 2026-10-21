@@ -10,7 +10,7 @@ from hypervector.live.cohort_operator_commands import (
     CohortOperatorCommand,
 )
 from hypervector.live.multi_asset_operator_runtime import LiveOperatorCommandProcessor
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 
 class _Source:
@@ -41,9 +41,9 @@ class _Telemetry:
 
 class _Engine:
     @property
-    def snapshot(self) -> SolLiveSnapshot:
-        return SolLiveSnapshot(
-            state=SolLiveState.OPEN,
+    def snapshot(self) -> AssetLiveSnapshot:
+        return AssetLiveSnapshot(
+            state=AssetLiveState.OPEN,
             position_size_signed=0.01,
             stop_oid=9,
         )

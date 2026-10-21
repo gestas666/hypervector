@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidOrderAck,
     HyperliquidOrderStatus,
-    SolBookSnapshot,
-    SolFundingPayment,
-    SolReconciliationSnapshot,
-    SolVenuePreflight,
+    HyperliquidBookSnapshot,
+    HyperliquidFundingPayment,
+    HyperliquidReconciliationSnapshot,
+    HyperliquidVenuePreflight,
 )
 
 
@@ -19,7 +19,7 @@ class MultiAssetDirectionalAdapter:
 
     def __init__(
         self,
-        delegate: BtcHyperliquidAdapter,
+        delegate: HyperliquidPerpAdapter,
         *,
         requested_leverage: int | None = None,
     ) -> None:
@@ -36,7 +36,7 @@ class MultiAssetDirectionalAdapter:
         """Return the exact optional builder-perp namespace."""
         return self._delegate.perp_dex
 
-    def preflight(self, *, expected_max_leverage: int) -> SolVenuePreflight:
+    def preflight(self, *, expected_max_leverage: int) -> HyperliquidVenuePreflight:
         """Return symbol-scoped venue and account facts.
 
         With the market's requested leverage, only a venue maximum below it
@@ -49,7 +49,7 @@ class MultiAssetDirectionalAdapter:
             requested_leverage=self._requested_leverage,
         )
 
-    def book_snapshot(self, *, depth_levels: int) -> SolBookSnapshot:
+    def book_snapshot(self, *, depth_levels: int) -> HyperliquidBookSnapshot:
         """Return the symbol's read-only depth snapshot."""
         return self._delegate.book_snapshot(depth_levels=depth_levels)
 
@@ -143,7 +143,7 @@ class MultiAssetDirectionalAdapter:
             client_order_id=client_order_id,
         )
 
-    def reconcile(self) -> SolReconciliationSnapshot:
+    def reconcile(self) -> HyperliquidReconciliationSnapshot:
         """Return symbol exposure with shared account totals."""
         return self._delegate.reconcile()
 
@@ -167,7 +167,7 @@ class MultiAssetDirectionalAdapter:
         *,
         start_time_ms: int,
         end_time_ms: int,
-    ) -> tuple[SolFundingPayment, ...]:
+    ) -> tuple[HyperliquidFundingPayment, ...]:
         """Return exact symbol funding ledger updates."""
         return self._delegate.funding_payments(
             start_time_ms=start_time_ms,

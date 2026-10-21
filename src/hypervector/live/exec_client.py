@@ -468,9 +468,9 @@ class SdkClientBuilder(Protocol):
 
 def _official_sdk_builder() -> SdkClientBuilder:
     """Mainnet-only builder shared with cohort live (API-agent parent check)."""
-    from hypervector.live.hyperliquid_sol_factory import OfficialSolSdkBuilder
+    from hypervector.live.hyperliquid_sdk_factory import OfficialHyperliquidSdkBuilder
 
-    return OfficialSolSdkBuilder()
+    return OfficialHyperliquidSdkBuilder()
 
 
 @dataclass

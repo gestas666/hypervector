@@ -6,17 +6,17 @@ from collections.abc import Mapping
 
 from hypervector.live.multi_asset_cohort_history import compatible_execution_rows
 from hypervector.live.multi_asset_cohort_history import execution_row_is_compatible
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
-from hypervector.live.sol_range_onset_ledger import SolLiveLedgerCursor
+from hypervector.live.asset_ledger import AssetLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedgerCursor
 
 
 class CohortAssetHistoryCache:
     """Read each asset ledger once, then consume only its validated suffix."""
 
-    def __init__(self, ledgers: Mapping[str, SolLiveLedger]) -> None:
+    def __init__(self, ledgers: Mapping[str, AssetLiveLedger]) -> None:
         self._ledgers = dict(ledgers)
         self._histories: dict[str, list[dict[str, object]]] = {}
-        self._cursors: dict[str, SolLiveLedgerCursor] = {}
+        self._cursors: dict[str, AssetLiveLedgerCursor] = {}
         for symbol, ledger in self._ledgers.items():
             rows = compatible_execution_rows(ledger)
             self._histories[symbol] = _compact_rows(rows, ledger.run_id)

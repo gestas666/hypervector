@@ -24,7 +24,7 @@ from hypervector.live.cohort_regime_routing import routing_policy_payload
 from hypervector.live.cohort_runtime_fault import runtime_fault_payload
 from hypervector.live.cohort_startup_candle_recorder import CohortStartupCandleRecorder
 from hypervector.live.cohort_transition_drain import CohortTransitionDrain
-from hypervector.live.hyperliquid_protocol import SolBookSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidBookSnapshot
 from hypervector.live.multi_asset_cohort_history import (
     asset_costs,
     current_run_rows,
@@ -56,7 +56,7 @@ from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.multi_asset_strategy_evidence import (
     strategy_evidence_payloads,
 )
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 
 class MultiAssetCohortTelemetry:
@@ -66,9 +66,9 @@ class MultiAssetCohortTelemetry:
         self,
         *,
         config: MultiAssetLiveConfig,
-        ledger: SolLiveLedger,
+        ledger: AssetLiveLedger,
         now_fn: Callable[[], datetime],
-        asset_ledgers: Mapping[str, SolLiveLedger] | None = None,
+        asset_ledgers: Mapping[str, AssetLiveLedger] | None = None,
         prestart_backup: CohortPrestartBackupResult | None = None,
         transition_drain: CohortTransitionDrain | None = None,
     ) -> None:
@@ -274,7 +274,7 @@ class MultiAssetCohortTelemetry:
 
     def emit_market_books(
         self,
-        books: Mapping[str, SolBookSnapshot],
+        books: Mapping[str, HyperliquidBookSnapshot],
     ) -> None:
         """Publish current public L2 snapshots without execution authority."""
         if set(books) != set(self._config.symbols):
@@ -443,7 +443,7 @@ class MultiAssetCohortTelemetry:
 
 
 def _history_cache(
-    ledgers: Mapping[str, SolLiveLedger],
+    ledgers: Mapping[str, AssetLiveLedger],
 ) -> CohortAssetHistoryCache | None:
     return CohortAssetHistoryCache(ledgers) if ledgers else None
 
@@ -478,7 +478,7 @@ def _validate_canonical_evaluations(
 
 def _book_payload(
     symbol: str,
-    book: SolBookSnapshot,
+    book: HyperliquidBookSnapshot,
     *,
     recv_ts_ms: int,
 ) -> dict[str, object]:

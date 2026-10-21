@@ -9,8 +9,8 @@ from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 
 
 @dataclass(frozen=True)
-class SolMarketMetadata:
-    """Venue precision and leverage limits for SOL perpetuals."""
+class HyperliquidMarketMetadata:
+    """Venue precision and leverage limits for one perpetual."""
 
     symbol: str
     size_decimals: int
@@ -36,8 +36,8 @@ class Hip3MarketFeeMetadata:
 
 
 @dataclass(frozen=True)
-class SolPositionSnapshot:
-    """Venue-authoritative one-way SOL position state."""
+class HyperliquidPositionSnapshot:
+    """Venue-authoritative one-way position state for one symbol."""
 
     size_signed: float
     entry_price: float | None
@@ -50,20 +50,20 @@ class SolPositionSnapshot:
 
 
 @dataclass(frozen=True)
-class SolAccountSnapshot:
-    """Clearinghouse values and the current SOL position."""
+class HyperliquidAccountSnapshot:
+    """Clearinghouse values and the current position for one symbol."""
 
     account_value_usd: float
     withdrawable_usd: float
     total_margin_used_usd: float
     total_notional_position_usd: float
-    position: SolPositionSnapshot
+    position: HyperliquidPositionSnapshot
     balance_source: str | None = None
 
 
 @dataclass(frozen=True)
-class SolOpenOrder:
-    """One venue-reported open SOL order."""
+class HyperliquidOpenOrder:
+    """One venue-reported open order."""
 
     oid: int
     size: float
@@ -78,8 +78,8 @@ class SolOpenOrder:
 
 
 @dataclass(frozen=True)
-class SolFill:
-    """One venue-reported SOL fill with fee and exchange time."""
+class HyperliquidFill:
+    """One venue-reported fill with fee and exchange time."""
 
     oid: int
     price: float
@@ -96,8 +96,8 @@ class SolFill:
 
 
 @dataclass(frozen=True)
-class SolFundingPayment:
-    """One exact SOL funding ledger update for the configured account."""
+class HyperliquidFundingPayment:
+    """One exact funding ledger update for the configured account."""
 
     timestamp_ms: int
     usdc_delta: float
@@ -107,7 +107,7 @@ class SolFundingPayment:
 
 
 @dataclass(frozen=True)
-class SolBookLevel:
+class HyperliquidBookLevel:
     """One price level from the venue L2 snapshot."""
 
     price: float
@@ -116,12 +116,12 @@ class SolBookLevel:
 
 
 @dataclass(frozen=True)
-class SolBookSnapshot:
-    """Read-only SOL L2 depth and directly derived pressure metrics."""
+class HyperliquidBookSnapshot:
+    """Read-only L2 depth and directly derived pressure metrics."""
 
     exchange_timestamp_ms: int
-    bids: tuple[SolBookLevel, ...]
-    asks: tuple[SolBookLevel, ...]
+    bids: tuple[HyperliquidBookLevel, ...]
+    asks: tuple[HyperliquidBookLevel, ...]
     mid_price: float
     spread_bps: float
     bid_depth: float
@@ -173,37 +173,37 @@ class HyperliquidOrderStatus:
 
 
 @dataclass(frozen=True)
-class SolVenuePreflight:
+class HyperliquidVenuePreflight:
     """Read-only venue and account facts required before live arming."""
 
-    market: SolMarketMetadata
+    market: HyperliquidMarketMetadata
     mark_price: float
     price_tick: float
     size_step: float
     fees: HyperliquidFeeSchedule
     account_value_usd: float
     withdrawable_usd: float
-    position: SolPositionSnapshot
+    position: HyperliquidPositionSnapshot
     account_abstraction_mode: str = "disabled"
     hip3_fee_metadata: Hip3MarketFeeMetadata | None = None
 
 
 @dataclass(frozen=True)
-class SolReconciliationSnapshot:
-    """Authoritative SOL account, open-order, and fill state."""
+class HyperliquidReconciliationSnapshot:
+    """Authoritative account, open-order, and fill state for one symbol."""
 
-    account: SolAccountSnapshot
-    open_orders: tuple[SolOpenOrder, ...]
-    fills: tuple[SolFill, ...]
+    account: HyperliquidAccountSnapshot
+    open_orders: tuple[HyperliquidOpenOrder, ...]
+    fills: tuple[HyperliquidFill, ...]
 
     @property
-    def position(self) -> SolPositionSnapshot:
-        """Return the reconciled SOL position."""
+    def position(self) -> HyperliquidPositionSnapshot:
+        """Return the reconciled position."""
         return self.account.position
 
     @property
     def is_flat(self) -> bool:
-        """Return true only when exposure and every SOL open order are absent."""
+        """Return true only when exposure and every open order for the symbol are absent."""
         return self.position.size_signed == 0.0 and not self.open_orders
 
 
@@ -359,14 +359,14 @@ class HyperliquidExchangeProtocol(Protocol):
 
 
 @runtime_checkable
-class SolLiveAdapterProtocol(Protocol):
-    """Venue operations required by the deterministic SOL lifecycle."""
+class HyperliquidLiveAdapterProtocol(Protocol):
+    """Venue operations required by the deterministic per-asset lifecycle."""
 
-    def preflight(self, *, expected_max_leverage: int) -> SolVenuePreflight:
+    def preflight(self, *, expected_max_leverage: int) -> HyperliquidVenuePreflight:
         """Return validated venue and account facts."""
         ...
 
-    def book_snapshot(self, *, depth_levels: int) -> SolBookSnapshot:
+    def book_snapshot(self, *, depth_levels: int) -> HyperliquidBookSnapshot:
         """Return read-only venue L2 telemetry."""
         ...
 
@@ -431,7 +431,7 @@ class SolLiveAdapterProtocol(Protocol):
         """Submit a reduce-only close for reconciled exposure."""
         ...
 
-    def reconcile(self) -> SolReconciliationSnapshot:
+    def reconcile(self) -> HyperliquidReconciliationSnapshot:
         """Return authoritative account, order, and fill state."""
         ...
 
@@ -451,6 +451,6 @@ class SolLiveAdapterProtocol(Protocol):
         *,
         start_time_ms: int,
         end_time_ms: int,
-    ) -> tuple[SolFundingPayment, ...]:
-        """Return exact account funding payments for SOL."""
+    ) -> tuple[HyperliquidFundingPayment, ...]:
+        """Return exact account funding payments for the symbol."""
         ...

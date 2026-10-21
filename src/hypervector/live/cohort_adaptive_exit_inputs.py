@@ -10,7 +10,7 @@ import math
 from hypervector.live.canonical_regime_telemetry import latest_canonical_evaluation_at_or_before
 from hypervector.live.cohort_adaptive_exit_policy import BOOK_MAX_AGE_MS
 from hypervector.live.cohort_regime_routing import canonical_alignment_score
-from hypervector.live.hyperliquid_protocol import SolBookSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidBookSnapshot
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
 from hypervector.live.provider_evaluation import ProviderEvaluation
 
@@ -36,7 +36,7 @@ class AdaptiveMarketInputs:
 
 def prepare_adaptive_inputs(
     *, symbol: str, side: str, entry_price: float, opened_ms: int, observed_ms: int,
-    book: SolBookSnapshot | None, bars: tuple[CohortMarketBar, ...],
+    book: HyperliquidBookSnapshot | None, bars: tuple[CohortMarketBar, ...],
     evaluations: tuple[ProviderEvaluation, ...],
 ) -> AdaptiveMarketInputs:
     """Use only completed candles and fresh executable-side book prices."""
@@ -60,7 +60,7 @@ def prepare_adaptive_inputs(
                                 stamp, pressure, ROUND_TRIP_COST_ASSUMPTION_BPS + spread)
 
 
-def _fresh_book(book: SolBookSnapshot | None, observed_ms: int, opened_ms: int) -> bool:
+def _fresh_book(book: HyperliquidBookSnapshot | None, observed_ms: int, opened_ms: int) -> bool:
     if book is None or not book.bids or not book.asks:
         return False
     if not opened_ms <= book.exchange_timestamp_ms <= observed_ms:

@@ -8,9 +8,9 @@ from native_replay_scheduled_fixture import ScheduledEngineFixture
 from test_native_replay_adapter import deny_external_ports
 
 from hypervector.live.hyperliquid_protocol import HyperliquidOrderAck
-from hypervector.live.sol_order_submission import SolOrderRecoveryError
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_order_submission import AssetOrderRecoveryError
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
+from hypervector.live.asset_state import AssetLiveState
 
 __all__ = ["deny_external_ports"]
 
@@ -49,9 +49,9 @@ def test_rejected_receipt_with_reduced_exposure_faults_before_new_mutation(
     replay.prepare_close(symbol)
     contradictory_close(replay, symbol, monkeypatch)
     targets = replay.mutations.count("target")
-    with pytest.raises(SolLiveEngineError, match="rejected close changed position"):
+    with pytest.raises(AssetLiveEngineError, match="rejected close changed position"):
         replay.engines[symbol].exit(mark_price=100, reason="contradiction")
-    assert replay.engines[symbol].snapshot.state is SolLiveState.FAULTED
+    assert replay.engines[symbol].snapshot.state is AssetLiveState.FAULTED
     assert replay.mutations.count("target") == targets
     assert replay.mutations.count("close") == 1
     assert original.stop_oid in replay.orders
@@ -72,13 +72,13 @@ def test_partial_close_replacement_target_response_loss_recovers_without_duplica
     )
     replay.prepare_close(asset.symbol)
     replay.lost = "target"
-    with pytest.raises(SolOrderRecoveryError):
+    with pytest.raises(AssetOrderRecoveryError):
         replay.engines[asset.symbol].exit(mark_price=100, reason="partial_target_loss")
     targets = replay.mutations.count("target")
     replay.clock.advance_to(replay.clock.now_ms + 6000)
     replay.lost = None
     recovered = replay.engine(asset).start()
-    assert recovered.state is SolLiveState.OPEN
+    assert recovered.state is AssetLiveState.OPEN
     assert recovered.opened_at_ms == original.opened_at_ms
     assert recovered.position_size_signed == pytest.approx(
         float(replay.account.snapshot().positions[asset.symbol].quantity_signed)

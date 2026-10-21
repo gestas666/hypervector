@@ -18,7 +18,7 @@ from hypervector.live.multi_asset_readiness_seed import (
     RECOVERY_SCAN_START_METRIC,
 )
 from hypervector.live.provider_evaluation import ProviderEvaluation
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_state import AssetLiveState
 
 _PREACTIVATION_READINESS_REASON = "pre_activation_readiness_seed"
 _RECOVERY_GAP_EXIT_REASON = "provider_recipe_exit_recovery_unverified"
@@ -78,7 +78,7 @@ class CohortProviderExitController:
     ) -> RoutingAction | None:
         snapshot = self._engines[symbol].snapshot
         plan = snapshot.execution_plan
-        if snapshot.state is not SolLiveState.OPEN or plan is None:
+        if snapshot.state is not AssetLiveState.OPEN or plan is None:
             return None
         if plan.provider_recipe_exit_policy != "honor":
             return None

@@ -30,7 +30,7 @@ from hypervector.live.cohort_operator_commands import (
 )
 from hypervector.live.cohort_transition_drain import CohortTransitionDrain
 from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_intent_poller import (
     CohortIntentPoll,
     CohortMarketBar,
@@ -38,7 +38,7 @@ from hypervector.live.multi_asset_intent_poller import (
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 
@@ -46,7 +46,7 @@ _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 class _Engine:
     def __init__(self, symbol: str) -> None:
         self.symbol = symbol
-        self.current = SolLiveSnapshot()
+        self.current = AssetLiveSnapshot()
         self.entries: list[tuple[str, float, int]] = []
         self.entry_sizing: list[CohortEntrySizing | None] = []
         self.exits: list[tuple[float, str]] = []
@@ -54,11 +54,11 @@ class _Engine:
         self.reconciliations: list[tuple[int, int]] = []
 
     @property
-    def snapshot(self) -> SolLiveSnapshot:
+    def snapshot(self) -> AssetLiveSnapshot:
         return self.current
 
-    def start(self) -> SolLiveSnapshot:
-        self.current = SolLiveSnapshot(state=SolLiveState.FLAT)
+    def start(self) -> AssetLiveSnapshot:
+        self.current = AssetLiveSnapshot(state=AssetLiveState.FLAT)
         return self.current
 
     def reconcile_telemetry(
@@ -66,7 +66,7 @@ class _Engine:
         *,
         funding_start_time_ms: int,
         funding_end_time_ms: int,
-    ) -> SolReconciliationSnapshot:
+    ) -> HyperliquidReconciliationSnapshot:
         self.reconciliations.append((funding_start_time_ms, funding_end_time_ms))
         return _venue(self.current.position_size_signed)
 
@@ -81,15 +81,15 @@ class _Engine:
         decision_time_ms: int | None = None,
         entry_sizing: CohortEntrySizing | None = None,
         entry_deadline: EntrySubmissionDeadline | None = None,
-    ) -> SolLiveSnapshot:
+    ) -> AssetLiveSnapshot:
         assert decision_time_ms is not None
         if entry_deadline is not None:
             entry_deadline.check("adapter_dispatch")
         size = 1.0 if side == "long" else -1.0
         self.entries.append((side, mark_price, decision_time_ms))
         self.entry_sizing.append(entry_sizing)
-        self.current = SolLiveSnapshot(
-            state=SolLiveState.OPEN,
+        self.current = AssetLiveSnapshot(
+            state=AssetLiveState.OPEN,
             entry_oid=1,
             stop_oid=2,
             position_size_signed=size,
@@ -97,15 +97,15 @@ class _Engine:
         )
         return self.current
 
-    def exit(self, *, mark_price: float, reason: str) -> SolLiveSnapshot:
+    def exit(self, *, mark_price: float, reason: str) -> AssetLiveSnapshot:
         self.exits.append((mark_price, reason))
-        self.current = SolLiveSnapshot(state=SolLiveState.FLAT)
+        self.current = AssetLiveSnapshot(state=AssetLiveState.FLAT)
         return self.current
 
-    def stop(self, reason: str) -> SolLiveSnapshot:
+    def stop(self, reason: str) -> AssetLiveSnapshot:
         self.current = replace(
             self.current,
-            state=SolLiveState.STOPPED,
+            state=AssetLiveState.STOPPED,
             stop_reason=reason,
         )
         return self.current
@@ -589,8 +589,8 @@ def test_manual_close_is_reduce_only_engine_exit_and_does_not_reenter(
         (_intent("BTC", "long"),),
         operator_commands=commands,
     )
-    engines["BTC"].current = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    engines["BTC"].current = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=1,
         stop_oid=2,
         position_size_signed=-1.0,
@@ -618,8 +618,8 @@ def test_manual_close_suppresses_one_cycle_then_automatic_strategy_resumes(
         (_intent("BTC", "long"),),
         operator_commands=commands,
     )
-    engines["BTC"].current = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    engines["BTC"].current = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=1,
         stop_oid=2,
         position_size_signed=-1.0,
@@ -730,8 +730,8 @@ def test_transition_drain_allows_opposite_intent_to_close_existing_position(
         transition_drain=drain,
     )
     runner.start(activation_time_ms=1_785_600_000_000)
-    engines["BTC"].current = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    engines["BTC"].current = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=1,
         stop_oid=2,
         position_size_signed=1.0,
@@ -784,8 +784,8 @@ def test_one_process_routes_two_coins_and_attributes_capacity(tmp_path: Path) ->
 def test_opposite_intent_closes_without_same_cycle_reversal(tmp_path: Path) -> None:
     """A one-way symbol closes first and waits for a later fresh entry."""
     runner, engines, _ = _runner(tmp_path, (_intent("BTC", "short"),))
-    engines["BTC"].current = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    engines["BTC"].current = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=1,
         stop_oid=2,
         position_size_signed=1.0,
@@ -804,8 +804,8 @@ def test_maximum_hold_closes_at_completed_reference_without_reentry(
 ) -> None:
     """An expired protected position closes once and suppresses same-cycle intents."""
     runner, engines, telemetry = _runner(tmp_path, (_intent("BTC", "long"),))
-    engines["BTC"].current = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    engines["BTC"].current = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=1,
         stop_oid=2,
         position_size_signed=-1.0,
@@ -829,8 +829,8 @@ def test_open_position_uses_its_persisted_provider_maximum_hold(tmp_path: Path) 
         strategy_id="test_trend_provider",
         stop_anchor=None,
     )
-    engines["BTC"].current = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    engines["BTC"].current = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=1,
         stop_oid=2,
         position_size_signed=1.0,
@@ -867,8 +867,8 @@ def test_bound_provider_recipe_exit_closes_open_lifecycle(tmp_path: Path) -> Non
         exit_reason="provider_exit_signal",
     )
     runner, engines, telemetry = _runner(tmp_path, (), evaluations=(evaluation,))
-    engines["BTC"].current = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    engines["BTC"].current = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=1,
         stop_oid=2,
         position_size_signed=1.0,
@@ -905,8 +905,8 @@ def test_supported_soft_deadline_is_journaled_once(tmp_path: Path) -> None:
         hard_maximum_hold_seconds=86_400,
         maximum_hold_evidence_maximum_age_seconds=60,
     ).bind(strategy_id="test_trend_provider", stop_anchor=None)
-    engines["HYPE"].current = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    engines["HYPE"].current = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=99,
         stop_oid=100,
         position_size_signed=1.0,
@@ -1015,8 +1015,8 @@ def test_profit_lock_candle_gap_remains_the_latest_health_state(tmp_path: Path) 
         execution_contracts={"test_trend_provider": contract},
     )
     runner.start(activation_time_ms=1_785_585_600_000, start_engines=False)
-    engines["BTC"].current = SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    engines["BTC"].current = AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=1,
         stop_oid=2,
         position_size_signed=1.0,
@@ -1088,9 +1088,9 @@ class _ReadFailureAfterSubmission(_Engine):
         super().__init__(symbol)
         self.submitted = False
 
-    def enter(self, **kwargs: object) -> SolLiveSnapshot:
+    def enter(self, **kwargs: object) -> AssetLiveSnapshot:
         self.submitted = True
-        self.current = SolLiveSnapshot(state=SolLiveState.PROTECTING)
+        self.current = AssetLiveSnapshot(state=AssetLiveState.PROTECTING)
         raise ServerError(502, "Bad Gateway")
 
 
@@ -1103,7 +1103,7 @@ def test_transient_read_failure_before_execution_still_degrades(
 
     original = engines["BTC"].reconcile_telemetry
 
-    def flaky(**kwargs: object) -> SolReconciliationSnapshot:
+    def flaky(**kwargs: object) -> HyperliquidReconciliationSnapshot:
         failure = next(failures, None)
         if failure is not None:
             raise failure

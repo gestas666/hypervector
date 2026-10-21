@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 
 from hypervector.live.canonical_regime_telemetry import CANONICAL_REGIME_TELEMETRY_STRATEGY
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
+from hypervector.live.asset_live_journal import build_live_journal
 from hypervector.research.cohort_live_audit_summaries import rebased
 from hypervector.research.cohort_live_audit_values import (
     mapping, mapping_list, nonnegative_int, payload, text, timestamp,

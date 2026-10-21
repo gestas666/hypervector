@@ -12,9 +12,9 @@ from test_native_protective_execution_progress import _partial_fixture
 from test_native_replay_adapter import deny_external_ports
 
 from hypervector.live.hyperliquid_protocol import HyperliquidOrderAck
-from hypervector.live.sol_order_submission import SolOrderRecoveryError
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_order_submission import AssetOrderRecoveryError
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
+from hypervector.live.asset_state import AssetLiveState
 
 __all__ = ["deny_external_ports"]
 STOP_CASES = [case for case in CASES if case[1] == "stop"]
@@ -35,7 +35,7 @@ def test_partial_followup_close_retains_stop_exit_obligation_until_restart_compl
         funding_start_time_ms=original.opened_at_ms,
         funding_end_time_ms=replay.clock.now_ms,
     )
-    assert engine.snapshot.state is SolLiveState.EXIT_PENDING
+    assert engine.snapshot.state is AssetLiveState.EXIT_PENDING
     assert engine.snapshot.protective_progress.stop_exit_required
     assert engine.snapshot.position_size_signed == venue.position.size_signed
     assert engine.snapshot.opened_at_ms == original.opened_at_ms
@@ -92,7 +92,7 @@ def test_lost_followup_close_response_recovers_exactly_once(
     """Delayed status after a lost response cannot authorize a duplicate reduce-only order."""
     replay, original = _partial_fixture(tmp_path, symbol, kind, last_side, Decimal("0.5"))
     replay.lost, replay.recovery_delay_ms = "close", RECEIPT_DELAY_MS
-    with pytest.raises((SolOrderRecoveryError, SolLiveEngineError)):
+    with pytest.raises((AssetOrderRecoveryError, AssetLiveEngineError)):
         replay.engines[symbol].reconcile_telemetry(
             funding_start_time_ms=original.opened_at_ms,
             funding_end_time_ms=replay.clock.now_ms,
@@ -131,19 +131,19 @@ def test_late_partial_protective_fill_history_restores_original_owner(
     oid = original.target_oid if kind == "target" else original.stop_oid
     release = replay.clock.now_ms + RECEIPT_DELAY_MS
     _delay_selected_fills(replay, delayed_oids={oid}, prior_oids=set(), release_ms=release)
-    with pytest.raises(SolLiveEngineError):
+    with pytest.raises(AssetLiveEngineError):
         replay.engines[symbol].reconcile_telemetry(
             funding_start_time_ms=original.opened_at_ms,
             funding_end_time_ms=replay.clock.now_ms,
         )
     assert replay.mutations.count("close") == 0
     for _ in range(2):
-        with pytest.raises(SolLiveEngineError):
+        with pytest.raises(AssetLiveEngineError):
             restart(replay, symbol)
     replay.clock.advance_to(release)
     engine = restart(replay, symbol)
     if kind == "target":
-        assert engine.snapshot.state is SolLiveState.OPEN
+        assert engine.snapshot.state is AssetLiveState.OPEN
         assert engine.snapshot.opened_at_ms == original.opened_at_ms
         assert replay.mutations.count("close") == 0
     else:
@@ -160,14 +160,14 @@ def test_late_followup_close_fills_recover_without_duplicate_exit(
     release = replay.clock.now_ms + RECEIPT_DELAY_MS
     prior = {original.entry_oid, original.stop_oid, original.target_oid} - {None}
     _delay_selected_fills(replay, delayed_oids=None, prior_oids=prior, release_ms=release)
-    with pytest.raises(SolLiveEngineError):
+    with pytest.raises(AssetLiveEngineError):
         replay.engines[symbol].reconcile_telemetry(
             funding_start_time_ms=original.opened_at_ms,
             funding_end_time_ms=replay.clock.now_ms,
         )
     assert replay.mutations.count("close") == 1
     for _ in range(2):
-        with pytest.raises(SolLiveEngineError):
+        with pytest.raises(AssetLiveEngineError):
             restart(replay, symbol)
     replay.clock.advance_to(release)
     restart(replay, symbol)
@@ -189,7 +189,7 @@ def test_partial_target_then_partial_commanded_close_keeps_receipts_across_targe
     replay.partial_close_collateral["BTC"] = replay.collateral["BTC"]
     replay.prepare_close("BTC")
     engine.exit(mark_price=100, reason="fixture_fixed_hold")
-    assert engine.snapshot.state is SolLiveState.OPEN
+    assert engine.snapshot.state is AssetLiveState.OPEN
     assert engine.snapshot.target_oid != original.target_oid
     engine = restart(replay, "BTC")
     assert engine.snapshot.opened_at_ms == original.opened_at_ms
@@ -216,13 +216,13 @@ def test_delayed_final_protection_after_partial_target_survives_repeated_restart
     replay.fill_owned_order(oid, history_delay_ms=RECEIPT_DELAY_MS)
     release = replay.clock.now_ms + RECEIPT_DELAY_MS
     before = list(replay.mutations)
-    with pytest.raises(SolLiveEngineError):
+    with pytest.raises(AssetLiveEngineError):
         engine.reconcile_telemetry(
             funding_start_time_ms=original.opened_at_ms,
             funding_end_time_ms=replay.clock.now_ms,
         )
     for _ in range(2):
-        with pytest.raises(SolLiveEngineError):
+        with pytest.raises(AssetLiveEngineError):
             restart(replay, "BTC")
     replay.clock.advance_to(release)
     restart(replay, "BTC")

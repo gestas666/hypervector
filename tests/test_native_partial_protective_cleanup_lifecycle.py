@@ -10,12 +10,12 @@ from test_native_partial_protective_recovery import assert_closed_economics, res
 from test_native_protective_execution_progress import _partial_fixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_order_restart import SolOrderRestartError
-from hypervector.live.sol_protective_cleanup_checkpoint import (
+from hypervector.live.asset_order_restart import AssetOrderRestartError
+from hypervector.live.asset_protective_cleanup_checkpoint import (
     CLEANUP_PHASE,
     pending_protective_cleanup,
 )
-from hypervector.live.sol_protective_cleanup_suffix import validate_cleanup_suffix
+from hypervector.live.asset_protective_cleanup_suffix import validate_cleanup_suffix
 
 __all__ = ["deny_external_ports", "pending_records"]
 
@@ -53,7 +53,7 @@ def test_cleanup_rejects_unproven_completion_and_missing_original_lifecycle(
         previous["payload"]["state"] = "OPEN"
     else:
         marker["payload"]["completed_progress"]["fills"].reverse()
-    with pytest.raises(SolOrderRestartError):
+    with pytest.raises(AssetOrderRestartError):
         pending_protective_cleanup(records)
 
 
@@ -109,7 +109,7 @@ def test_cleanup_suffix_preserves_only_owned_status_and_recognized_faults(
     if case == "owned_status":
         validate_cleanup_suffix(records, context)
     else:
-        with pytest.raises(SolOrderRestartError, match="contradictory"):
+        with pytest.raises(AssetOrderRestartError, match="contradictory"):
             validate_cleanup_suffix(records, context)
 
 

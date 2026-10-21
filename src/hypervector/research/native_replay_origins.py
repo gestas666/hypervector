@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger, SolLiveLedgerCursor
+from hypervector.live.asset_ledger import AssetLiveLedger, AssetLiveLedgerCursor
 from hypervector.research.native_replay_clock import EPOCH, ReplayClock
 from hypervector.research.native_replay_events import require_clock
 
@@ -11,10 +11,10 @@ from hypervector.research.native_replay_events import require_clock
 class NativeReplayOrigins:
     """Read incremental native ledgers instead of supplying prescribed entry timestamps."""
 
-    def __init__(self, clock: ReplayClock, ledgers: Mapping[str, SolLiveLedger]) -> None:
+    def __init__(self, clock: ReplayClock, ledgers: Mapping[str, AssetLiveLedger]) -> None:
         """Bind exact writers; existing rows are validated on the first request."""
         self.clock, self.ledgers = clock, dict(ledgers)
-        self._cursors = {symbol: SolLiveLedgerCursor(0, 1) for symbol in ledgers}
+        self._cursors = {symbol: AssetLiveLedgerCursor(0, 1) for symbol in ledgers}
         self._decisions: dict[str, int] = {}
         self._intents: dict[str, dict[str, object]] = {}
 

@@ -9,8 +9,8 @@ from native_replay_engine_fixture import EngineReplayFixture
 
 from hypervector.live.cohort_adaptive_exit_policy import RETENTION_EXIT_POLICY
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
-from hypervector.live.sol_range_onset_engine_contract import STOP_ALREADY_AT_TARGET
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_engine_contract import STOP_ALREADY_AT_TARGET
+from hypervector.live.asset_state import AssetLiveState
 from exit_parameter_fixtures import RETENTION_PARAMETERS
 
 
@@ -41,7 +41,7 @@ def _open(tmp_path: Path, side: str):
     result = engine.enter(
         side=side, mark_price=100, decision_time_ms=replay.clock.now_ms
     )
-    assert result.state is SolLiveState.OPEN and result.stop_oid is not None
+    assert result.state is AssetLiveState.OPEN and result.stop_oid is not None
     return replay, engine, symbol
 
 
@@ -57,7 +57,7 @@ def test_raise_replaces_the_owned_stop_and_survives_reconciliation(
     replay, engine, symbol = _open(tmp_path, side)
     previous = engine.snapshot.stop_oid
     assert engine.raise_protective_stop(trigger_price=trigger) is True
-    assert engine.snapshot.state is SolLiveState.OPEN
+    assert engine.snapshot.state is AssetLiveState.OPEN
     assert engine.snapshot.stop_oid != previous
     assert previous not in replay.orders
     resting = replay.orders[engine.snapshot.stop_oid]
@@ -99,7 +99,7 @@ def test_rejected_modify_keeps_the_original_stop(tmp_path: Path) -> None:
     )
     assert engine.raise_protective_stop(trigger_price=100.25) is False
     assert engine.snapshot.stop_oid == previous and previous in replay.orders
-    assert engine.snapshot.state is SolLiveState.OPEN
+    assert engine.snapshot.state is AssetLiveState.OPEN
     replay._exchange.modify_order.side_effect = original_modify
     restored = replay.engine(replay.assets[symbol])
     assert restored.start().stop_oid == previous
@@ -124,7 +124,7 @@ def test_raise_interrupted_after_the_venue_applied_it_is_adopted_on_restart(
     replay._exchange.modify_order.side_effect = applied
     restored = replay.engine(replay.assets[symbol])
     snapshot = restored.start()
-    assert snapshot.state is SolLiveState.OPEN and snapshot.stop_oid == new_oid
+    assert snapshot.state is AssetLiveState.OPEN and snapshot.stop_oid == new_oid
     rows = _rows(tmp_path, symbol)
     recovered = [
         r
@@ -148,7 +148,7 @@ def test_raise_interrupted_before_the_venue_saw_it_keeps_the_original_stop(
     assert previous in replay.orders
     restored = replay.engine(replay.assets[symbol])
     snapshot = restored.start()
-    assert snapshot.state is SolLiveState.OPEN and snapshot.stop_oid == previous
+    assert snapshot.state is AssetLiveState.OPEN and snapshot.stop_oid == previous
     resolved = _unindexed_raise_resolutions(_rows(tmp_path, symbol))
     assert len(resolved) == 1 and resolved[0]["accepted"] is False
     assert resolved[0]["oid"] is None
@@ -167,7 +167,7 @@ def test_repeated_pre_dispatch_raise_crashes_never_accumulate_unresolved_intents
             engine.raise_protective_stop(trigger_price=100.25)
         engine = replay.engine(replay.assets[symbol])
         snapshot = engine.start()
-        assert snapshot.state is SolLiveState.OPEN and snapshot.stop_oid == previous
+        assert snapshot.state is AssetLiveState.OPEN and snapshot.stop_oid == previous
     rows = _rows(tmp_path, symbol)
     intents = [
         r["payload"]["client_order_id"]

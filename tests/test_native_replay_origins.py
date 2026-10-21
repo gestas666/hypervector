@@ -4,14 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 from hypervector.research.native_replay_clock import ReplayClock
 from hypervector.research.native_replay_origins import NativeReplayOrigins
 
 
-def origin(tmp_path: Path) -> tuple[NativeReplayOrigins, SolLiveLedger]:
+def origin(tmp_path: Path) -> tuple[NativeReplayOrigins, AssetLiveLedger]:
     """Use a real native ledger with explicit offline identity and one known clock."""
-    ledger = SolLiveLedger(
+    ledger = AssetLiveLedger(
         path=tmp_path / "live/bidirectional_cohort/ccc.jsonl",
         profile_id="offline",
         profile_fingerprint="profile",
@@ -21,7 +21,7 @@ def origin(tmp_path: Path) -> tuple[NativeReplayOrigins, SolLiveLedger]:
     return NativeReplayOrigins(ReplayClock(2000), {"xyz:CCC": ledger}), ledger
 
 
-def append(ledger: SolLiveLedger, event: str, payload: dict[str, object]) -> None:
+def append(ledger: AssetLiveLedger, event: str, payload: dict[str, object]) -> None:
     """Write the same timestamped durable shape consumed by the real order bridge."""
     ledger.append(
         event_type=event,

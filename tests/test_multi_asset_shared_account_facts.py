@@ -3,9 +3,9 @@
 import pytest
 
 from hypervector.live.hyperliquid_protocol import (
-    SolAccountSnapshot,
-    SolPositionSnapshot,
-    SolReconciliationSnapshot,
+    HyperliquidAccountSnapshot,
+    HyperliquidPositionSnapshot,
+    HyperliquidReconciliationSnapshot,
 )
 from hypervector.live.multi_asset_live_runner_support import (
     MultiAssetLiveRunnerError,
@@ -13,10 +13,10 @@ from hypervector.live.multi_asset_live_runner_support import (
 )
 
 
-def _venue(margin: float, notional: float) -> SolReconciliationSnapshot:
+def _venue(margin: float, notional: float) -> HyperliquidReconciliationSnapshot:
     """Build one unified-account namespace projection."""
-    position = SolPositionSnapshot(0.0, None, None, 0.0, 0.0, 0.0, None, None)
-    account = SolAccountSnapshot(
+    position = HyperliquidPositionSnapshot(0.0, None, None, 0.0, 0.0, 0.0, None, None)
+    account = HyperliquidAccountSnapshot(
         4_984.50,
         4_512.16,
         margin,
@@ -24,7 +24,7 @@ def _venue(margin: float, notional: float) -> SolReconciliationSnapshot:
         position,
         "spot_clearinghouse_state",
     )
-    return SolReconciliationSnapshot(account, (), ())
+    return HyperliquidReconciliationSnapshot(account, (), ())
 
 
 def test_shared_account_sums_one_total_per_perp_namespace() -> None:

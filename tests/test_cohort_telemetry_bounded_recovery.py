@@ -9,7 +9,7 @@ import pytest
 
 from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTelemetry
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 
 def test_durable_decision_recovery_does_not_materialize_complete_ledger(
@@ -23,7 +23,7 @@ def test_durable_decision_recovery_does_not_materialize_complete_ledger(
         enabled=True,
         accepts_live_risk=True,
     )
-    ledger = SolLiveLedger(
+    ledger = AssetLiveLedger(
         path=tmp_path / "data/live/bidirectional_cohort/decisions.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,

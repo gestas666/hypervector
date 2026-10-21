@@ -6,7 +6,7 @@ from hypervector.live.hyperliquid_protocol import (
     HyperliquidOrderAck,
     HyperliquidOrderStatus,
 )
-from hypervector.live.hyperliquid_sol_parsing import (
+from hypervector.live.hyperliquid_parsing import (
     HyperliquidAdapterError,
     HyperliquidOrderUnavailableError,
     _ack_statuses,
@@ -18,7 +18,7 @@ from hypervector.live.hyperliquid_sol_parsing import (
     positive_integer,
     text,
 )
-from hypervector.live.sol_order_identity import validate_client_order_id
+from hypervector.live.asset_order_identity import validate_client_order_id
 
 
 def parse_order_status(

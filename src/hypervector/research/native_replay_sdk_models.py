@@ -5,8 +5,8 @@ from decimal import Decimal
 
 from hypervector.live.hyperliquid_hip3_fee_parsing import parse_hip3_market_fee_metadata
 from hypervector.live.hyperliquid_perp_parsing import parse_market_for_symbol
-from hypervector.live.hyperliquid_protocol import SolMarketMetadata
-from hypervector.live.hyperliquid_sol_parsing import parse_fees
+from hypervector.live.hyperliquid_protocol import HyperliquidMarketMetadata
+from hypervector.live.hyperliquid_parsing import parse_fees
 from hypervector.live.multi_asset_preflight_fees import preflight_fee_payload
 from hypervector.live.perp_venue_identity import parse_perp_venue_identity
 from hypervector.research.native_replay_events import require_clock
@@ -32,7 +32,7 @@ class ReplaySdkTiming:
 class ReplayMarket:
     """Native parsed precision and effective account fees for one declared market."""
 
-    metadata: SolMarketMetadata
+    metadata: HyperliquidMarketMetadata
     perp_dex: str
     maker_rate: Decimal
     taker_rate: Decimal

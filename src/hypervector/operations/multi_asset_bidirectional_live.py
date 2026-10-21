@@ -86,8 +86,8 @@ from hypervector.live.process_signal_stop import (
     raise_if_stop_requested,
     stop_aware_sleep,
 )
-from hypervector.live.sol_range_onset_engine import SolRangeOnsetLiveEngine
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_engine import AssetLiveEngine
+from hypervector.live.asset_ledger import AssetLiveLedger
 from hypervector.runtime_env import (
     CredentialPresence,
     credential_presence_from_env,
@@ -347,7 +347,7 @@ def _venue_metadata_mismatch(error: BaseException) -> BaseException | None:
 
 def _create_runner(
     config: MultiAssetLiveConfig,
-    engines: dict[str, SolRangeOnsetLiveEngine],
+    engines: dict[str, AssetLiveEngine],
     poller: ConfiguredMultiAssetIntentPoller,
     telemetry: MultiAssetCohortTelemetry,
     transition_drain: CohortTransitionDrain,
@@ -435,14 +435,14 @@ def _create_engines(
     adapters: MultiAssetCohortAdapters,
     presence: CredentialPresence,
     run_id: str,
-) -> tuple[dict[str, SolLiveLedger], dict[str, SolRangeOnsetLiveEngine]]:
+) -> tuple[dict[str, AssetLiveLedger], dict[str, AssetLiveEngine]]:
     ledgers = {
         asset.symbol: _ledger(asset.live_ledger, asset, run_id)
         for asset in config.assets
     }
     credentials_present = presence.wallet_configured and presence.signing_key_configured
     engines = {
-        asset.symbol: SolRangeOnsetLiveEngine(
+        asset.symbol: AssetLiveEngine(
             config=asset,
             adapter=adapters.by_symbol[asset.symbol],
             ledger=ledgers[asset.symbol],

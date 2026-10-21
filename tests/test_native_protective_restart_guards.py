@@ -4,10 +4,10 @@ from copy import deepcopy
 from dataclasses import replace
 
 import pytest
-from test_sol_range_onset_live_engine import _order, _stop_fill, _venue
+from test_asset_live_engine import _order, _stop_fill, _venue
 
-from hypervector.live.sol_order_restart import SolOrderRestartError
-from hypervector.live.sol_protective_restart_context import (
+from hypervector.live.asset_order_restart import AssetOrderRestartError
+from hypervector.live.asset_protective_restart_context import (
     UNRESOLVED_PROTECTIVE_EXIT,
     records_for_late_protective_exit,
 )
@@ -86,7 +86,7 @@ def test_open_without_fault_and_unrelated_fault_keep_existing_recovery() -> None
 def test_later_execution_or_conflicting_fault_blocks_recovery(tail: dict[str, object]) -> None:
     """A flat venue cannot justify discarding later contradictory execution evidence."""
     records = _records() + [tail]
-    with pytest.raises(SolOrderRestartError, match="protective restart"):
+    with pytest.raises(AssetOrderRestartError, match="protective restart"):
         records_for_late_protective_exit(records, _venue(0, fills=(_stop_fill(),)))
 
 
@@ -106,7 +106,7 @@ def test_fault_snapshot_must_preserve_all_original_identity(field: str, value: o
     """Ownership, quantity, clock and bound strategy plan cannot change during a retry."""
     records = _records()
     records[-1]["payload"][field] = value
-    with pytest.raises(SolOrderRestartError, match="contradictory"):
+    with pytest.raises(AssetOrderRestartError, match="contradictory"):
         records_for_late_protective_exit(records, _venue(0, fills=(_stop_fill(),)))
 
 
@@ -157,7 +157,7 @@ def test_missing_or_invalid_execution_attribution_stays_unresolved(
 ) -> None:
     """Position disappearance is insufficient without complete valid owned fill receipts."""
     fill = replace(_stop_fill(), **changes)
-    with pytest.raises(SolOrderRestartError, match=UNRESOLVED_PROTECTIVE_EXIT):
+    with pytest.raises(AssetOrderRestartError, match=UNRESOLVED_PROTECTIVE_EXIT):
         records_for_late_protective_exit(_records(), _venue(0, fills=(fill,)))
 
 
@@ -172,7 +172,7 @@ def test_ambiguous_venue_observations_stay_unresolved(kind: str) -> None:
         if kind.endswith(("order", "remains"))
         else ()
     )
-    with pytest.raises(SolOrderRestartError, match=UNRESOLVED_PROTECTIVE_EXIT):
+    with pytest.raises(AssetOrderRestartError, match=UNRESOLVED_PROTECTIVE_EXIT):
         records_for_late_protective_exit(
             _records(), _venue(0.3 if kind == "nonflat" else 0, orders, fills)
         )
@@ -189,7 +189,7 @@ def test_mixed_bracket_exit_requires_unique_trade_identity_across_orders(
     )
     venue = _venue(0, fills=(stop, target))
     if duplicate_identity:
-        with pytest.raises(SolOrderRestartError, match=UNRESOLVED_PROTECTIVE_EXIT):
+        with pytest.raises(AssetOrderRestartError, match=UNRESOLVED_PROTECTIVE_EXIT):
             records_for_late_protective_exit(_records(bracket=True), venue)
     else:
         records = _records(bracket=True)
@@ -202,14 +202,14 @@ def test_protective_identities_must_be_present_and_distinct(stop_oid: int | None
     records = _records(bracket=True)
     records[0]["payload"]["stop_oid"] = stop_oid
     records[2]["payload"]["stop_oid"] = stop_oid
-    with pytest.raises(SolOrderRestartError, match="distinct owned"):
+    with pytest.raises(AssetOrderRestartError, match="distinct owned"):
         records_for_late_protective_exit(records, _venue(0, fills=(_stop_fill(),)))
 
 
 def test_bracket_recovery_rejects_duplicate_open_order_rows() -> None:
     """Repeated residual order rows cannot authorize multiple cancellation intents."""
     order = _order(203, size=0.3, reduce_only=True, trigger=False)
-    with pytest.raises(SolOrderRestartError, match=UNRESOLVED_PROTECTIVE_EXIT):
+    with pytest.raises(AssetOrderRestartError, match=UNRESOLVED_PROTECTIVE_EXIT):
         records_for_late_protective_exit(
             _records(bracket=True), _venue(0, orders=(order, order), fills=(_stop_fill(),))
         )
@@ -224,13 +224,13 @@ def test_preflight_cannot_silently_claim_the_original_position() -> None:
             "payload": {**records[0]["payload"], "state": "PREFLIGHT"},
         }
     )
-    with pytest.raises(SolOrderRestartError, match="contradictory"):
+    with pytest.raises(AssetOrderRestartError, match="contradictory"):
         records_for_late_protective_exit(records, _venue(0, fills=(_stop_fill(),)))
 
 
 def test_malformed_state_payload_is_an_explicit_recovery_error() -> None:
     """Malformed durable ownership cannot be interpreted as an empty account."""
-    with pytest.raises(SolOrderRestartError, match="payload must be an object"):
+    with pytest.raises(AssetOrderRestartError, match="payload must be an object"):
         records_for_late_protective_exit(
             [{"event_type": "state_transition", "payload": None}], _venue(0)
         )

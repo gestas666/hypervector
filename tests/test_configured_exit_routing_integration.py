@@ -10,17 +10,17 @@ from test_cohort_regime_routing import _evaluation
 from hypervector.live.cohort_adaptive_exit_journal import AdaptiveExitJournal
 from hypervector.live.cohort_profit_lock_controller import CohortProfitLockController
 from hypervector.live.cohort_route_cycle import admitted_intents, configured_exit_batch
-from hypervector.live.hyperliquid_protocol import SolBookSnapshot, SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidBookSnapshot, HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot
+from hypervector.live.asset_state import AssetLiveSnapshot
 
 
 @dataclass
 class OwnedEngine:
     """Expose the production controller's exact owned lifecycle inputs."""
 
-    snapshot: SolLiveSnapshot
-    latest_book: SolBookSnapshot
+    snapshot: AssetLiveSnapshot
+    latest_book: HyperliquidBookSnapshot
 
 
 @pytest.mark.parametrize("side,trend,opposed,peak,cross", [
@@ -38,7 +38,7 @@ def test_canonical_deterioration_routes_persisted_exit_and_suppresses_entry(
     controller = CohortProfitLockController(symbols=("SOL",), engines={"SOL": owner}, telemetry=sink)
     timer, recipe = Mock(), Mock()
     timer.actions.return_value = recipe.actions.return_value = (set(), ())
-    venue = Mock(spec=SolReconciliationSnapshot)
+    venue = Mock(spec=HyperliquidReconciliationSnapshot)
     venue.position.entry_price = 100.0
     batch = None
     for stamp, direction, price in [(now, trend, peak), (now + 15_000, opposed, cross)]:

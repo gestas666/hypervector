@@ -36,11 +36,11 @@ from hypervector.live.cohort_breakeven_stop import (
     breakeven_target_price,
     raise_breakeven_stops,
 )
-from hypervector.live.hyperliquid_sol_parsing import normalize_perp_price
+from hypervector.live.hyperliquid_parsing import normalize_perp_price
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
-from hypervector.live.sol_order_submission import SolOrderSubmission
-from hypervector.live.sol_range_onset_engine_contract import STOP_ALREADY_AT_TARGET
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_order_submission import AssetOrderSubmission
+from hypervector.live.asset_engine_contract import STOP_ALREADY_AT_TARGET
+from hypervector.live.asset_state import AssetLiveState
 from hypervector.research.cohort_protection_warnings import protection_warnings
 
 _ATTEMPT = "breakeven_stop_attempt"
@@ -105,7 +105,7 @@ def test_a_restart_retarget_rounding_onto_the_resting_stop_makes_no_venue_call(
 
     assert outcome is STOP_ALREADY_AT_TARGET and not outcome
     assert replay.mutations == mutations
-    assert restarted.snapshot.state is SolLiveState.OPEN
+    assert restarted.snapshot.state is AssetLiveState.OPEN
     assert restarted.snapshot.stop_oid == resting and resting in replay.orders
     written = _rows(tmp_path, symbol)[before:]
     assert not [row for row in written if row["event_type"] in _VENUE_ROWS]
@@ -147,8 +147,8 @@ def test_the_adapter_normalization_is_the_wire_rounding_of_its_stop_orders(
 def test_the_order_layer_delegates_normalization_and_keeps_bare_adapters_exact() -> (
     None
 ):
-    def orders(adapter: object) -> SolOrderSubmission:
-        return SolOrderSubmission(
+    def orders(adapter: object) -> AssetOrderSubmission:
+        return AssetOrderSubmission(
             adapter=adapter,  # type: ignore[arg-type]
             events=Mock(),
             client_order_id_fn=Mock(side_effect=AssertionError("no order identity")),

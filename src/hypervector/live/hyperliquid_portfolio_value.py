@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 import math
 from typing import Protocol
 
-from hypervector.live.hyperliquid_sol_parsing import validate_address
+from hypervector.live.hyperliquid_parsing import validate_address
 
 _USDC_TOKEN_INDEX = 0
 _USDC_SYMBOL = "USDC"

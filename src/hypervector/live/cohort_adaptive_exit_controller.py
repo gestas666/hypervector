@@ -21,18 +21,18 @@ from hypervector.live.cohort_adaptive_exit_policy import (
     advance_retention_exit,
 )
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
-from hypervector.live.hyperliquid_protocol import SolBookSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidBookSnapshot
 from hypervector.live.multi_asset_live_runner_support import entry_provider_strategy_id
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
 from hypervector.live.provider_evaluation import ProviderEvaluation
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 
 def adaptive_exit_action(
     *,
     symbol: str,
-    snapshot: SolLiveSnapshot,
-    book: SolBookSnapshot | None,
+    snapshot: AssetLiveSnapshot,
+    book: HyperliquidBookSnapshot | None,
     observed_ms: int,
     entry_price: float | None,
     market_bars: tuple[CohortMarketBar, ...],
@@ -43,7 +43,7 @@ def adaptive_exit_action(
     """Return an exact persisted exit; unknown data cannot fabricate protection."""
     plan = snapshot.execution_plan
     if (
-        snapshot.state is not SolLiveState.OPEN
+        snapshot.state is not AssetLiveState.OPEN
         or plan is None
         or plan.adaptive_exit_policy == "none"
     ):
@@ -119,7 +119,7 @@ def adaptive_exit_action(
 
 
 def _identity(
-    symbol: str, snapshot: SolLiveSnapshot, entry_price: float | None
+    symbol: str, snapshot: AssetLiveSnapshot, entry_price: float | None
 ) -> dict[str, object]:
     if (
         snapshot.entry_oid is None
@@ -223,8 +223,8 @@ def _integer(value: object) -> int:
 def retention_exit_action(
     *,
     symbol: str,
-    snapshot: SolLiveSnapshot,
-    book: SolBookSnapshot | None,
+    snapshot: AssetLiveSnapshot,
+    book: HyperliquidBookSnapshot | None,
     observed_ms: int,
     entry_price: float | None,
     market_bars: tuple[CohortMarketBar, ...],
@@ -234,7 +234,7 @@ def retention_exit_action(
 ) -> RoutingAction | None:
     """Advance the regime-flip ratchet and profit floor from one executable quote."""
     plan = snapshot.execution_plan
-    if snapshot.state is not SolLiveState.OPEN or plan is None:
+    if snapshot.state is not AssetLiveState.OPEN or plan is None:
         return None
     if plan.adaptive_exit_policy != RETENTION_EXIT_POLICY or plan.retention_exit is None:
         raise ValueError("unsupported bound retention exit policy")
@@ -305,14 +305,14 @@ def lifecycle_risk_bps(
 def retention_breakeven_requested(
     *,
     symbol: str,
-    snapshot: SolLiveSnapshot,
+    snapshot: AssetLiveSnapshot,
     entry_price: float | None,
     journal: AdaptiveExitJournal,
 ) -> bool:
     """Report whether the durable retention state armed the profit floor for this lifecycle."""
     plan = snapshot.execution_plan
     if (
-        snapshot.state is not SolLiveState.OPEN
+        snapshot.state is not AssetLiveState.OPEN
         or plan is None
         or plan.adaptive_exit_policy != RETENTION_EXIT_POLICY
         or entry_price is None

@@ -8,8 +8,8 @@ from test_native_partial_protective_recovery import assert_closed_economics, res
 from test_native_protective_execution_progress import _partial_fixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
+from hypervector.live.asset_state import AssetLiveState
 
 __all__ = ["deny_external_ports"]
 
@@ -50,7 +50,7 @@ def test_rejected_remainder_close_preserves_obligation_and_accounts_for_racing_t
     if during_rejection == "full_target":
         assert_closed_economics(replay, "BTC")
         return
-    assert engine.snapshot.state is SolLiveState.EXIT_PENDING
+    assert engine.snapshot.state is AssetLiveState.EXIT_PENDING
     assert engine.snapshot.protective_progress.stop_exit_required
     assert engine.snapshot.opened_at_ms == original.opened_at_ms
     assert engine.snapshot.position_size_signed == float(
@@ -87,7 +87,7 @@ def test_partial_target_rejects_invalid_remaining_venue_orders_without_mutations
 
     replay._info.frontend_open_orders.side_effect = corrupted
     before = list(replay.mutations)
-    with pytest.raises(SolLiveEngineError):
+    with pytest.raises(AssetLiveEngineError):
         if on_restart:
             restart(replay, "BTC")
         else:

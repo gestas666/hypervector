@@ -18,7 +18,7 @@ from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
     load_multi_asset_live_config,
 )
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 
 def test_restart_retains_compatible_fill_and_cost_history(tmp_path: Path) -> None:
@@ -182,20 +182,20 @@ def _config() -> MultiAssetLiveConfig:
 def _restarted_asset_ledgers(
     tmp_path: Path,
     config: MultiAssetLiveConfig,
-) -> dict[str, SolLiveLedger]:
+) -> dict[str, AssetLiveLedger]:
     return {
         asset.symbol: _ledger(tmp_path, asset, "old-run") for asset in config.assets
     }
 
 
 def _reopen_asset_ledgers(
-    ledgers: dict[str, SolLiveLedger],
+    ledgers: dict[str, AssetLiveLedger],
     config: MultiAssetLiveConfig,
     run_id: str,
-) -> dict[str, SolLiveLedger]:
+) -> dict[str, AssetLiveLedger]:
     assets = {asset.symbol: asset for asset in config.assets}
     return {
-        symbol: SolLiveLedger(
+        symbol: AssetLiveLedger(
             path=ledger.path,
             profile_id=assets[symbol].profile_id,
             profile_fingerprint=assets[symbol].profile_fingerprint,
@@ -210,8 +210,8 @@ def _ledger(
     tmp_path: Path,
     asset: AssetLiveConfig,
     run_id: str,
-) -> SolLiveLedger:
-    return SolLiveLedger(
+) -> AssetLiveLedger:
+    return AssetLiveLedger(
         path=tmp_path
         / "data/live/bidirectional_cohort"
         / f"{asset.symbol.lower()}.jsonl",
@@ -222,7 +222,7 @@ def _ledger(
     )
 
 
-def _append_hype_lifecycle(ledger: SolLiveLedger) -> None:
+def _append_hype_lifecycle(ledger: AssetLiveLedger) -> None:
     _append(
         ledger, "regime_decision", 0, _decision("test_fade_1m")
     )
@@ -250,7 +250,7 @@ def _append_hype_lifecycle(ledger: SolLiveLedger) -> None:
     )
 
 
-def _append_new_hype_entry(ledger: SolLiveLedger) -> None:
+def _append_new_hype_entry(ledger: AssetLiveLedger) -> None:
     _append(
         ledger, "regime_decision", 11, _decision("test_fade_1m")
     )
@@ -312,7 +312,7 @@ def _fill_sized(
 
 
 def _append(
-    ledger: SolLiveLedger,
+    ledger: AssetLiveLedger,
     event_type: str,
     offset: int,
     payload: dict[str, object],
@@ -329,9 +329,9 @@ def _append(
 def _emit_snapshot(
     tmp_path: Path,
     config: MultiAssetLiveConfig,
-    asset_ledgers: dict[str, SolLiveLedger],
+    asset_ledgers: dict[str, AssetLiveLedger],
 ) -> dict[str, object]:
-    cohort = SolLiveLedger(
+    cohort = AssetLiveLedger(
         path=tmp_path / "data/live/bidirectional_cohort/decisions.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,

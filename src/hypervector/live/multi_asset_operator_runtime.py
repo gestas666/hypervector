@@ -12,8 +12,8 @@ from hypervector.live.cohort_operator_commands import (
     CohortProfileSettings,
 )
 from hypervector.live.cohort_transition_drain import CohortTransitionDrainError
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
+from hypervector.live.asset_state import AssetLiveSnapshot
 
 
 class OperatorCommandSourceProtocol(Protocol):
@@ -40,7 +40,7 @@ class OperatorEngineProtocol(Protocol):
     """Minimum venue-protected lifecycle used by manual overrides."""
 
     @property
-    def snapshot(self) -> SolLiveSnapshot: ...
+    def snapshot(self) -> AssetLiveSnapshot: ...
 
 
 class CohortOperatorExecutionError(RuntimeError):
@@ -130,7 +130,7 @@ class LiveOperatorCommandProcessor:
             self._lifecycle.emit(claim, "accepted", "backend constraints passed")
             try:
                 execute(action)
-            except SolLiveEngineError as exc:
+            except AssetLiveEngineError as exc:
                 self._lifecycle.reject(claim, f"execution failed: {exc}")
                 raise CohortOperatorExecutionError(
                     f"operator command {claim.request_id} failed closed"

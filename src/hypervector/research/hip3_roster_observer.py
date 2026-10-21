@@ -14,10 +14,10 @@ from typing import Protocol
 
 from hypervector.live.hyperliquid_protocol import (
     Hip3MarketFeeMetadata,
-    SolBookLevel,
-    SolBookSnapshot,
-    SolOpenOrder,
-    SolVenuePreflight,
+    HyperliquidBookLevel,
+    HyperliquidBookSnapshot,
+    HyperliquidOpenOrder,
+    HyperliquidVenuePreflight,
 )
 from hypervector.research.hip3_fee_model import Hip3FeeInputs, effective_hip3_fees
 
@@ -41,15 +41,15 @@ class Hip3MarketSpec:
 class Hip3ReaderProtocol(Protocol):
     """Read-only venue surface required by the roster observer."""
 
-    def preflight(self, *, expected_max_leverage: int) -> SolVenuePreflight:
+    def preflight(self, *, expected_max_leverage: int) -> HyperliquidVenuePreflight:
         """Return current venue, account, and fee truth."""
         ...
 
-    def book_snapshot(self, *, depth_levels: int) -> SolBookSnapshot:
+    def book_snapshot(self, *, depth_levels: int) -> HyperliquidBookSnapshot:
         """Return one exact two-sided order book."""
         ...
 
-    def open_orders(self) -> tuple[SolOpenOrder, ...]:
+    def open_orders(self) -> tuple[HyperliquidOpenOrder, ...]:
         """Return open orders for only the bound symbol."""
         ...
 
@@ -184,7 +184,7 @@ def _validate_reader_roster(
 
 
 def _venue_payload(
-    preflight: SolVenuePreflight,
+    preflight: HyperliquidVenuePreflight,
     metadata: Hip3MarketFeeMetadata,
 ) -> dict[str, object]:
     fees = _fee_payload(preflight, metadata)
@@ -200,7 +200,7 @@ def _venue_payload(
 
 
 def _fee_payload(
-    preflight: SolVenuePreflight,
+    preflight: HyperliquidVenuePreflight,
     metadata: Hip3MarketFeeMetadata,
 ) -> dict[str, object]:
     common = {
@@ -248,7 +248,7 @@ def _fee_payload(
     }
 
 
-def _book_payload(book: SolBookSnapshot) -> dict[str, object]:
+def _book_payload(book: HyperliquidBookSnapshot) -> dict[str, object]:
     return {
         "exchange_timestamp_ms": book.exchange_timestamp_ms,
         "mid_price": book.mid_price,
@@ -261,7 +261,7 @@ def _book_payload(book: SolBookSnapshot) -> dict[str, object]:
     }
 
 
-def _depth_window(book: SolBookSnapshot, levels: int) -> dict[str, float]:
+def _depth_window(book: HyperliquidBookSnapshot, levels: int) -> dict[str, float]:
     bids = book.bids[:levels]
     asks = book.asks[:levels]
     bid_depth = _depth(bids)
@@ -274,13 +274,13 @@ def _depth_window(book: SolBookSnapshot, levels: int) -> dict[str, float]:
     }
 
 
-def _depth(levels: tuple[SolBookLevel, ...]) -> float:
+def _depth(levels: tuple[HyperliquidBookLevel, ...]) -> float:
     return sum(level.size for level in levels)
 
 
 def _account_payload(
-    preflight: SolVenuePreflight,
-    orders: tuple[SolOpenOrder, ...],
+    preflight: HyperliquidVenuePreflight,
+    orders: tuple[HyperliquidOpenOrder, ...],
 ) -> dict[str, object]:
     return {
         "account_value_usd": preflight.account_value_usd,

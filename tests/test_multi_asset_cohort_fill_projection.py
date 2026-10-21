@@ -14,7 +14,7 @@ from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
     load_multi_asset_live_config,
 )
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 _RUN_ID = "cohort-live-fill-test"
 _CLIENT_ORDER_ID = "0x11111111111111111111111111111111"
@@ -55,9 +55,9 @@ def test_snapshot_projects_fill_slippage_latency_and_markout(tmp_path: Path) -> 
 def _asset_ledgers(
     config: MultiAssetLiveConfig,
     tmp_path: Path,
-) -> dict[str, SolLiveLedger]:
+) -> dict[str, AssetLiveLedger]:
     return {
-        asset.symbol: SolLiveLedger(
+        asset.symbol: AssetLiveLedger(
             path=tmp_path
             / "data/live/bidirectional_cohort"
             / f"{asset.symbol.lower()}.jsonl",
@@ -70,8 +70,8 @@ def _asset_ledgers(
     }
 
 
-def _cohort_ledger(config: MultiAssetLiveConfig, tmp_path: Path) -> SolLiveLedger:
-    return SolLiveLedger(
+def _cohort_ledger(config: MultiAssetLiveConfig, tmp_path: Path) -> AssetLiveLedger:
+    return AssetLiveLedger(
         path=tmp_path / "data/live/bidirectional_cohort/decisions.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,
@@ -80,12 +80,12 @@ def _cohort_ledger(config: MultiAssetLiveConfig, tmp_path: Path) -> SolLiveLedge
     )
 
 
-def _seed_fill_lifecycle(ledger: SolLiveLedger) -> None:
+def _seed_fill_lifecycle(ledger: AssetLiveLedger) -> None:
     _seed_entry_identity(ledger)
     _seed_fill_and_book(ledger)
 
 
-def _seed_entry_identity(ledger: SolLiveLedger) -> None:
+def _seed_entry_identity(ledger: AssetLiveLedger) -> None:
     _append(
         ledger,
         "regime_decision",
@@ -118,7 +118,7 @@ def _seed_entry_identity(ledger: SolLiveLedger) -> None:
     )
 
 
-def _seed_fill_and_book(ledger: SolLiveLedger) -> None:
+def _seed_fill_and_book(ledger: AssetLiveLedger) -> None:
     _append(
         ledger,
         "fill",
@@ -154,7 +154,7 @@ def _seed_fill_and_book(ledger: SolLiveLedger) -> None:
 
 
 def _append(
-    ledger: SolLiveLedger,
+    ledger: AssetLiveLedger,
     event_type: str,
     observed_at_utc: str,
     payload: dict[str, object],

@@ -13,14 +13,14 @@ from hypervector.live.bidirectional_intents import (
 )
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_cohort_telemetry import (
     AssetCohortSnapshot,
     SharedAccountFacts,
 )
 from hypervector.live.perp_venue_identity import parse_perp_venue_identity
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
-from hypervector.live.sol_protective_order import protective_stop_covers
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
+from hypervector.live.asset_protective_order import protective_stop_covers
 
 
 class MultiAssetLiveRunnerError(RuntimeError):
@@ -46,11 +46,11 @@ class ReconciliationEngine(Protocol):
     """Minimum engine surface needed by shared reconciliation helpers."""
 
     @property
-    def snapshot(self) -> SolLiveSnapshot: ...
+    def snapshot(self) -> AssetLiveSnapshot: ...
 
     def reconcile_telemetry(
         self, *, funding_start_time_ms: int, funding_end_time_ms: int
-    ) -> SolReconciliationSnapshot: ...
+    ) -> HyperliquidReconciliationSnapshot: ...
 
 
 def validate_runtime(
@@ -92,14 +92,14 @@ def entry_provider_strategy_id(strategy_id: str) -> str:
 
 def shared_account_facts(
     symbols: tuple[str, ...],
-    venues: tuple[SolReconciliationSnapshot, ...],
+    venues: tuple[HyperliquidReconciliationSnapshot, ...],
 ) -> SharedAccountFacts:
     """Project shared equity and one exposure total per perp namespace."""
     if not venues:
         raise MultiAssetLiveRunnerError("shared account reconciliation is empty")
     if len(symbols) != len(venues):
         raise MultiAssetLiveRunnerError("shared account symbols and venue snapshots must agree")
-    namespaces: dict[str, SolReconciliationSnapshot] = {}
+    namespaces: dict[str, HyperliquidReconciliationSnapshot] = {}
     for symbol, venue in zip(symbols, venues, strict=True):
         namespace = parse_perp_venue_identity(symbol).perp_dex
         namespaces[namespace] = venue
@@ -118,7 +118,7 @@ def reconcile_engines(
     engines: Mapping[str, ReconciliationEngine],
     funding_start_time_ms: int,
     funding_end_time_ms: int,
-) -> tuple[SolReconciliationSnapshot, ...]:
+) -> tuple[HyperliquidReconciliationSnapshot, ...]:
     """Reconcile every symbol against one exact shared funding window."""
     return tuple(
         engines[symbol].reconcile_telemetry(
@@ -132,7 +132,7 @@ def reconcile_engines(
 def asset_snapshots(
     symbols: tuple[str, ...],
     engines: Mapping[str, ReconciliationEngine],
-    venues: tuple[SolReconciliationSnapshot, ...],
+    venues: tuple[HyperliquidReconciliationSnapshot, ...],
     reference_prices: Mapping[str, float],
 ) -> tuple[AssetCohortSnapshot, ...]:
     """Project each reconciled venue using its corresponding engine state."""
@@ -157,8 +157,8 @@ def engine_position_states(
 
 def asset_snapshot(
     symbol: str,
-    snapshot: SolLiveSnapshot,
-    venue: SolReconciliationSnapshot,
+    snapshot: AssetLiveSnapshot,
+    venue: HyperliquidReconciliationSnapshot,
     mark_price: float | None,
 ) -> AssetCohortSnapshot:
     """Combine lifecycle identity with venue-authoritative position facts."""
@@ -194,7 +194,7 @@ def asset_snapshot(
     )
 
 
-def _stop_protection(snapshot: SolLiveSnapshot, venue: SolReconciliationSnapshot) -> str:
+def _stop_protection(snapshot: AssetLiveSnapshot, venue: HyperliquidReconciliationSnapshot) -> str:
     if venue.position.size_signed == 0.0:
         return "flat"
     stops = [order for order in venue.open_orders if order.oid == snapshot.stop_oid]
@@ -243,7 +243,7 @@ def remaining_delay(period_seconds: float, elapsed_seconds: float) -> float:
     return max(0.0, period_seconds - elapsed_seconds)
 
 
-def all_flat_and_unowned(snapshots: tuple[SolLiveSnapshot, ...]) -> bool:
+def all_flat_and_unowned(snapshots: tuple[AssetLiveSnapshot, ...]) -> bool:
     """Return whether every lifecycle is flat without an owned order identity."""
     for snapshot in snapshots:
         owned = (
@@ -252,7 +252,7 @@ def all_flat_and_unowned(snapshots: tuple[SolLiveSnapshot, ...]) -> bool:
             snapshot.target_oid,
             snapshot.close_oid,
         )
-        if snapshot.state != SolLiveState.FLAT or any(oid is not None for oid in owned):
+        if snapshot.state != AssetLiveState.FLAT or any(oid is not None for oid in owned):
             return False
         if snapshot.position_size_signed != 0.0:
             return False

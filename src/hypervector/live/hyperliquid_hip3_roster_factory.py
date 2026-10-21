@@ -11,8 +11,8 @@ from hypervector.live.hyperliquid_hip3_factory import (
 )
 from hypervector.live.hyperliquid_perp_reader import HyperliquidPerpReader
 from hypervector.live.hyperliquid_protocol import HyperliquidInfoProtocol
-from hypervector.live.hyperliquid_sol_factory import OfficialSolReadOnlySdkBuilder
-from hypervector.live.hyperliquid_sol_parsing import (
+from hypervector.live.hyperliquid_sdk_factory import OfficialHyperliquidReadOnlySdkBuilder
+from hypervector.live.hyperliquid_parsing import (
     HyperliquidAdapterError,
     validate_address,
 )
@@ -63,7 +63,7 @@ def _build_roster(
     if not address:
         raise HyperliquidAdapterError("read-only HIP-3 telemetry requires a wallet")
     validated_address = validate_address(address)
-    sdk_builder = builder if builder is not None else OfficialSolReadOnlySdkBuilder()
+    sdk_builder = builder if builder is not None else OfficialHyperliquidReadOnlySdkBuilder()
     info = sdk_builder.build(perp_dexes=(dex,))
     readers = {
         symbol: HyperliquidPerpReader(

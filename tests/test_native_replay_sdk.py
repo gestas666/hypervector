@@ -5,7 +5,7 @@ from decimal import Decimal
 import pytest
 from test_native_replay_adapter import ADDRESS, deny_external_ports
 
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.multi_asset_directional_adapter import MultiAssetDirectionalAdapter
 from hypervector.research.native_replay_clock import ReplayClock
 from hypervector.research.native_replay_depth import ExactLevel, RecordedBook
@@ -64,7 +64,7 @@ def recorded_book(symbol: str, arrival_ms: int, step: Decimal) -> RecordedBook:
 def adapter(replay: ReplaySdk) -> MultiAssetDirectionalAdapter:
     """Use the real directional and SDK adapters around one offline shared state."""
     return MultiAssetDirectionalAdapter(
-        BtcHyperliquidAdapter(
+        HyperliquidPerpAdapter(
             info=replay.info,
             exchange=replay.exchange,
             account_address=ADDRESS,

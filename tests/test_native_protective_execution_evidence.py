@@ -5,8 +5,8 @@ import json
 
 import pytest
 
-from hypervector.live.hyperliquid_protocol import SolFill
-from hypervector.live.sol_protective_execution_evidence import (
+from hypervector.live.hyperliquid_protocol import HyperliquidFill
+from hypervector.live.asset_protective_execution_evidence import (
     ProtectiveExecutionEvidenceError,
     ProtectiveExecutionProgress,
     observe_protective_execution,
@@ -16,15 +16,15 @@ STOP_OID, TARGET_OID = 41, 42
 OPENED_MS, OBSERVED_MS = 1000, 5000
 
 
-def receipt(*, quantity: float = 2.0, oid: int = TARGET_OID, trade_id: int = 9) -> SolFill:
+def receipt(*, quantity: float = 2.0, oid: int = TARGET_OID, trade_id: int = 9) -> HyperliquidFill:
     """Create one explicit normalized closing receipt, including all economics."""
-    return SolFill(
+    return HyperliquidFill(
         oid, 123.5, quantity, "A", 2000, 0.25, "USDC", 3.75, False, "Close Long", "0xabc", trade_id
     )
 
 
 def observe(
-    fills: tuple[SolFill, ...],
+    fills: tuple[HyperliquidFill, ...],
     *,
     previous: float = 8.0,
     current: float = 6.0,
@@ -231,7 +231,7 @@ def test_corrupt_checkpoint_is_rejected(value: object) -> None:
         ProtectiveExecutionProgress.from_payload(value)
 
 
-@pytest.mark.parametrize("field", list(SolFill.__dataclass_fields__))
+@pytest.mark.parametrize("field", list(HyperliquidFill.__dataclass_fields__))
 def test_checkpoint_requires_every_economic_receipt_field(field: str) -> None:
     """Losing a price, fee or identity field cannot become a successful restart."""
     raw = asdict(receipt())

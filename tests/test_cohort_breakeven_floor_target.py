@@ -28,13 +28,13 @@ from hypervector.live.cohort_execution_plan import (
 from hypervector.live.cohort_profile_stage import _toml
 from hypervector.live.bidirectional_intents import IntentRoutingReport
 from hypervector.live.hyperliquid_protocol import (
-    SolBookLevel,
-    SolBookSnapshot,
-    SolOpenOrder,
+    HyperliquidBookLevel,
+    HyperliquidBookSnapshot,
+    HyperliquidOpenOrder,
 )
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.sol_range_onset_ledger import SOL_LIVE_EVENT_TYPES
+from hypervector.live.asset_ledger import ASSET_LIVE_EVENT_TYPES
 from hypervector.research.cohort_configuration_exit_policy import (
     provider_exit_expectation,
     provider_exit_policy_evidence,
@@ -54,11 +54,11 @@ class _Position:
 @dataclass
 class _Venue:
     position: _Position
-    open_orders: tuple[SolOpenOrder, ...] = field(default_factory=tuple)
+    open_orders: tuple[HyperliquidOpenOrder, ...] = field(default_factory=tuple)
 
 
-def _stop(trigger: float, oid: int = 77) -> SolOpenOrder:
-    return SolOpenOrder(oid, 1.0, 1.0, "A", True, True, trigger, "Stop Market", NOW)
+def _stop(trigger: float, oid: int = 77) -> HyperliquidOpenOrder:
+    return HyperliquidOpenOrder(oid, 1.0, 1.0, "A", True, True, trigger, "Stop Market", NOW)
 
 
 def _contract(
@@ -81,11 +81,11 @@ def _plan(target: str = "floor", stop_bps: float = 250.0) -> BoundExecutionPlan:
     )
 
 
-def _book(bid: float, ask: float, stamp: int = NOW - 1_000) -> SolBookSnapshot:
-    return SolBookSnapshot(
+def _book(bid: float, ask: float, stamp: int = NOW - 1_000) -> HyperliquidBookSnapshot:
+    return HyperliquidBookSnapshot(
         stamp,
-        (SolBookLevel(bid, 10, 1),),
-        (SolBookLevel(ask, 10, 1),),
+        (HyperliquidBookLevel(bid, 10, 1),),
+        (HyperliquidBookLevel(ask, 10, 1),),
         (bid + ask) / 2,
         (ask - bid) / ((bid + ask) / 2) * 10_000,
         10,
@@ -98,10 +98,10 @@ def _run(
     *,
     plan: BoundExecutionPlan,
     size: float,
-    book: SolBookSnapshot | None,
+    book: HyperliquidBookSnapshot | None,
     outcomes: list[bool] | None = None,
     attempts: dict[tuple[str, int], int] | None = None,
-    resting: SolOpenOrder | None = None,
+    resting: HyperliquidOpenOrder | None = None,
 ) -> tuple[bool, list[float], list[dict[str, object]], dict[tuple[str, int], int]]:
     calls: list[float] = []
     events: list[dict[str, object]] = []
@@ -170,7 +170,7 @@ def test_structural_floor_uses_the_lifecycle_initial_stop_distance() -> None:
     [(1.0, _book(106.0, 106.01), 101.25), (-1.0, _book(93.99, 94.0), 98.75)],
 )
 def test_floor_mode_raises_to_half_r_inside_the_market(
-    size: float, book: SolBookSnapshot, trigger: float
+    size: float, book: HyperliquidBookSnapshot, trigger: float
 ) -> None:
     mutated, calls, events, counts = _run(plan=_plan(), size=size, book=book)
     assert mutated is True
@@ -200,7 +200,7 @@ def test_floor_mode_raises_to_half_r_inside_the_market(
     ],
 )
 def test_target_at_or_through_the_executable_quote_is_skipped_and_journaled(
-    size: float, book: SolBookSnapshot
+    size: float, book: HyperliquidBookSnapshot
 ) -> None:
     mutated, calls, events, counts = _run(plan=_plan(), size=size, book=book)
     assert mutated is False and calls == [] and counts == {}
@@ -221,7 +221,7 @@ def test_target_at_or_through_the_executable_quote_is_skipped_and_journaled(
     ],
 )
 def test_missing_stale_or_crossed_quote_skips_without_consuming_an_attempt(
-    book: SolBookSnapshot | None,
+    book: HyperliquidBookSnapshot | None,
 ) -> None:
     mutated, calls, events, counts = _run(plan=_plan(), size=1.0, book=book)
     assert mutated is False and calls == [] and counts == {}
@@ -279,7 +279,7 @@ def test_exhausted_raise_is_journaled_once_per_lifecycle(target: str) -> None:
 
 
 def test_new_break_even_events_are_durable_ledger_types() -> None:
-    assert {BREAKEVEN_SKIPPED_EVENT, RAISE_EXHAUSTED_EVENT} <= SOL_LIVE_EVENT_TYPES
+    assert {BREAKEVEN_SKIPPED_EVENT, RAISE_EXHAUSTED_EVENT} <= ASSET_LIVE_EVENT_TYPES
 
 
 def test_contract_option_is_typed_opt_in_and_omitted_by_default() -> None:
@@ -354,7 +354,7 @@ def test_option_absent_keeps_baseline_identity_and_floor_changes_it(tmp_path) ->
     [(_stop(101.25), False), (_stop(101.3), False), (_stop(97.5), True)],
 )
 def test_restart_retry_against_an_already_raised_stop_is_not_a_warning(
-    resting: SolOpenOrder, warned: bool
+    resting: HyperliquidOpenOrder, warned: bool
 ) -> None:
     counts: dict[tuple[str, int], int] = {}
     journal: list[dict[str, object]] = []

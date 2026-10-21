@@ -2,9 +2,9 @@
 
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
 from hypervector.live.hyperliquid_protocol import (
-    SolAccountSnapshot,
-    SolPositionSnapshot,
-    SolReconciliationSnapshot,
+    HyperliquidAccountSnapshot,
+    HyperliquidPositionSnapshot,
+    HyperliquidReconciliationSnapshot,
 )
 
 
@@ -21,9 +21,9 @@ def execution_contract(
     )
 
 
-def venue_snapshot(size: float) -> SolReconciliationSnapshot:
+def venue_snapshot(size: float) -> HyperliquidReconciliationSnapshot:
     """Return one deterministic isolated-margin venue snapshot."""
-    position = SolPositionSnapshot(
+    position = HyperliquidPositionSnapshot(
         size_signed=size,
         entry_price=100.0 if size else None,
         liquidation_price=80.0 if size > 0 else 120.0 if size < 0 else None,
@@ -33,5 +33,5 @@ def venue_snapshot(size: float) -> SolReconciliationSnapshot:
         leverage_type="isolated" if size else None,
         leverage=5 if size else None,
     )
-    account = SolAccountSnapshot(153.5, 148.0, 5.5, 25.0, position)
-    return SolReconciliationSnapshot(account, (), ())
+    account = HyperliquidAccountSnapshot(153.5, 148.0, 5.5, 25.0, position)
+    return HyperliquidReconciliationSnapshot(account, (), ())

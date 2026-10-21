@@ -12,15 +12,15 @@ from hypervector.live.cohort_maximum_hold_controller import (
 from hypervector.live.cohort_maximum_hold_policy import EvaluationKey
 from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 
 class _Engine:
-    def __init__(self, snapshot: SolLiveSnapshot) -> None:
+    def __init__(self, snapshot: AssetLiveSnapshot) -> None:
         self._snapshot = snapshot
 
     @property
-    def snapshot(self) -> SolLiveSnapshot:
+    def snapshot(self) -> AssetLiveSnapshot:
         return self._snapshot
 
 
@@ -138,7 +138,7 @@ def _controller(engine: _Engine, telemetry: _Telemetry) -> CohortMaximumHoldCont
     )
 
 
-def _open_snapshot(opened_at_ms: int) -> SolLiveSnapshot:
+def _open_snapshot(opened_at_ms: int) -> AssetLiveSnapshot:
     plan = ProviderExecutionContract(
         entry_liquidity="taker_ioc",
         stop_policy="fixed_bps",
@@ -149,8 +149,8 @@ def _open_snapshot(opened_at_ms: int) -> SolLiveSnapshot:
         hard_maximum_hold_seconds=86_400,
         maximum_hold_evidence_maximum_age_seconds=60,
     ).bind(strategy_id="hype", stop_anchor=None)
-    return SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    return AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=99,
         stop_oid=100,
         position_size_signed=1.0,

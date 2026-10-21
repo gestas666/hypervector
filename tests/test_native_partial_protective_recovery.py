@@ -10,9 +10,9 @@ from test_native_partial_protective_execution import CASES, assert_partial_econo
 from test_native_protective_execution_progress import _partial_fixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_range_onset_engine import SolRangeOnsetLiveEngine
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_engine import AssetLiveEngine
+from hypervector.live.asset_live_journal import build_live_journal
+from hypervector.live.asset_state import AssetLiveState
 from hypervector.live.multi_asset_cohort_history import fill_payloads
 
 __all__ = ["deny_external_ports"]
@@ -23,7 +23,7 @@ def assert_closed_economics(replay: PartialProtectiveFixture, symbol: str) -> No
     engine = replay.engines[symbol]
     records = [json.loads(line) for line in engine._ledger.path.read_text().splitlines()]
     journal = build_live_journal(records)
-    assert engine.snapshot.state is SolLiveState.FLAT
+    assert engine.snapshot.state is AssetLiveState.FLAT
     assert not journal["open_lifecycles"] and len(journal["trades"]) == 1
     assert journal["trades"][0]["net_pnl_usd"] == pytest.approx(
         float(replay.account.snapshot().cash_usd) - 5000
@@ -31,7 +31,7 @@ def assert_closed_economics(replay: PartialProtectiveFixture, symbol: str) -> No
     assert_partial_economics(replay)
 
 
-def restart(replay: PartialProtectiveFixture, symbol: str) -> SolRangeOnsetLiveEngine:
+def restart(replay: PartialProtectiveFixture, symbol: str) -> AssetLiveEngine:
     """Replace only the local consumer, retaining its original ledger and venue ports."""
     engine = replay.engine(replay.assets[symbol])
     replay.engines[symbol] = engine
@@ -47,7 +47,7 @@ def test_restart_observes_previously_unacknowledged_partial_protection(
     replay, original = _partial_fixture(tmp_path, symbol, kind, last_side, Decimal("0.5"))
     engine = restart(replay, symbol)
     if kind == "target":
-        assert engine.snapshot.state is SolLiveState.OPEN
+        assert engine.snapshot.state is AssetLiveState.OPEN
         assert engine.snapshot.position_size_signed == float(
             replay.account.snapshot().positions[symbol].quantity_signed
         )
@@ -95,7 +95,7 @@ def test_repeated_target_partials_restart_and_final_close_retain_every_fill(
     fills = fill_payloads("BTC", engine._ledger.read_all())
     assert {fill["strategy_id"] for fill in fills} == {fills[0]["strategy_id"]}
     count = replay.mutations.count("close")
-    assert restart(replay, "BTC").snapshot.state is SolLiveState.FLAT
+    assert restart(replay, "BTC").snapshot.state is AssetLiveState.FLAT
     assert replay.mutations.count("close") == count
 
 
@@ -117,7 +117,7 @@ def test_scheduled_exit_observes_completed_protection_after_a_partial_target(
     replay.fill_owned_order(
         original.stop_oid if kind == "stop" else original.target_oid, history_delay_ms=0
     )
-    assert engine.exit(mark_price=100, reason="fixture_fixed_hold").state is SolLiveState.FLAT
+    assert engine.exit(mark_price=100, reason="fixture_fixed_hold").state is AssetLiveState.FLAT
     assert replay.mutations.count("close") == 0
     assert_closed_economics(replay, "BTC")
 

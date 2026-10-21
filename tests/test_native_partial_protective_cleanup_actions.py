@@ -6,24 +6,24 @@ from unittest.mock import Mock
 import pytest
 from test_native_partial_protective_cleanup_evidence import pending_records
 from test_native_replay_adapter import deny_external_ports
-from test_sol_range_onset_live_engine import _order, _venue
+from test_asset_live_engine import _order, _venue
 
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidOrderAck,
-    SolReconciliationSnapshot,
+    HyperliquidReconciliationSnapshot,
 )
-from hypervector.live.sol_order_submission import SolOrderSubmission
-from hypervector.live.sol_partial_protective_recovery import _context_snapshot
-from hypervector.live.sol_protective_cleanup_actions import finish_protective_cleanup
-from hypervector.live.sol_protective_cleanup_checkpoint import (
+from hypervector.live.asset_order_submission import AssetOrderSubmission
+from hypervector.live.asset_partial_protective_recovery import _context_snapshot
+from hypervector.live.asset_protective_cleanup_actions import finish_protective_cleanup
+from hypervector.live.asset_protective_cleanup_checkpoint import (
     pending_protective_cleanup,
 )
-from hypervector.live.sol_protective_execution_evidence import (
+from hypervector.live.asset_protective_execution_evidence import (
     ProtectiveExecutionEvidenceError,
 )
-from hypervector.live.sol_range_onset_consistency import SolReconciliationPoller
-from hypervector.live.sol_range_onset_engine_events import SolLiveEngineEvents
-from hypervector.live.sol_range_onset_reconcile import SolStartupReconciliationError
+from hypervector.live.asset_consistency import AssetReconciliationPoller
+from hypervector.live.asset_engine_events import AssetLiveEngineEvents
+from hypervector.live.asset_reconcile import AssetStartupReconciliationError
 
 __all__ = ["deny_external_ports", "pending_records"]
 
@@ -50,10 +50,10 @@ def test_contradictory_venue_before_or_after_cleanup_cannot_commit_flat(
     assert context is not None and context.owner.target_oid is not None
     clean = _venue(0.0, fills=context.completed.fills)
     broken = _corrupted(clean, context.owner.target_oid, corruption)
-    orders, events = Mock(spec=SolOrderSubmission), Mock(spec=SolLiveEngineEvents)
-    poller = Mock(spec=SolReconciliationPoller)
+    orders, events = Mock(spec=AssetOrderSubmission), Mock(spec=AssetLiveEngineEvents)
+    poller = Mock(spec=AssetReconciliationPoller)
     poller.wait_for.return_value = broken if after_poll else clean
-    with pytest.raises((SolStartupReconciliationError, ProtectiveExecutionEvidenceError)):
+    with pytest.raises((AssetStartupReconciliationError, ProtectiveExecutionEvidenceError)):
         finish_protective_cleanup(
             owner=_context_snapshot(context.owner),
             completed=context.completed,
@@ -66,7 +66,7 @@ def test_contradictory_venue_before_or_after_cleanup_cannot_commit_flat(
     assert not orders.mock_calls and not events.mock_calls
 
 
-def _corrupted(venue: SolReconciliationSnapshot, oid: int, kind: str) -> SolReconciliationSnapshot:
+def _corrupted(venue: HyperliquidReconciliationSnapshot, oid: int, kind: str) -> HyperliquidReconciliationSnapshot:
     order = _order(oid, size=0.1, reduce_only=True, trigger=True)
     if kind == "position":
         position = replace(venue.position, size_signed=0.1)
@@ -101,14 +101,14 @@ def test_unresolved_exact_cancel_status_cannot_record_cleanup_success(
         orders=(_order(oid, size=0.1, reduce_only=True, trigger=True),),
         fills=context.completed.fills,
     )
-    orders, events = Mock(spec=SolOrderSubmission), Mock(spec=SolLiveEngineEvents)
+    orders, events = Mock(spec=AssetOrderSubmission), Mock(spec=AssetLiveEngineEvents)
     status = "unknown" if failure == "unknown_status" else "open"
     orders.recover_existing_cancel.return_value = HyperliquidOrderAck(
         False, 99999 if failure == "identity" else oid, status
     )
     orders.cancel_order.return_value = HyperliquidOrderAck(False, oid, "error", error="rejected")
-    poller = Mock(spec=SolReconciliationPoller)
-    with pytest.raises(SolStartupReconciliationError):
+    poller = Mock(spec=AssetReconciliationPoller)
+    with pytest.raises(AssetStartupReconciliationError):
         finish_protective_cleanup(
             owner=_context_snapshot(context.owner),
             completed=context.completed,

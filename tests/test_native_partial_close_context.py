@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import pytest
 
-from hypervector.live.sol_close_restart_context import (
+from hypervector.live.asset_close_restart_context import (
     PARTIAL_CLOSE_UNRESOLVED,
     records_before_partial_close_fault,
 )

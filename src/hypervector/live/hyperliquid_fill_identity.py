@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from hypervector.live.hyperliquid_protocol import SolFill
+from hypervector.live.hyperliquid_protocol import HyperliquidFill
 
 type FillKey = tuple[int, int, int]
 
@@ -20,7 +20,7 @@ def require_trade_id(value: object, *, label: str) -> int:
     return value
 
 
-def fill_trade_id(fill: SolFill) -> int:
+def fill_trade_id(fill: HyperliquidFill) -> int:
     """Return the exact venue identity of one normalized user fill."""
     return require_trade_id(fill.trade_id, label="fill trade_id")
 

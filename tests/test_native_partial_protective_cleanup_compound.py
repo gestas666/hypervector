@@ -12,7 +12,7 @@ from test_native_partial_protective_recovery import assert_closed_economics, res
 from test_native_protective_execution_progress import _partial_fixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
 
 __all__ = ["deny_external_ports"]
 
@@ -30,16 +30,16 @@ def test_delayed_close_receipts_then_cleanup_rejection_recover_from_newest_proof
         prior_oids={original.entry_oid, original.stop_oid, original.target_oid},
         release_ms=release,
     )
-    with pytest.raises(SolLiveEngineError):
+    with pytest.raises(AssetLiveEngineError):
         replay.engines["BTC"].reconcile_telemetry(
             funding_start_time_ms=original.opened_at_ms, funding_end_time_ms=replay.clock.now_ms
         )
-    with pytest.raises(SolLiveEngineError):
+    with pytest.raises(AssetLiveEngineError):
         restart(replay, "BTC")
     replay.clock.advance_to(release)
     original_cancel = replay._exchange.cancel.side_effect
     replay._exchange.cancel.side_effect = _rejected_cancel
-    with pytest.raises(SolLiveEngineError, match="cancel rejected"):
+    with pytest.raises(AssetLiveEngineError, match="cancel rejected"):
         restart(replay, "BTC")
     replay._exchange.cancel.side_effect = original_cancel
     if aged_out:

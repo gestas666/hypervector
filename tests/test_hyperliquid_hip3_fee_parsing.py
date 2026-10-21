@@ -7,7 +7,7 @@ import pytest
 from hypervector.live.hyperliquid_hip3_fee_parsing import (
     parse_hip3_market_fee_metadata,
 )
-from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.hyperliquid_parsing import HyperliquidAdapterError
 
 
 def _metadata(growth_mode: str = "enabled") -> dict[str, object]:

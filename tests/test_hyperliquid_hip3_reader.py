@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from hypervector.live.hyperliquid_perp_reader import HyperliquidPerpReader
-from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.hyperliquid_parsing import HyperliquidAdapterError
 from hypervector.live.policy import SECRET_ENV_WALLET
 
 _ADDRESS = "0x1111111111111111111111111111111111111111"

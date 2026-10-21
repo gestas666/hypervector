@@ -9,9 +9,9 @@ from native_replay_engine_fixture import EngineReplayFixture
 
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
 from hypervector.live.cohort_stop_risk_sizing import StopRiskBudget
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
-from hypervector.live.sol_range_onset_execution_plan import entry_notional
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
+from hypervector.live.asset_execution_plan import entry_notional
+from hypervector.live.asset_state import AssetLiveState
 
 SYMBOL = "xyz:CCC"
 
@@ -55,7 +55,7 @@ def test_fraction_budget_sizes_from_the_entry_account_value_and_journals_it(
     result = engine.enter(
         side=side, mark_price=100, decision_time_ms=replay.clock.now_ms
     )
-    assert result.state is SolLiveState.OPEN and result.stop_oid is not None
+    assert result.state is AssetLiveState.OPEN and result.stop_oid is not None
     rows = _rows(tmp_path)
     risk = next(r for r in rows if r["event_type"] == "entry_stop_risk_sizing")
     payload = risk["payload"]
@@ -80,7 +80,7 @@ def test_fraction_budget_refuses_an_unusable_account_value_with_a_journaled_faul
     tmp_path: Path, account: float
 ) -> None:
     replay, engine = _engine(tmp_path, StopRiskBudget(None, 20, 0.006))
-    with pytest.raises(SolLiveEngineError, match="account value"):
+    with pytest.raises(AssetLiveEngineError, match="account value"):
         engine._enter_with_protection(
             side="long",
             mark_price=100,
@@ -109,6 +109,6 @@ def test_non_finite_live_account_value_is_a_journaled_entry_refusal(
         leverage = 5.0
 
     reasons: list[str] = []
-    with pytest.raises(SolLiveEngineError, match="finite"):
+    with pytest.raises(AssetLiveEngineError, match="finite"):
         entry_notional(_Config(), account, fault=reasons.append)  # type: ignore[arg-type]
     assert reasons == ["live account value must be finite and positive"]

@@ -3,12 +3,12 @@
 from pathlib import Path
 
 import pytest
-from test_sol_range_onset_live_engine import FakeSolAdapter, _order, _runtime, _venue
+from test_asset_live_engine import FakeVenueAdapter, _order, _runtime, _venue
 
 from hypervector.live.hyperliquid_protocol import HyperliquidOrderStatus
-from hypervector.live.hyperliquid_sol_parsing import HyperliquidOrderUnavailableError
-from hypervector.live.sol_range_onset_engine import SolRangeOnsetLiveEngine
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.hyperliquid_parsing import HyperliquidOrderUnavailableError
+from hypervector.live.asset_engine import AssetLiveEngine
+from hypervector.live.asset_state import AssetLiveState
 from hypervector.research.native_replay_clock import ReplayClock
 
 
@@ -20,7 +20,7 @@ def test_engine_recovery_wait_uses_the_injected_clock(
     clock = ReplayClock(1_789_135_200_000)
     initial = clock.now_ms
     stop = _order(202, size=0.30, reduce_only=True, trigger=True)
-    adapter = FakeSolAdapter([_venue(0), _venue(0), _venue(0.30), _venue(0.30, (stop,))])
+    adapter = FakeVenueAdapter([_venue(0), _venue(0), _venue(0.30), _venue(0.30, (stop,))])
     adapter.response_loss.add("entry")
     original = adapter.order_status_by_client_id
 
@@ -31,7 +31,7 @@ def test_engine_recovery_wait_uses_the_injected_clock(
         return original(client_id)
 
     monkeypatch.setattr(adapter, "order_status_by_client_id", delayed)
-    engine = SolRangeOnsetLiveEngine(
+    engine = AssetLiveEngine(
         config=config,
         adapter=adapter,
         ledger=ledger,
@@ -41,6 +41,6 @@ def test_engine_recovery_wait_uses_the_injected_clock(
     )
     engine.start()
     result = engine.enter(side="long", mark_price=73, decision_time_ms=initial)
-    assert result.state is SolLiveState.OPEN and result.opened_at_ms == initial
+    assert result.state is AssetLiveState.OPEN and result.opened_at_ms == initial
     assert clock.now_ms == initial + 250
     assert sum(name == "submit_entry" for name, _ in adapter.calls) == 1

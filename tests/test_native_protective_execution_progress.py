@@ -10,11 +10,11 @@ from native_replay_partial_protective_fixture import PartialProtectiveFixture
 from test_native_partial_protective_execution import CASES, assert_partial_economics
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_protective_execution_evidence import (
+from hypervector.live.asset_protective_execution_evidence import (
     ProtectiveExecutionProgress,
     observe_protective_execution,
 )
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot
+from hypervector.live.asset_state import AssetLiveSnapshot
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
 __all__ = ["deny_external_ports"]
@@ -88,7 +88,7 @@ def test_partial_matrix_covers_each_configured_side_once() -> None:
 
 def _partial_fixture(
     root: Path, symbol: str, kind: str, last_side: bool, collateral_fraction: Decimal
-) -> tuple[PartialProtectiveFixture, SolLiveSnapshot]:
+) -> tuple[PartialProtectiveFixture, AssetLiveSnapshot]:
     replay = PartialProtectiveFixture(root)
     original = replay.enter_current(replay.assets[symbol], last_side=last_side)
     oid = original.target_oid if kind == "target" else original.stop_oid

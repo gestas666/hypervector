@@ -19,7 +19,7 @@ from hypervector.live.multi_asset_live_runner_support import (
     MultiAssetLiveRunnerError,
     position_side,
 )
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 
 class CohortMaximumHoldController:
@@ -70,7 +70,7 @@ class CohortMaximumHoldController:
         evaluations: EvaluationMap,
     ) -> RoutingAction | None:
         snapshot = self._engines[symbol].snapshot
-        if snapshot.state is not SolLiveState.OPEN:
+        if snapshot.state is not AssetLiveState.OPEN:
             return None
         opened = snapshot.opened_at_ms
         if opened is None or opened > observed_ms:
@@ -111,7 +111,7 @@ class CohortMaximumHoldController:
 
     def _soft_decision(
         self,
-        snapshot: SolLiveSnapshot,
+        snapshot: AssetLiveSnapshot,
         symbol: str,
         side: str,
         opened_at_ms: int,
@@ -137,7 +137,7 @@ class CohortMaximumHoldController:
     def _terminal_decision(
         self,
         *,
-        snapshot: SolLiveSnapshot,
+        snapshot: AssetLiveSnapshot,
         symbol: str,
         side: str,
         opened_at_ms: int,
@@ -183,13 +183,13 @@ class CohortMaximumHoldController:
         return payload
 
 
-def _needs_fresh_context(snapshot: SolLiveSnapshot, observed_ms: int) -> bool:
+def _needs_fresh_context(snapshot: AssetLiveSnapshot, observed_ms: int) -> bool:
     """Skip extension soft decisions during acquisition failure, preserving hard caps."""
     plan, opened = snapshot.execution_plan, snapshot.opened_at_ms
     if plan is None or plan.maximum_hold_policy == "fixed":
         return False
     if (
-        snapshot.state is not SolLiveState.OPEN
+        snapshot.state is not AssetLiveState.OPEN
         or opened is None
         or opened > observed_ms
     ):

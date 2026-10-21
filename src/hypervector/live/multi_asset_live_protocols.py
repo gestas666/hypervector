@@ -12,8 +12,8 @@ from hypervector.live.cohort_startup_candle_recorder import StartupCandleObserve
 from hypervector.live.cohort_funding_window import CohortFundingWindow
 from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 from hypervector.live.hyperliquid_protocol import (
-    SolReconciliationSnapshot,
-    SolBookSnapshot,
+    HyperliquidReconciliationSnapshot,
+    HyperliquidBookSnapshot,
 )
 from hypervector.live.cohort_adaptive_exit_journal import AdaptiveExitJournal
 from hypervector.live.multi_asset_cohort_telemetry import (
@@ -22,27 +22,27 @@ from hypervector.live.multi_asset_cohort_telemetry import (
 )
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll, CohortMarketBar
 from hypervector.live.provider_evaluation import ProviderEvaluation
-from hypervector.live.sol_range_onset_engine_contract import StopRaiseOutcome
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot
+from hypervector.live.asset_engine_contract import StopRaiseOutcome
+from hypervector.live.asset_state import AssetLiveSnapshot
 
 
 class MultiAssetEngineProtocol(Protocol):
     """Protected symbol lifecycle consumed by the cohort scheduler."""
 
     @property
-    def snapshot(self) -> SolLiveSnapshot: ...
+    def snapshot(self) -> AssetLiveSnapshot: ...
 
     @property
-    def latest_book(self) -> SolBookSnapshot | None: ...
+    def latest_book(self) -> HyperliquidBookSnapshot | None: ...
 
-    def start(self) -> SolLiveSnapshot: ...
+    def start(self) -> AssetLiveSnapshot: ...
 
     def reconcile_telemetry(
         self,
         *,
         funding_start_time_ms: int,
         funding_end_time_ms: int,
-    ) -> SolReconciliationSnapshot: ...
+    ) -> HyperliquidReconciliationSnapshot: ...
 
     def record_strategy_decision(self, payload: dict[str, object]) -> None: ...
 
@@ -54,9 +54,9 @@ class MultiAssetEngineProtocol(Protocol):
         decision_time_ms: int | None = None,
         entry_sizing: CohortEntrySizing | None = None,
         entry_deadline: EntrySubmissionDeadline | None = None,
-    ) -> SolLiveSnapshot: ...
+    ) -> AssetLiveSnapshot: ...
 
-    def exit(self, *, mark_price: float, reason: str) -> SolLiveSnapshot: ...
+    def exit(self, *, mark_price: float, reason: str) -> AssetLiveSnapshot: ...
 
     def raise_protective_stop(
         self, *, trigger_price: float
@@ -64,7 +64,7 @@ class MultiAssetEngineProtocol(Protocol):
 
     def normalize_trigger_price(self, trigger_price: float) -> float: ...
 
-    def stop(self, reason: str) -> SolLiveSnapshot: ...
+    def stop(self, reason: str) -> AssetLiveSnapshot: ...
 
 
 class MultiAssetIntentPollerProtocol(Protocol):

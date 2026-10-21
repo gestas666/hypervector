@@ -13,15 +13,15 @@ from hypervector.live.bidirectional_cohort_factory import (
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidExchangeProtocol,
     HyperliquidInfoProtocol,
-    SolLiveAdapterProtocol,
+    HyperliquidLiveAdapterProtocol,
 )
-from hypervector.live.hyperliquid_sol_factory import SolSdkBuilderProtocol
+from hypervector.live.hyperliquid_sdk_factory import HyperliquidSdkBuilderProtocol
 from hypervector.live.policy import SECRET_ENV_API_KEY, SECRET_ENV_WALLET
 
 _ADDRESS = "0x1111111111111111111111111111111111111111"
 
 
-class _Builder(SolSdkBuilderProtocol):
+class _Builder(HyperliquidSdkBuilderProtocol):
     """Record authenticated construction without network access."""
 
     def __init__(self) -> None:
@@ -67,7 +67,7 @@ def test_one_sdk_build_constructs_every_configured_symbol() -> None:
         adapters.by_symbol[symbol].symbol == symbol for symbol in adapters.symbols
     )
     assert all(
-        isinstance(adapters.by_symbol[symbol], SolLiveAdapterProtocol)
+        isinstance(adapters.by_symbol[symbol], HyperliquidLiveAdapterProtocol)
         for symbol in adapters.symbols
     )
     assert builder.calls == [(_ADDRESS, "private", ())]

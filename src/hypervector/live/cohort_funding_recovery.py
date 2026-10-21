@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from hypervector.live.cohort_funding_window import funding_window_from_payload
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 _DAY_MS = 86_400_000
 _RECOVERY_EVENTS = frozenset(
@@ -14,7 +14,7 @@ _RECOVERY_EVENTS = frozenset(
 
 
 def recover_funding_cursor(
-    ledger: SolLiveLedger, profile_fingerprint: str
+    ledger: AssetLiveLedger, profile_fingerprint: str
 ) -> int | None:
     """Recover the last committed query, or the first known profile activation."""
     records = ledger.read_matching(

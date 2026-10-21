@@ -19,7 +19,7 @@ from hypervector.live.multi_asset_live_protocols import (
     MultiAssetEngineProtocol,
     MultiAssetIntentPollerProtocol,
 )
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 PROFILE = Path("tests/fixtures/profiles/noncrypto_live.toml")
 DAY_MS = 86_400_000
@@ -38,7 +38,7 @@ def test_long_downtime_restores_last_committed_funding_boundary(
         cohort_ledger=tmp_path / "live/bidirectional_cohort/decisions.jsonl",
         stop_file=tmp_path / "STOP",
     )
-    ledger = SolLiveLedger(
+    ledger = AssetLiveLedger(
         path=config.cohort_ledger,
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,

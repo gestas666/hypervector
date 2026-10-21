@@ -4,11 +4,11 @@ from dataclasses import replace
 
 import pytest
 
-from hypervector.live.sol_order_restart import (
-    PendingSolOrderIntent,
-    SolOrderRestartError,
+from hypervector.live.asset_order_restart import (
+    PendingAssetOrderIntent,
+    AssetOrderRestartError,
 )
-from hypervector.live.sol_order_restart_context import (
+from hypervector.live.asset_order_restart_context import (
     execution_plan_for_intent,
     pending_entry_opened_at_ms,
 )
@@ -16,9 +16,9 @@ from hypervector.live.sol_order_restart_context import (
 CLIENT_ID = "0x11111111111111111111111111111111"
 
 
-def intent(payload: dict[str, object]) -> PendingSolOrderIntent:
+def intent(payload: dict[str, object]) -> PendingAssetOrderIntent:
     """Build a synthetic durable intent with explicit clock provenance."""
-    return PendingSolOrderIntent("entry", CLIENT_ID, "2026-09-11T14:00:00+00:00", payload)
+    return PendingAssetOrderIntent("entry", CLIENT_ID, "2026-09-11T14:00:00+00:00", payload)
 
 
 def records() -> list[dict[str, object]]:
@@ -59,7 +59,7 @@ def test_invalid_entry_plan_context_is_not_recovered(mutation: str) -> None:
         source[0]["payload"] = {"state": "ENTRY_PENDING", "execution_plan": {"invalid": True}}
     else:
         source.pop(0)
-    with pytest.raises(SolOrderRestartError):
+    with pytest.raises(AssetOrderRestartError):
         execution_plan_for_intent(source, "ENTRY_PENDING", CLIENT_ID)
 
 
@@ -92,18 +92,18 @@ def test_legacy_intent_without_decision_keeps_explicit_venue_clock_compatibility
 )
 def test_present_but_invalid_deadline_cannot_fall_back_to_venue_time(deadline: object) -> None:
     """Corrupt explicit provenance cannot silently extend or replace the hold clock."""
-    with pytest.raises(SolOrderRestartError):
+    with pytest.raises(AssetOrderRestartError):
         pending_entry_opened_at_ms(intent({"entry_deadline": deadline}), 1200)
 
 
 @pytest.mark.parametrize("timestamp", [True, -1, 1.5, None])
 def test_invalid_venue_timestamp_is_rejected(timestamp: object) -> None:
     """Even a legacy fallback requires valid integer-millisecond evidence."""
-    with pytest.raises(SolOrderRestartError):
+    with pytest.raises(AssetOrderRestartError):
         pending_entry_opened_at_ms(intent({}), timestamp)
 
 
 def test_other_operation_cannot_be_reinterpreted_as_entry_clock() -> None:
     """The helper refuses a different lifecycle operation."""
-    with pytest.raises(SolOrderRestartError):
+    with pytest.raises(AssetOrderRestartError):
         pending_entry_opened_at_ms(replace(intent({}), operation="target"), 1200)

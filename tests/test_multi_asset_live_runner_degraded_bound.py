@@ -17,7 +17,7 @@ from multi_asset_live_runner_fixtures import execution_contract as _contract
 from test_multi_asset_live_runner import _SYMBOLS, _Engine, _Poller, _Telemetry
 from test_multi_asset_live_runner import _router
 
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from hypervector.live.multi_asset_live_runner_support import (
@@ -63,7 +63,7 @@ class _AccountBlindEngine(_Engine):
 
     def reconcile_telemetry(
         self, *, funding_start_time_ms: int, funding_end_time_ms: int
-    ) -> SolReconciliationSnapshot:
+    ) -> HyperliquidReconciliationSnapshot:
         if self._scenario.mode == "account":
             self._scenario.now += _FAILED_POLL_SECONDS
             raise requests.ConnectionError("venue unreachable")
@@ -157,7 +157,7 @@ def test_the_bound_is_time_not_poll_count(tmp_path: Path) -> None:
         tmp_path, ("account",) * 400, maximum_degraded_seconds=3_600.0
     )
 
-    def fast_failure(**_kwargs: object) -> SolReconciliationSnapshot:
+    def fast_failure(**_kwargs: object) -> HyperliquidReconciliationSnapshot:
         scenario.now += 1.0
         raise requests.Timeout("read timed out")
 

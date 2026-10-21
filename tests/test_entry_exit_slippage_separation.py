@@ -10,7 +10,7 @@ from types import ModuleType
 
 import pytest
 
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.multi_asset_cohort_payloads import asset_config_payload
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.research.cohort_configuration_generation import (
@@ -70,10 +70,11 @@ class _Exchange:
 def test_entry_cap_can_be_tighter_than_close_cap() -> None:
     """Entry containment must not narrow the reduce-only exit envelope."""
     exchange = _Exchange()
-    adapter = BtcHyperliquidAdapter(
+    adapter = HyperliquidPerpAdapter(
         info=_Info(),
         exchange=exchange,
         account_address=_ADDRESS,
+        symbol="BTC",
         max_notional_usd=500.0,
         slippage_fraction=0.01,
         entry_slippage_fraction=0.002,

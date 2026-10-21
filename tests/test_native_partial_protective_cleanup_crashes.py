@@ -10,7 +10,7 @@ from test_native_protective_execution_progress import _partial_fixture
 from test_native_replay_adapter import deny_external_ports
 
 from hypervector.live.hyperliquid_protocol import HyperliquidOrderAck
-from hypervector.live.sol_protective_cleanup_checkpoint import CLEANUP_PHASE
+from hypervector.live.asset_protective_cleanup_checkpoint import CLEANUP_PHASE
 
 __all__ = ["deny_external_ports"]
 

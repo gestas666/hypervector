@@ -3,24 +3,24 @@
 from dataclasses import replace
 
 import pytest
-from test_sol_range_onset_live_engine import _order, _stop_fill, _venue
+from test_asset_live_engine import _order, _stop_fill, _venue
 
 from hypervector.live.hyperliquid_protocol import HyperliquidOrderStatus
-from hypervector.live.sol_execution_evidence import (
+from hypervector.live.asset_execution_evidence import (
     canceled_close_fill_size,
     canceled_close_has_no_observed_fill,
     canceled_entry_fill_size,
     partial_close_size,
 )
-from hypervector.live.sol_protective_order import protective_stop_covers
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_protective_order import protective_stop_covers
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 
 @pytest.mark.parametrize("sign", [1, -1])
 def test_owned_partial_close_explains_the_exact_remainder(sign: int) -> None:
     """Both directions retain only the original position minus exact owned close fills."""
-    state = SolLiveSnapshot(
-        SolLiveState.EXIT_PENDING,
+    state = AssetLiveSnapshot(
+        AssetLiveState.EXIT_PENDING,
         entry_oid=101,
         stop_oid=202,
         position_size_signed=sign * 0.3,
@@ -42,8 +42,8 @@ def test_owned_partial_close_explains_the_exact_remainder(sign: int) -> None:
 )
 def test_partial_close_rejects_incomplete_or_contradictory_fills(change: str) -> None:
     """A changed position alone cannot establish an owned partial close."""
-    state = SolLiveSnapshot(
-        SolLiveState.EXIT_PENDING,
+    state = AssetLiveSnapshot(
+        AssetLiveState.EXIT_PENDING,
         entry_oid=101,
         stop_oid=202,
         position_size_signed=0.3,
@@ -129,7 +129,7 @@ def test_canceled_fill_evidence_rejects_missing_request_and_contradictory_exposu
 
 def test_partial_close_needs_prior_clock_and_matching_direction() -> None:
     """No inferred lifecycle origin or position flip can satisfy close attribution."""
-    state = SolLiveSnapshot(SolLiveState.EXIT_PENDING, position_size_signed=0.3)
+    state = AssetLiveSnapshot(AssetLiveState.EXIT_PENDING, position_size_signed=0.3)
     assert partial_close_size(state, _venue(0.2), 303) is None
     state = replace(state, opened_at_ms=1000)
     for remaining in (0.0, -0.2, 0.3, float("nan")):

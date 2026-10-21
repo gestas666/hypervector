@@ -10,9 +10,9 @@ from typing import Protocol
 
 from hypervector.live.hyperliquid_protocol import (
     Hip3MarketFeeMetadata,
-    SolBookSnapshot,
-    SolOpenOrder,
-    SolVenuePreflight,
+    HyperliquidBookSnapshot,
+    HyperliquidOpenOrder,
+    HyperliquidVenuePreflight,
 )
 from hypervector.live.multi_asset_preflight_fees import preflight_fee_payload
 from hypervector.live.multi_asset_live_config import (
@@ -48,18 +48,18 @@ class MultiAssetReadOnlyReaderProtocol(Protocol):
         *,
         expected_max_leverage: int,
         requested_leverage: int | None = None,
-    ) -> SolVenuePreflight:
+    ) -> HyperliquidVenuePreflight:
         """Return current metadata, account, fee, mark, and position facts.
 
         With ``requested_leverage`` only a venue maximum below it refuses.
         """
         ...
 
-    def book_snapshot(self, *, depth_levels: int) -> SolBookSnapshot:
+    def book_snapshot(self, *, depth_levels: int) -> HyperliquidBookSnapshot:
         """Return one exact finite public order book."""
         ...
 
-    def open_orders(self) -> tuple[SolOpenOrder, ...]:
+    def open_orders(self) -> tuple[HyperliquidOpenOrder, ...]:
         """Return current venue orders for only this asset."""
         ...
 
@@ -148,7 +148,7 @@ def _asset_report(
 
 def _sizing(
     asset: AssetLiveConfig,
-    preflight: SolVenuePreflight,
+    preflight: HyperliquidVenuePreflight,
     sizing_reference_equity_usd: float | None,
 ) -> dict[str, object]:
     reference = (
@@ -173,7 +173,7 @@ def _sizing(
     }
 
 
-def _visible_depth(book: SolBookSnapshot, notional: float) -> dict[str, object]:
+def _visible_depth(book: HyperliquidBookSnapshot, notional: float) -> dict[str, object]:
     if notional <= 0.0 or not math.isfinite(notional):
         raise ValueError("planned notional must be positive and finite")
     quantity = notional / book.mid_price
@@ -200,8 +200,8 @@ def _visible_depth(book: SolBookSnapshot, notional: float) -> dict[str, object]:
 
 
 def _ledger_reconciliation(
-    preflight: SolVenuePreflight,
-    orders: tuple[SolOpenOrder, ...],
+    preflight: HyperliquidVenuePreflight,
+    orders: tuple[HyperliquidOpenOrder, ...],
     ledger: AssetLedgerExpectation,
 ) -> dict[str, object]:
     tolerance = max(preflight.size_step / 2.0, 1e-12)
@@ -224,8 +224,8 @@ def _ledger_reconciliation(
 
 
 def _protection(
-    preflight: SolVenuePreflight,
-    orders: tuple[SolOpenOrder, ...],
+    preflight: HyperliquidVenuePreflight,
+    orders: tuple[HyperliquidOpenOrder, ...],
 ) -> dict[str, object]:
     size = preflight.position.size_signed
     if size == 0.0:
@@ -253,7 +253,7 @@ def _protection(
 
 
 def _is_qualified_stop(
-    order: SolOpenOrder,
+    order: HyperliquidOpenOrder,
     expected_side: str,
     mark_price: float,
 ) -> bool:
@@ -383,7 +383,7 @@ def _orders(asset: Mapping[str, object]) -> tuple[object, ...]:
 
 
 def _venue(
-    preflight: SolVenuePreflight,
+    preflight: HyperliquidVenuePreflight,
     fees: Mapping[str, object],
 ) -> dict[str, object]:
     return {
@@ -397,7 +397,7 @@ def _venue(
     }
 
 
-def _position(preflight: SolVenuePreflight) -> dict[str, object]:
+def _position(preflight: HyperliquidVenuePreflight) -> dict[str, object]:
     position = preflight.position
     return {
         "size_signed": position.size_signed,
@@ -411,7 +411,7 @@ def _position(preflight: SolVenuePreflight) -> dict[str, object]:
     }
 
 
-def _order(order: SolOpenOrder) -> dict[str, object]:
+def _order(order: HyperliquidOpenOrder) -> dict[str, object]:
     return {
         "oid": order.oid,
         "size": order.size,

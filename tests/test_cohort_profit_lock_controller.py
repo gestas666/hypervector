@@ -17,8 +17,8 @@ from hypervector.live.cohort_profit_lock_controller import CohortProfitLockContr
 from multi_asset_live_runner_fixtures import execution_contract as _contract
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
 from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunnerError
-from hypervector.live.sol_range_onset_ledger import SOL_LIVE_EVENT_TYPES
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_ledger import ASSET_LIVE_EVENT_TYPES
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 _PROVIDER = "test_breakout_1m"
 _SYMBOL = "SOL"
@@ -27,10 +27,10 @@ _OPENED_MS = 10_000
 
 @dataclass
 class _Engine:
-    current: SolLiveSnapshot
+    current: AssetLiveSnapshot
 
     @property
-    def snapshot(self) -> SolLiveSnapshot:
+    def snapshot(self) -> AssetLiveSnapshot:
         return self.current
 
 
@@ -74,9 +74,9 @@ def _plan(*, enabled: bool = True) -> BoundExecutionPlan:
     ).bind(strategy_id=_PROVIDER, stop_anchor=None)
 
 
-def _snapshot(*, enabled: bool = True) -> SolLiveSnapshot:
-    return SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+def _snapshot(*, enabled: bool = True) -> AssetLiveSnapshot:
+    return AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=7,
         stop_oid=8,
         position_size_signed=1.0,
@@ -98,7 +98,7 @@ def _bar(
 def _actions(
     bars: tuple[CohortMarketBar, ...],
     *,
-    snapshot: SolLiveSnapshot | None = None,
+    snapshot: AssetLiveSnapshot | None = None,
     telemetry: _Telemetry | None = None,
     observed_ms: int = 180_000,
 ) -> tuple[set[str], tuple[RoutingAction, ...]]:
@@ -151,7 +151,7 @@ def test_required_profit_lock_position_rejects_a_missing_bound_plan() -> None:
 
 def test_profit_lock_decision_is_an_explicit_ledger_event() -> None:
     """Durable lock decisions cannot be hidden in a generic heartbeat payload."""
-    assert "profit_lock_decision" in SOL_LIVE_EVENT_TYPES
+    assert "profit_lock_decision" in ASSET_LIVE_EVENT_TYPES
 
 
 def test_completed_bar_lock_persists_before_returning_current_price_exit() -> None:

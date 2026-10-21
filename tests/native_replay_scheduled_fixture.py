@@ -17,7 +17,7 @@ from requests import RequestException
 
 from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 from hypervector.live.multi_asset_live_config import AssetLiveConfig
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 from hypervector.research.native_replay_account import ReplayPosition
 from hypervector.research.native_replay_depth import ExactLevel, RecordedBook
 from hypervector.research.native_replay_unified import (
@@ -83,7 +83,7 @@ class ScheduledEngineFixture(EngineReplayFixture):
         self._info.frontend_open_orders.side_effect = self._visible_orders
         self._info.user_fills.side_effect = self._visible_fills
 
-    def enter_current(self, asset: AssetLiveConfig, *, last_side: bool = False) -> SolLiveSnapshot:
+    def enter_current(self, asset: AssetLiveConfig, *, last_side: bool = False) -> AssetLiveSnapshot:
         """Drive the configured provider plan and sizing through the actual engine."""
         symbol = asset.symbol
         provider = next(p for p in self.config.providers if symbol in p.execution_symbols)
@@ -91,7 +91,7 @@ class ScheduledEngineFixture(EngineReplayFixture):
         side = sides[-1] if last_side else sides[0]
         engine = self.engine(asset)
         self.engines[symbol] = engine
-        assert engine.start().state is SolLiveState.FLAT
+        assert engine.start().state is AssetLiveState.FLAT
         decision = self.clock.now_ms
         self.prepare_entry(symbol, side, decision)
         plan = provider.execution_for(symbol, side).bind(

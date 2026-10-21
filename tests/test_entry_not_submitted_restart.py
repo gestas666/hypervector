@@ -3,10 +3,10 @@
 from copy import deepcopy
 
 import pytest
-from test_sol_order_restart import _ENTRY_ID, _STOP_ID, _record
+from test_asset_order_restart import _ENTRY_ID, _STOP_ID, _record
 
-from hypervector.live.sol_order_restart import (
-    SolOrderRestartError,
+from hypervector.live.asset_order_restart import (
+    AssetOrderRestartError,
     interrupted_lifecycle_intent,
     pending_order_intent,
 )
@@ -76,7 +76,7 @@ def test_corrupted_unsent_evidence_is_rejected(field: str, value: object) -> Non
     """Corrupt markers cannot erase durable venue-ownership evidence."""
     records = unsent_records()
     records[-1]["payload"][field] = value
-    with pytest.raises(SolOrderRestartError):
+    with pytest.raises(AssetOrderRestartError):
         pending_order_intent(records)
 
 
@@ -88,7 +88,7 @@ def test_persisted_deadline_contract_requires_integer_fields(
     """A marker cannot supply missing or invalid policy evidence after a crash."""
     records = unsent_records()
     records[1]["payload"]["entry_deadline"][field] = value
-    with pytest.raises(SolOrderRestartError, match="persisted deadline"):
+    with pytest.raises(AssetOrderRestartError, match="persisted deadline"):
         pending_order_intent(records)
 
 
@@ -122,5 +122,5 @@ def test_contradictory_unsent_history_is_rejected(variant: str) -> None:
         records[1]["payload"].pop("entry_deadline")
     else:
         records[1]["payload"]["operation"] = "protective_stop"
-    with pytest.raises(SolOrderRestartError):
+    with pytest.raises(AssetOrderRestartError):
         pending_order_intent(records)

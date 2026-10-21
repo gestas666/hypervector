@@ -35,22 +35,22 @@ from hypervector.live.multi_asset_strategy_evidence_models import (
     StrategyResearchEvidence,
 )
 from hypervector.live.provider_readiness import SignalReadiness
-from hypervector.live.hyperliquid_protocol import SolBookLevel, SolBookSnapshot
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.hyperliquid_protocol import HyperliquidBookLevel, HyperliquidBookSnapshot
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 
 def _telemetry(
     tmp_path: Path,
     *,
     prestart_backup: CohortPrestartBackupResult | None = None,
-) -> tuple[MultiAssetCohortTelemetry, SolLiveLedger]:
+) -> tuple[MultiAssetCohortTelemetry, AssetLiveLedger]:
     config = load_multi_asset_live_config(
         "tests/fixtures/profiles/cohort_base.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
     )
-    ledger = SolLiveLedger(
+    ledger = AssetLiveLedger(
         path=tmp_path / "data/live/bidirectional_cohort/decisions.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,
@@ -146,7 +146,7 @@ def test_snapshots_project_explicit_transition_drain_state(tmp_path: Path) -> No
         enabled=True,
         accepts_live_risk=True,
     )
-    ledger = SolLiveLedger(
+    ledger = AssetLiveLedger(
         path=tmp_path / "data/live/bidirectional_cohort/decisions.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,
@@ -492,7 +492,7 @@ def test_observe_telemetry_is_explicitly_disarmed(tmp_path: Path) -> None:
         "tests/fixtures/profiles/cohort_base.toml",
         mode="observe",
     )
-    ledger = SolLiveLedger(
+    ledger = AssetLiveLedger(
         path=tmp_path / "data/live/bidirectional_cohort/decisions.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,
@@ -642,14 +642,14 @@ def test_provider_exit_decision_rejects_conflicting_stable_identity(
         )
 
 
-def _restarted_telemetry(ledger: SolLiveLedger) -> MultiAssetCohortTelemetry:
+def _restarted_telemetry(ledger: AssetLiveLedger) -> MultiAssetCohortTelemetry:
     config = load_multi_asset_live_config(
         "tests/fixtures/profiles/cohort_base.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
     )
-    restarted_ledger = SolLiveLedger(
+    restarted_ledger = AssetLiveLedger(
         path=ledger.path,
         profile_id=ledger.profile_id,
         profile_fingerprint=ledger.profile_fingerprint,
@@ -710,10 +710,10 @@ def test_observer_books_emit_complete_backend_authored_depth(tmp_path: Path) -> 
     """Public observer depth is serialized without wallet or order authority."""
     telemetry, ledger = _telemetry(tmp_path)
     books = {
-        symbol: SolBookSnapshot(
+        symbol: HyperliquidBookSnapshot(
             exchange_timestamp_ms=1_785_585_600_000,
-            bids=(SolBookLevel(99.9, 2.0, 3), SolBookLevel(99.8, 1.0, 1)),
-            asks=(SolBookLevel(100.1, 1.5, 2), SolBookLevel(100.2, 2.5, 4)),
+            bids=(HyperliquidBookLevel(99.9, 2.0, 3), HyperliquidBookLevel(99.8, 1.0, 1)),
+            asks=(HyperliquidBookLevel(100.1, 1.5, 2), HyperliquidBookLevel(100.2, 2.5, 4)),
             mid_price=100.0,
             spread_bps=20.0,
             bid_depth=3.0,

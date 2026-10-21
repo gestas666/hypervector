@@ -8,8 +8,8 @@ import pytest
 from native_replay_protective_fixture import ProtectiveEngineFixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_range_onset_state import SolLiveState
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
+from hypervector.live.asset_state import AssetLiveState
+from hypervector.live.asset_live_journal import build_live_journal
 
 __all__ = ["deny_external_ports"]
 SYMBOLS = ["BTC", "ETH", "SOL", "HYPE", "xyz:BBB", "xyz:CCC", "xyz:EEE"]
@@ -30,7 +30,7 @@ def test_intrapoll_stop_fill_returns_final_flat_snapshot(
         funding_start_time_ms=original.opened_at_ms,
         funding_end_time_ms=replay.clock.now_ms,
     )
-    assert engine.snapshot.state is SolLiveState.FLAT
+    assert engine.snapshot.state is AssetLiveState.FLAT
     assert venue.is_flat, "returned reconciliation must reflect completed sibling cleanup"
     assert not replay.orders and not replay.account.snapshot().positions
     assert replay.mutations.count("close") == 0
@@ -52,7 +52,7 @@ def test_intrapoll_target_fill_cancels_stop_and_returns_current_flat_snapshot(
         funding_start_time_ms=original.opened_at_ms,
         funding_end_time_ms=replay.clock.now_ms,
     )
-    assert replay.engines["BTC"].snapshot.state is SolLiveState.FLAT
+    assert replay.engines["BTC"].snapshot.state is AssetLiveState.FLAT
     assert venue.is_flat and not replay.orders
     assert replay.mutations.count("close") == 0
     assert_exact_cash(replay)

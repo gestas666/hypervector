@@ -10,7 +10,7 @@ from test_multi_asset_observer_audit import _observer_rows, _row, _RUN_ID
 from hypervector.research.cohort_observer_audit import audit_cohort_observer_run
 from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTelemetry
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 
 def test_bounded_observer_publishes_stop_after_its_final_poll(tmp_path: Path) -> None:
@@ -66,11 +66,11 @@ def test_stop_telemetry_failure_is_propagated(tmp_path: Path) -> None:
         runner.run(max_polls=1)
 
 
-def _telemetry(tmp_path: Path) -> tuple[MultiAssetCohortTelemetry, SolLiveLedger]:
+def _telemetry(tmp_path: Path) -> tuple[MultiAssetCohortTelemetry, AssetLiveLedger]:
     config = load_multi_asset_live_config(
         "tests/fixtures/profiles/cohort_base.toml", mode="observe"
     )
-    ledger = SolLiveLedger(
+    ledger = AssetLiveLedger(
         path=tmp_path / "observe/decisions.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,

@@ -28,7 +28,7 @@ from hypervector.live.multi_asset_live_config import MultiAssetLiveConfigError
 from hypervector.live.multi_asset_live_runner_support import (
     CohortDegradedBlindnessError,
 )
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
 
 _CONFIG = "tests/fixtures/profiles/cohort_base.toml"
 
@@ -280,8 +280,8 @@ def test_a_wrapped_mismatch_is_still_a_refusal(
         try:
             raise VenueMetadataMismatchError("SOL max leverage mismatch")
         except VenueMetadataMismatchError as inner:
-            raise SolLiveEngineError("startup failed") from inner
-    except SolLiveEngineError as wrapped:
+            raise AssetLiveEngineError("startup failed") from inner
+    except AssetLiveEngineError as wrapped:
         fault = wrapped
     _, config = _engine_start_fault(live_script, monkeypatch, fault)
 
@@ -300,7 +300,7 @@ def test_other_start_faults_stay_restartable(
     """Only the venue contract refusal changes phase; an ordinary fault still crashes."""
     live_script = _load_module()
     _, config = _engine_start_fault(
-        live_script, monkeypatch, SolLiveEngineError("receipt not yet visible")
+        live_script, monkeypatch, AssetLiveEngineError("receipt not yet visible")
     )
 
     with pytest.raises(live_script.CohortRunFailure):

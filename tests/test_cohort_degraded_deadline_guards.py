@@ -16,7 +16,7 @@ from test_cohort_degraded_deadlines import (
 from hypervector.live.cohort_degraded_deadlines import reconciled_position_prices
 from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunnerError
 from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_state import AssetLiveState
 
 
 @pytest.mark.parametrize(
@@ -75,7 +75,7 @@ def test_unconditional_scope_preserves_nonopen_lifecycle(tmp_path: Path) -> None
     runner, engine, telemetry = runner_fixture(
         tmp_path, age_ms=HARD_MS, side=-0.25, extension=True
     )
-    engine.current = replace(engine.current, state=SolLiveState.STOPPED)
+    engine.current = replace(engine.current, state=AssetLiveState.STOPPED)
     runner.start(activation_time_ms=NOW_MS)
     with pytest.raises(TransientCohortMarketDataError):
         runner.poll_once()
@@ -124,7 +124,7 @@ def test_fixed_position_before_deadline_remains_open(tmp_path: Path) -> None:
     runner.start(activation_time_ms=NOW_MS)
     with pytest.raises(TransientCohortMarketDataError):
         runner.poll_once()
-    assert engine.snapshot.state is SolLiveState.OPEN and engine.exits == []
+    assert engine.snapshot.state is AssetLiveState.OPEN and engine.exits == []
     assert telemetry.maximum_hold_events == []
 
 

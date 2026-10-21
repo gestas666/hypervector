@@ -3,10 +3,10 @@
 from collections.abc import Mapping
 
 import pytest
-from test_sol_range_onset_live_journal import _record
+from test_asset_live_journal import _record
 
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
-from hypervector.live.sol_range_onset_live_journal_orders import (
+from hypervector.live.asset_live_journal import build_live_journal
+from hypervector.live.asset_live_journal_orders import (
     accepted_entry_acks,
     close_fill_records,
     exit_order_ids,

@@ -9,7 +9,7 @@ from pathlib import Path
 from hypervector.live.cohort_runtime_preflight import build_cohort_router as build_router
 
 from hypervector.live.cohort_entry_submission import entry_delays_from_providers
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTelemetry
 from hypervector.live.multi_asset_directional_adapter import MultiAssetDirectionalAdapter
 from hypervector.live.multi_asset_intent_poller import (
@@ -19,8 +19,8 @@ from hypervector.live.multi_asset_intent_poller import (
 )
 from hypervector.live.multi_asset_live_config import AssetLiveConfig, MultiAssetLiveConfig
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
-from hypervector.live.sol_range_onset_engine import SolRangeOnsetLiveEngine
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_engine import AssetLiveEngine
+from hypervector.live.asset_ledger import AssetLiveLedger
 from hypervector.research.native_replay_origins import NativeReplayOrigins
 from hypervector.research.native_replay_sdk import ReplaySdk
 
@@ -33,9 +33,9 @@ class NativeReplayRunner:
     """The actual runtime and its separate, native-shaped research telemetry writers."""
 
     runner: MultiAssetLiveRunner
-    engines: dict[str, SolRangeOnsetLiveEngine]
-    ledgers: dict[str, SolLiveLedger]
-    cohort_ledger: SolLiveLedger
+    engines: dict[str, AssetLiveEngine]
+    ledgers: dict[str, AssetLiveLedger]
+    cohort_ledger: AssetLiveLedger
 
 
 class ReplayConfiguredPoller:
@@ -122,8 +122,8 @@ def _poller(
     return ReplayConfiguredPoller(poller, finish_poll)
 
 
-def _ledger(config: MultiAssetLiveConfig | AssetLiveConfig, root: Path, name: str) -> SolLiveLedger:
-    return SolLiveLedger(
+def _ledger(config: MultiAssetLiveConfig | AssetLiveConfig, root: Path, name: str) -> AssetLiveLedger:
+    return AssetLiveLedger(
         path=root / "live/bidirectional_cohort" / f"{name}.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,
@@ -135,13 +135,13 @@ def _ledger(config: MultiAssetLiveConfig | AssetLiveConfig, root: Path, name: st
 def _engine(
     replay: ReplaySdk,
     asset: AssetLiveConfig,
-    ledger: SolLiveLedger,
+    ledger: AssetLiveLedger,
     sleep_fn: Callable[[float], None],
     client_id: Callable[[], str],
-) -> SolRangeOnsetLiveEngine:
+) -> AssetLiveEngine:
     asset = replace(asset, live_ledger=ledger.path)
     adapter = MultiAssetDirectionalAdapter(
-        BtcHyperliquidAdapter(
+        HyperliquidPerpAdapter(
             info=replay.info,
             exchange=replay.exchange,
             account_address=OFFLINE_ADDRESS,
@@ -152,7 +152,7 @@ def _engine(
             perp_dex=replay.markets[asset.symbol].perp_dex,
         )
     )
-    return SolRangeOnsetLiveEngine(
+    return AssetLiveEngine(
         config=asset,
         adapter=adapter,
         ledger=ledger,
@@ -166,7 +166,7 @@ def _engine(
 def _runner(
     config: MultiAssetLiveConfig,
     replay: ReplaySdk,
-    engines: dict[str, SolRangeOnsetLiveEngine],
+    engines: dict[str, AssetLiveEngine],
     poller: ReplayConfiguredPoller,
     telemetry: MultiAssetCohortTelemetry,
     stop_file: Path,

@@ -54,7 +54,7 @@ from hypervector.live.process_signal_stop import (
     install_process_signal_stop,
     stop_aware_sleep,
 )
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 _PROFILE_A = Path("tests/fixtures/cohort_chain/profile_a.toml")
 _NOW = datetime(2026, 8, 1, 12, tzinfo=UTC)
@@ -141,9 +141,9 @@ def _runner(
     )
 
 
-def _stopped_by_operator(snapshot: SolLiveSnapshot) -> bool:
+def _stopped_by_operator(snapshot: AssetLiveSnapshot) -> bool:
     return (
-        snapshot.state is SolLiveState.STOPPED
+        snapshot.state is AssetLiveState.STOPPED
         and snapshot.stop_reason == "operator_stop"
     )
 
@@ -436,7 +436,7 @@ class _SignalledMidEntry(_Engine):
         super().__init__(symbol)
         self.steps: list[str] = []
 
-    def enter(self, **kwargs: object) -> SolLiveSnapshot:  # type: ignore[override]
+    def enter(self, **kwargs: object) -> AssetLiveSnapshot:  # type: ignore[override]
         self.steps.append("entry_filled")
         signal.raise_signal(signal.SIGTERM)
         time.sleep(0.01)  # a handler that raised would surface here at the latest
@@ -489,7 +489,7 @@ def test_a_signal_during_order_submission_never_interrupts_it(
 class _StopCheckInsideExecution(_Engine):
     """A misplaced stop check inside an order-capable operation."""
 
-    def enter(self, **kwargs: object) -> SolLiveSnapshot:  # type: ignore[override]
+    def enter(self, **kwargs: object) -> AssetLiveSnapshot:  # type: ignore[override]
         raise ProcessStopRequested("stop check inside an order operation")
 
 

@@ -7,7 +7,7 @@ from unittest.mock import create_autospec
 import pytest
 import requests
 
-from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_adapter import HyperliquidPerpAdapter
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidExchangeProtocol,
     HyperliquidInfoProtocol,
@@ -108,7 +108,7 @@ def test_native_reference_sizing_survives_a_delayed_fill(side: str, price: Decim
     port = ReceiptPort(price)
     exchange.market_open.side_effect = port.market_open
     adapter = MultiAssetDirectionalAdapter(
-        BtcHyperliquidAdapter(
+        HyperliquidPerpAdapter(
             info=info,
             exchange=exchange,
             account_address=ADDRESS,

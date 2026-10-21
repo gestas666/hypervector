@@ -7,8 +7,8 @@ import pytest
 from native_replay_scheduled_fixture import ScheduledEngineFixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
+from hypervector.live.asset_state import AssetLiveState
 
 __all__ = ["deny_external_ports"]
 
@@ -29,14 +29,14 @@ def test_partial_close_fill_history_can_arrive_after_repeated_restart_failure(
         row for row in fills(address) if row["dir"].startswith("Open")
     ]
     replay.prepare_close(symbol)
-    with pytest.raises(SolLiveEngineError, match="protected exposure remains"):
+    with pytest.raises(AssetLiveEngineError, match="protected exposure remains"):
         replay.engines[symbol].exit(mark_price=100, reason="late_close_fill_history")
     if repeat:
-        with pytest.raises(SolLiveEngineError):
+        with pytest.raises(AssetLiveEngineError):
             replay.engine(asset).start()
     replay._info.user_fills.side_effect = fills
     recovered = replay.engine(asset).start()
-    assert recovered.state is SolLiveState.OPEN
+    assert recovered.state is AssetLiveState.OPEN
     assert recovered.position_size_signed == pytest.approx(original.position_size_signed / 2)
     assert recovered.opened_at_ms == original.opened_at_ms
     assert (recovered.target_oid is not None) == (original.target_oid is not None)

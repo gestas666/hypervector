@@ -13,8 +13,8 @@ import sys
 from hyperliquid.utils.error import ClientError, ServerError  # type: ignore[import-untyped]
 from requests import RequestException
 
-from hypervector.live.hyperliquid_sol_factory import SolSdkFactoryError
-from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.hyperliquid_sdk_factory import HyperliquidSdkFactoryError
+from hypervector.live.hyperliquid_parsing import HyperliquidAdapterError
 from hypervector.live.multi_asset_live_config import (
     AssetLiveConfig,
     MultiAssetLiveConfig,
@@ -436,7 +436,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         OSError,
         RequestException,
         ServerError,
-        SolSdkFactoryError,
+        HyperliquidSdkFactoryError,
         ValueError,
     ) as exc:
         print(f"multi-asset read-only preflight failed: {exc}", file=sys.stderr)

@@ -7,7 +7,7 @@ from collections.abc import Sequence
 import pytest
 
 from hypervector.live.hyperliquid_perp_reader import HyperliquidPerpReader
-from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.live.hyperliquid_parsing import HyperliquidAdapterError
 
 ADDRESS = "0x1111111111111111111111111111111111111111"
 SYMBOL = "xyz:CCC"

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from hypervector.live.hyperliquid_protocol import Hip3MarketFeeMetadata
-from hypervector.live.hyperliquid_sol_parsing import (
+from hypervector.live.hyperliquid_parsing import (
     HyperliquidAdapterError,
     mapping,
     nonnegative_integer,

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from multi_asset_live_runner_fixtures import execution_contract
 from test_multi_asset_live_runner import _Telemetry
-from test_sol_range_onset_live_engine import FakeSolAdapter, _order, _runtime, _venue
+from test_asset_live_engine import FakeVenueAdapter, _order, _runtime, _venue
 
 from hypervector.live.bidirectional_intents import (
     BidirectionalIntentRouter,
@@ -18,12 +18,12 @@ from hypervector.live.bidirectional_intents import (
 )
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidOrderAck,
-    SolReconciliationSnapshot,
+    HyperliquidReconciliationSnapshot,
 )
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
-from hypervector.live.sol_range_onset_engine import SolRangeOnsetLiveEngine
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_engine import AssetLiveEngine
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 if TYPE_CHECKING:
     from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
@@ -64,7 +64,7 @@ class Clock:
         self.offset_us += round(seconds * 1_000_000)
 
 
-class TimedAdapter(FakeSolAdapter):
+class TimedAdapter(FakeVenueAdapter):
     """Use existing test responses and record the fake dispatch boundary."""
 
     def __init__(self, clock: Clock, case: Case) -> None:
@@ -73,7 +73,7 @@ class TimedAdapter(FakeSolAdapter):
         self.read_count = 0
         self.entry_times_ms: list[int] = []
 
-    def reconcile(self) -> SolReconciliationSnapshot:
+    def reconcile(self) -> HyperliquidReconciliationSnapshot:
         """Delay only the pre-entry flat verification."""
         self.read_count += 1
         if self.read_count == 3:
@@ -101,7 +101,7 @@ class TimedAdapter(FakeSolAdapter):
         )
 
 
-def reconciliations() -> list[SolReconciliationSnapshot]:
+def reconciliations() -> list[HyperliquidReconciliationSnapshot]:
     """Return startup, cycle, entry and full-size protection responses."""
     stop = _order(202, size=0.30, reduce_only=True, trigger=True)
     return [
@@ -140,12 +140,12 @@ class Scenario:
     """Inspectable real runner/engine with fake external dependencies."""
 
     runner: MultiAssetLiveRunner
-    engine: SolRangeOnsetLiveEngine
+    engine: AssetLiveEngine
     adapter: TimedAdapter
     telemetry: _Telemetry
     clock: Clock
     poller: TimedPoller
-    ledger: SolLiveLedger
+    ledger: AssetLiveLedger
 
 
 def scenario(directory: Path, case: Case) -> Scenario:
@@ -153,7 +153,7 @@ def scenario(directory: Path, case: Case) -> Scenario:
     clock = Clock()
     adapter, telemetry = TimedAdapter(clock, case), _Telemetry()
     config, ledger = _runtime(directory)
-    engine = SolRangeOnsetLiveEngine(
+    engine = AssetLiveEngine(
         config=config,
         adapter=adapter,
         ledger=ledger,

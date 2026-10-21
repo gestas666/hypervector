@@ -41,7 +41,7 @@ from hypervector.live.cohort_route_cycle import (
 from hypervector.live.cohort_routing_execution import execute_routing_action
 from hypervector.live.cohort_transition_drain import CohortTransitionDrain
 from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_execution_authority import (
     create_operator_processor,
     effective_execution_directions,
@@ -73,7 +73,7 @@ from hypervector.live.multi_asset_operator_runtime import (
 )
 from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.process_signal_stop import ProcessStopRequested
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_state import AssetLiveState
 from hypervector.live.transient_transport import transient_read_failure_reason
 
 # One hour of account blindness, measured on the monotonic clock. A poll whose
@@ -377,7 +377,7 @@ class MultiAssetLiveRunner:
         self,
         *,
         poll: CohortIntentPoll,
-        venues: tuple[SolReconciliationSnapshot, ...],
+        venues: tuple[HyperliquidReconciliationSnapshot, ...],
         funding_start_ms: int,
         funding_end_ms: int,
         observed_ms: int,
@@ -425,7 +425,7 @@ class MultiAssetLiveRunner:
         operator_actions: tuple[RoutingAction, ...],
         routed: IntentRoutingReport,
         routed_actions: tuple[RoutingAction, ...],
-        venues: Mapping[str, SolReconciliationSnapshot],
+        venues: Mapping[str, HyperliquidReconciliationSnapshot],
         funding_start_ms: int,
         funding_end_ms: int,
         observed_ms: int,
@@ -469,8 +469,8 @@ class MultiAssetLiveRunner:
     def _raise_breakeven_stops(
         self,
         report: IntentRoutingReport,
-        venues: Mapping[str, SolReconciliationSnapshot]
-        | tuple[SolReconciliationSnapshot, ...],
+        venues: Mapping[str, HyperliquidReconciliationSnapshot]
+        | tuple[HyperliquidReconciliationSnapshot, ...],
         observed_ms: int | None = None,
     ) -> bool:
         """Move venue stops to break-even for v2 lifecycles whose floor armed this cycle."""
@@ -637,7 +637,7 @@ class MultiAssetLiveRunner:
     def _stop_all(self, reason: str) -> None:
         for symbol in self._symbols:
             snapshot = self._engines[symbol].snapshot
-            if snapshot.state in {SolLiveState.FLAT, SolLiveState.OPEN}:
+            if snapshot.state in {AssetLiveState.FLAT, AssetLiveState.OPEN}:
                 self._engines[symbol].stop(reason)
 
 

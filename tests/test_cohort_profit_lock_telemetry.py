@@ -9,20 +9,20 @@ import pytest
 
 from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTelemetry
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.asset_ledger import AssetLiveLedger
 
 
 def _telemetry(
     tmp_path: Path,
-    ledger: SolLiveLedger | None = None,
-) -> tuple[MultiAssetCohortTelemetry, SolLiveLedger]:
+    ledger: AssetLiveLedger | None = None,
+) -> tuple[MultiAssetCohortTelemetry, AssetLiveLedger]:
     config = load_multi_asset_live_config(
         "tests/fixtures/profiles/cohort_base.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,
     )
-    sink = ledger or SolLiveLedger(
+    sink = ledger or AssetLiveLedger(
         path=tmp_path / "data/live/bidirectional_cohort/profit-lock.jsonl",
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,

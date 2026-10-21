@@ -4,21 +4,21 @@ from dataclasses import replace
 from unittest.mock import Mock
 
 import pytest
-from test_sol_range_onset_live_engine import _order, _stop_fill, _venue
+from test_asset_live_engine import _order, _stop_fill, _venue
 
 from hypervector.live.hyperliquid_protocol import HyperliquidOrderAck
-from hypervector.live.sol_order_submission import SolOrderSubmission
-from hypervector.live.sol_range_onset_bracket_exit import reconcile_owned_bracket_exit
-from hypervector.live.sol_range_onset_consistency import SolReconciliationPoller
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
-from hypervector.live.sol_range_onset_engine_events import SolLiveEngineEvents
-from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.asset_order_submission import AssetOrderSubmission
+from hypervector.live.asset_bracket_exit import reconcile_owned_bracket_exit
+from hypervector.live.asset_consistency import AssetReconciliationPoller
+from hypervector.live.asset_engine_contract import AssetLiveEngineError
+from hypervector.live.asset_engine_events import AssetLiveEngineEvents
+from hypervector.live.asset_state import AssetLiveSnapshot, AssetLiveState
 
 
-def owned_snapshot() -> SolLiveSnapshot:
+def owned_snapshot() -> AssetLiveSnapshot:
     """Prescribe one exact fully owned long bracket."""
-    return SolLiveSnapshot(
-        state=SolLiveState.OPEN,
+    return AssetLiveSnapshot(
+        state=AssetLiveState.OPEN,
         entry_oid=101,
         stop_oid=202,
         target_oid=303,
@@ -37,9 +37,9 @@ def test_unverified_bracket_cleanup_cannot_return_a_success_snapshot(case: str) 
     stop = _order(202, size=0.3, reduce_only=True, trigger=True)
     fill = replace(_stop_fill(oid=303, size=0.3), timestamp_ms=2000)
     venue = _venue(0.0, orders=(stop,), fills=(fill,))
-    events = Mock(spec=SolLiveEngineEvents)
-    orders = Mock(spec=SolOrderSubmission)
-    poller = Mock(spec=SolReconciliationPoller)
+    events = Mock(spec=AssetLiveEngineEvents)
+    orders = Mock(spec=AssetOrderSubmission)
+    poller = Mock(spec=AssetReconciliationPoller)
     orders.cancel_order.return_value = HyperliquidOrderAck(True, 202, "canceled")
     poller.wait_for.return_value = _venue(0.0, fills=(fill,))
     if case == "stop_identity":
@@ -52,7 +52,7 @@ def test_unverified_bracket_cleanup_cannot_return_a_success_snapshot(case: str) 
         orders.cancel_order.return_value = HyperliquidOrderAck(False, 202, "rejected")
     else:
         poller.wait_for.return_value = venue
-    with pytest.raises(SolLiveEngineError):
+    with pytest.raises(AssetLiveEngineError):
         reconcile_owned_bracket_exit(
             snapshot=snapshot, venue=venue, orders=orders, events=events, poller=poller
         )
@@ -66,9 +66,9 @@ def test_already_clean_bracket_returns_the_exact_verified_venue_object() -> None
     """A filled bracket with no residual order requires no cancellation."""
     fill = replace(_stop_fill(oid=303, size=0.3), timestamp_ms=2000)
     venue = _venue(0.0, fills=(fill,))
-    events = Mock(spec=SolLiveEngineEvents)
-    orders = Mock(spec=SolOrderSubmission)
-    poller = Mock(spec=SolReconciliationPoller)
+    events = Mock(spec=AssetLiveEngineEvents)
+    orders = Mock(spec=AssetOrderSubmission)
+    poller = Mock(spec=AssetReconciliationPoller)
     after = replace(venue)
     poller.wait_for.return_value = after
     assert (
@@ -89,8 +89,8 @@ def test_complete_owned_fill_skips_canceling_its_stale_open_order_row(filled_oid
     fill = replace(_stop_fill(oid=filled_oid, size=0.3), timestamp_ms=2000)
     venue = _venue(0.0, orders=(stop, target), fills=(fill,))
     final = _venue(0.0, fills=(fill,))
-    orders, events = Mock(spec=SolOrderSubmission), Mock(spec=SolLiveEngineEvents)
-    poller = Mock(spec=SolReconciliationPoller)
+    orders, events = Mock(spec=AssetOrderSubmission), Mock(spec=AssetLiveEngineEvents)
+    poller = Mock(spec=AssetReconciliationPoller)
     sibling = 303 if filled_oid == 202 else 202
     orders.cancel_order.return_value = HyperliquidOrderAck(True, sibling, "canceled")
     poller.wait_for.return_value = final
@@ -109,8 +109,8 @@ def test_mixed_partial_fills_still_cancel_both_unfilled_remainders() -> None:
     fills = (_stop_fill(oid=202, size=0.1), _stop_fill(oid=303, size=0.2))
     venue = _venue(0.0, orders=(stop, target), fills=fills)
     final = _venue(0.0, fills=fills)
-    orders, events = Mock(spec=SolOrderSubmission), Mock(spec=SolLiveEngineEvents)
-    poller = Mock(spec=SolReconciliationPoller)
+    orders, events = Mock(spec=AssetOrderSubmission), Mock(spec=AssetLiveEngineEvents)
+    poller = Mock(spec=AssetReconciliationPoller)
     orders.cancel_order.side_effect = [
         HyperliquidOrderAck(True, 202, "canceled"),
         HyperliquidOrderAck(True, 303, "canceled"),
@@ -130,10 +130,10 @@ def test_complete_fill_does_not_hide_a_persistently_open_order() -> None:
     stop = _order(202, size=0.3, reduce_only=True, trigger=True)
     fill = _stop_fill(oid=202, size=0.3)
     venue = _venue(0.0, orders=(stop,), fills=(fill,))
-    orders, events = Mock(spec=SolOrderSubmission), Mock(spec=SolLiveEngineEvents)
-    poller = Mock(spec=SolReconciliationPoller)
+    orders, events = Mock(spec=AssetOrderSubmission), Mock(spec=AssetLiveEngineEvents)
+    poller = Mock(spec=AssetReconciliationPoller)
     poller.wait_for.return_value = venue
-    with pytest.raises(SolLiveEngineError, match="did not reconcile flat"):
+    with pytest.raises(AssetLiveEngineError, match="did not reconcile flat"):
         reconcile_owned_bracket_exit(
             snapshot=owned_snapshot(), venue=venue, orders=orders, events=events, poller=poller
         )

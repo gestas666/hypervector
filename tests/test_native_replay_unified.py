@@ -6,7 +6,7 @@ from decimal import Decimal, localcontext
 import pytest
 
 from hypervector.live.hyperliquid_perp_parsing import parse_account_mode_for_symbol
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_live_runner_support import shared_account_facts
 from hypervector.research.native_replay_account import AccountView, ExactFillAccount
 from hypervector.research.native_replay_events import FillEvent, Stamp
@@ -77,7 +77,7 @@ def test_seven_native_projections_do_not_duplicate_equity_or_margin(
     """Actual parsers and namespace aggregation consume one shared balance."""
     wire = project(account_view(side))
     venues = tuple(
-        SolReconciliationSnapshot(
+        HyperliquidReconciliationSnapshot(
             parse_account_mode_for_symbol(
                 mode="unifiedAccount",
                 perp_state=wire.perp_states[symbol.partition(":")[0] if ":" in symbol else ""],

@@ -9,7 +9,7 @@ from hyperliquid.utils.error import ClientError  # type: ignore[import-untyped]
 import pytest
 from requests import ReadTimeout
 
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import HyperliquidReconciliationSnapshot
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
@@ -49,7 +49,7 @@ class _TransientReconcileEngine(_Engine):
         *,
         funding_start_time_ms: int,
         funding_end_time_ms: int,
-    ) -> SolReconciliationSnapshot:
+    ) -> HyperliquidReconciliationSnapshot:
         self.reconcile_attempts += 1
         if self.reconcile_attempts == 1:
             raise self._failure

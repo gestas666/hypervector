@@ -9,8 +9,8 @@ from entry_deadline_fixtures import DECISION_MS, Case, Clock, scenario
 from hypervector.live.bidirectional_intents import RoutingAction
 from hypervector.live.cohort_entry_submission import execute_fresh_routed_actions
 from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
-from hypervector.live.sol_order_restart import pending_order_intent
-from hypervector.live.sol_range_onset_state import SolLiveState
+from hypervector.live.asset_order_restart import pending_order_intent
+from hypervector.live.asset_state import AssetLiveState
 
 
 def test_expired_first_entry_preserves_fresh_route_and_selected_exit() -> None:
@@ -63,7 +63,7 @@ def test_failed_non_submission_write_keeps_pending_intent(
     with pytest.raises(OSError, match="simulated persistence failure"):
         state.runner.poll_once()
     assert state.adapter.entry_times_ms == []
-    assert state.engine.snapshot.state is SolLiveState.ENTRY_PENDING
+    assert state.engine.snapshot.state is AssetLiveState.ENTRY_PENDING
     records = state.ledger.read_all()
     assert pending_order_intent(records) is not None
     assert not [row for row in records if row["event_type"] == "entry_not_submitted"]

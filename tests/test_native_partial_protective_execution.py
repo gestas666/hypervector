@@ -11,8 +11,8 @@ from native_replay_engine_fixture import FEE_RATE
 from native_replay_partial_protective_fixture import PartialProtectiveFixture
 from test_native_replay_adapter import deny_external_ports
 
-from hypervector.live.sol_range_onset_state import SolLiveState
-from hypervector.live.sol_range_onset_live_journal import build_live_journal
+from hypervector.live.asset_state import AssetLiveState
+from hypervector.live.asset_live_journal import build_live_journal
 
 __all__ = ["deny_external_ports"]
 D = Decimal
@@ -69,16 +69,16 @@ def test_native_partial_protection_preserves_or_completes_owned_lifecycle(
         funding_start_time_ms=original.opened_at_ms, funding_end_time_ms=replay.clock.now_ms
     )
     if kind == "target":
-        assert engine.snapshot.state is SolLiveState.OPEN
+        assert engine.snapshot.state is AssetLiveState.OPEN
         assert engine.snapshot.position_size_signed == venue.position.size_signed
         assert engine.snapshot.opened_at_ms == original.opened_at_ms
         assert engine.snapshot.stop_oid == original.stop_oid and engine.snapshot.target_oid == oid
         assert replay.mutations.count("close") == 0
         restarted = replay.engine(replay.assets[symbol]).start()
-        assert restarted.state is SolLiveState.OPEN
+        assert restarted.state is AssetLiveState.OPEN
         assert restarted.opened_at_ms == original.opened_at_ms
     else:
-        assert engine.snapshot.state is SolLiveState.FLAT and venue.is_flat
+        assert engine.snapshot.state is AssetLiveState.FLAT and venue.is_flat
         assert replay.mutations.count("close") == 1
         rows = [json.loads(line) for line in engine._ledger.path.read_text().splitlines()]
         report = build_live_journal(rows)
