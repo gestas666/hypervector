@@ -11,14 +11,17 @@ from __future__ import annotations
 
 import math
 from dataclasses import asdict, dataclass, field
-from typing import Any, Callable, Literal
-
-import pandas as pd
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 Role = Literal["uptrend", "downtrend", "regime", "other"]
 TradeDirection = Literal["long", "short"]
 
-SignalBuilder = Callable[..., tuple[pd.Series, pd.Series, str]]
+if TYPE_CHECKING:
+    import pandas as pd
+
+    SignalBuilder = Callable[..., tuple[pd.Series, pd.Series, str]]
+else:  # the registry stays importable without pandas (CLI discovery, status)
+    SignalBuilder = Callable[..., tuple[Any, Any, str]]
 
 #: Exit mode of a strategy whose own exit signals are its only exits.
 STRATEGY_MANAGED_EXIT_MODE = "strategy_managed"

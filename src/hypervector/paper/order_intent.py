@@ -9,6 +9,8 @@ from hypervector.strategies.registry import execution_profile
 
 ORDER_INTENT_SCHEMA = "hv_order_intent_v1"
 NETWORK_MAINNET = "mainnet"
+#: Ledger actions of an entry order (its fill and its resting lifecycle).
+_ENTRY_ACTIONS = frozenset({"enter_long", "enter_short", "submit_entry", "cancel_entry"})
 
 
 def build_order_intent(
@@ -86,7 +88,7 @@ def shadow_order_intent(
         )
     reduce_only = action == "close"
     post_only_entry = (
-        action in {"enter_long", "enter_short"}
+        action in _ENTRY_ACTIONS
         and execution_profile(strategy_name).post_only_entries
     )
     if not post_only_entry:

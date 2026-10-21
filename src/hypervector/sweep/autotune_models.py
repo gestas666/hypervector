@@ -42,7 +42,7 @@ class AutotuneResult:
     space_exhausted: bool = False
     warnings: list[str] = field(default_factory=list)
     #: Fee model the trials were measured with, and the one the caller asked
-    #: for; they differ only when a strategy contract overrides it.
+    #: for; they differ only when the strategy declares a fee model.
     fee_model_used: str = ""
     fee_model_requested: str = ""
 

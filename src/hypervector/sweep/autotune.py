@@ -10,7 +10,11 @@ import pandas as pd
 from hypervector.config import DEFAULT_LOOKBACK, DEFAULT_SYMBOL, DEFAULT_TIMEFRAME
 from hypervector.data.pipeline import load_research_history
 from hypervector.strategies import register_all_strategies
-from hypervector.strategies.registry import ExecutionProfile, get_strategy
+from hypervector.strategies.registry import (
+    ExecutionProfile,
+    get_strategy,
+    unknown_strategy_message,
+)
 from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.metrics import compute_trial_metrics
 from hypervector.sweep.autotune_models import (
@@ -60,7 +64,7 @@ def run_autotune(
     symbol: str = DEFAULT_SYMBOL,
     timeframe: str = DEFAULT_TIMEFRAME,
     lookback_days: int = DEFAULT_LOOKBACK,
-    strategy_name: str,
+    strategy_name: str | None = None,
     n_trials: int = 100,
     fee_model: str = "hl_base_taker",
     book_data_path: str | Path | None = None,
@@ -119,6 +123,8 @@ def run_autotune(
     selected_root = _resolve_root(root, data_root)
     if book_data_path not in (None, "") and not Path(book_data_path).is_file():  # type: ignore[arg-type]
         raise FileNotFoundError(f"book data path is not a file: {book_data_path}")
+    if not strategy_name:
+        raise ValueError(unknown_strategy_message(None))
     register_all_strategies()
     execution = get_strategy(strategy_name).execution
     _check_declared_leverage(execution, symbol)
@@ -278,7 +284,7 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
         notes.append(
             f"fee model {settings.fee_model_requested!r} was requested but "
             f"{settings.strategy_name} is measured with {settings.fee_model!r} "
-            "(strategy contract override)"
+            "(the fee model its execution profile declares)"
         )
     if book_requested and not book_loaded:
         notes.append(
