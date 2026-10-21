@@ -39,7 +39,7 @@ def test_load_expectation_retains_provider_symbol_sizing() -> None:
 def test_staged_expectation_retains_exact_provider_membership_and_routes() -> None:
     """The pending generation exposes its complete execution roster."""
     expectation = load_configuration_expectation(
-        _FIXTURE_PROFILES / "evidence_roster.toml"
+        _FIXTURE_PROFILES / "staged_route_subset.toml"
     )
 
     scopes = dict(expectation.provider_execution_scopes)
@@ -49,7 +49,7 @@ def test_staged_expectation_retains_exact_provider_membership_and_routes() -> No
     assert "test_band_a_15m" not in scopes
     assert "test_band_b_15m" not in scopes
     active = load_configuration_expectation(
-        _FIXTURE_PROFILES / "all_live.toml"
+        _FIXTURE_PROFILES / "complete_portfolio.toml"
     )
     active_routes = {
         (provider, symbol)
@@ -74,10 +74,10 @@ def test_staged_expectation_retains_exact_provider_membership_and_routes() -> No
     assert staged_routes - active_routes == set()
 
 
-def test_staged_expectation_retains_exact_side_specialist_directions() -> None:
+def test_staged_expectation_retains_exact_side_specific_directions() -> None:
     """Staged evidence reports aggregate BTC coverage without name inference."""
     expectation = load_configuration_expectation(
-        _FIXTURE_PROFILES / "btc_specialists.toml"
+        _FIXTURE_PROFILES / "side_specific_routes.toml"
     )
 
     directions = {
@@ -111,11 +111,11 @@ def test_staged_expectation_retains_exact_side_specialist_directions() -> None:
     ] == ["long"]
 
 
-def test_staged_expectation_exposes_corrected_long_identity_and_six_sides() -> None:
-    """The staged cockpit sees the corrected route rather than its earlier alias."""
+def test_staged_expectation_exposes_replaced_long_identity_and_six_sides() -> None:
+    """The staged expectation shows the replacement long route, not the one it replaced."""
     expectation = load_configuration_expectation(
         _FIXTURE_PROFILES
-        / "btc_specialists_corrected.toml"
+        / "side_specific_routes_replaced_long.toml"
     )
     directions = {
         (strategy, symbol): sides
@@ -131,7 +131,7 @@ def test_staged_expectation_exposes_corrected_long_identity_and_six_sides() -> N
 
 
 def test_profile_b_expectation_exposes_exact_live_routes_without_authority() -> None:
-    """The retained live profile publishes its six route-sides as report-only."""
+    """Profile B publishes its six route-sides as report-only."""
     expectation = load_configuration_expectation(_PROFILE_B)
 
     assert dict(expectation.provider_execution_scopes) == {
@@ -214,7 +214,7 @@ def test_load_expectation_retains_provider_directional_sizing(
 def test_load_expectation_retains_exact_pending_asset_sizing() -> None:
     """The selected profile exposes every asset cap without activating it."""
     expectation = load_configuration_expectation(
-        _FIXTURE_PROFILES / "range_retired_hype75.toml"
+        _FIXTURE_PROFILES / "four_asset_hold_extension.toml"
     )
 
     assert expectation.asset_sizing == (
@@ -226,9 +226,9 @@ def test_load_expectation_retains_exact_pending_asset_sizing() -> None:
 
 
 def test_generation_exposes_preserved_provider_exit_policy_without_authority() -> None:
-    """The operator can verify the HYPE extension remains unchanged."""
+    """The HYPE provider's hold-extension exit policy is exposed unchanged."""
     expectation = load_configuration_expectation(
-        _FIXTURE_PROFILES / "range_retired_hype75.toml"
+        _FIXTURE_PROFILES / "four_asset_hold_extension.toml"
     )
     evidence = configuration_generation_evidence(
         "runtime-profile",
@@ -568,7 +568,7 @@ def test_generation_exposes_directional_profit_lock_without_collapsing_scope(
     tmp_path: Path,
 ) -> None:
     """Checkpoint evidence preserves strategy, symbol, and side identity."""
-    source = _FIXTURE_PROFILES / "repaired_b.toml"
+    source = _FIXTURE_PROFILES / "four_asset_mixed_sides.toml"
     text = source.read_text(encoding="utf-8")
     anchor = 'execution_symbols = ["HYPE"]\n'
     override = (

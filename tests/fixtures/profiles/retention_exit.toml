@@ -1,4 +1,4 @@
-profile = "fixture_exit_policy_v2"
+profile = "fixture_retention_exit"
 network = "mainnet"
 margin_mode = "isolated"
 maximum_positions = 8
@@ -6,7 +6,7 @@ maximum_positions = 8
 [runtime]
 cohort_ledger = "data/live/bidirectional_cohort/decisions.jsonl"
 stop_file = "data/live/bidirectional_cohort/STOP"
-transition_approval = "tests/fixtures/approvals/exit_policy_v2.json"
+transition_approval = "tests/fixtures/approvals/retention_exit.json"
 poll_seconds = 15.0
 lookback_days = 14
 

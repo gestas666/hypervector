@@ -1,4 +1,4 @@
-profile = "fixture_eight_asset_incremental"
+profile = "fixture_eight_asset_short_only_override"
 network = "mainnet"
 margin_mode = "isolated"
 maximum_positions = 10
@@ -166,6 +166,7 @@ priority = 70
 timeframe = "15m"
 maximum_entry_delay_seconds = 30
 execution_symbols = ["xyz:AAA"]
+execution_side_overrides = { "xyz:AAA" = ["short"] }
 execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", stop_bps = 80.0, target_policy = "none", maximum_hold_seconds = 86400, profit_lock_policy = "completed_bar_trailing", profit_lock_activation_bps = 100.0, profit_lock_floor_bps = 40.0, profit_lock_giveback_bps = 80.0 }
 
 [[providers]]

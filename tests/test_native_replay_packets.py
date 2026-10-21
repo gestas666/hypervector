@@ -75,7 +75,7 @@ def _recorded_packet(root: Path, config: MultiAssetLiveConfig, cutoff_ms: int) -
 def scenario_file(tmp_path: Path) -> Path:
     """Describe synthetic account quotes around a synthetic authenticated candle packet."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/noncrypto_live.toml",
+        "tests/fixtures/profiles/mixed_crypto_hip3.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

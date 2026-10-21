@@ -21,7 +21,7 @@ def expected_provider_pairs(identity: Record) -> set[str]:
 
 
 def executable_provider_pairs(identity: Record) -> set[str]:
-    """Return provider/symbol pairs granted explicit canary authority."""
+    """Return provider/symbol pairs granted explicit execution authority."""
     providers = object_list(payload(identity), "providers")
     pairs: set[str] = set()
     for provider in providers:

@@ -539,7 +539,7 @@ def test_market_family_flag_reaches_book_trade_and_price_requests(
             "archive",
             command,
             "--symbol",
-            "xyz:SNDK",
+            "xyz:AAA",
             "--market-family",
             "hip3",
             "--start",
@@ -552,7 +552,7 @@ def test_market_family_flag_reaches_book_trade_and_price_requests(
     capsys.readouterr()
     assert rc == 0
     assert captured[0].market_family == "hip3"  # type: ignore[attr-defined]
-    assert captured[0].symbol == "xyz:SNDK"  # type: ignore[attr-defined]
+    assert captured[0].symbol == "xyz:AAA"  # type: ignore[attr-defined]
 
 
 def test_audit_reports_incomplete_bundle_instead_of_identity_mismatch(

@@ -8,11 +8,11 @@
   "execution_authority": "none",
   "previous_profile": {
     "profile_id": "fixture_cohort_b",
-    "profile_fingerprint": "c7e0d2cc5f6c0fdc0c4f1fd22667adf0a3a6d8375739b562512a52d5836de2dd"
+    "profile_fingerprint": "e1cb59ecb58b39b81d8ef02faea18545956edf70758eced8b2809f769cb5f52d"
   },
   "candidate_profile": {
     "profile_id": "fixture_cohort_a",
-    "profile_fingerprint": "ee336b4c06f24876e7475dac323c72f863338c5e8e1763c215bb3b9b43a8e324"
+    "profile_fingerprint": "431979d7baf7a6b9731d450d321a14dad3142541368842f234c085871baecf50"
   },
   "change_scopes": [
     "rollback_to_fixture_cohort_a"
@@ -29,7 +29,7 @@
   ],
   "rollback": {
     "config_path": "../profile_b.toml",
-    "profile_fingerprint": "c7e0d2cc5f6c0fdc0c4f1fd22667adf0a3a6d8375739b562512a52d5836de2dd",
+    "profile_fingerprint": "e1cb59ecb58b39b81d8ef02faea18545956edf70758eced8b2809f769cb5f52d",
     "sha256": "61fa4f6ea8b1009502cfc32685c9d31e8f3b0c6331c14ad75062b023bbfbcc19"
   },
   "retirements": []

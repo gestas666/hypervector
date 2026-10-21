@@ -473,7 +473,7 @@ class MultiAssetLiveRunner:
         | tuple[HyperliquidReconciliationSnapshot, ...],
         observed_ms: int | None = None,
     ) -> bool:
-        """Move venue stops to break-even for v2 lifecycles whose floor armed this cycle."""
+        """Move venue stops to break-even for retention-exit lifecycles whose floor armed this cycle."""
         requests = self._profit_lock_controller.breakeven_requests
         if not requests:
             return False

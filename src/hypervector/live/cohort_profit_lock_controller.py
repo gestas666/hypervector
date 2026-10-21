@@ -69,7 +69,7 @@ class CohortProfitLockController:
 
     @property
     def breakeven_requests(self) -> frozenset[str]:
-        """Symbols whose durable v2 state armed the profit floor during this cycle."""
+        """Symbols whose durable retention-exit state armed the profit floor during this cycle."""
         return self._breakeven_requests
 
     def actions(

@@ -1,4 +1,4 @@
-profile = "fixture_eth_sol_full_observation"
+profile = "fixture_provider_order_mismatch"
 network = "mainnet"
 margin_mode = "isolated"
 maximum_positions = 4

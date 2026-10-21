@@ -15,7 +15,7 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 
-_PROFILE = Path("tests/fixtures/profiles/repaired_b.toml")
+_PROFILE = Path("tests/fixtures/profiles/four_asset_mixed_sides.toml")
 _HYPE = "test_squeeze_1m"
 _OVERRIDES = (
     "profit_lock_overrides = { HYPE = { long = { policy = "

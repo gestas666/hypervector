@@ -124,8 +124,7 @@ class CohortRunFailure(RuntimeError):
 def build_parser() -> argparse.ArgumentParser:
     """Build the explicit live-only cohort command boundary."""
     parser = argparse.ArgumentParser(description=__doc__)
-    # Required: the old default named a canary profile that is now a test
-    # fixture; the supervised start always passes --config explicitly.
+    # Required: the supervised start always passes --config explicitly.
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--enabled", action="store_true")
     parser.add_argument("--i-accept-live-risk", action="store_true")

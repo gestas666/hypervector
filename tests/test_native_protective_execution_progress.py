@@ -65,7 +65,7 @@ def test_partial_native_receipts_explain_exact_remaining_exposure(
 def test_partial_matrix_covers_each_configured_side_once() -> None:
     """Reject missing or duplicate configured directions instead of inflating case counts."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/noncrypto_live.toml", mode="observe"
+        "tests/fixtures/profiles/mixed_crypto_hip3.toml", mode="observe"
     )
     by_symbol = {
         asset.symbol: sorted(

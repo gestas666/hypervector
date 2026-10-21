@@ -267,7 +267,7 @@ def test_archive_replays_only_a_bounded_cross_channel_window(tmp_path: Path) -> 
     assert later not in replay
 
 
-def test_archive_replays_only_trade_channel_for_cash_open_source(
+def test_archive_replays_only_trade_channel_for_trade_only_source(
     tmp_path: Path,
 ) -> None:
     """A trade-only replay must not deserialize unrelated L2 or context rows."""

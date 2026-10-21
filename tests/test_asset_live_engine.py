@@ -526,7 +526,7 @@ def test_target_plan_places_and_verifies_complete_bracket(tmp_path: Path) -> Non
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
 
     engine.start()
     engine.record_strategy_decision(
@@ -583,7 +583,7 @@ def test_target_fill_cancels_residual_stop_and_journals_exact_exit(
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     engine.start()
     engine.record_strategy_decision({"execution_plan": plan.as_payload()})
     engine.enter(side="long", mark_price=73.0)
@@ -640,7 +640,7 @@ def test_scheduled_bracket_exit_keeps_stop_until_position_is_flat(
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     engine.start()
     engine.record_strategy_decision({"execution_plan": plan.as_payload()})
     engine.enter(side="long", mark_price=73.0)
@@ -1080,7 +1080,7 @@ def test_restart_restores_exact_open_target_bracket(tmp_path: Path) -> None:
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     ledger.append(
         event_type="state_transition",
         observed_at_utc="2026-07-31T11:59:00+00:00",
@@ -1132,7 +1132,7 @@ def test_restart_cleans_residual_stop_after_target_fill(tmp_path: Path) -> None:
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     ledger.append(
         event_type="state_transition",
         observed_at_utc="2026-07-31T11:59:00+00:00",
@@ -1178,7 +1178,7 @@ def test_restart_recovers_committed_target_without_resubmission(tmp_path: Path) 
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     target_client_id = "0x33333333333333333333333333333333"
     ledger.append(
         event_type="state_transition",
@@ -1252,7 +1252,7 @@ def test_restart_adopts_bracket_after_false_target_visibility_fault(
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     target_client_id = "0x33333333333333333333333333333333"
     common = {
         "entry_oid": 101,
@@ -1767,7 +1767,7 @@ def test_restart_cleans_residual_stop_after_filled_bracket_close(
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     ledger.append(
         event_type="state_transition",
         observed_at_utc="2026-07-31T11:59:00+00:00",
@@ -1834,7 +1834,7 @@ def test_restart_restores_target_after_exit_crash_before_close_intent(
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     ledger.append(
         event_type="state_transition",
         observed_at_utc="2026-07-31T11:59:00+00:00",
@@ -1892,7 +1892,7 @@ def test_restart_restores_target_after_bracket_close_rejection(
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     ledger.append(
         event_type="state_transition",
         observed_at_utc="2026-07-31T11:59:00+00:00",

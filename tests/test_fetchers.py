@@ -70,7 +70,7 @@ def test_live_snapshot_fetch_uses_one_candle_request() -> None:
 def test_hip3_symbol_preserves_lowercase_dex_namespace() -> None:
     """HIP-3 requests use the venue's exact dex:ASSET identity."""
     assert hl_data.hl_coin("xyz:SP500") == "xyz:SP500"
-    assert hl_data.hl_coin("xyz:SPCX") == "xyz:SPCX"
+    assert hl_data.hl_coin("xyz:BBB") == "xyz:BBB"
 
 
 def test_live_snapshot_fetch_uses_exact_hip3_coin() -> None:

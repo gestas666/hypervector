@@ -27,7 +27,7 @@ def test_native_stop_reconciles_engine_cleanup_journal_and_exact_cash(
 ) -> None:
     """Both telemetry and restart paths must recover actual stop OIDs without a second close."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/noncrypto_live.toml",
+        "tests/fixtures/profiles/mixed_crypto_hip3.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

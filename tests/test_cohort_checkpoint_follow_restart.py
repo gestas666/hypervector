@@ -12,7 +12,7 @@ from hypervector.research.cohort_rolling_checkpoint import publish_rolling_check
 from test_cohort_checkpoint_bounded_transition import _complete_checkpoint
 from test_multi_asset_bidirectional_live_checkpoint_script import _load_module
 
-_CONFIG = Path("tests/fixtures/profiles/noncrypto_live.toml")
+_CONFIG = Path("tests/fixtures/profiles/mixed_crypto_hip3.toml")
 
 
 _CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/cohort_base.toml"]

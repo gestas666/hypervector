@@ -52,7 +52,7 @@ def test_candle_fetch_cli_reports_secret_free_provenance(
 
 @pytest.mark.parametrize(
     ("symbol", "options", "family"),
-    [("BTC", [], "core"), ("xyz:SNDK", ["--market-family", "hip3"], "hip3")],
+    [("BTC", [], "core"), ("xyz:AAA", ["--market-family", "hip3"], "hip3")],
 )
 def test_candle_cli_passes_explicit_identity(
     tmp_path: Path,
@@ -96,7 +96,7 @@ def test_candle_cli_passes_explicit_identity(
     assert requests[0].market_family == family
 
 
-@pytest.mark.parametrize(("symbol", "family"), [("xyz:SNDK", "core"), ("SNDK", "hip3")])
+@pytest.mark.parametrize(("symbol", "family"), [("xyz:AAA", "core"), ("AAA", "hip3")])
 def test_candle_cli_rejects_family_mismatch_before_acquisition(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -130,7 +130,7 @@ class AssetLiveConfig:
     strategy_id: str = "multi_strategy_bidirectional_router"
     max_positions_per_symbol: int = 1
     capital_source: str = "shared_live_account"
-    portfolio_purpose: str = "multi_asset_canary_validation"
+    portfolio_purpose: str = "multi_asset_cohort"
     metalabel_mode: str = "observe"
 
     @property
@@ -266,7 +266,7 @@ class MultiAssetLiveConfig:
 
     @property
     def executable_provider_symbols(self) -> frozenset[tuple[str, str]]:
-        """Return the explicitly authorized provider-symbol canary pairs."""
+        """Return the explicitly authorized provider-symbol execution pairs."""
         return frozenset(
             (provider.strategy_id, symbol)
             for provider in self.providers

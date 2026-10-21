@@ -1,4 +1,4 @@
-profile = "fixture_evidence_roster"
+profile = "fixture_staged_route_subset"
 network = "mainnet"
 margin_mode = "isolated"
 maximum_positions = 10

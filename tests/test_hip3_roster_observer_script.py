@@ -195,7 +195,7 @@ def test_explicit_markets_form_the_roster_in_declared_order() -> None:
 def test_profile_hip3_assets_form_the_roster() -> None:
     """--config takes every HIP-3 asset and its declared venue maximum leverage."""
     module = _load_module()
-    profile = Path("tests/fixtures/profiles/noncrypto_live.toml")
+    profile = Path("tests/fixtures/profiles/mixed_crypto_hip3.toml")
     markets = module.roster_markets(profile, ())
     assert markets
     assert all(":" in spec.symbol for spec in markets)
@@ -206,7 +206,7 @@ def test_profile_hip3_assets_form_the_roster() -> None:
     "argv",
     [
         [],
-        ["--market", "xyz:AAA=20", "--config", "tests/fixtures/profiles/noncrypto_live.toml"],
+        ["--market", "xyz:AAA=20", "--config", "tests/fixtures/profiles/mixed_crypto_hip3.toml"],
         ["--market", "BTC=40"],
         ["--market", "xyz:AAA"],
         ["--market", "xyz:AAA=20", "--market", "xyz:AAA=20"],

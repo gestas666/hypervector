@@ -200,10 +200,10 @@ def test_observer_ledger_uses_a_separate_domain_and_truthful_mode(
     tmp_path: Path,
 ) -> None:
     """A disarmed observer cannot masquerade as live telemetry."""
-    path = tmp_path / "data/observe/btc_hype_breakout_transfer/decisions.jsonl"
+    path = tmp_path / "data/observe/bidirectional_cohort/decisions.jsonl"
     ledger = AssetLiveLedger(
         path=path,
-        profile_id="fixture_btc_hype_breakout_transfer",
+        profile_id="fixture_observer",
         profile_fingerprint="profile-hash",
         run_fingerprint="run-hash",
         run_id="observer-001",

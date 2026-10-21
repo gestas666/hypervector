@@ -1,4 +1,4 @@
-profile = "fixture_six_asset_profit_lock"
+profile = "fixture_six_asset_base"
 network = "mainnet"
 margin_mode = "isolated"
 maximum_positions = 10

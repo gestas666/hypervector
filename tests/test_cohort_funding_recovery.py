@@ -21,7 +21,7 @@ from hypervector.live.multi_asset_live_protocols import (
 )
 from hypervector.live.asset_ledger import AssetLiveLedger
 
-PROFILE = Path("tests/fixtures/profiles/noncrypto_live.toml")
+PROFILE = Path("tests/fixtures/profiles/mixed_crypto_hip3.toml")
 DAY_MS = 86_400_000
 COMMITTED_END_MS = 1_789_141_030_000
 

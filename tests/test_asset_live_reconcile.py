@@ -327,7 +327,7 @@ def test_verified_owned_position_and_exact_target_bracket_can_be_restored() -> N
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     outcome = reconcile_asset_startup(
         records=[
             _record(

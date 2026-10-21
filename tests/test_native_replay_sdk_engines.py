@@ -131,7 +131,7 @@ def test_all_configured_assets_complete_native_engine_lifecycles_with_shared_sdk
 ) -> None:
     """Configured plans preserve decision clocks, protection and funded account identity."""
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/noncrypto_live.toml",
+        "tests/fixtures/profiles/mixed_crypto_hip3.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

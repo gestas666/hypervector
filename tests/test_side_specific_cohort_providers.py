@@ -1,4 +1,4 @@
-"""Aggregate bidirectional coverage for side-specialist cohort providers."""
+"""Aggregate bidirectional coverage for side-specific cohort providers."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import pytest
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
 
-_BASE = Path("tests/fixtures/profiles/focused_growth_5000.toml")
+_BASE = Path("tests/fixtures/profiles/three_asset_bidirectional.toml")
 _BIDIRECTIONAL_BLOCK = """[[providers]]
 strategy_id = "test_trend_5m"
 symbols = ["BTC"]
@@ -20,7 +20,7 @@ maximum_entry_delay_seconds = 60
 execution_symbols = ["BTC"]
 execution = { entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", minimum_stop_bps = 20.0, maximum_stop_bps = 75.0, target_policy = "reward_risk", target_r_multiple = 3.0, maximum_hold_seconds = 86400 }
 """
-_SPECIALIST_BLOCKS = """[[providers]]
+_SIDE_SPECIFIC_BLOCKS = """[[providers]]
 strategy_id = "test_short_trend_5m"
 symbols = ["BTC"]
 sides = ["short"]
@@ -42,15 +42,15 @@ execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", stop_bps
 """
 
 
-def test_side_specialists_may_jointly_supply_btc_bidirectional_coverage(
+def test_side_specific_providers_may_jointly_supply_bidirectional_coverage(
     tmp_path: Path,
 ) -> None:
     """The asset stays bidirectional while each strategy keeps honest scope."""
     text = _BASE.read_text(encoding="utf-8").replace(
         _BIDIRECTIONAL_BLOCK,
-        _SPECIALIST_BLOCKS,
+        _SIDE_SPECIFIC_BLOCKS,
     )
-    profile = tmp_path / "side-specialists.toml"
+    profile = tmp_path / "side-specific.toml"
     profile.write_text(text, encoding="utf-8")
 
     config = load_multi_asset_live_config(profile, mode="observe")

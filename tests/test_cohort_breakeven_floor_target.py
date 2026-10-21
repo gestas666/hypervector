@@ -1,4 +1,4 @@
-"""Opt-in venue stop raise to the v2 software floor, market-guarded and alerting."""
+"""Opt-in venue stop raise to the retention-exit software floor, market-guarded and alerting."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
@@ -41,7 +41,7 @@ from hypervector.research.cohort_configuration_exit_policy import (
 )
 from exit_parameter_fixtures import RETENTION_PARAMETERS
 
-EXIT_POLICY_V2 = "tests/fixtures/profiles/exit_policy_v2.toml"
+RETENTION_EXIT = "tests/fixtures/profiles/retention_exit.toml"
 NOW = 1_800_000_000_000
 
 
@@ -312,7 +312,7 @@ def test_contract_option_is_typed_opt_in_and_omitted_by_default() -> None:
         {"adaptive_exit_policy": ADAPTIVE_EXIT_POLICY},
     ],
 )
-def test_floor_target_requires_a_known_value_and_the_v2_floor(
+def test_floor_target_requires_a_known_value_and_the_retention_floor(
     changes: dict[str, str],
 ) -> None:
     with pytest.raises(CohortExecutionPlanError):
@@ -320,10 +320,10 @@ def test_floor_target_requires_a_known_value_and_the_v2_floor(
 
 
 def test_option_absent_keeps_baseline_identity_and_floor_changes_it(tmp_path) -> None:
-    config = load_multi_asset_live_config(EXIT_POLICY_V2, mode="observe")
+    config = load_multi_asset_live_config(RETENTION_EXIT, mode="observe")
     assert (
         config.profile_fingerprint
-        == "4a7c74b468c7a2466a0d3b3150ce1b05db8e4ec0c70ee8f9453e1a78496f42be"
+        == "48695de61a13454a12a01d921fa8a3aa7139b9ba28565daa6ede487165871620"
     )
     assert all(
         provider.execution.breakeven_stop_target == "entry_offset"

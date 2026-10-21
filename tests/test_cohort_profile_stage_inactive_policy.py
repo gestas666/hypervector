@@ -16,13 +16,13 @@ from hypervector.live.multi_asset_live_config import (
 )
 from test_cohort_profile_stage_roundtrip import unchanged_settings
 
-NONCRYPTO_PROFILE = Path("tests/fixtures/profiles/noncrypto_live.toml")
+MIXED_PROFILE = Path("tests/fixtures/profiles/mixed_crypto_hip3.toml")
 
 
 @pytest.mark.parametrize("index", range(7))
 def test_disable_and_reenable_preserves_exact_policy(index: int, tmp_path: Path) -> None:
     """The scope switch alone removes authority; inactive overrides survive the round trip."""
-    original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
+    original = load_multi_asset_live_config(MIXED_PROFILE, mode="observe")
     settings = unchanged_settings(original)
     providers = list(settings.providers)
     providers[index] = replace(providers[index], execution_symbols=())
@@ -44,12 +44,12 @@ def test_disable_and_reenable_preserves_exact_policy(index: int, tmp_path: Path)
     enabled = load_multi_asset_live_config(enabled_path, mode="observe")
     assert enabled.providers == original.providers
     assert enabled.executable_provider_directions == original.executable_provider_directions
-    assert original == load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
+    assert original == load_multi_asset_live_config(MIXED_PROFILE, mode="observe")
 
 
 def test_inactive_override_still_requires_an_observed_provider_symbol() -> None:
     """Preserved settings cannot name an asset the provider does not observe."""
-    original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
+    original = load_multi_asset_live_config(MIXED_PROFILE, mode="observe")
     invalid = replace(original.providers[0], execution_symbols=(),
                       execution_side_overrides=(("ETH", frozenset({"long"})),))
     with pytest.raises(ValueError, match="execution_side_overrides"):
@@ -59,7 +59,7 @@ def test_inactive_override_still_requires_an_observed_provider_symbol() -> None:
 @pytest.mark.parametrize("index", [1, 2])
 def test_inactive_provider_still_rejects_signal_clock_drift(index: int) -> None:
     """Observe-only status does not relax what the registered signal can compute."""
-    original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
+    original = load_multi_asset_live_config(MIXED_PROFILE, mode="observe")
     providers = list(original.providers)
     inactive = replace(providers[index], execution_symbols=())
     providers[index] = replace(inactive, timeframe="15m")
@@ -70,7 +70,7 @@ def test_inactive_provider_still_rejects_signal_clock_drift(index: int) -> None:
 @pytest.mark.parametrize("index", [1, 2])
 def test_inactive_route_keeps_its_own_side_and_stop(index: int) -> None:
     """Execution side scope and stop distance are profile choices, not provider identity."""
-    original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
+    original = load_multi_asset_live_config(MIXED_PROFILE, mode="observe")
     providers = list(original.providers)
     inactive = replace(providers[index], execution_symbols=(), execution_side_overrides=())
     providers[index] = replace(inactive, execution=replace(inactive.execution, stop_bps=80.0))

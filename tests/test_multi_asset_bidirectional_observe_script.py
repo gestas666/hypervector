@@ -144,7 +144,7 @@ def test_observer_rebinding_changes_only_storage_identity(tmp_path: Path) -> Non
     """A different fingerprint must not conceal a different strategy contract."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/btc_specialists_growth_sizing.toml",
+        "tests/fixtures/profiles/side_specific_routes_replaced_long.toml",
         mode="observe",
     )
 
@@ -206,7 +206,7 @@ def test_observer_cache_bypasses_completed_bar_profit_lock_symbols() -> None:
     """Observer transport must retain raw polling for lock-sensitive symbols."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/eight_asset_incremental.toml",
+        "tests/fixtures/profiles/eight_asset_base.toml",
         mode="observe",
     )
     calls: list[str] = []

@@ -9,7 +9,7 @@ import pytest
 
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
-CONFIG = Path("tests/fixtures/profiles/noncrypto_live.toml")
+CONFIG = Path("tests/fixtures/profiles/mixed_crypto_hip3.toml")
 
 
 def _source() -> dict[str, object]:

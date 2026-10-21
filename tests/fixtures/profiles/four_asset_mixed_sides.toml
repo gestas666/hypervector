@@ -1,4 +1,4 @@
-profile = "fixture_repaired_a"
+profile = "fixture_four_asset_mixed_sides"
 network = "mainnet"
 margin_mode = "isolated"
 maximum_positions = 10
@@ -81,6 +81,7 @@ priority = 30
 timeframe = "1m"
 maximum_entry_delay_seconds = 60
 execution_symbols = ["ETH", "SOL"]
+stop_bps_overrides = { SOL = 80.0 }
 execution = { entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", stop_bps = 60.0, target_policy = "none", maximum_hold_seconds = 172800 }
 
 [[providers]]

@@ -1,4 +1,4 @@
-"""Durable, side-correct v2 retention exits and break-even requests without network."""
+"""Durable, side-correct retention exits and break-even requests without network."""
 
 from collections.abc import Mapping
 from dataclasses import replace
@@ -27,7 +27,7 @@ from exit_parameter_fixtures import ADAPTIVE_PARAMETERS, RETENTION_PARAMETERS
 
 
 def engine(side: str = "long") -> _Engine:
-    """Create an exact owned lifecycle bound to the v2 policy (fixed 80 bps stop, so R = 80)."""
+    """Create an exact owned lifecycle bound to the retention policy (fixed 80 bps stop, so R = 80)."""
     current = _snapshot(enabled=False)
     return _Engine(
         replace(

@@ -20,7 +20,7 @@ SCRIPT = (
     Path(__file__).parents[1]
     / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_live_checkpoint.py'
 )
-EPOCH = CohortAccountingEpoch("growth_5000_a", "a" * 64, 1_786_579_200_000)
+EPOCH = CohortAccountingEpoch("fixture_epoch_a", "a" * 64, 1_786_579_200_000)
 
 
 _CHECKPOINT_CONFIG = ["--config", "tests/fixtures/profiles/cohort_base.toml"]

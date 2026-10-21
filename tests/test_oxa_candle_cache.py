@@ -16,7 +16,7 @@ def _args(tmp_path: Path, *, minutes: int = 1440) -> argparse.Namespace:
     start = datetime(2026, 7, 1, tzinfo=UTC)
     return argparse.Namespace(
         data_root=tmp_path,
-        symbol="xyz:SNDK",
+        symbol="xyz:AAA",
         timeframe="1m",
         start=start,
         end=start + timedelta(minutes=minutes),

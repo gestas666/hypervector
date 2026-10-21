@@ -311,7 +311,7 @@ def test_trail_runs_do_not_report_the_bracket_gap(
         ("DOGEUSDT", "DOGE", "DOGE-PERP"),
         ("kPEPE-PERP", "kPEPE", "KPEPE-PERP"),
         ("SUSDE", "SUSDE", "SUSDE-PERP"),  # never a substring strip
-        ("xyz:SNDK", "xyz:SNDK", "XYZ:SNDK-PERP"),
+        ("xyz:AAA", "xyz:AAA", "XYZ:AAA-PERP"),
     ],
 )
 def test_one_coin_key_for_exporter_and_resolver(
@@ -324,8 +324,8 @@ def test_one_coin_key_for_exporter_and_resolver(
 
 
 def test_hip3_perp_suffix_is_not_doubled() -> None:
-    assert research_symbol_to_instrument("xyz:SNDK-PERP") == "XYZ:SNDK-PERP"
-    assert research_symbol_to_instrument("xyz:SNDK") == "XYZ:SNDK-PERP"
+    assert research_symbol_to_instrument("xyz:AAA-PERP") == "XYZ:AAA-PERP"
+    assert research_symbol_to_instrument("xyz:AAA") == "XYZ:AAA-PERP"
 
 
 @pytest.mark.parametrize(("symbol", "coin"), [("ETHUSDT", "ETH"), ("SOLUSDT", "SOL")])
@@ -394,7 +394,7 @@ def test_alias_export_runs_on_the_venue_instrument(tmp_path: Path) -> None:
     [
         ("BTC", "BTC-PERP.HYPERLIQUID"),
         ("kPEPE", "KPEPE-PERP.HYPERLIQUID"),
-        ("xyz:SNDK", "XYZ:SNDK-PERP.HYPERLIQUID"),
+        ("xyz:AAA", "XYZ:AAA-PERP.HYPERLIQUID"),
     ],
 )
 def test_catalog_default_instrument_id_matches_nautilus_run(

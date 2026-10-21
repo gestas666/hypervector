@@ -151,7 +151,7 @@ def test_checkpoint_does_not_downgrade_epoch_archive_from_bounded_reflections() 
             "runtime_strategy_changed": False,
         },
         "accounting_epoch": {
-            "epoch_id": "growth_5000",
+            "epoch_id": "fixture_epoch",
             "profile_fingerprint": fingerprint,
             "start_venue_timestamp_ms": 1,
         },
@@ -546,7 +546,7 @@ def test_publish_current_run_only_starts_at_exact_run_identity(tmp_path: Path) -
             "runtime_strategy_changed": False,
         },
         "accounting_epoch": {
-            "epoch_id": "growth_5000",
+            "epoch_id": "fixture_epoch",
             "profile_fingerprint": "a" * 64,
             "start_venue_timestamp_ms": 1,
         },

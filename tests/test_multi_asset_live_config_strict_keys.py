@@ -9,12 +9,12 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
 
 ADAPTIVE_EIGHT_ASSET = Path("tests/fixtures/profiles/adaptive_eight_asset.toml")
-EXIT_POLICY_V2 = Path("tests/fixtures/profiles/exit_policy_v2.toml")
+RETENTION_EXIT = Path("tests/fixtures/profiles/retention_exit.toml")
 CHANNEL = "test_channel_15m"
 
 
 def _variant(tmp_path: Path, old: str, new: str, count: int = 1) -> Path:
-    text = EXIT_POLICY_V2.read_text()
+    text = RETENTION_EXIT.read_text()
     assert text.count(old) >= count
     target = tmp_path / "variant.toml"
     target.write_text(text.replace(old, new, count))
@@ -24,7 +24,7 @@ def _variant(tmp_path: Path, old: str, new: str, count: int = 1) -> Path:
 def _first_provider_line(key: str) -> str:
     return next(
         line
-        for line in EXIT_POLICY_V2.read_text().splitlines()
+        for line in RETENTION_EXIT.read_text().splitlines()
         if line.startswith("execution = ") and key in line
     )
 
@@ -34,13 +34,13 @@ def test_fixture_profiles_keep_their_fingerprints() -> None:
         load_multi_asset_live_config(
             ADAPTIVE_EIGHT_ASSET, mode="observe"
         ).profile_fingerprint
-        == "a458a0d66e9ab524ab13547cf772e72c5751880ea6abfe8c489f1468920aa325"
+        == "4deedb93b8f38d0324ec6ffa2ea99a364b4340a7380c9a904a7377281a1f4e4d"
     )
     assert (
         load_multi_asset_live_config(
-            EXIT_POLICY_V2, mode="observe"
+            RETENTION_EXIT, mode="observe"
         ).profile_fingerprint
-        == "4a7c74b468c7a2466a0d3b3150ce1b05db8e4ec0c70ee8f9453e1a78496f42be"
+        == "48695de61a13454a12a01d921fa8a3aa7139b9ba28565daa6ede487165871620"
     )
 
 
@@ -148,6 +148,6 @@ def test_every_checked_in_cohort_profile_still_loads() -> None:
 def test_every_fixture_cohort_profile_still_loads() -> None:
     """Profiles kept as test fixtures stay valid under strict keys."""
     loaded = _load_every_cohort_profile(FIXTURE_PROFILES)
-    assert {ADAPTIVE_EIGHT_ASSET.name, EXIT_POLICY_V2.name} | (
+    assert {ADAPTIVE_EIGHT_ASSET.name, RETENTION_EXIT.name} | (
         TEMPLATE_FIXTURE_PROFILES
     ) <= loaded

@@ -25,8 +25,8 @@ from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunne
 
 SCRIPT = Path(__file__).parents[1] / "src" / "hypervector" / "operations" / "multi_asset_bidirectional_live.py"
 COMPLETE_PORTFOLIO = Path("tests/fixtures/profiles/complete_portfolio.toml")
-BANKROLL_BUILDER_CONFIG = Path(
-    "tests/fixtures/profiles/bankroll_builder.toml"
+RETENTION_EXIT_CONFIG = Path(
+    "tests/fixtures/profiles/retention_exit.toml"
 )
 
 
@@ -64,7 +64,7 @@ def _args(**overrides: object) -> argparse.Namespace:
 
 
 def test_live_command_requires_an_explicit_profile() -> None:
-    """An armed start never falls back to a default profile (the old default is a fixture)."""
+    """An armed start never falls back to a default profile."""
     live_script = _load_module()
 
     with pytest.raises(SystemExit) as missing:
@@ -79,7 +79,7 @@ def test_router_preserves_canonical_asset_order_across_providers() -> None:
     live_script = _load_module()
     config = live_script.load_multi_asset_live_config(
         Path(
-            "tests/fixtures/profiles/eth_sol_full_observation.toml"
+            "tests/fixtures/profiles/provider_order_mismatch.toml"
         ),
         mode="observe",
     )
@@ -1113,7 +1113,7 @@ def test_configuration_refusal_precedes_the_backup_and_the_venue_client(
     with pytest.raises(MultiAssetLiveRunnerError, match="exceeds executable"):
         live_script.run_live(
             _args(
-                config=BANKROLL_BUILDER_CONFIG,
+                config=RETENTION_EXIT_CONFIG,
                 enabled=True,
                 i_accept_live_risk=True,
             )

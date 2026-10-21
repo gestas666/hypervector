@@ -1,4 +1,4 @@
-"""Tests for the recoverable prior-to-growth accounting boundary."""
+"""Tests for the recoverable accounting-epoch rollover boundary."""
 
 from __future__ import annotations
 
@@ -26,12 +26,12 @@ from hypervector.live.multi_asset_live_config import (
 _PRIOR_PATH = Path(
     "tests/fixtures/profiles/ten_asset_base.toml"
 )
-_NEXT_PATH = Path("tests/fixtures/profiles/repaired_b.toml")
+_NEXT_PATH = Path("tests/fixtures/profiles/four_asset_mixed_sides.toml")
 _PARENT_EPOCH_PATH = Path(
-    "tests/fixtures/profiles/eight_asset_incremental.toml"
+    "tests/fixtures/profiles/eight_asset_base.toml"
 )
 _CONTINUED_PATH = Path(
-    "tests/fixtures/profiles/eight_asset_aaa_short_containment.toml"
+    "tests/fixtures/profiles/eight_asset_short_only_override.toml"
 )
 _NOW = datetime(2026, 8, 12, 23, 0, tzinfo=UTC)
 _PARENT_EPOCH_START_MS = 1_787_164_729_837
@@ -120,7 +120,7 @@ def test_rollover_manifest_binds_zero_state_equity_and_preserved_history() -> No
         _checkpoint(prior),
         _preflight(prior, successor),
         _backup(prior, successor),
-        epoch_id="growth_5000_clean",
+        epoch_id="fixture_epoch_2",
         backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
         checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
         preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
@@ -128,7 +128,7 @@ def test_rollover_manifest_binds_zero_state_equity_and_preserved_history() -> No
     )
 
     epoch = report["accounting_epoch"]
-    assert epoch["epoch_id"] == "growth_5000_clean"
+    assert epoch["epoch_id"] == "fixture_epoch_2"
     assert epoch["profile_fingerprint"] == successor.profile_fingerprint
     assert epoch["start_venue_timestamp_ms"] == int(_NOW.timestamp() * 1_000)
     assert report["acceptance"] == {
@@ -156,7 +156,7 @@ def test_rollover_rejects_inconsistent_observed_venue_equity() -> None:
             _checkpoint(prior),
             preflight,
             _backup(prior, successor),
-            epoch_id="growth_5000_clean",
+            epoch_id="fixture_epoch_2",
             backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
             checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
             preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
@@ -176,7 +176,7 @@ def test_rollover_rejects_nonflat_checkpoint() -> None:
             checkpoint,
             _preflight(prior, successor),
             _backup(prior, successor),
-            epoch_id="growth_5000_clean",
+            epoch_id="fixture_epoch_2",
             backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
             checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
             preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
@@ -197,7 +197,7 @@ def test_rollover_rejects_open_or_unreconciled_preflight() -> None:
             _checkpoint(prior),
             preflight,
             _backup(prior, successor),
-            epoch_id="growth_5000_clean",
+            epoch_id="fixture_epoch_2",
             backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
             checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
             preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
@@ -217,7 +217,7 @@ def test_rollover_rejects_wrong_preserved_profile_identity() -> None:
             _checkpoint(prior),
             _preflight(prior, successor),
             backup,
-            epoch_id="growth_5000_clean",
+            epoch_id="fixture_epoch_2",
             backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
             checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
             preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
@@ -241,7 +241,7 @@ def _published_rollover(tmp_path: Path) -> tuple[Path, MultiAssetLiveConfig]:
         _checkpoint(prior),
         _preflight(prior, successor),
         _backup(prior, successor),
-        epoch_id="growth_5000_clean",
+        epoch_id="fixture_epoch_2",
         backup_bundle_evidence=_raw_evidence(str(backup), backup.read_bytes()),
         checkpoint_evidence=_raw_evidence("final_checkpoint.json", checkpoint),
         preflight_evidence=_raw_evidence("final_preflight.json", preflight),
@@ -324,7 +324,7 @@ def test_rollover_loader_returns_exact_successor_accounting_epoch(
 
     epoch = load_accounting_rollover_manifest(bundle, successor)
 
-    assert epoch.epoch_id == "growth_5000_clean"
+    assert epoch.epoch_id == "fixture_epoch_2"
     assert epoch.profile_fingerprint == successor.profile_fingerprint
     assert epoch.start_venue_timestamp_ms == int(_NOW.timestamp() * 1_000)
 

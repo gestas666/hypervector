@@ -27,7 +27,7 @@ END = START + timedelta(minutes=1)
 
 def _request(family: MarketFamily = "hip3") -> OxaCandleRequest:
     return OxaCandleRequest(
-        "xyz:SNDK" if family == "hip3" else "BTC",
+        "xyz:AAA" if family == "hip3" else "BTC",
         START,
         END,
         max_pages=1,
@@ -63,11 +63,11 @@ def test_route_keeps_exact_family_symbol_and_request_bounds(
 @pytest.mark.parametrize(
     ("symbol", "family"),
     [
-        ("xyz:SNDK", "core"),
-        ("SNDK", "hip3"),
-        ("XYZ:SNDK", "hip3"),
-        ("xyz:sndk", "hip3"),
-        ("xyz:../SNDK", "hip3"),
+        ("xyz:AAA", "core"),
+        ("AAA", "hip3"),
+        ("XYZ:AAA", "hip3"),
+        ("xyz:aaa", "hip3"),
+        ("xyz:../AAA", "hip3"),
         ("BTC", "invalid"),
     ],
 )
@@ -178,7 +178,7 @@ def test_acquisition_report_exposes_family_without_credentials(
     )
     assert report["market_family"] == "hip3"
     assert report["source"] == "0xarchive_hyperliquid_hip3_candles"
-    assert report["symbol"] == "xyz:SNDK"
+    assert report["symbol"] == "xyz:AAA"
     assert "private-test-value" not in json.dumps(report)
 
 
@@ -257,4 +257,4 @@ def test_hip3_http_failure_does_not_fall_back_to_core(
     monkeypatch.setattr("hypervector.data.oxa_api.OxaRestClient.get", get)
     with pytest.raises(OxaHistoryError, match="HTTP 404"):
         fetch_candle_history(OxaCandleClient(api_key="test"), _request())
-    assert calls == ["/hip3/candles/xyz:SNDK"]
+    assert calls == ["/hip3/candles/xyz:AAA"]

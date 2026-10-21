@@ -82,7 +82,7 @@ def test_hip3_book_uses_distinct_route_storage_and_provenance(tmp_path: Path) ->
 def test_hip3_backfill_is_explicitly_book_only(tmp_path: Path) -> None:
     """HIP-3 mode must not route trades or prices through core endpoints."""
     config = OxaBackfillConfig(
-        symbol="xyz:SPCX",
+        symbol="xyz:BBB",
         start=datetime(2026, 8, 6, 14, tzinfo=UTC),
         end=datetime(2026, 8, 6, 16, tzinfo=UTC),
         data_root=tmp_path,

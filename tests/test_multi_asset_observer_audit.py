@@ -380,7 +380,7 @@ def _row(
         "effective_mode": "DISARMED",
         "live_armed": False,
         "execution_authority": "none",
-        "profile_id": "multi_asset_bidirectional_canary_v1",
+        "profile_id": "fixture_cohort",
         "profile_fingerprint": "profile",
         "run_fingerprint": "run",
         "run_id": _RUN_ID,

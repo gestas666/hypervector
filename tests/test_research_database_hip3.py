@@ -22,7 +22,7 @@ from hypervector.data.oxa_history import (
 from hypervector.data.research_database import ResearchDatabase
 
 
-_SYMBOL = "xyz:SPCX"
+_SYMBOL = "xyz:BBB"
 _START = datetime(2026, 8, 6, 14, tzinfo=UTC)
 _END = datetime(2026, 8, 6, 15, tzinfo=UTC)
 

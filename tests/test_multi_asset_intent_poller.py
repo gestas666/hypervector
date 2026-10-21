@@ -554,7 +554,7 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
     assert all(0.0 < days < 1.0 for _, _, days, _ in calls[4:])
 
 
-def test_range_retired_profile_keeps_canonical_regime_outside_route_roster() -> None:
+def test_profile_keeps_canonical_regime_outside_route_roster() -> None:
     """Retained routes remain exact while independent regime evidence weights intents."""
     config = load_multi_asset_live_config(
         "tests/fixtures/profiles/ten_asset_base.toml",

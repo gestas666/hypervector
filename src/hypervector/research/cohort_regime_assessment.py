@@ -36,7 +36,7 @@ def build_regime_assessment(side: str, current_context: Record) -> dict[str, obj
     structure_stance = _stance(structure_score)
     return {
         "schema_version": 1,
-        "mode": "causal_regime_context_challenger_v1",
+        "mode": "causal_regime_context_v1",
         "contract": _contract(),
         "structure_support_score": structure_score,
         "structure_weight_observed": structure_weight,

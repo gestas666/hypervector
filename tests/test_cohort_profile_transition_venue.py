@@ -18,10 +18,10 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 
 _SCRIPT = Path(__file__).parents[1] / "src/hypervector/operations/multi_asset_bidirectional_live.py"
 _NINE_ASSET = Path(
-    "tests/fixtures/profiles/nine_asset_bankroll_builder.toml"
+    "tests/fixtures/profiles/nine_asset_before_removal.toml"
 )
-_DDD_REMOVED = Path(
-    "tests/fixtures/profiles/eight_asset_ddd_removed.toml"
+_AFTER_REMOVAL = Path(
+    "tests/fixtures/profiles/eight_asset_after_removal.toml"
 )
 
 
@@ -30,7 +30,7 @@ def test_changed_profile_rejects_retired_ddd_venue_exposure() -> None:
     live_script = _load_script()
     previous = load_multi_asset_live_config(_NINE_ASSET, mode="observe")
     candidate = load_multi_asset_live_config(
-        _DDD_REMOVED,
+        _AFTER_REMOVAL,
         mode="live",
         enabled=True,
         accepts_live_risk=True,
@@ -65,7 +65,7 @@ def test_changed_profile_reconciles_retained_and_flat_retired_symbols() -> None:
     """A flat removal checks every candidate adapter and retired reader once."""
     previous = load_multi_asset_live_config(_NINE_ASSET, mode="observe")
     candidate = load_multi_asset_live_config(
-        _DDD_REMOVED,
+        _AFTER_REMOVAL,
         mode="live",
         enabled=True,
         accepts_live_risk=True,

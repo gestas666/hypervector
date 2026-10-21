@@ -35,7 +35,7 @@ TargetPolicy = Literal["none", "fixed_bps", "reward_risk", "absolute_anchor"]
 MaximumHoldPolicy = Literal["fixed", "extend_while_regime_supported"]
 ProviderRecipeExitPolicy = Literal["ignore", "honor"]
 ProfitLockPolicy = Literal["none", "completed_bar_trailing"]
-# Where the v2 floor moves the resting venue stop: entry +/- 25 bps, or
+# Where the retention-exit floor moves the resting venue stop: entry +/- 25 bps, or
 # the more protective of that and the +/- 0.5R software floor.
 BreakevenStopTarget = Literal["entry_offset", "floor"]
 

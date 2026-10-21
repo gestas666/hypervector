@@ -71,7 +71,7 @@ def test_target_plan_requires_exact_target_before_open() -> None:
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_strategy", stop_anchor=None)
     machine = AssetLiveStateMachine()
     machine.begin_preflight()
     machine.confirm_preflight_flat()

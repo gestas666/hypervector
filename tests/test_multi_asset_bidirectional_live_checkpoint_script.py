@@ -103,7 +103,7 @@ def test_checkpoint_loop_refuses_a_second_writer_for_the_same_output(
 
 
 def test_checkpoint_requires_an_explicit_profile() -> None:
-    """The deleted canary default is gone: a checkpoint names its exact profile."""
+    """A checkpoint has no default profile: it names its exact profile."""
     module = _load_module()
     with pytest.raises(SystemExit) as exc:
         module.build_parser().parse_args(["--once"])

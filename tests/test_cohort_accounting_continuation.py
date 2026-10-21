@@ -31,7 +31,7 @@ def test_continuation_preserves_parent_start_and_inherited_closed_trades() -> No
     )
 
     assert report["accounting_epoch"] == {
-        "epoch_id": "a_b_growth_5000",
+        "epoch_id": "a_b_fixture_epoch",
         "profile_fingerprint": _PROFILE_B,
         "start_venue_timestamp_ms": _START_MS,
         "included_profile_fingerprints": [_PROFILE_A, _PROFILE_B],
@@ -55,7 +55,7 @@ def test_continuation_appends_to_existing_profile_lineage() -> None:
     parent = _parent()
     parent["successor_identity"] = _identity("profile_b", _PROFILE_B)
     parent["accounting_epoch"] = {
-        "epoch_id": "a_b_growth_5000",
+        "epoch_id": "a_b_fixture_epoch",
         "profile_fingerprint": _PROFILE_B,
         "start_venue_timestamp_ms": _START_MS,
         "included_profile_fingerprints": [_PROFILE_A, _PROFILE_B],
@@ -76,7 +76,7 @@ def test_continuation_appends_to_existing_profile_lineage() -> None:
     )
 
     assert report["accounting_epoch"] == {
-        "epoch_id": "a_b_growth_5000",
+        "epoch_id": "a_b_fixture_epoch",
         "profile_fingerprint": _PROFILE_C,
         "start_venue_timestamp_ms": _START_MS,
         "included_profile_fingerprints": [_PROFILE_A, _PROFILE_B, _PROFILE_C],
@@ -135,7 +135,7 @@ def test_loaded_continuation_verifies_internal_parent_manifest(tmp_path: Path) -
         parent_manifest_evidence=_evidence(parent_raw),
     )
     epoch = CohortAccountingEpoch(
-        "a_b_growth_5000",
+        "a_b_fixture_epoch",
         _PROFILE_B,
         _START_MS,
         included_profile_fingerprints=(_PROFILE_A, _PROFILE_B),
@@ -157,7 +157,7 @@ def _rollover() -> dict[str, object]:
         "prior_identity": _identity("profile_a", _PROFILE_A),
         "successor_identity": _identity("profile_b", _PROFILE_B),
         "accounting_epoch": {
-            "epoch_id": "a_b_growth_5000",
+            "epoch_id": "a_b_fixture_epoch",
             "profile_fingerprint": _PROFILE_B,
             "start_venue_timestamp_ms": 1_787_396_800_000,
         },
@@ -185,7 +185,7 @@ def _parent() -> dict[str, object]:
         "mode": "cohort_accounting_epoch_rollover_v1",
         "successor_identity": _identity("profile_a", _PROFILE_A),
         "accounting_epoch": {
-            "epoch_id": "a_growth_5000",
+            "epoch_id": "a_fixture_epoch",
             "profile_fingerprint": _PROFILE_A,
             "start_venue_timestamp_ms": _START_MS,
         },

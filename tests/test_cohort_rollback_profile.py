@@ -441,7 +441,7 @@ def test_retired_scope_maps_to_the_unique_same_symbol_side_replacement() -> None
     config = load_multi_asset_live_config(REPOSITORY / PROFILE_A, mode="observe")
     btc = config.providers[0]
     assert btc.symbols == ("BTC",)
-    renamed = replace(config, providers=(replace(btc, strategy_id="btc_new_v1"),))
+    renamed = replace(config, providers=(replace(btc, strategy_id="test_renamed_long_1m"),))
     previous = replace(config, providers=(btc,))
 
     assert rollback.derive_retirements(previous, renamed) == [
@@ -452,7 +452,7 @@ def test_retired_scope_maps_to_the_unique_same_symbol_side_replacement() -> None
                 "side": "long",
             },
             "replacement_scope": {
-                "strategy_id": "btc_new_v1",
+                "strategy_id": "test_renamed_long_1m",
                 "symbol": "BTC",
                 "side": "long",
             },

@@ -48,7 +48,7 @@ def test_hip3_bundle_preserves_namespaced_symbol_identity(tmp_path: Path) -> Non
     """Funding verification must not uppercase the HIP-3 dex namespace."""
     start_ms = 1_784_980_800_000
     request = HlFundingRequest(
-        "xyz:SPCX",
+        "xyz:BBB",
         datetime(2026, 7, 25, 12, tzinfo=UTC),
         datetime(2026, 7, 25, 14, tzinfo=UTC),
     )
@@ -57,19 +57,19 @@ def test_hip3_bundle_preserves_namespaced_symbol_identity(tmp_path: Path) -> Non
         request,
         (
             (
-                _row(start_ms, "0.00001", coin="xyz:SPCX"),
+                _row(start_ms, "0.00001", coin="xyz:BBB"),
                 _row(
                     start_ms + 3_600_000,
                     "-0.00002",
-                    coin="xyz:SPCX",
+                    coin="xyz:BBB",
                 ),
             ),
         ),
     )
 
-    evidence = read_complete_hl_funding_evidence(stored.funding_path, "xyz:SPCX")
+    evidence = read_complete_hl_funding_evidence(stored.funding_path, "xyz:BBB")
 
-    assert evidence.symbol == "xyz:SPCX"
+    assert evidence.symbol == "xyz:BBB"
     assert len(evidence.rows) == 2
 
 

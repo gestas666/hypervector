@@ -15,7 +15,7 @@ from hypervector.research.cohort_live_portfolio_archive import CohortAccountingE
 
 SCRIPT = Path(__file__).parents[1] / "src/hypervector/operations/multi_asset_bidirectional_live.py"
 PRIOR = Path("tests/fixtures/profiles/ten_asset_base.toml")
-SUCCESSOR = Path("tests/fixtures/profiles/repaired_b.toml")
+SUCCESSOR = Path("tests/fixtures/profiles/four_asset_mixed_sides.toml")
 
 
 def _load() -> ModuleType:
@@ -75,7 +75,7 @@ def test_backend_validates_the_bundle_against_its_loaded_config(
     args = module.build_parser().parse_args(
         ["--config", str(SUCCESSOR), "--accounting-epoch-bundle", "epoch-clean"]
     )
-    expected = CohortAccountingEpoch("growth_5000_clean", "a" * 64, 1)
+    expected = CohortAccountingEpoch("fixture_epoch_2", "a" * 64, 1)
     from hypervector.operations import cohort_live_construction
 
     monkeypatch.setattr(

@@ -27,7 +27,7 @@ _CHAIN = Path("tests/fixtures/cohort_chain")
 _PROFILE_A = _CHAIN / "profile_a.toml"
 _PROFILE_B = _CHAIN / "profile_b.toml"
 _ROLLBACK_B_TO_A = _CHAIN / "rollback_b_to_a.toml"
-_BTC_SWEEP = "test_long_target_1m"
+_LONG_TARGET = "test_long_target_1m"
 _CHANNEL = "test_channel_short_15m"
 _CHANNEL_SYMBOLS = '["SOL", "xyz:CCC", "xyz:EEE", "xyz:FFF"]'
 
@@ -245,7 +245,7 @@ def test_rollback_must_reproduce_previous_profile(tmp_path: Path) -> None:
 def test_retired_scope_requires_named_added_replacement(tmp_path: Path) -> None:
     """Removing execution authority without replacement cannot be approved."""
     previous = _load(_PROFILE_B)
-    retired = _provider(previous, _BTC_SWEEP)
+    retired = _provider(previous, _LONG_TARGET)
     candidate = _replace_provider(previous, retired, None)
     approval = _write_approval(tmp_path, previous, candidate)
 
@@ -303,7 +303,7 @@ def test_retained_asset_scope_allows_explicit_terminal_removal(
 ) -> None:
     """An operator may reduce one retained asset's execution authority."""
     previous = _load(_PROFILE_B)
-    retired = _provider(previous, _BTC_SWEEP)
+    retired = _provider(previous, _LONG_TARGET)
     candidate = _replace_provider(previous, retired, None)
     assert "BTC" in candidate.symbols
     approval = _write_approval(
@@ -331,7 +331,7 @@ def test_retained_asset_scope_allows_explicit_terminal_removal(
 def test_replacement_must_preserve_symbol_and_side_coverage(tmp_path: Path) -> None:
     """A long BTC retirement cannot be filled by a short BTC route."""
     previous = _load(_PROFILE_B)
-    retired = _provider(previous, _BTC_SWEEP)
+    retired = _provider(previous, _LONG_TARGET)
     replacement = replace(
         retired,
         strategy_id="candidate-btc-short-replacement",
@@ -364,7 +364,7 @@ def test_replacement_must_preserve_symbol_and_side_coverage(tmp_path: Path) -> N
 def test_retired_scope_cannot_be_mapped_twice(tmp_path: Path) -> None:
     """Duplicate mappings cannot disguise incomplete one-to-one lineage."""
     previous = _load(_PROFILE_B)
-    retired = _provider(previous, _BTC_SWEEP)
+    retired = _provider(previous, _LONG_TARGET)
     replacement = replace(retired, strategy_id="candidate-btc-long-replacement")
     candidate = _replace_provider(previous, retired, replacement)
     mapping = _retirement(
@@ -388,9 +388,9 @@ def test_retired_scope_cannot_be_mapped_twice(tmp_path: Path) -> None:
 
 def test_replacement_scope_must_be_newly_added(tmp_path: Path) -> None:
     """An existing provider cannot be relabeled as a retirement replacement."""
-    source = _write_shared_btc_long_profile(tmp_path)
+    source = _write_channel_with_btc_profile(tmp_path)
     previous = _load(source)
-    retired = _provider(previous, _BTC_SWEEP)
+    retired = _provider(previous, _LONG_TARGET)
     existing = _provider(previous, _CHANNEL)
     assert (existing.strategy_id, "BTC", "long") in (
         previous.executable_provider_directions
@@ -422,7 +422,7 @@ def test_approved_replacement_covers_every_removed_scope_once(
 ) -> None:
     """Exact live approval accepts a complete one-to-one replacement lineage."""
     previous = _load(_PROFILE_B)
-    retired = _provider(previous, _BTC_SWEEP)
+    retired = _provider(previous, _LONG_TARGET)
     replacement = replace(retired, strategy_id="candidate-btc-long-replacement")
     candidate = _replace_provider(previous, retired, replacement)
     approval = _write_approval(
@@ -453,7 +453,7 @@ def test_approved_replacement_covers_every_removed_scope_once(
     assert result["execution_authority"] == "none"
 
 
-def _write_shared_btc_long_profile(root: Path) -> Path:
+def _write_channel_with_btc_profile(root: Path) -> Path:
     """Write a profile B variant whose channel route also executes BTC both ways."""
     text = _PROFILE_B.read_text(encoding="utf-8")
     assert text.count(_CHANNEL_SYMBOLS) == 2

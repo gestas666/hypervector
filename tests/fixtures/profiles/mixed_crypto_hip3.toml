@@ -1,4 +1,4 @@
-profile = "fixture_noncrypto_live"
+profile = "fixture_mixed_crypto_hip3"
 network = "mainnet"
 margin_mode = "isolated"
 maximum_positions = 7
@@ -8,7 +8,7 @@ cohort_ledger = "data/live/bidirectional_cohort/decisions.jsonl"
 stop_file = "data/live/bidirectional_cohort/STOP"
 poll_seconds = 15.0
 lookback_days = 14
-transition_approval = "tests/fixtures/approvals/noncrypto_live.json"
+transition_approval = "tests/fixtures/approvals/mixed_crypto_hip3.json"
 
 [[assets]]
 symbol = "BTC"

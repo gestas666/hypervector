@@ -17,7 +17,7 @@ from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 _CONFIG = Path(
-    "tests/fixtures/profiles/six_asset_profit_lock.toml"
+    "tests/fixtures/profiles/six_asset_base.toml"
 )
 _OBSERVED = datetime(2026, 8, 15, 12, tzinfo=UTC)
 _OBSERVED_MS = int(_OBSERVED.timestamp() * 1_000)

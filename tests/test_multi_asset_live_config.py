@@ -1,4 +1,4 @@
-"""Strict configuration tests for the multi-asset bidirectional canary."""
+"""Strict configuration tests for the multi-asset bidirectional cohort."""
 
 from __future__ import annotations
 
@@ -16,8 +16,8 @@ from hypervector.live.multi_asset_live_config import (
 )
 
 _PROFILE = Path("tests/fixtures/profiles/cohort_base.toml")
-_BREAKOUT_OBSERVER_PROFILE = Path(
-    "tests/fixtures/profiles/breakout_observer.toml"
+_OBSERVATION_ONLY_PROFILE = Path(
+    "tests/fixtures/profiles/observation_only_routes.toml"
 )
 _COMPLETE_PROFILE = Path(
     "tests/fixtures/profiles/complete_portfolio.toml"
@@ -26,7 +26,7 @@ _SINGLE_SYMBOL_ID = "test_mirror_1m"
 
 
 def test_profile_enables_four_coins_with_both_directions() -> None:
-    """The production configuration cannot collapse any coin to one side."""
+    """The base profile keeps every coin bidirectional."""
     config = load_multi_asset_live_config(_PROFILE, mode="observe")
 
     assert config.symbols == ("BTC", "ETH", "SOL", "HYPE")
@@ -118,9 +118,9 @@ def _assert_provider_contracts(
     assert trend_contract.target_r_multiple == 3.0
 
 
-def test_staged_breakout_observer_expands_observation_without_authority() -> None:
+def test_observation_only_routes_expand_observation_without_authority() -> None:
     """The staged profile adds evidence rows without adding executable pairs."""
-    config = load_multi_asset_live_config(_BREAKOUT_OBSERVER_PROFILE, mode="observe")
+    config = load_multi_asset_live_config(_OBSERVATION_ONLY_PROFILE, mode="observe")
     observed = {
         (provider.strategy_id, symbol)
         for provider in config.providers

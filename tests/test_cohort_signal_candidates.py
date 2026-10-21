@@ -187,8 +187,8 @@ def test_technical_unavailability_is_not_a_signal_candidate() -> None:
 
 def test_single_configured_direction_attributes_null_readiness_side() -> None:
     """A one-sided provider supplies an unambiguous counterfactual direction."""
-    evaluation = _null_side_evaluation("btc_sweep_long", "BTC")
-    identity = _identity_provider("btc_sweep_long", "BTC", ["long"])
+    evaluation = _null_side_evaluation("test_long_only_1m", "BTC")
+    identity = _identity_provider("test_long_only_1m", "BTC", ["long"])
     records = [
         _row("configuration_identity", identity, _DECISION_MS - 60_000, "run-a"),
         _row(
