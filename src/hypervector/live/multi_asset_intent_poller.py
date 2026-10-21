@@ -5,27 +5,26 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
 from typing import Protocol
 
 import pandas as pd
 import requests
 
 from hypervector.live.bidirectional_intents import StrategyIntent, WithheldIntent
+from hypervector.live.canonical_regime_decisions import (
+    shared_completed_regime_decisions,
+)
 from hypervector.live.canonical_regime_telemetry import (
-    LEGACY_CANONICAL_REGIME_STRATEGY,
     CanonicalRegimeCollectorProtocol,
     CanonicalRegimeTelemetryCollector,
+    configured_canonical_regime_symbols,
 )
 from hypervector.live.cohort_regime_routing import attach_regime_preferences
 from hypervector.live.cohort_startup_candle_recorder import StartupCandleObserver
-from hypervector.live.configured_canonical_regime import (
-    configured_canonical_regime_symbols,
-)
 from hypervector.live.cohort_profit_lock_history import profit_lock_market_bars
-from hypervector.live.multi_asset_default_collectors import build_default_collector
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
+    MultiAssetLiveConfigError,
     StrategyProviderConfig,
 )
 from hypervector.live.multi_asset_market_bars import (
@@ -39,23 +38,21 @@ from hypervector.live.multi_asset_market_bars import (
     resample_one_minute_bars,
     resample_one_minute_to_five,
 )
-from hypervector.live.multi_asset_polling_contract import (
-    SOURCE_TIMEFRAMES,
-)
 from hypervector.live.multi_asset_poll_validation import (
     record_fresh_intents,
     validate_intent_batch,
 )
 from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.multi_asset_readiness_seed import (
-    ProviderIntentCollectorProtocol,
     collect_provider_batch,
     collect_readiness_seed_views,
     latest_startup_telemetry_evaluation,
     preferred_startup_runtime_evaluation,
 )
-from hypervector.live.sol_range_onset_decision_source import (
-    shared_completed_decisions,
+from hypervector.live.provider_registration import ProviderIntentCollectorProtocol
+from hypervector.live.provider_registry import (
+    build_provider_collector,
+    provider_signal_timeframe,
 )
 from hypervector.live.transient_transport import transient_read_failure_reason
 
@@ -74,9 +71,6 @@ class CohortBarFetcherProtocol(Protocol):
         *,
         end_ms: int | None = None,
     ) -> pd.DataFrame: ...
-
-
-_default_collector = build_default_collector
 
 
 @dataclass(frozen=True)
@@ -128,24 +122,18 @@ class ConfiguredMultiAssetIntentPoller:
             raise MultiAssetIntentPollerError(
                 "intent collectors must exactly match configured providers"
             )
-        unknown = expected.difference(SOURCE_TIMEFRAMES)
-        if unknown:
-            raise MultiAssetIntentPollerError(
-                f"provider source timeframe is not defined: {sorted(unknown)}"
-            )
+        try:
+            self._timeframes = {
+                strategy: provider_signal_timeframe(strategy) for strategy in expected
+            }
+        except MultiAssetLiveConfigError as exc:
+            raise MultiAssetIntentPollerError(str(exc)) from exc
         self._config = config
         self._fetch_bars = fetch_bars
         self._collectors = dict(collectors)
         self._canonical_regime_collector = canonical_regime_collector or (
             CanonicalRegimeTelemetryCollector(
                 symbols=configured_canonical_regime_symbols(config),
-                legacy_execution_enabled=False,
-                legacy_execution_symbols=frozenset(
-                    symbol
-                    for provider in config.providers
-                    if provider.strategy_id == LEGACY_CANONICAL_REGIME_STRATEGY
-                    for symbol in provider.symbols
-                ),
             )
         )
         self._boundaries: dict[tuple[str, str], int] | None = None
@@ -161,20 +149,15 @@ class ConfiguredMultiAssetIntentPoller:
         self._startup_input_observer = observer
 
     @classmethod
-    def with_default_collectors(
+    def with_registered_collectors(
         cls,
         *,
         config: MultiAssetLiveConfig,
         fetch_bars: CohortBarFetcherProtocol,
-        backtest_lab_root: Path,
     ) -> ConfiguredMultiAssetIntentPoller:
-        """Construct every configured provider with verified dependencies."""
+        """Construct every configured provider from its registered factory."""
         collectors = {
-            provider.strategy_id: build_default_collector(
-                provider,
-                config,
-                backtest_lab_root,
-            )
+            provider.strategy_id: build_provider_collector(provider, config)
             for provider in config.providers
         }
         return cls(
@@ -221,8 +204,8 @@ class ConfiguredMultiAssetIntentPoller:
                 reason=reason,
             ) from exc
         # Collectors reading the same completed window in this cycle share its
-        # range decisions; nothing is retained after the cycle.
-        with shared_completed_decisions():
+        # canonical regime decisions; nothing is retained after the cycle.
+        with shared_completed_regime_decisions():
             intents, source_withheld, evaluations, telemetry_evaluations = (
                 self._collect_cycle(
                     bars,
@@ -284,7 +267,7 @@ class ConfiguredMultiAssetIntentPoller:
         evaluations: list[ProviderEvaluation],
         telemetry_evaluations: list[ProviderEvaluation],
     ) -> None:
-        timeframe = SOURCE_TIMEFRAMES[provider.strategy_id]
+        timeframe = self._timeframes[provider.strategy_id]
         collector = self._collectors[provider.strategy_id]
         for symbol in provider.symbols:
             key = (provider.strategy_id, symbol)

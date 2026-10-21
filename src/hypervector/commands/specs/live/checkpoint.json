@@ -151,63 +151,6 @@
     },
     {
       "flags": [
-        "--opportunity-matrix"
-      ],
-      "options": {
-        "dest": "opportunity_matrix",
-        "type": "Path",
-        "default": null,
-        "help": "opportunity matrix JSON to attach when present"
-      },
-      "data_default": "runtime/bidirectional_cohort/latest_opportunity_matrix.json"
-    },
-    {
-      "flags": [
-        "--supplemental-opportunity-matrix"
-      ],
-      "options": {
-        "dest": "supplemental_opportunity_matrix",
-        "action": "append",
-        "type": "Path",
-        "default": [],
-        "help": "additional opportunity matrix JSON; repeatable"
-      }
-    },
-    {
-      "flags": [
-        "--eligible-policy-forward"
-      ],
-      "options": {
-        "dest": "eligible_policy_forward",
-        "action": "store_true",
-        "default": false,
-        "help": "attach the report-only exact ETH stop/hold lifecycle journal"
-      }
-    },
-    {
-      "flags": [
-        "--asymmetric-forward-journal"
-      ],
-      "options": {
-        "dest": "asymmetric_forward_journal",
-        "type": "Path",
-        "default": null,
-        "help": "attach this frozen report-only asymmetric portfolio observer journal"
-      }
-    },
-    {
-      "flags": [
-        "--disable-asymmetric-forward-observer"
-      ],
-      "options": {
-        "dest": "disable_asymmetric_forward_observer",
-        "action": "store_true",
-        "default": false,
-        "help": "do not attach a profile-specific asymmetric portfolio observer"
-      }
-    },
-    {
-      "flags": [
         "--current-run-only"
       ],
       "options": {

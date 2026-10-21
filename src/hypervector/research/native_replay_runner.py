@@ -115,10 +115,9 @@ def _poller(
     fetch_bars: CohortBarFetcherProtocol,
     finish_poll: Callable[[], None] | None,
 ) -> ReplayConfiguredPoller:
-    poller = ConfiguredMultiAssetIntentPoller.with_default_collectors(
+    poller = ConfiguredMultiAssetIntentPoller.with_registered_collectors(
         config=config,
         fetch_bars=fetch_bars,
-        backtest_lab_root=config.source_path.resolve().parents[2] / "backtest-lab",
     )
     return ReplayConfiguredPoller(poller, finish_poll)
 

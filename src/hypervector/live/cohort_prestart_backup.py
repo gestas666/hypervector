@@ -156,7 +156,6 @@ def _backup_sources(
 ) -> tuple[_BackupSource, ...]:
     sources = [_required_source("target_config", config.source_path)]
     sources.extend(_ledger_sources(config, previous))
-    sources.extend(_provider_sources(config))
     sources.extend(_previous_sources(previous, strategy_changed, config.source_path))
     if approval := config.transition_approval:
         sources.append(_required_source("transition_approval", approval))
@@ -186,16 +185,6 @@ def _ledger_backup_plan(
         raise CohortPrestartBackupError(str(exc)) from exc
 
 
-def _provider_sources(config: MultiAssetLiveConfig) -> list[_BackupSource]:
-    return [
-        _required_source(
-            f"target_provider_{provider.strategy_id}", provider.source_profile
-        )
-        for provider in config.providers
-        if provider.source_profile is not None
-    ]
-
-
 def _previous_sources(
     previous: Mapping[str, object] | None,
     strategy_changed: bool,
@@ -205,16 +194,15 @@ def _previous_sources(
         return []
     paths = previous_configuration_paths(previous)
     sources: list[_BackupSource] = []
-    for index, path in enumerate(paths):
+    for path in paths:
         if not path.exists():
             if strategy_changed:
                 raise CohortPrestartBackupError(
                     f"previous strategy source is missing: {path}"
                 )
             continue
-        role = "previous_config" if index == 0 else f"previous_provider_{index}"
         if path != target_path or strategy_changed:
-            sources.append(_required_source(role, path))
+            sources.append(_required_source("previous_config", path))
     return sources
 
 

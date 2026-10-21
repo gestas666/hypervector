@@ -50,17 +50,6 @@
         "default": null,
         "help": "account equity in USD for the book-level risk and margin check"
       }
-    },
-    {
-      "flags": [
-        "--backtest-lab-root"
-      ],
-      "options": {
-        "dest": "backtest_lab_root",
-        "type": "Path",
-        "default": null,
-        "help": "backtest-lab provider package directory (default: beside the repository root, as the supervised start uses)"
-      }
     }
   ]
 }

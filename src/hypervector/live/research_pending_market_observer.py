@@ -1,13 +1,29 @@
-"""Fail-closed market telemetry for assets without a validated entry route."""
+"""Fail-closed market telemetry for assets without a validated entry route.
+
+This is the only built-in provider: it is strategy-free, observe-only and
+cannot emit an intent, so a profile can watch any enabled asset before a
+strategy for it exists.
+"""
 
 from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
 from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
+from hypervector.live.provider_registration import (
+    ProviderCapability,
+    ProviderRegistration,
+)
+
+if TYPE_CHECKING:
+    from hypervector.live.multi_asset_live_config import (
+        MultiAssetLiveConfig,
+        StrategyProviderConfig,
+    )
 
 RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY = (
     "research_pending_market_observer_bidirectional_15m_v1"
@@ -114,3 +130,20 @@ def _aware_utc(value: pd.Timestamp) -> pd.Timestamp:
     if timestamp.tzinfo is None:
         raise ValueError("research-pending observer clock must be timezone-aware")
     return timestamp.tz_convert("UTC")
+
+
+def _collector(
+    provider: StrategyProviderConfig,
+    config: MultiAssetLiveConfig,
+) -> ResearchPendingMarketObserverCollector:
+    del provider, config
+    return ResearchPendingMarketObserverCollector()
+
+
+RESEARCH_PENDING_MARKET_OBSERVER = ProviderRegistration(
+    strategy_id=RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY,
+    signal_timeframe="15m",
+    readiness_lookback_minutes=16,
+    collector_factory=_collector,
+    capability=ProviderCapability(observer_only=True),
+)

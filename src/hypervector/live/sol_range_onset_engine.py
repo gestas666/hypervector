@@ -1,4 +1,4 @@
-"""Fail-closed live lifecycle for the frozen SOL range-onset canary."""
+"""Fail-closed per-symbol protected-order live lifecycle shared by every route."""
 
 from __future__ import annotations
 

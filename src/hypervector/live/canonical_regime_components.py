@@ -1,4 +1,9 @@
-"""Causal observe-only component bank for regime and range telemetry."""
+"""Causal observe-only indicator components attached to canonical regime telemetry.
+
+Each column is a completed-bar diagnostic (EMA/SMA gaps and directions,
+Heikin-Ashi RSI, choppiness, completed higher-timeframe bias, rolling trend
+slope and fit, trend quality). None carries execution authority.
+"""
 
 from __future__ import annotations
 
@@ -13,7 +18,7 @@ _ONE_MINUTE = pd.Timedelta(minutes=1)
 
 
 def build_regime_component_frame(bars: pd.DataFrame) -> pd.DataFrame:
-    """Return causal Pine-derived diagnostics without execution authority."""
+    """Return causal indicator diagnostics without execution authority."""
     frame = _validated_bars(bars)
     gaps = frame.index.to_series().diff().ne(_ONE_MINUTE)
     blocks = [
@@ -28,8 +33,8 @@ def _build_contiguous_block(frame: pd.DataFrame) -> pd.DataFrame:
     ema_55 = ema(close, 55)
     sma_100 = sma(close, 100)
     sma_200 = sma(close, 200)
-    cipher_11 = ema(close, 11)
-    cipher_34 = ema(close, 34)
+    ema_11 = ema(close, 11)
+    ema_34 = ema(close, 34)
     harsi = _harsi(frame)
     slope, r_squared = _rolling_trend(close, 20)
     output = pd.DataFrame(index=frame.index)
@@ -37,7 +42,7 @@ def _build_contiguous_block(frame: pd.DataFrame) -> pd.DataFrame:
     output["ema_21_55_direction"] = _direction(ema_21 - ema_55)
     output["sma_100_200_gap_bps"] = _gap_bps(sma_100, sma_200)
     output["sma_100_200_direction"] = _direction(sma_100 - sma_200)
-    output["cipher_a_direction"] = _direction(cipher_11 - cipher_34)
+    output["ema_11_34_direction"] = _direction(ema_11 - ema_34)
     output["harsi_direction"] = harsi["direction"]
     output["harsi_smoothed_rsi"] = harsi["smoothed_rsi"]
     output["choppiness_14"] = choppiness_index(frame["high"], frame["low"], close, 14)

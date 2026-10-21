@@ -6,7 +6,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from hypervector.live.canonical_regime_telemetry import (
-    CANONICAL_REGIME_STRATEGIES,
     CANONICAL_REGIME_TELEMETRY_STRATEGY,
 )
 from hypervector.research.cohort_live_audit_values import (
@@ -52,12 +51,10 @@ def exact_canonical_evaluation(
     symbol: str,
     decision_time_ms: int,
 ) -> Record | None:
-    """Return exact-time canonical context, preferring the independent source."""
-    for strategy in CANONICAL_REGIME_STRATEGIES:
-        value = index.evaluations.get((run_id, strategy, symbol, decision_time_ms))
-        if value is not None:
-            return value
-    return None
+    """Return exact-time canonical regime context."""
+    return index.evaluations.get(
+        (run_id, CANONICAL_REGIME_TELEMETRY_STRATEGY, symbol, decision_time_ms)
+    )
 
 
 def latest_canonical_for_run(
@@ -66,12 +63,9 @@ def latest_canonical_for_run(
     symbol: str,
 ) -> Record | None:
     """Return the newest canonical evaluation within one exact live run."""
-    values = [
-        value
-        for strategy in CANONICAL_REGIME_STRATEGIES
-        if (value := index.latest_by_run.get((run_id, strategy, symbol))) is not None
-    ]
-    return _newest_canonical(values)
+    return index.latest_by_run.get(
+        (run_id, CANONICAL_REGIME_TELEMETRY_STRATEGY, symbol)
+    )
 
 
 def latest_canonical_at_or_before(
@@ -82,23 +76,18 @@ def latest_canonical_at_or_before(
     """Return the newest canonical row available by an exact causal timestamp."""
     values = [
         value
-        for strategy in CANONICAL_REGIME_STRATEGIES
-        for value in index.timelines.get((strategy, symbol), ())
+        for value in canonical_timeline(index, symbol)
         if _evaluation_time(value) <= timestamp_ms
     ]
-    return _newest_canonical(values)
+    return max(values, key=_evaluation_time, default=None)
 
 
 def canonical_timeline(
     index: ReflectionEvidenceIndex,
     symbol: str,
 ) -> tuple[Record, ...]:
-    """Merge legacy and independent canonical histories without duplicate closes."""
-    by_decision: dict[int, Record] = {}
-    for strategy in CANONICAL_REGIME_STRATEGIES:
-        for value in index.timelines.get((strategy, symbol), ()):
-            by_decision.setdefault(_evaluation_time(value), value)
-    return tuple(by_decision[key] for key in sorted(by_decision))
+    """Return one symbol's canonical regime history in decision order."""
+    return index.timelines.get((CANONICAL_REGIME_TELEMETRY_STRATEGY, symbol), ())
 
 
 def build_reflection_evidence_index(
@@ -214,13 +203,3 @@ def _parse_candle(raw: Record) -> Candle:
 def _evaluation_time(record: Record) -> int:
     return nonnegative_int(record.get("decision_time_ms"), "evaluation decision time")
 
-
-def _newest_canonical(values: Sequence[Record]) -> Record | None:
-    return max(
-        values,
-        key=lambda value: (
-            _evaluation_time(value),
-            value.get("strategy_id") == CANONICAL_REGIME_TELEMETRY_STRATEGY,
-        ),
-        default=None,
-    )

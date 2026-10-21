@@ -98,7 +98,6 @@ from hypervector.runtime_lock import (
     bidirectional_live_runtime_lock,
 )
 
-_DEFAULT_BACKTEST_LAB = Path("../backtest-lab/backtest_lab")
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 _MAX_READ_COALESCE_SECONDS = 10.0
 _READ_COALESCE_POLL_FRACTION = 0.8
@@ -128,11 +127,6 @@ def build_parser() -> argparse.ArgumentParser:
     # Required: the old default named a canary profile that is now a test
     # fixture; the supervised start always passes --config explicitly.
     parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument(
-        "--backtest-lab-root",
-        type=Path,
-        default=_DEFAULT_BACKTEST_LAB,
-    )
     parser.add_argument("--enabled", action="store_true")
     parser.add_argument("--i-accept-live-risk", action="store_true")
     parser.add_argument("--accounting-epoch-bundle", type=Path)
@@ -174,13 +168,12 @@ def run_live(args: argparse.Namespace) -> int:
     # the start boundaries still ends the process at once, as it always has.
     signal_stop = ProcessSignalStop()
     with requests.Session() as candle_session:
-        poller = ConfiguredMultiAssetIntentPoller.with_default_collectors(
+        poller = ConfiguredMultiAssetIntentPoller.with_registered_collectors(
             config=config,
             fetch_bars=_live_candle_fetcher(
                 candle_session,
                 partial(_backend_stop_requested, config.stop_file, signal_stop),
             ),
-            backtest_lab_root=args.backtest_lab_root.resolve(),
         )
         with bidirectional_live_runtime_lock(config.cohort_ledger) as lock_path:
             return _run_locked(
@@ -226,14 +219,14 @@ def _run_locked(
 ) -> int:
     transition_path = config.cohort_ledger.parent / "transition_drain.json"
     recovery = _transition_recovery(args, config, transition_path)
-    imported = implementation_source_identity(_implementation_sources(args))
+    imported = implementation_source_identity(_implementation_sources())
     _await_venue(config)
     _refresh_start_grace(lock_path)
     # Stamped after any venue wait, so the run and its bundle carry the time the
     # start actually proceeded.
     now = datetime.now(UTC)
     run_id = f"bidirectional-live-{int(now.timestamp() * 1_000)}"
-    sources = _implementation_sources(args)
+    sources = _implementation_sources()
     _require_unchanged_implementation(imported, sources)
     backup = create_cohort_prestart_backup(
         config, now=now, implementation_sources=sources
@@ -298,13 +291,10 @@ def _await_venue(config: MultiAssetLiveConfig) -> None:
         )
 
 
-def _implementation_sources(args: argparse.Namespace) -> dict[str, Path]:
+def _implementation_sources() -> dict[str, Path]:
     if not (_REPOSITORY_ROOT / "src" / "hypervector").is_dir():
-        return discover_installed_cohort_sources(args.backtest_lab_root.resolve())
-    return discover_cohort_implementation_sources(
-        _REPOSITORY_ROOT,
-        args.backtest_lab_root.resolve(),
-    )
+        return discover_installed_cohort_sources()
+    return discover_cohort_implementation_sources(_REPOSITORY_ROOT)
 
 
 def _require_unchanged_implementation(

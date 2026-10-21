@@ -17,7 +17,10 @@ from hypervector.research.cohort_regime_assessment import build_regime_assessmen
 from hypervector.research.cohort_regime_opposition import (
     build_regime_opposition_episode,
 )
-from hypervector.research.cohort_open_trade_evidence import build_open_trade_evidence
+from hypervector.research.cohort_open_trade_path import (
+    build_open_trade_extension_path,
+    build_open_trade_path,
+)
 from hypervector.research.cohort_open_profit_protection import (
     build_open_profit_protection,
 )
@@ -211,15 +214,10 @@ def _execution_annotations(
     protective_stop: dict[str, object],
     as_of_ms: int,
 ) -> dict[str, object]:
-    evidence = build_open_trade_evidence(
-        index.candles.get(symbol, {}),
-        core.side,
-        core.entry,
-        core.position,
-        core.exit_plan,
-        as_of_ms,
-        provider_evaluations=index.timelines.get((core.strategy, symbol), ()),
-        protective_stop=protective_stop,
+    candles = index.candles.get(symbol, {})
+    soft_deadline = nonnegative_int(
+        core.exit_plan.get("soft_deadline_timestamp_ms"),
+        "soft deadline timestamp",
     )
     return {
         "profit_protection": build_open_profit_protection(
@@ -227,7 +225,16 @@ def _execution_annotations(
         ),
         "target_order": project_open_target_order(core.position, core.side),
         "exit_plan": core.exit_plan,
-        **evidence,
+        "path_since_entry": build_open_trade_path(
+            candles, core.side, core.entry, core.position, as_of_ms
+        ),
+        "path_since_soft_deadline": build_open_trade_extension_path(
+            candles,
+            core.side,
+            soft_deadline_ms=soft_deadline,
+            marked_economics=core.position,
+            as_of_ms=as_of_ms,
+        ),
         "holding_time_ms": _holding_time_ms(core.entry, as_of_ms),
     }
 

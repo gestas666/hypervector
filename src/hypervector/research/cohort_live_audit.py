@@ -59,35 +59,11 @@ from hypervector.research.cohort_live_audit_summaries import (
     scorecard_pairs,
     validated_records,
 )
-from hypervector.research.cohort_entry_alignment_mechanism import (
-    build_live_entry_alignment_mechanism,
-)
-from hypervector.research.cohort_ignored_provider_exit_scorecard import (
-    build_ignored_provider_exit_policy_scorecard,
-)
 from hypervector.research.cohort_maximum_hold_decisions import (
     build_maximum_hold_decision_evidence,
 )
-from hypervector.research.cohort_maximum_hold_extension_outcomes import (
-    build_maximum_hold_extension_outcomes,
-)
-from hypervector.research.cohort_mature_profit_floor import (
-    build_mature_profit_floor_mechanism,
-)
 from hypervector.research.cohort_open_trade_reflections import (
     build_open_trade_reflections,
-)
-from hypervector.research.cohort_profit_lock_challenger import (
-    build_all_time_profit_lock_mechanism,
-    build_profit_lock_challenger,
-    build_regime_conditioned_profit_lock_mechanism,
-    build_support_decay_profit_lock_mechanism,
-)
-from hypervector.research.cohort_risk_normalized_profit_lock import (
-    build_risk_normalized_profit_lock_mechanism,
-)
-from hypervector.research.cohort_provider_episode_reentry import (
-    build_provider_episode_reentry,
 )
 from hypervector.research.cohort_provider_contract_history import (
     build_provider_contract_history,
@@ -300,116 +276,13 @@ def _execution_evidence(
         compatible_run_ids=compatible_run_ids,
         current_run_id=_run_id(identity),
     )
-    compatible_cohort = tuple(
-        row for row in cohort if row.get("run_id") in compatible_run_ids
-    )
-    reflected_trades = _mapping_list(
-        trade_reflections.get("trades"), "reflected trades"
-    )
-    open_reflected_trades = _mapping_list(
-        open_trade_reflections.get("trades"), "open reflected trades"
-    )
-    resolved = _resolved_exit_evidence(
-        selected,
-        identity,
-        compatible_cohort,
-        history_assets,
-        reflected_trades,
-        open_reflected_trades=open_reflected_trades,
-        all_time_cohort=cohort,
-        all_time_assets=all_time_assets,
-        all_time_reflected_trades=_mapping_list(
-            all_time_live.get("trades"), "all-time reflected trades"
-        ),
-    )
     return {
         "execution": execution,
         "open_trade_reflections": open_trade_reflections,
         "trade_reflections": trade_reflections,
-        "ignored_provider_exit_policy_scorecard": (
-            build_ignored_provider_exit_policy_scorecard(
-                closed_trades=reflected_trades,
-                open_trades=open_reflected_trades,
-            )
-        ),
-        **resolved,
-    }
-
-
-def _resolved_exit_evidence(
-    selected: Sequence[Record],
-    identity: Record,
-    compatible_cohort: Sequence[Record],
-    history_assets: Mapping[str, Sequence[Record]],
-    reflected_trades: Sequence[Record],
-    *,
-    open_reflected_trades: Sequence[Record],
-    all_time_cohort: Sequence[Record],
-    all_time_assets: Mapping[str, Sequence[Record]],
-    all_time_reflected_trades: Sequence[Record],
-) -> dict[str, object]:
-    maximum_hold = build_maximum_hold_decision_evidence(
-        selected,
-        _expected_provider_pairs(identity),
-    )
-    maximum_hold["extension_outcomes"] = build_maximum_hold_extension_outcomes(
-        compatible_cohort,
-        history_assets,
-        reflected_trades,
-    )
-    profit_lock = build_profit_lock_challenger(
-        compatible_cohort,
-        history_assets,
-        reflected_trades,
-        current_profile_fingerprint=_text(
-            identity.get("profile_fingerprint"), "current profile fingerprint"
-        ),
-        current_run_id=_run_id(identity),
-    )
-    profit_lock["all_time_live_mechanism"] = build_all_time_profit_lock_mechanism(
-        all_time_cohort,
-        all_time_assets,
-        all_time_reflected_trades,
-    )
-    profit_lock["mature_profit_floor_all_time_live_mechanism"] = (
-        build_mature_profit_floor_mechanism(
-            all_time_cohort,
-            all_time_assets,
-            all_time_reflected_trades,
-        )
-    )
-    profit_lock["risk_normalized_all_time_live_mechanism"] = (
-        build_risk_normalized_profit_lock_mechanism(
-            all_time_cohort,
-            all_time_assets,
-            all_time_reflected_trades,
-        )
-    )
-    profit_lock["regime_conditioned_all_time_live_mechanism"] = (
-        build_regime_conditioned_profit_lock_mechanism(
-            all_time_cohort,
-            all_time_assets,
-            all_time_reflected_trades,
-        )
-    )
-    profit_lock["support_decay_all_time_live_mechanism"] = (
-        build_support_decay_profit_lock_mechanism(
-            all_time_cohort,
-            all_time_assets,
-            all_time_reflected_trades,
-        )
-    )
-    return {
-        "maximum_hold_decisions": maximum_hold,
-        "profit_lock_challenger": profit_lock,
-        "entry_alignment_mechanism": build_live_entry_alignment_mechanism(
-            all_time_reflected_trades,
-            open_trades=open_reflected_trades,
-        ),
-        "provider_episode_reentry": build_provider_episode_reentry(
-            all_time_cohort,
-            all_time_reflected_trades,
-            open_trades=open_reflected_trades,
+        "maximum_hold_decisions": build_maximum_hold_decision_evidence(
+            selected,
+            _expected_provider_pairs(identity),
         ),
     }
 

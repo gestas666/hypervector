@@ -25,17 +25,6 @@
         "help": "cohort profile TOML to back up"
       },
       "required": true
-    },
-    {
-      "flags": [
-        "--backtest-lab-root"
-      ],
-      "options": {
-        "dest": "backtest_lab_root",
-        "type": "Path",
-        "default": "../backtest-lab/backtest_lab",
-        "help": "backtest-lab provider package directory"
-      }
     }
   ]
 }

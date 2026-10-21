@@ -1,4 +1,4 @@
-"""Typed HIP-3 availability failures and fail-closed telemetry."""
+"""Typed provider source unavailability and its fail-closed telemetry."""
 
 from __future__ import annotations
 
@@ -6,20 +6,20 @@ from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 
-class Hip3ObserverUnavailableError(ValueError):
-    """A report-only HIP-3 observer cannot currently authorize new entries."""
+class ProviderSourceUnavailableError(ValueError):
+    """A provider's external signal source cannot currently authorize entries.
+
+    A collector raises this instead of returning an ``IntentBatch`` when a
+    source it depends on is stale or missing; the poller records one explicit
+    non-executable evaluation and does not advance the provider's cursor.
+    """
 
     def __init__(self, reason: str) -> None:
         """Store a stable machine-readable non-action reason."""
         if not isinstance(reason, str) or not reason.strip():
-            raise ValueError("HIP-3 observer unavailability reason is required")
+            raise ValueError("provider source unavailability reason is required")
         self.reason = reason.strip()
-        message = (
-            "HIP-3 v3 observer status is stale"
-            if self.reason == "observer_status_stale"
-            else f"HIP-3 observer unavailable: {self.reason}"
-        )
-        super().__init__(message)
+        super().__init__(f"provider source unavailable: {self.reason}")
 
 
 def unavailable_provider_evaluation(
@@ -45,7 +45,7 @@ def unavailable_provider_evaluation(
             conditions_met=0,
             conditions_required=1,
             blockers=(reason,),
-            indicators=("HIP-3 OBSERVER UNAVAILABLE",),
+            indicators=("PROVIDER SOURCE UNAVAILABLE",),
             metrics={"technical_availability": "unavailable"},
         ),
         backend_non_action_reason=reason,

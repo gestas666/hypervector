@@ -1,4 +1,4 @@
-"""Append-only authoritative ledger for the SOL mainnet canary."""
+"""Append-only authoritative per-symbol ledger for live and observer runs."""
 
 from __future__ import annotations
 
@@ -362,21 +362,13 @@ class SolLiveLedger:
 
 def _validate_live_path(path: Path) -> None:
     parts = path.parts
-    sol_domain = any(
-        parts[index : index + 2] == ("live", "sol_range_onset_canary")
-        for index in range(max(0, len(parts) - 1))
-    )
     cohort_domain = any(
         parts[index : index + 2] == ("live", "bidirectional_cohort")
         for index in range(max(0, len(parts) - 1))
     )
-    valid_name = path.name == "decisions.jsonl" or (
-        cohort_domain and path.suffix == ".jsonl"
-    )
-    if not (sol_domain or cohort_domain) or not valid_name:
+    if not cohort_domain or path.suffix != ".jsonl":
         raise SolLiveLedgerError(
-            "live ledger path must use live/sol_range_onset_canary/decisions.jsonl "
-            "or live/bidirectional_cohort/*.jsonl"
+            "live ledger path must use live/bidirectional_cohort/*.jsonl"
         )
 
 

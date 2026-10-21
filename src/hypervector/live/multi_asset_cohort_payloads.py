@@ -80,7 +80,6 @@ def provider_config_payload(provider: StrategyProviderConfig) -> dict[str, objec
         "execution_side_overrides": {
             symbol: sorted(sides) for symbol, sides in provider.execution_side_overrides
         },
-        "entry_context_overrides": dict(provider.entry_context_overrides),
         "stop_bps_overrides": dict(provider.stop_bps_overrides),
         "sizing_overrides": {
             symbol: sizing.as_payload() for symbol, sizing in provider.sizing_overrides
@@ -90,11 +89,6 @@ def provider_config_payload(provider: StrategyProviderConfig) -> dict[str, objec
             provider.profit_lock_overrides
         ),
         "execution": provider.execution.as_payload(),
-        "source_profile": (
-            str(provider.source_profile)
-            if provider.source_profile is not None
-            else None
-        ),
     }
 
 

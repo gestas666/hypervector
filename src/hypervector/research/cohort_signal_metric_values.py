@@ -1,4 +1,10 @@
-"""Metric value validation and explicit availability accounting."""
+"""Metric value validation and explicit availability accounting.
+
+A provider declares point-in-time metric unavailability in its readiness
+metrics: with ``metric_availability = "warmup_unavailable"`` every metric it
+reports as null is counted as declared unavailable rather than as a telemetry
+gap. Callers can also pass explicit metric names.
+"""
 
 from __future__ import annotations
 
@@ -7,33 +13,8 @@ import math
 
 MetricValue = str | int | float | bool | None
 
-_EXPLICIT_UNAVAILABLE_CATEGORIES = frozenset({"breakout_side"})
-_CONDITION_ANATOMY_STATUS = "condition_anatomy_status"
-_CONDITION_ANATOMY_UNAVAILABLE = "legacy_or_warmup_unavailable"
-_PRESSURE_UNAVAILABLE_STATUSES = frozenset({"no_candidate", "stale_candidate"})
-_PRESSURE_METRICS = frozenset({"imbalance_10", "pressure_age_seconds"})
-_CONDITION_ANATOMY_METRICS = frozenset(
-    {
-        "close",
-        "ema_fast_period",
-        "ema_gap_bps",
-        "ema_slow_period",
-        "fast_ema",
-        "long_breakout_distance_bps",
-        "long_ema_alignment",
-        "long_pressure_confirmation",
-        "long_price_breakout",
-        "long_raw_condition",
-        "prior_breakout_high",
-        "prior_breakout_low",
-        "short_breakout_distance_bps",
-        "short_ema_alignment",
-        "short_pressure_confirmation",
-        "short_price_breakout",
-        "short_raw_condition",
-        "slow_ema",
-    }
-)
+METRIC_AVAILABILITY_KEY = "metric_availability"
+METRIC_WARMUP_UNAVAILABLE = "warmup_unavailable"
 
 
 class MetricAvailability:
@@ -41,10 +22,9 @@ class MetricAvailability:
 
     def __init__(self, horizons: Sequence[int]) -> None:
         """Create counters for the configured horizon identities."""
-        self._evaluations = dict.fromkeys(_CONDITION_ANATOMY_METRICS, 0)
-        self._horizons = {
-            horizon: dict.fromkeys(_CONDITION_ANATOMY_METRICS, 0)
-            for horizon in horizons
+        self._evaluations: dict[str, int] = {}
+        self._horizons: dict[int, dict[str, int]] = {
+            horizon: {} for horizon in horizons
         }
 
     def observe_evaluation(
@@ -92,9 +72,7 @@ def usable_metrics(metrics: Mapping[str, object]) -> dict[str, MetricValue]:
             raise ValueError("metric names must be non-empty text")
         name = raw_name.strip()
         if raw_value is None:
-            if name not in _EXPLICIT_UNAVAILABLE_CATEGORIES:
-                continue
-            raw_value = "unavailable"
+            continue
         if not isinstance(raw_value, (str, int, float, bool)):
             raise ValueError(f"metric {raw_name} has an unsupported value")
         metric_type(raw_value)
@@ -120,16 +98,11 @@ def metric_type(value: MetricValue) -> tuple[str, str]:
 
 
 def _explicitly_unavailable(metrics: Mapping[str, object]) -> frozenset[str]:
-    unavailable: set[str] = set()
-    if metrics.get(_CONDITION_ANATOMY_STATUS) == _CONDITION_ANATOMY_UNAVAILABLE:
-        unavailable.update(
-            name for name in _CONDITION_ANATOMY_METRICS if metrics.get(name) is None
-        )
-    if metrics.get("pressure_status") in _PRESSURE_UNAVAILABLE_STATUSES:
-        unavailable.update(
-            name for name in _PRESSURE_METRICS if metrics.get(name) is None
-        )
-    return frozenset(unavailable)
+    if metrics.get(METRIC_AVAILABILITY_KEY) != METRIC_WARMUP_UNAVAILABLE:
+        return frozenset()
+    return frozenset(
+        name for name, value in metrics.items() if isinstance(name, str) and value is None
+    )
 
 
 def _validated_unavailable(

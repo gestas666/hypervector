@@ -27,7 +27,6 @@ def provider_profile_values(config: StrategyProviderConfig) -> dict[str, object]
     values = asdict(config)
     for field in (
         "execution_side_overrides",
-        "entry_context_overrides",
         "stop_bps_overrides",
         "sizing_overrides",
         "directional_sizing_overrides",

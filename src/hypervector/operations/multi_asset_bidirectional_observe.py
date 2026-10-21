@@ -3,20 +3,15 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 import sys
 import time
 
-import pandas as pd
 import requests
 
 from hypervector.data.hl import fetch_hl_ohlcv_snapshot
-from hypervector.live.configured_canonical_regime import (
-    configured_canonical_regime_symbols,
-)
-from hypervector.live.multi_asset_default_collectors import build_default_collector
 from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTelemetry
 from hypervector.live.multi_asset_intent_poller import (
     CohortBarFetcherProtocol,
@@ -48,7 +43,6 @@ from hypervector.live.hyperliquid_sol_factory import (
     SolSdkFactoryError,
 )
 from hypervector.live.process_signal_stop import install_process_signal_stop
-from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.perp_venue_identity import configured_perp_dexes
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger, SolLiveLedgerError
 from hypervector.runtime_lock import (
@@ -56,35 +50,12 @@ from hypervector.runtime_lock import (
     bidirectional_observer_runtime_lock,
 )
 
-_DEFAULT_BACKTEST_LAB = Path("../backtest-lab/backtest_lab")
-
-
-class _EmptyCanonicalRegimeCollector:
-    """No-op regime source for isolated HIP-3 research observers."""
-
-    def activate(self, activation_time_ms: int) -> None:
-        if activation_time_ms < 0:
-            raise ValueError("activation_time_ms must be nonnegative")
-
-    def collect(
-        self,
-        bars: Mapping[tuple[str, str], pd.DataFrame],
-        observed_at: pd.Timestamp,
-    ) -> tuple[ProviderEvaluation, ...]:
-        del bars, observed_at
-        return ()
-
 
 def build_parser() -> argparse.ArgumentParser:
     """Build an observe-only command surface without live-arm flags."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--config", type=Path, required=True, help="cohort profile TOML to observe"
-    )
-    parser.add_argument(
-        "--backtest-lab-root",
-        type=Path,
-        default=_DEFAULT_BACKTEST_LAB,
     )
     parser.add_argument(
         "--ledger-root",
@@ -107,7 +78,6 @@ def run_observer(args: argparse.Namespace) -> int:
     poller = _build_observer_poller(
         config,
         fetch_bars=_observer_candle_fetcher(config, fetch_hl_ohlcv_snapshot),
-        backtest_lab_root=args.backtest_lab_root.resolve(),
     )
     public_books = _build_public_books(config)
     with bidirectional_observer_runtime_lock(config.cohort_ledger):
@@ -226,28 +196,11 @@ def _build_observer_poller(
     config: MultiAssetLiveConfig,
     *,
     fetch_bars: CohortBarFetcherProtocol,
-    backtest_lab_root: Path,
 ) -> ConfiguredMultiAssetIntentPoller:
-    """Build exact providers and their explicitly supported descriptive telemetry."""
-    if configured_canonical_regime_symbols(config):
-        return ConfiguredMultiAssetIntentPoller.with_default_collectors(
-            config=config,
-            fetch_bars=fetch_bars,
-            backtest_lab_root=backtest_lab_root,
-        )
-    collectors = {
-        provider.strategy_id: build_default_collector(
-            provider,
-            config,
-            backtest_lab_root,
-        )
-        for provider in config.providers
-    }
-    return ConfiguredMultiAssetIntentPoller(
+    """Build registered providers and the canonical telemetry for core perps."""
+    return ConfiguredMultiAssetIntentPoller.with_registered_collectors(
         config=config,
         fetch_bars=fetch_bars,
-        collectors=collectors,
-        canonical_regime_collector=_EmptyCanonicalRegimeCollector(),
     )
 
 

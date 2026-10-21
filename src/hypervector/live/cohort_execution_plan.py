@@ -31,12 +31,7 @@ StopPolicy = Literal["fixed_bps", "structural_clamped_bps"]
 TargetPolicy = Literal["none", "fixed_bps", "reward_risk", "absolute_anchor"]
 MaximumHoldPolicy = Literal["fixed", "extend_while_regime_supported"]
 ProviderRecipeExitPolicy = Literal["ignore", "honor"]
-ProfitLockPolicy = Literal[
-    "none",
-    "completed_bar_trailing",
-    "btc_hulk_delayed_component_floor_v1",
-    "btc_hulk_delayed_component_exit_v2",
-]
+ProfitLockPolicy = Literal["none", "completed_bar_trailing"]
 # Where the v2 floor moves the resting venue stop: entry +/- 25 bps, or
 # the more protective of that and the +/- 0.5R software floor.
 BreakevenStopTarget = Literal["entry_offset", "floor"]
@@ -47,14 +42,7 @@ _TARGET_POLICIES = frozenset({"none", "fixed_bps", "reward_risk", "absolute_anch
 _MAXIMUM_HOLD_POLICIES = frozenset({"fixed", "extend_while_regime_supported"})
 _PROVIDER_RECIPE_EXIT_POLICIES = frozenset({"ignore", "honor"})
 _BREAKEVEN_STOP_TARGETS = frozenset({"entry_offset", "floor"})
-_PROFIT_LOCK_POLICIES = frozenset(
-    {
-        "none",
-        "completed_bar_trailing",
-        "btc_hulk_delayed_component_floor_v1",
-        "btc_hulk_delayed_component_exit_v2",
-    }
-)
+_PROFIT_LOCK_POLICIES = frozenset({"none", "completed_bar_trailing"})
 
 
 @dataclass(frozen=True)

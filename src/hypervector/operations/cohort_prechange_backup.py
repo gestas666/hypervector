@@ -35,11 +35,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--config", type=Path, required=True, help="cohort profile TOML to snapshot"
     )
-    parser.add_argument(
-        "--backtest-lab-root",
-        type=Path,
-        default=Path("../backtest-lab/backtest_lab"),
-    )
     return parser
 
 
@@ -48,10 +43,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         config = load_multi_asset_live_config(args.config, mode="observe")
-        sources = discover_cohort_implementation_sources(
-            _REPOSITORY_ROOT,
-            args.backtest_lab_root.resolve(),
-        )
+        sources = discover_cohort_implementation_sources(_REPOSITORY_ROOT)
         result = create_cohort_prestart_backup(
             config,
             implementation_sources=sources,

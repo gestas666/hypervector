@@ -17,23 +17,8 @@ def validate_profit_lock_contract(
 ) -> None:
     """Reject incomplete or internally inconsistent profit-lock parameters."""
     values = (activation_bps, floor_bps, giveback_bps)
-    supported = {
-        "none",
-        "completed_bar_trailing",
-        "btc_hulk_delayed_component_floor_v1",
-        "btc_hulk_delayed_component_exit_v2",
-    }
-    if policy not in supported:
+    if policy not in {"none", "completed_bar_trailing"}:
         raise CohortExecutionPlanError("unsupported profit lock policy")
-    if policy in {
-        "btc_hulk_delayed_component_floor_v1",
-        "btc_hulk_delayed_component_exit_v2",
-    }:
-        if any(value is not None for value in values):
-            raise CohortExecutionPlanError(
-                "BTC Hulk delayed component floor cannot define fixed-bps parameters"
-            )
-        return
     if policy == "none":
         if any(value is not None for value in values):
             raise CohortExecutionPlanError(

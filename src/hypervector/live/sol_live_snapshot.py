@@ -25,7 +25,7 @@ class SolLiveState(str, Enum):
 
 
 class SolLiveStateError(RuntimeError):
-    """A requested transition violates the SOL canary lifecycle."""
+    """A requested transition violates the per-symbol execution lifecycle."""
 
 
 @dataclass(frozen=True)

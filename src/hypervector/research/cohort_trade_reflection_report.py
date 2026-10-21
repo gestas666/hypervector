@@ -4,17 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from hypervector.research.cohort_entry_alignment_challenger import (
-    build_entry_component_alignment_challenger,
-    build_entry_alignment_challenger,
-)
 from hypervector.research.cohort_exit_controller_attribution import (
     build_exit_controller_attribution,
 )
 from hypervector.research.cohort_live_audit_values import mapping
-from hypervector.research.cohort_regime_opposition import (
-    build_regime_opposition_outcome_challenger,
-)
 from hypervector.research.cohort_repeatability_evidence import (
     build_repeatability_evidence,
 )
@@ -47,15 +40,11 @@ def build_all_time_reflection_report(
         "maximum_hold_context_journal": build_maximum_hold_context_journal(
             trades, horizons
         ),
-        "entry_alignment_challenger": build_entry_alignment_challenger(trades),
-        "entry_component_alignment_challenger": (
-            build_entry_component_alignment_challenger(trades)
-        ),
         "trades": trades,
         "limitations": [
             "all-time live history may combine materially different strategy profiles",
             "lifecycle context remains point-in-time but is not policy-comparable",
-            "all-time challengers are descriptive and have no execution authority",
+            "all-time summaries are descriptive and have no execution authority",
         ],
     }
 
@@ -81,15 +70,8 @@ def build_reflection_report(
         "maximum_hold_context_journal": build_maximum_hold_context_journal(
             trades, horizons
         ),
-        "entry_alignment_challenger": build_entry_alignment_challenger(trades),
-        "entry_component_alignment_challenger": (
-            build_entry_component_alignment_challenger(trades)
-        ),
         "exit_controller_attribution": build_exit_controller_attribution(trades),
         "repeatability": build_repeatability_evidence(trades),
-        "regime_opposition_outcome_challenger": (
-            build_regime_opposition_outcome_challenger(trades)
-        ),
         "performance": build_trade_performance(
             trades,
             current_profile_fingerprint=current_profile_fingerprint,

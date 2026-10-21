@@ -9,12 +9,6 @@ from hypervector.live.cohort_adaptive_exit_policy import (
     ADAPTIVE_EXIT_POLICIES,
     RETENTION_EXIT_POLICY,
 )
-from hypervector.live.btc_hulk_delayed_component_floor import (
-    BTC_HULK_DELAYED_COMPONENT_POLICY_IDS,
-)
-from hypervector.live.btc_hulk_robust_short_provider import (
-    HULK_ROBUST_SHORT_STRATEGY,
-)
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.live.cohort_stop_risk_sizing import StopRiskBudget
 
@@ -215,10 +209,6 @@ def _profit_lock_valid(row: ProviderExitExpectation) -> bool:
     )
     if row.profit_lock_policy == "none":
         return all(value is None for value in values)
-    if row.profit_lock_policy in BTC_HULK_DELAYED_COMPONENT_POLICY_IDS:
-        return row.strategy_id == HULK_ROBUST_SHORT_STRATEGY and all(
-            value is None for value in values
-        )
     if row.profit_lock_policy != "completed_bar_trailing":
         return False
     if any(value is None for value in values):

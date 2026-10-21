@@ -57,7 +57,6 @@ from hypervector_supervision.cohort_supervisor_models import (
 
 from hypervector.live.cohort_execution_plan_validation import CohortExecutionPlanError
 from hypervector.live.cohort_runtime_preflight import validate_runtime_configuration
-from hypervector.live.multi_asset_default_collectors import build_default_collector
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
     MultiAssetLiveConfigError,
@@ -67,6 +66,7 @@ from hypervector.live.multi_asset_live_runner_support import (
     MultiAssetLiveRunnerError,
 )
 from hypervector.live.multi_asset_market_bars import MultiAssetIntentPollerError
+from hypervector.live.provider_registry import build_provider_collector
 
 BOOK_AT_STOP_RISK_LIMIT = 0.03
 BOOK_MARGIN_LIMIT = 0.25
@@ -74,25 +74,17 @@ BOOK_MARGIN_LIMIT = 0.25
 # a route whose provider declares no stop_risk_budget of its own.
 DEFAULT_COST_BUFFER_BPS = 20.0
 BPS_PER_UNIT = 10_000.0
-# The armed entrypoint's default, "../backtest-lab/backtest_lab" relative to the
-# repository root the supervisor runs it from; anchored there, not to this cwd.
-DEFAULT_BACKTEST_LAB = REPOSITORY_ROOT.parent / "backtest-lab" / "backtest_lab"
 # Hyperliquid's maintenance margin is half the initial margin at the venue's
 # maximum leverage.
 MAINTENANCE_MARGIN_SHARE = 0.5
 
 
-def check(
-    config_path: Path,
-    *,
-    mode: str,
-    backtest_lab_root: Path = DEFAULT_BACKTEST_LAB,
-) -> list[str]:
+def check(config_path: Path, *, mode: str) -> list[str]:
     """Return the runtime validator's objections for one profile, if any.
 
     In live mode a profile whose paths the supervisor does not watch, whose
-    provider has no default collector, or whose stop could sit beyond its
-    liquidation price raises instead: those are refusals.
+    provider is not registered or cannot build its collector, or whose stop
+    could sit beyond its liquidation price raises instead: those are refusals.
     """
     armed = mode == "live"
     config = load_multi_asset_live_config(
@@ -100,7 +92,7 @@ def check(
     )
     if armed:
         require_supervised_paths(config)
-        require_default_collectors(config, backtest_lab_root.resolve())
+        require_registered_collectors(config)
         require_stops_inside_liquidation(config_path)
     problems: list[str] = []
     try:
@@ -139,16 +131,15 @@ def require_supervised_paths(
         raise MultiAssetLiveConfigError("; ".join(problems))
 
 
-def require_default_collectors(
-    config: MultiAssetLiveConfig, backtest_lab_root: Path
-) -> None:
+def require_registered_collectors(config: MultiAssetLiveConfig) -> None:
     """Build every provider's collector exactly as the armed entrypoint does.
 
-    The armed start builds one for every provider, executable or not, and a
-    strategy_id without one is refused there. Construction fetches nothing.
+    The armed start builds one for every provider, executable or not, from the
+    provider registry, and an unregistered strategy_id is refused there.
+    Construction fetches nothing.
     """
     for provider in config.providers:
-        build_default_collector(provider, config, backtest_lab_root)
+        build_provider_collector(provider, config)
 
 
 def _repository_path(path: Path) -> Path:
@@ -487,15 +478,6 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         help="account equity in USD for the book-level at-stop risk and margin check",
     )
-    parser.add_argument(
-        "--backtest-lab-root",
-        type=Path,
-        default=None,
-        help=(
-            "backtest-lab dependency root, as passed to the armed entrypoint "
-            "(default: the supervised entrypoint's, beside the repository root)"
-        ),
-    )
     return parser
 
 
@@ -530,11 +512,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     lines stay on stderr.
     """
     args = build_parser().parse_args(argv)
-    backtest_lab_root = (
-        DEFAULT_BACKTEST_LAB
-        if args.backtest_lab_root is None
-        else args.backtest_lab_root
-    )
     report: dict[str, object] = {
         "ok": False,
         "config": str(args.config),
@@ -545,9 +522,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "book": None,
     }
     try:
-        problems = check(
-            args.config, mode=args.mode, backtest_lab_root=backtest_lab_root
-        )
+        problems = check(args.config, mode=args.mode)
         book = (
             book_check(args.config, equity_usd=args.equity)
             if args.equity is not None and not problems

@@ -1,4 +1,11 @@
-"""Convert completed Hyperliquid candles into causal SOL live decisions."""
+"""Causal completed-bar canonical regime decisions for live telemetry.
+
+Every completed one-minute bar of the latest contiguous segment is classified by
+the canonical multi-timeframe regime engine (1m execution state, completed 5m
+state and 15m context) and annotated with the observe-only indicator
+components. A decision depends only on the completed window and its bar
+position. Nothing here emits an intent or gates an entry.
+"""
 
 from __future__ import annotations
 
@@ -6,33 +13,90 @@ from collections import OrderedDict
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
+from dataclasses import dataclass
 import hashlib
 import math
 
 import numpy as np
 import pandas as pd
 
-from hypervector.live.sol_range_onset_controller import SolLiveDecision
+from hypervector.live.canonical_regime_components import build_regime_component_frame
 from hypervector.live.provider_readiness import ReadinessMetric, SignalReadiness
+from hypervector.regime.classifier import validate_regime_bars
 from hypervector.regime.composite import classify_multitimeframe
-from hypervector.regime.component_telemetry import build_regime_component_frame
-from hypervector.research.range_onset_observation import (
-    completed_range_onset_bars,
-)
-from hypervector.research.range_onset_signals import build_range_onset_signals
 
 _MINUTE = pd.Timedelta(minutes=1)
+_OHLCV_COLUMNS = ("open", "high", "low", "close", "volume")
+_DIRECTIONS = frozenset({"long", "short", "neutral"})
 
 
-def build_completed_live_decisions(
+@dataclass(frozen=True)
+class CanonicalRegimeDecision:
+    """One completed-bar canonical regime classification and its provenance."""
+
+    decision_time_ms: int
+    reference_price: float
+    primary_regime: str
+    state_1m: str
+    state_5m: str
+    context_15m: str
+    confidence: float
+    structural_direction: str
+    readiness: SignalReadiness
+
+    def __post_init__(self) -> None:
+        """Reject malformed time, price, state or direction."""
+        if (
+            isinstance(self.decision_time_ms, bool)
+            or not isinstance(self.decision_time_ms, int)
+            or self.decision_time_ms < 0
+        ):
+            raise ValueError("decision_time_ms must be a nonnegative integer")
+        if not math.isfinite(self.reference_price) or self.reference_price <= 0.0:
+            raise ValueError("reference_price must be positive and finite")
+        if not math.isfinite(self.confidence):
+            raise ValueError("confidence must be finite")
+        for name in ("primary_regime", "state_1m", "state_5m", "context_15m"):
+            if not str(getattr(self, name)).strip():
+                raise ValueError(f"{name} must be non-empty")
+        if self.structural_direction not in _DIRECTIONS:
+            raise ValueError("structural_direction must be long, short, or neutral")
+
+
+def completed_minute_bars(
+    raw_bars: pd.DataFrame, *, observed_at: pd.Timestamp
+) -> pd.DataFrame:
+    """Return the latest contiguous segment of completed, validated 1m bars."""
+    required = {"timestamp", *_OHLCV_COLUMNS}
+    missing = required.difference(raw_bars.columns)
+    if missing:
+        raise ValueError(f"regime candle frame is missing columns: {sorted(missing)}")
+    bars = raw_bars.loc[:, sorted(required)].copy()
+    bars["timestamp"] = pd.to_datetime(bars["timestamp"], utc=True)
+    bars = bars.drop_duplicates("timestamp", keep="last").set_index("timestamp")
+    bars = bars.sort_index().loc[:, list(_OHLCV_COLUMNS)]
+    observed = _utc_timestamp(observed_at)
+    complete = bars.loc[bars.index + _MINUTE <= observed]
+    if complete.empty:
+        raise ValueError("no completed one-minute candles for regime telemetry")
+    deltas = complete.index[1:] - complete.index[:-1]
+    resets = [position + 1 for position, delta in enumerate(deltas) if delta != _MINUTE]
+    complete = complete.iloc[resets[-1] :] if resets else complete
+    if not complete.index.floor("min").equals(complete.index):
+        raise ValueError("1m regime bars require exact 1m open-time cadence")
+    validate_regime_bars(complete)
+    return complete
+
+
+def build_completed_regime_decisions(
     raw_bars: pd.DataFrame,
     *,
     observed_at: pd.Timestamp,
     after_decision_time_ms: int | None = None,
-) -> tuple[SolLiveDecision, ...]:
+) -> tuple[CanonicalRegimeDecision, ...]:
     """Return every unseen completed-bar decision in chronological order."""
     after = _optional_timestamp(after_decision_time_ms)
-    bars = completed_range_onset_bars(raw_bars, observed_at=observed_at)
+    bars = completed_minute_bars(raw_bars, observed_at=observed_at)
     positions = bars.index
     if after is not None:
         if after >= int((positions[-1] + _MINUTE).timestamp() * 1_000):
@@ -57,19 +121,20 @@ def build_completed_live_decisions(
     return decisions
 
 
-_CompletedFrames = tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
+_CompletedFrames = tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
 # Per poll: distinct windows remembered, and decisions kept for each. The
-# retained suffix covers every steady-state lookback (at most 61 bars), so one
-# frame build serves every consumer of a window; seed queries beyond it rebuild.
+# retained suffix covers every steady-state lookback, so one frame build serves
+# every consumer of a window; seed queries beyond it rebuild.
 _SHARED_WINDOW_LIMIT = 64
 _SHARED_DECISION_LIMIT = 128
 _SHARED_DECISIONS: ContextVar[
-    OrderedDict[tuple[object, ...], tuple[int, tuple[SolLiveDecision, ...]]] | None
-] = ContextVar("completed_decision_cycle", default=None)
+    OrderedDict[tuple[object, ...], tuple[int, tuple[CanonicalRegimeDecision, ...]]]
+    | None
+] = ContextVar("completed_regime_decision_cycle", default=None)
 
 
 @contextmanager
-def shared_completed_decisions() -> Iterator[None]:
+def shared_completed_regime_decisions() -> Iterator[None]:
     """Let consumers in one poll share decisions for bit-identical windows.
 
     A decision depends only on the completed window and its bar position, so a
@@ -85,20 +150,21 @@ def shared_completed_decisions() -> Iterator[None]:
 
 
 def _completed_frames(bars: pd.DataFrame) -> _CompletedFrames:
-    """Build every indicator frame for one completed window, classifying once."""
+    """Build the regime and component frames for one completed window."""
     regimes = classify_multitimeframe(bars)
-    signals = build_range_onset_signals(bars, regimes=regimes)
-    _validate_alignment(bars, signals, regimes)
+    _validate_alignment(bars, regimes)
     components = build_regime_component_frame(bars)
-    _validate_alignment(bars, components, regimes)
-    return bars, signals, regimes, components
+    _validate_alignment(bars, components)
+    return bars, regimes, components
 
 
-def _decisions(frames: _CompletedFrames, first: int) -> tuple[SolLiveDecision, ...]:
+def _decisions(
+    frames: _CompletedFrames, first: int
+) -> tuple[CanonicalRegimeDecision, ...]:
     """Decide every bar from ``first`` on, in order, raising at the first failure."""
     readers = tuple(_RowReader(frame) for frame in frames)
     index = frames[0].index
-    decisions: list[SolLiveDecision] = []
+    decisions: list[CanonicalRegimeDecision] = []
     for start in range(first, len(index), _ROW_CHUNK):
         locations = np.arange(start, min(start + _ROW_CHUNK, len(index)))
         rows = zip(*(reader.rows(locations) for reader in readers), strict=True)
@@ -109,7 +175,7 @@ def _decisions(frames: _CompletedFrames, first: int) -> tuple[SolLiveDecision, .
 
 def _decision_at(
     index: pd.Index, location: int, row: tuple[Mapping[str, object], ...]
-) -> SolLiveDecision:
+) -> CanonicalRegimeDecision:
     decision_time = pd.Timestamp(index[location]) + _MINUTE
     decision_ms = int(decision_time.timestamp() * 1_000)
     return _decision_from_rows(decision_ms, *row)
@@ -118,8 +184,8 @@ def _decision_at(
 def _retained_suffix(
     frames: _CompletedFrames,
     first: int,
-    decisions: tuple[SolLiveDecision, ...],
-) -> tuple[int, tuple[SolLiveDecision, ...]]:
+    decisions: tuple[CanonicalRegimeDecision, ...],
+) -> tuple[int, tuple[CanonicalRegimeDecision, ...]]:
     """Keep a bounded decided suffix, extended over older bars that decide cleanly.
 
     Older bars were not requested, so a bar that cannot be decided only ends the
@@ -132,7 +198,7 @@ def _retained_suffix(
     lowest = max(0, first - (_SHARED_DECISION_LIMIT - len(decisions)))
     locations = np.arange(lowest, first)
     rows = list(zip(*(_RowReader(frame).rows(locations) for frame in frames), strict=True))
-    older: list[SolLiveDecision] = []
+    older: list[CanonicalRegimeDecision] = []
     for location, row in zip(reversed(locations), reversed(rows), strict=True):
         try:
             older.append(_decision_at(frames[0].index, int(location), row))
@@ -238,114 +304,56 @@ def _same_element(left: object, right: object) -> bool:
 def _decision_from_rows(
     decision_time_ms: int,
     bar: Mapping[str, object],
-    signal: Mapping[str, object],
     regime: Mapping[str, object],
     components: Mapping[str, object],
-) -> SolLiveDecision:
-    return SolLiveDecision(
+) -> CanonicalRegimeDecision:
+    structural = _structural_direction(regime.get("structural_direction"))
+    return CanonicalRegimeDecision(
         decision_time_ms=decision_time_ms,
         reference_price=_positive_float(bar.get("close"), "close"),
-        long_entry=_boolean(signal.get("long_entry"), "long_entry"),
-        short_entry=_boolean(signal.get("short_entry"), "short_entry"),
-        long_exit=_boolean(signal.get("long_exit"), "long_exit"),
-        short_exit=_boolean(signal.get("short_exit"), "short_exit"),
         primary_regime=_text(regime.get("primary_regime"), "primary_regime"),
         state_1m=_text(regime.get("state_1m"), "state_1m"),
         state_5m=_text(regime.get("state_5m"), "state_5m"),
         context_15m=_text(regime.get("context_15m"), "context_15m"),
         confidence=_finite_float(regime.get("confidence"), "confidence"),
-        structural_direction=_text(
-            signal.get("structural_direction"),
-            "structural_direction",
-        ),
-        regime_admitted=_boolean(signal.get("regime_admitted"), "regime_admitted"),
-        open_price=_positive_float(bar.get("open"), "open"),
-        high_price=_positive_float(bar.get("high"), "high"),
-        low_price=_positive_float(bar.get("low"), "low"),
-        volume=_nonnegative_float(bar.get("volume"), "volume"),
-        readiness=_range_readiness(signal, regime, components),
-        breakout_side=_regime_breakout_side(regime),
+        structural_direction=structural,
+        readiness=_regime_readiness(regime, components, structural),
     )
 
 
-def _regime_breakout_side(regime: Mapping[str, object]) -> str | None:
-    if regime.get("state_5m") != "BREAKOUT":
-        return None
-    value = regime.get("structural_direction")
-    if value in {None, "neutral"} or pd.isna(value):
-        return None
-    if value not in {"long", "short"}:
-        raise ValueError("5m breakout structural_direction must be long or short")
+def _structural_direction(value: object) -> str:
+    if value is None or (not isinstance(value, str) and pd.isna(value)):
+        return "neutral"
+    if value not in _DIRECTIONS:
+        raise ValueError("regime structural_direction must be long, short, or neutral")
     return str(value)
 
 
-def _range_readiness(
-    signal: Mapping[str, object],
+def _regime_readiness(
     regime: Mapping[str, object],
     components: Mapping[str, object],
+    structural: str,
 ) -> SignalReadiness:
-    fields = signal.index if isinstance(signal, pd.Series) else signal.keys()
-    if not _RANGE_READINESS_FIELDS.issubset(fields):
-        return _unavailable_readiness()
-    fast = float(signal["sma_fast"])  # type: ignore[arg-type]
-    slow = float(signal["sma_slow"])  # type: ignore[arg-type]
-    gap = float(signal["sma_gap_bps"])  # type: ignore[arg-type]
-    history_ready = all(math.isfinite(value) for value in (fast, slow, gap))
-    long_cross = bool(signal["raw_long_cross"])
-    short_cross = bool(signal["raw_short_cross"])
-    crossed = long_cross or short_cross
-    admitted = bool(signal["regime_admitted"])
-    conditions = (history_ready, admitted, crossed)
-    blockers = tuple(name for name, met in zip(_RANGE_BLOCKERS, conditions, strict=True) if not met)
-    structural = str(signal["structural_direction"])
-    side = (
-        "long"
-        if long_cross or (not short_cross and structural == "long")
-        else "short"
-        if short_cross or structural == "short"
-        else None
-    )
-    context_indicator, context_admitted = _dual_mtf_challenger(side, components)
+    primary = _text(regime.get("primary_regime"), "primary_regime")
+    classified = primary != "UNKNOWN"
     return SignalReadiness(
-        side=side,
-        conditions_met=sum(conditions),
-        conditions_required=len(conditions),
-        blockers=blockers,
+        side=structural if structural in {"long", "short"} else None,
+        conditions_met=int(classified),
+        conditions_required=1,
+        blockers=() if classified else ("regime_unclassified",),
         indicators=(
-            _sma_value("SMA10", fast),
-            _sma_value("SMA30", slow),
-            _sma_gap(gap),
-            f"RAW CROSS {'LONG' if long_cross else 'SHORT' if short_cross else 'NONE'}",
-            f"5m REGIME {'ADMITTED' if admitted else 'BLOCKED'}",
+            f"REGIME {primary}",
             f"STRUCT {structural.upper()}",
             *_regime_indicators(regime),
             *_component_indicators(components),
-            context_indicator,
         ),
         metrics={
-            **_range_metrics(fast, slow, gap, long_cross, short_cross, admitted, structural),
+            "structural_direction": structural,
             **_regime_metrics(regime),
             **_component_metrics(components),
-            "dual_mtf_context_challenger_admitted": context_admitted,
-            "dual_mtf_context_challenger_authority": "report_only",
         },
     )
 
-
-_RANGE_READINESS_FIELDS = {
-    "raw_long_cross",
-    "raw_short_cross",
-    "sma_fast",
-    "sma_slow",
-    "sma_gap_bps",
-    "regime_admitted",
-    "structural_direction",
-}
-_RANGE_BLOCKERS = (
-    "hourly_sma_warmup",
-    "5m_regime_not_admitted",
-    "awaiting_hourly_sma_cross",
-)
 
 CANONICAL_REGIME_METRIC_FIELDS = (
     "rsi",
@@ -393,26 +401,31 @@ CANONICAL_REGIME_TEXT_METRIC_FIELDS = frozenset(
 CANONICAL_REGIME_BOOLEAN_METRIC_FIELDS = frozenset(
     name for name in CANONICAL_REGIME_METRIC_FIELDS if "coiling" in name or "range_cause" in name
 )
-
-
-def _range_metrics(
-    fast: float,
-    slow: float,
-    gap: float,
-    long_cross: bool,
-    short_cross: bool,
-    admitted: bool,
-    structural: str,
-) -> dict[str, ReadinessMetric]:
-    return {
-        "raw_long_cross": long_cross,
-        "raw_short_cross": short_cross,
-        "regime_admitted": admitted,
-        "sma_fast": _optional_metric(fast),
-        "sma_gap_bps": _optional_metric(gap),
-        "sma_slow": _optional_metric(slow),
-        "structural_direction": structural,
+CANONICAL_COMPONENT_METRIC_FIELDS = (
+    "ema_21_55_gap_bps",
+    "ema_21_55_direction",
+    "sma_100_200_gap_bps",
+    "sma_100_200_direction",
+    "ema_11_34_direction",
+    "harsi_direction",
+    "harsi_smoothed_rsi",
+    "choppiness_14",
+    "mtf_5m_bias",
+    "mtf_15m_bias",
+    "trend_slope_bps",
+    "trend_r2",
+    "self_aware_tqi",
+)
+CANONICAL_COMPONENT_CATEGORICAL_FIELDS = frozenset(
+    {
+        "ema_21_55_direction",
+        "sma_100_200_direction",
+        "ema_11_34_direction",
+        "harsi_direction",
+        "mtf_5m_bias",
+        "mtf_15m_bias",
     }
+)
 
 
 def _regime_metrics(values: Mapping[str, object]) -> dict[str, ReadinessMetric]:
@@ -478,64 +491,11 @@ def _component_metrics(values: Mapping[str, object]) -> dict[str, ReadinessMetri
     return metrics
 
 
-CANONICAL_COMPONENT_METRIC_FIELDS = (
-    "ema_21_55_gap_bps",
-    "ema_21_55_direction",
-    "sma_100_200_gap_bps",
-    "sma_100_200_direction",
-    "cipher_a_direction",
-    "harsi_direction",
-    "harsi_smoothed_rsi",
-    "choppiness_14",
-    "mtf_5m_bias",
-    "mtf_15m_bias",
-    "trend_slope_bps",
-    "trend_r2",
-    "self_aware_tqi",
-)
-CANONICAL_COMPONENT_CATEGORICAL_FIELDS = frozenset(
-    {
-        "ema_21_55_direction",
-        "sma_100_200_direction",
-        "cipher_a_direction",
-        "harsi_direction",
-        "mtf_5m_bias",
-        "mtf_15m_bias",
-    }
-)
-
-
-def _optional_metric(value: object) -> float | None:
-    try:
-        number = float(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError):
-        return None
-    return number if math.isfinite(number) else None
-
-
-def _optional_integer_metric(value: object) -> int | None:
-    number = _optional_metric(value)
-    if number is None:
-        return None
-    integer = int(number)
-    if number != integer:
-        raise ValueError("categorical regime component must be integer-valued")
-    return integer
-
-
-def _optional_boolean_metric(value: object) -> bool | None:
-    return bool(value) if isinstance(value, (bool, np.bool_)) else None
-
-
-def _optional_text_metric(value: object) -> str | None:
-    return value.strip() if isinstance(value, str) and value.strip() else None
-
-
 def _component_indicators(values: Mapping[str, object]) -> tuple[str, ...]:
     return (
         _indicator("EMA21/55", values.get("ema_21_55_gap_bps"), "bps"),
         _indicator("SMA100/200", values.get("sma_100_200_gap_bps"), "bps"),
-        _direction_indicator("CIPHER A", values.get("cipher_a_direction")),
+        _direction_indicator("EMA11/34", values.get("ema_11_34_direction")),
         _direction_indicator("HARSI", values.get("harsi_direction")),
         _indicator("CHOP14", values.get("choppiness_14"), ""),
         _bias_indicator(values),
@@ -565,47 +525,37 @@ def _bias_indicator(values: Mapping[str, object]) -> str:
     return f"MTF BIAS 5M {left} / 15M {right}"
 
 
-def _dual_mtf_challenger(
-    side: str | None,
-    values: Mapping[str, object],
-) -> tuple[str, bool | None]:
-    five = _optional_metric(values.get("mtf_5m_bias"))
-    fifteen = _optional_metric(values.get("mtf_15m_bias"))
-    if side not in {"long", "short"} or five is None or fifteen is None:
-        return "DUAL-MTF CHALLENGER N/A [REPORT ONLY]", None
-    side_sign = 1.0 if side == "long" else -1.0
-    opposed = five * side_sign < 0.0 and fifteen * side_sign < 0.0
-    state = "OPPOSED" if opposed else "CLEAR"
-    return f"DUAL-MTF CHALLENGER {state} [REPORT ONLY]", not opposed
+def _optional_metric(value: object) -> float | None:
+    try:
+        number = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
 
 
-def _sma_value(label: str, value: float) -> str:
-    return f"{label} {value:.4f}" if math.isfinite(value) else f"{label} N/A"
+def _optional_integer_metric(value: object) -> int | None:
+    number = _optional_metric(value)
+    if number is None:
+        return None
+    integer = int(number)
+    if number != integer:
+        raise ValueError("categorical regime component must be integer-valued")
+    return integer
 
 
-def _sma_gap(value: float) -> str:
-    return f"SMA GAP {value:+.1f}bps" if math.isfinite(value) else "SMA GAP N/A"
+def _optional_boolean_metric(value: object) -> bool | None:
+    return bool(value) if isinstance(value, (bool, np.bool_)) else None
 
 
-def _unavailable_readiness() -> SignalReadiness:
-    return SignalReadiness(
-        side=None,
-        conditions_met=0,
-        conditions_required=1,
-        blockers=("indicator_telemetry_unavailable",),
-        indicators=("INDICATOR TELEMETRY UNAVAILABLE",),
-    )
+def _optional_text_metric(value: object) -> str | None:
+    return value.strip() if isinstance(value, str) and value.strip() else None
 
 
-def _validate_alignment(
-    bars: pd.DataFrame,
-    signals: pd.DataFrame,
-    regimes: pd.DataFrame,
-) -> None:
-    if not bars.index.equals(signals.index) or not bars.index.equals(regimes.index):
-        raise ValueError("SOL live bars, signals, and regimes must share one index")
+def _validate_alignment(bars: pd.DataFrame, frame: pd.DataFrame) -> None:
+    if not bars.index.equals(frame.index):
+        raise ValueError("regime bars and derived frames must share one index")
     if bars.index.has_duplicates or not bars.index.is_monotonic_increasing:
-        raise ValueError("SOL live decision index must be unique and increasing")
+        raise ValueError("regime decision index must be unique and increasing")
 
 
 def _optional_timestamp(value: int | None) -> int | None:
@@ -616,39 +566,33 @@ def _optional_timestamp(value: int | None) -> int | None:
     return value
 
 
-def _boolean(value: object, label: str) -> bool:
-    if not isinstance(value, (bool, np.bool_)):
-        raise ValueError(f"SOL live {label} must be boolean")
-    return bool(value)
+def _utc_timestamp(value: pd.Timestamp) -> pd.Timestamp:
+    timestamp = pd.Timestamp(value)
+    if timestamp.tzinfo is None:
+        raise ValueError("regime telemetry timestamps must be timezone-aware")
+    return timestamp.tz_convert("UTC")
 
 
 def _text(value: object, label: str) -> str:
     if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"SOL live {label} must be non-empty text")
+        raise ValueError(f"canonical regime {label} must be non-empty text")
     return value.strip()
 
 
 def _finite_float(value: object, label: str) -> float:
     if isinstance(value, bool):
-        raise ValueError(f"SOL live {label} must be numeric")
+        raise ValueError(f"canonical regime {label} must be numeric")
     try:
         result = float(value)  # type: ignore[arg-type]
     except (TypeError, ValueError) as exc:
-        raise ValueError(f"SOL live {label} must be numeric") from exc
+        raise ValueError(f"canonical regime {label} must be numeric") from exc
     if not math.isfinite(result):
-        raise ValueError(f"SOL live {label} must be finite")
+        raise ValueError(f"canonical regime {label} must be finite")
     return result
 
 
 def _positive_float(value: object, label: str) -> float:
     result = _finite_float(value, label)
     if result <= 0.0:
-        raise ValueError(f"SOL live {label} must be positive")
-    return result
-
-
-def _nonnegative_float(value: object, label: str) -> float:
-    result = _finite_float(value, label)
-    if result < 0.0:
-        raise ValueError(f"SOL live {label} must be nonnegative")
+        raise ValueError(f"canonical regime {label} must be positive")
     return result
