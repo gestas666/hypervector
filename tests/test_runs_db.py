@@ -14,7 +14,7 @@ def test_insert_and_list_trials(tmp_path: Path):
         TrialRow(
             run_id="r1",
             track="uptrend",
-            strategy="ma_cross_long",
+            strategy="test_sma_cross_long",
             params={"fast": 5, "slow": 20},
             net_pnl=100.0,
             total_return_pct=1.0,
@@ -46,7 +46,7 @@ def test_best_by_net_pnl_orders_primary(tmp_path: Path):
             TrialRow(
                 run_id="r",
                 track="downtrend",
-                strategy="ma_cross_short",
+                strategy="test_sma_cross_short",
                 params={"fast": 5, "slow": 20, "tag": pnl},
                 net_pnl=pnl,
                 total_return_pct=ret,

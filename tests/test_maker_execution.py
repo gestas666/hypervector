@@ -1,4 +1,4 @@
-"""Causal maker-order mechanics used by the Hypervelocity paper backend."""
+"""Causal maker-order mechanics for declared post-only paper entries."""
 
 from __future__ import annotations
 

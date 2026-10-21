@@ -186,18 +186,3 @@ def test_explicit_frequency_is_honoured_without_timestamps() -> None:
 
     assert m["bar_freq"] == "1h"
     assert m["funding_cost"] == pytest.approx(10_000.0 * 0.0001 * 4.0, rel=1e-9)
-
-
-def test_regime_trend_router_accepts_rangeindex_research_bars() -> None:
-    from hypervector.strategies.source_derived import regime_trend_router_signals
-
-    df = _bars(3_000, "1min", seed=21)
-    timed = df.set_axis(pd.DatetimeIndex(df["timestamp"]).rename(None), axis=0)
-
-    entries, exits, direction = regime_trend_router_signals(df, direction="long")
-    ref_entries, ref_exits, _ = regime_trend_router_signals(timed, direction="long")
-
-    assert direction == "long"
-    assert entries.index.equals(df.index)
-    assert entries.tolist() == ref_entries.tolist()
-    assert exits.tolist() == ref_exits.tolist()

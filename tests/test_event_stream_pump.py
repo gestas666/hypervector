@@ -6,7 +6,7 @@ from pathlib import Path
 
 from hypervector.data.hl_events import L2SnapshotEvent, StreamGap
 from hypervector.data.hl_ws_feed import FeedDisconnect, ReceivedMessage
-from hypervector.paper.event_stream_pump import HypervelocityEventStreamPump
+from hypervector.paper.event_stream_pump import HyperliquidEventStreamPump
 
 
 FIXTURES = Path("tests/fixtures")
@@ -52,7 +52,7 @@ def test_pump_declares_gap_then_archives_and_delivers_reconnected_event(
             ReceivedMessage(payload, 1_785_103_200_300_000_000),
         )
     )
-    pump = HypervelocityEventStreamPump(
+    pump = HyperliquidEventStreamPump(
         data_root=tmp_path,
         symbol="BTC",
         archive_batch_size=10,

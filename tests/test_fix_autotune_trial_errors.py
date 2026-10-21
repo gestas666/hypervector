@@ -16,7 +16,6 @@ import pandas as pd
 import pytest
 
 from hypervector.data.sources import fixture_ohlcv
-from hypervector.regime import tuning
 from hypervector.strategies import registry
 from hypervector.strategies.registry import StrategySpec, register
 from hypervector.sweep import autotune
@@ -145,7 +144,7 @@ def test_all_failed_search_still_raises_with_board(
     with pytest.raises(RuntimeError, match="no successful trials"):
         autotune.run_autotune(
             data_root=tmp_path,
-            strategy_name="ma_cross_long",
+            strategy_name="test_sma_cross_long",
             n_trials=3,
             train_fraction=1.0,
             no_export=True,
@@ -168,44 +167,3 @@ def _regime_bars() -> pd.DataFrame:
         },
         index=index,
     )
-
-
-@pytest.mark.parametrize(
-    "error",
-    [ZeroDivisionError("divide"), RuntimeError("engine"), OSError("disk"), AssertionError("x")],
-    ids=lambda error: type(error).__name__,
-)
-def test_regime_tuner_records_any_trial_exception(
-    monkeypatch: pytest.MonkeyPatch, error: Exception
-) -> None:
-    bars = _regime_bars()
-    positions = pd.DataFrame(
-        {
-            "open_time_utc": [bars.index[100], bars.index[140], bars.index[250]],
-            "side": ["long", "long", "short"],
-            "symbol": ["BTC"] * 3,
-        }
-    )
-    original = tuning.classify_multitimeframe
-    calls = {"n": 0}
-
-    def classify(*args: object, **kwargs: object) -> pd.DataFrame:
-        calls["n"] += 1
-        if calls["n"] == 2:
-            raise error
-        return original(*args, **kwargs)
-
-    monkeypatch.setattr(tuning, "classify_multitimeframe", classify)
-    candidates = tuning.generate_candidate_parameters(n_trials=3, seed=7)
-
-    board = tuning.autotune_regime_candidates(
-        bars, positions, candidates, train_fraction=2.0 / 3.0, forward_horizon=5
-    )
-
-    assert [trial.status for trial in board.trials] == [
-        "completed",
-        "technical_failure",
-        "completed",
-    ]
-    assert board.trials[1].error == f"{type(error).__name__}: {error}"
-    assert board.selected_trial_id in {0, 2}

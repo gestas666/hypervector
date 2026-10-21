@@ -18,21 +18,22 @@ from hypervector.nautilus.hyperliquid_margin import (
     IsolatedMarginPosition,
     maintenance_rate_for_max_leverage,
 )
-from hypervector.strategies.hypervelocity_contract import HypervelocityContract
+from hypervector.strategies.registry import ExecutionProfile
 
 
-def test_canary_allocation_and_btc_maintenance_requirement() -> None:
-    allocation = HypervelocityContract().allocate(120.0)
-    shadow = HypervelocityContract().allocate(10_000.0)
+def test_fixed_allocation_and_btc_maintenance_requirement() -> None:
+    execution = ExecutionProfile(fixed_margin_fraction=0.70, leverage=30.0)
+    notional_fraction = execution.fixed_notional_fraction
+    assert notional_fraction is not None
     rate = maintenance_rate_for_max_leverage(40.0)
 
-    assert allocation.margin == pytest.approx(84.0)
-    assert allocation.notional == pytest.approx(2_520.0)
+    assert 120.0 * execution.fixed_margin_fraction == pytest.approx(84.0)
+    assert 120.0 * notional_fraction == pytest.approx(2_520.0)
     assert rate == pytest.approx(0.0125)
-    assert allocation.notional * rate == pytest.approx(31.5)
-    assert shadow.margin == pytest.approx(7_000.0)
-    assert shadow.notional == pytest.approx(210_000.0)
-    assert shadow.notional * rate == pytest.approx(2_625.0)
+    assert 120.0 * notional_fraction * rate == pytest.approx(31.5)
+    assert 10_000.0 * execution.fixed_margin_fraction == pytest.approx(7_000.0)
+    assert 10_000.0 * notional_fraction == pytest.approx(210_000.0)
+    assert 10_000.0 * notional_fraction * rate == pytest.approx(2_625.0)
 
 
 def test_liquidation_uses_mark_fees_and_signed_funding() -> None:

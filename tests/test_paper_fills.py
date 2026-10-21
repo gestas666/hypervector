@@ -9,7 +9,7 @@ from hypervector.paper.fills import ExplicitFillEngine
 
 
 def event_engine(tmp_path: Path) -> ExplicitFillEngine:
-    """Return one maker-fee Hypervelocity fill engine."""
+    """Return one maker-fee fill engine for a strategy with declared post-only entries."""
     return ExplicitFillEngine(
         tmp_path / "event_data",
         cost_provider=CostProvider(
@@ -19,7 +19,7 @@ def event_engine(tmp_path: Path) -> ExplicitFillEngine:
         ),
         run_id="event-run",
         export_id="event-export",
-        strategy_name="hypervelocity_1m_scalper",
+        strategy_name="test_managed_long",
         symbol="BTC",
         timeframe="1m",
         conviction=0.5,
@@ -99,7 +99,7 @@ def test_buy_fill_pays_slippage_and_fee(tmp_path: Path):
         cost_provider=cp,
         run_id="r1",
         export_id="e1",
-        strategy_name="crown_stack_short",
+        strategy_name="test_sma_cross_short",
         symbol="BTC",
         timeframe="1m",
         conviction=0.5,
@@ -124,7 +124,7 @@ def test_engine_equity_includes_realized_fees_and_current_mark(tmp_path: Path):
         cost_provider=CostProvider(fee_tier=0, slippage_bps=0.0),
         run_id="r1",
         export_id="e1",
-        strategy_name="hypervelocity_1m_scalper_long",
+        strategy_name="test_managed_long",
         symbol="BTC",
         timeframe="1m",
         conviction=0.5,
@@ -138,14 +138,14 @@ def test_engine_equity_includes_realized_fees_and_current_mark(tmp_path: Path):
     assert eng.equity(mark_px=110.0) == expected
 
 
-def test_hypervelocity_ledger_uses_post_only_intent_and_maker_fee(tmp_path: Path):
+def test_declared_post_only_ledger_uses_post_only_intent_and_maker_fee(tmp_path: Path):
     costs = CostProvider(fee_tier=0, slippage_bps=0.0, assume_taker=False)
     eng = ExplicitFillEngine(
         tmp_path / "data_maker",
         cost_provider=costs,
         run_id="r1",
         export_id="e1",
-        strategy_name="hypervelocity_1m_scalper_short",
+        strategy_name="test_managed_short",
         symbol="BTC",
         timeframe="1m",
         conviction=0.5,
@@ -189,7 +189,7 @@ def test_historical_funding_rate_overrides_current_snapshot(tmp_path: Path) -> N
         cost_provider=cp,
         run_id="r1",
         export_id="e1",
-        strategy_name="hypervelocity_1m_scalper_long",
+        strategy_name="test_managed_long",
         symbol="BTC",
         timeframe="1m",
         conviction=0.5,
@@ -222,7 +222,7 @@ def test_sandbox_flag_on_record_does_not_change_fill(tmp_path: Path):
             cost_provider=CostProvider(fee_tier=0, slippage_bps=slip_bps),
             run_id="r1",
             export_id="e1",
-            strategy_name="crown_stack_short",
+            strategy_name="test_sma_cross_short",
             symbol="BTC",
             timeframe="1m",
             conviction=0.5,

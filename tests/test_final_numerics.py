@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from hypervector.strategies.registry import ExecutionProfile
 from hypervector.cli import main
 from hypervector.data.cache import ParquetCache
 from hypervector.data.sources import fixture_ohlcv
@@ -58,7 +59,7 @@ def test_pipeline_tune_no_network_reads_the_pinned_cache_and_never_fetches(
         "pipeline",
         "run",
         "--strategy",
-        "crown_stack_long",
+        "test_sma_cross_long",
         "--symbol",
         "BTC",
         "--timeframe",
@@ -96,10 +97,19 @@ def test_run_autotune_offline_never_fetches_on_a_cache_miss(
         lambda *_a, **_k: pytest.fail("offline autotune reached the network"),
     )
     with pytest.raises(FileNotFoundError, match="offline history cache missing"):
-        autotune.run_autotune(data_root=tmp_path, n_trials=1, allow_network=False)
+        autotune.run_autotune(
+            data_root=tmp_path,
+            strategy_name="test_sma_cross_long",
+            n_trials=1,
+            allow_network=False,
+        )
     with pytest.raises(ValueError, match="needs the network"):
         autotune.run_autotune(
-            data_root=tmp_path, n_trials=1, allow_network=False, force_refresh=True
+            data_root=tmp_path,
+            strategy_name="test_sma_cross_long",
+            n_trials=1,
+            allow_network=False,
+            force_refresh=True,
         )
 
 
@@ -273,7 +283,7 @@ def test_pipeline_tune_parity_compares_the_full_window_re_measure(
         "pipeline",
         "run",
         "--strategy",
-        "crown_stack_long",
+        "test_sma_cross_long",
         "--timeframe",
         "1h",
         "--lookback-days",
@@ -323,7 +333,7 @@ def test_autotune_records_the_selected_trial_re_measured_on_every_bar(
 
     bars = _offline_autotune_history(monkeypatch)
     result = autotune.run_autotune(
-        data_root=tmp_path, n_trials=3, strategy_name="crown_stack_long"
+        data_root=tmp_path, n_trials=3, strategy_name="test_sma_cross_long"
     )
     assert result.export_dir is not None
     meta = json.loads((Path(result.export_dir) / "meta.json").read_text())
@@ -334,10 +344,10 @@ def test_autotune_records_the_selected_trial_re_measured_on_every_bar(
     register_all_strategies()
     evaluator = TrialEvaluator(
         bars,
-        get_strategy("crown_stack_long"),
+        get_strategy("test_sma_cross_long"),
         None,
         resolve_cost_model(result.fee_model_used),
-        False,
+        ExecutionProfile(),
         compute_trial_metrics,
         symbol="BTC",
     )
@@ -359,7 +369,7 @@ def test_autotune_in_sample_mode_needs_no_separate_full_window_measure(
     result = autotune.run_autotune(
         data_root=tmp_path,
         n_trials=2,
-        strategy_name="crown_stack_long",
+        strategy_name="test_sma_cross_long",
         train_fraction=1.0,
     )
     assert result.export_dir is not None
@@ -514,7 +524,7 @@ def test_holdout_stop_distance_matches_a_full_history_run(mode: str) -> None:
         _single_entry_spec(_ENTRY),
         None,
         resolve_cost_model("hl_base_taker"),
-        False,
+        ExecutionProfile(),
         compute_trial_metrics,
         symbol="BTC",
     )
@@ -567,7 +577,7 @@ def _report_args() -> Any:
     from types import SimpleNamespace
 
     return SimpleNamespace(
-        strategy="crown_stack_long",
+        strategy="test_sma_cross_long",
         symbol="BTC",
         timeframe="15m",
         lookback=180,

@@ -97,9 +97,9 @@ def test_position_size_frac_defaults_when_risk_missing():
 
 
 @pytest.mark.parametrize("conviction", [0.0, 0.5, 1.0])
-def test_hypervelocity_uses_fixed_70pct_margin_at_30x(conviction: float):
+def test_declared_fixed_sizing_ignores_conviction_and_stop(conviction: float):
     loadout = _loadout(
-        strategy_name="hypervelocity_1m_scalper_long",
+        strategy_name="test_managed_long",
         risk={
             "risk_pct_min": 0.01,
             "risk_pct_max": 0.05,
@@ -114,4 +114,5 @@ def test_hypervelocity_uses_fixed_70pct_margin_at_30x(conviction: float):
         conviction=conviction,
     )
 
-    assert size == pytest.approx(21.0)
+    # 50% margin at the declared 10x, whatever the conviction or risk band.
+    assert size == pytest.approx(5.0)

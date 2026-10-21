@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from dataclasses import replace
 
 import pandas as pd
 import pytest
@@ -12,13 +11,12 @@ import pytest
 from hypervector.cli import main
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.export.phase2 import export_candidate
-from hypervector.paper.maker_execution import PostOnlyLimitFillModel
 from hypervector.paper.runner import PaperDaemonResult, start_paper_daemon
 from hypervector.paper.session import PaperSession
-from hypervector.strategies.hypervelocity_profile import load_hypervelocity_profile
+from synthetic_strategies import MANAGED_LONG, SYNTHETIC_LONG, SYNTHETIC_SHORT
 
 
-def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> Path:
+def _write_strict_export(root: Path, *, strategy: str = SYNTHETIC_SHORT) -> Path:
     track = "downtrend" if "short" in strategy else "uptrend"
     return export_candidate(
         root / "exports",
@@ -54,8 +52,8 @@ def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> 
         },
         params={
             "strategy": strategy,
-            "bbwp_lookback": 100,
-            "bbwp_threshold": 20.0,
+            "fast": 5,
+            "slow": 20,
             "exit_mode": "fixed_rr",
             "role": track,
         },
@@ -65,208 +63,9 @@ def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> 
             "sharpe": 0.4,
             "trade_count": 3,
         },
-        candidate_id="paper_cli_crown",
+        candidate_id="paper_cli_synthetic",
         strict=True,
     )
-
-
-def _venue_bar(timestamp: str, *, high: float) -> dict[str, object]:
-    """Build one Hyperliquid candle for daemon restart tests."""
-    return {
-        "timestamp": pd.Timestamp(timestamp),
-        "open": 100.0,
-        "high": high,
-        "low": 99.9,
-        "close": 100.0,
-        "volume": 1.0,
-        "source": "hl",
-    }
-
-
-class _EventPump:
-    """Deterministic no-network event pump for daemon activation tests."""
-
-    def __init__(self) -> None:
-        self.started = False
-        self.pumps = 0
-        self.closed = False
-
-    def start(self) -> None:
-        self.started = True
-
-    def pump(self, _consumer: object) -> int:
-        self.pumps += 1
-        return 0
-
-    def close(self) -> None:
-        self.closed = True
-
-
-class _FailingStartEventPump(_EventPump):
-    """Pump whose startup fails before it can accept a consumer."""
-
-    def start(self) -> None:
-        raise RuntimeError("public event stream unavailable")
-
-
-def test_daemon_activates_authoritative_event_stream_without_rest_book_poll(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    export = _write_strict_export(
-        tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
-    )
-    profile_text = Path("tests/fixtures/profiles/hypervelocity_shadow.toml").read_text()
-    profile_path = tmp_path / "profile.toml"
-    profile_path.write_text(
-        profile_text.replace(
-            "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
-            str(export),
-        ),
-        encoding="utf-8",
-    )
-    profile = replace(load_hypervelocity_profile(profile_path), metalabel_mode="off")
-    warm = fixture_ohlcv(n_bars=5)
-    pump = _EventPump()
-    monkeypatch.setattr(
-        PaperSession,
-        "initialize_hypervelocity_venue",
-        lambda _self: 0.0,
-    )
-    monkeypatch.setattr(
-        "hypervector.paper.runner.make_rest_poll_fn",
-        lambda _symbol, _timeframe: (lambda **_kwargs: warm.iloc[0:0].copy()),
-    )
-
-    def reject_rest_book(_self: object) -> None:
-        raise AssertionError("event authority must not poll the REST book")
-
-    monkeypatch.setattr("hypervector.paper.book.BookFeed.poll", reject_rest_book)
-
-    result = start_paper_daemon(
-        export_dir=export,
-        data_root=tmp_path / "data",
-        warm_ohlcv=warm,
-        poll_fn=None,
-        max_live_bars=0,
-        install_signal_handlers=False,
-        enable_funding_refresh=False,
-        hypervelocity_profile=profile,
-        event_stream_pump=pump,
-        now_fn=lambda: pd.Timestamp("2026-07-26T20:00:00Z"),
-    )
-
-    assert result.stop_reason == "max_live_bars"
-    assert pump.started and pump.closed
-    assert pump.pumps == 2
-
-
-def test_event_authority_defaults_to_websocket_context_not_rest_refresh(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    export = _write_strict_export(
-        tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
-    )
-    profile_text = Path("tests/fixtures/profiles/hypervelocity_shadow.toml").read_text()
-    profile_path = tmp_path / "profile.toml"
-    profile_path.write_text(
-        profile_text.replace(
-            "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
-            str(export),
-        ),
-        encoding="utf-8",
-    )
-    profile = replace(load_hypervelocity_profile(profile_path), metalabel_mode="off")
-    warm = fixture_ohlcv(n_bars=5)
-    live = warm.iloc[-1:].copy()
-    live.loc[:, "timestamp"] = pd.Timestamp("2026-07-26T20:00:00Z")
-    returned = False
-
-    def feed(**_kwargs: object) -> pd.DataFrame:
-        nonlocal returned
-        if returned:
-            return live.iloc[0:0].copy()
-        returned = True
-        return live
-
-    refresh_checks: list[bool] = []
-
-    def assert_ws_authority(session: PaperSession) -> None:
-        refresh_checks.append(session.enable_funding_refresh)
-
-    monkeypatch.setattr(
-        PaperSession,
-        "initialize_hypervelocity_venue",
-        lambda _self: 0.0,
-    )
-    monkeypatch.setattr(PaperSession, "maybe_refresh_funding", assert_ws_authority)
-    monkeypatch.setattr(
-        "hypervector.paper.runner.make_rest_poll_fn",
-        lambda _symbol, _timeframe: feed,
-    )
-
-    result = start_paper_daemon(
-        export_dir=export,
-        data_root=tmp_path / "data",
-        warm_ohlcv=warm,
-        poll_fn=None,
-        max_live_bars=1,
-        install_signal_handlers=False,
-        hypervelocity_profile=profile,
-        event_stream_pump=_EventPump(),
-        enforce_live_boundary=False,
-        now_fn=lambda: pd.Timestamp("2026-07-26T20:00:00Z"),
-        sleep_fn=lambda _seconds: None,
-    )
-
-    assert result.live_bars == 1
-    assert refresh_checks == [False]
-
-
-def test_event_stream_start_failure_is_not_masked_by_cleanup(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    export = _write_strict_export(
-        tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
-    )
-    profile_text = Path("tests/fixtures/profiles/hypervelocity_shadow.toml").read_text()
-    profile_path = tmp_path / "profile.toml"
-    profile_path.write_text(
-        profile_text.replace(
-            "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
-            str(export),
-        ),
-        encoding="utf-8",
-    )
-    profile = replace(load_hypervelocity_profile(profile_path), metalabel_mode="off")
-    pump = _FailingStartEventPump()
-    monkeypatch.setattr(
-        PaperSession,
-        "initialize_hypervelocity_venue",
-        lambda _self: 0.0,
-    )
-
-    with pytest.raises(RuntimeError, match="public event stream unavailable"):
-        start_paper_daemon(
-            export_dir=export,
-            data_root=tmp_path / "data",
-            warm_ohlcv=fixture_ohlcv(n_bars=5),
-            poll_fn=lambda **_kwargs: fixture_ohlcv(n_bars=0),
-            max_live_bars=0,
-            install_signal_handlers=False,
-            enable_funding_refresh=False,
-            hypervelocity_profile=profile,
-            event_stream_pump=pump,
-            now_fn=lambda: pd.Timestamp("2026-07-26T20:00:00Z"),
-        )
-
-    assert pump.closed
-    assert pump.pumps == 0
 
 
 def test_paper_check_reports_mode(tmp_path: Path, capsys, monkeypatch):
@@ -408,19 +207,18 @@ def test_daemon_default_shadow_mode_on_offline_path(tmp_path: Path):
     assert result.warm_bars == 20
 
 
-def test_hypervelocity_daemon_warmup_seeds_without_historical_orders(
+def test_daemon_warmup_seeds_without_historical_orders(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
     """Historical indicator seed data must not become fresh shadow orders."""
-    export = _write_strict_export(
-        tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
-    )
+    from hypervector.nautilus.signals import SignalIntent
+
+    export = _write_strict_export(tmp_path, strategy=SYNTHETIC_LONG)
     warm = fixture_ohlcv(n_bars=20, drift=5.0, wave_period=10)
     monkeypatch.setattr(
-        "hypervector.paper.session.PaperSession._hypervelocity_allowed",
-        lambda _self, _direction: True,
+        "hypervector.paper.session.last_bar_intent",
+        lambda df, _name, _params: SignalIntent("long", True, False, len(df) - 1),
     )
 
     result = start_paper_daemon(
@@ -678,82 +476,6 @@ def test_live_rest_seeds_stale_catchup_without_calling_execution(
     assert identity["runtime"]["live_activated_at"] == "2026-07-25T15:00:30+00:00"
 
 
-def test_daemon_reconciles_resumed_target_with_historical_funding(
-    tmp_path: Path,
-) -> None:
-    """Startup splits seed history from venue-matched missed execution bars."""
-    export = _write_strict_export(
-        tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
-    )
-    data_root = tmp_path / "data"
-    original = PaperSession(
-        export_dir=export,
-        data_root=data_root,
-        run_id="restart-run",
-        execution_mode="shadow",
-    )
-    original.ensure_session_identity()
-    original.engine.apply_market_fill(
-        feed_ts="2026-07-25T12:58:00Z",
-        action="enter_long",
-        side="buy",
-        qty=1.0,
-        mark_px=100.0,
-        fill_model=PostOnlyLimitFillModel(),
-    )
-    warm = pd.DataFrame(
-        [
-            _venue_bar("2026-07-25T12:57:00Z", high=100.1),
-            _venue_bar("2026-07-25T12:58:00Z", high=100.1),
-            _venue_bar("2026-07-25T12:59:00Z", high=100.1),
-        ]
-    )
-    calls: list[tuple[pd.Timestamp, pd.Timestamp]] = []
-
-    def funding_history(
-        symbol: str,
-        *,
-        start_time: pd.Timestamp,
-        end_time: pd.Timestamp,
-    ) -> pd.DataFrame:
-        assert symbol == "BTC"
-        calls.append((start_time, end_time))
-        return pd.DataFrame(
-            {
-                "timestamp": [pd.Timestamp("2026-07-25T13:00:00Z")],
-                "funding_rate": [0.001],
-                "source": ["hl_funding_history"],
-            }
-        )
-
-    result = start_paper_daemon(
-        export_dir=export,
-        data_root=data_root,
-        warm_ohlcv=warm,
-        poll_fn=lambda **_kwargs: warm.iloc[0:0].copy(),
-        funding_history_fn=funding_history,
-        max_live_bars=0,
-        poll_interval_secs=0.0,
-        sleep_fn=lambda _seconds: None,
-        install_signal_handlers=False,
-        execution_mode="shadow",
-        now_fn=lambda: pd.Timestamp("2026-07-25T13:00:30Z"),
-    )
-
-    assert result.run_id == "restart-run"
-    assert result.warm_bars == 3
-    assert calls == [
-        (
-            pd.Timestamp("2026-07-25T13:00:00Z"),
-            pd.Timestamp("2026-07-25T13:01:00Z"),
-        )
-    ]
-    rows = [json.loads(line) for line in result.decisions_path.read_text().splitlines()]
-    funding = [row for row in rows if row.get("action") == "funding"]
-    assert funding[-1]["funding_rate_hourly"] == 0.001
-
-
 def test_start_paper_daemon_stop_file(tmp_path: Path):
     export = _write_strict_export(tmp_path)
     warm = fixture_ohlcv(n_bars=5, drift=-1.0)
@@ -923,14 +645,11 @@ def test_cli_paper_run_observe_mode_reaches_daemon(tmp_path: Path, monkeypatch):
     assert captured["metalabel_mode"] == "observe"
 
 
-def test_cli_forces_hypervelocity_model_policy_to_annotation_only(
+def test_cli_forces_fixed_sizing_model_policy_to_annotation_only(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    export = _write_strict_export(
-        tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
-    )
+    export = _write_strict_export(tmp_path, strategy=MANAGED_LONG)
     captured: dict = {}
 
     def fake_daemon(**kwargs):
@@ -965,49 +684,6 @@ def test_cli_forces_hypervelocity_model_policy_to_annotation_only(
     assert captured["metalabel_enabled"] is True
     assert captured["metalabel_mode"] == "observe"
     assert captured["metalabel_filter"] is False
-
-
-def test_hypervelocity_shadow_cli_uses_websocket_funding_authority(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    captured: dict[str, object] = {}
-
-    def fake_daemon(**kwargs: object) -> PaperDaemonResult:
-        captured.update(kwargs)
-        return PaperDaemonResult(
-            run_id="hv",
-            export_dir=Path("data/exports"),
-            decisions_path=tmp_path / "decisions.jsonl",
-            warm_bars=0,
-            live_bars=0,
-            bars_processed=0,
-            fills_count=0,
-            stop_reason="bounded",
-            execution_mode="shadow",
-        )
-
-    monkeypatch.setattr("hypervector.commands.shadow.start_paper_daemon", fake_daemon)
-
-    result = main(
-        [
-            "--data-root",
-            str(tmp_path / "data"),
-            "paper",
-            "shadow",
-            "--config",
-            "tests/fixtures/profiles/hypervelocity_shadow.toml",
-            "--max-live-bars",
-            "0",
-        ]
-    )
-
-    assert result == 0
-    assert captured["enable_funding_refresh"] is False
-    output = json.loads(capsys.readouterr().out)
-    assert output["funding_authority"] == "hyperliquid_ws_activeAssetCtx"
-    assert output["rest_funding_refresh_enabled"] is False
 
 
 def test_cli_paper_run_mode_flag_wires_execution_mode(tmp_path: Path, monkeypatch):

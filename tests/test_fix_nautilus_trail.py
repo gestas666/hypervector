@@ -362,7 +362,7 @@ def test_tight_trail_matches_vectorbt_across_seeds(
 def test_trail_disabled_for_strategy_managed_exits(tmp_path: Path) -> None:
     export_dir = write_export(
         tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
+        strategy="test_managed_long",
         exit_mode="trail",
         timeframe="1m",
     )

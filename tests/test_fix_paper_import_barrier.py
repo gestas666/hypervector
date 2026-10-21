@@ -26,14 +26,12 @@ ENTRY_MODULES = (
     "hypervector.paper.live_node",
     "hypervector.paper.event_stream_pump",
     "hypervector.paper.warmup",
-    "hypervector.shadow_reset",
     "hypervector.runtime_lock",
     "hypervector.ml.metalabel",
     "hypervector.ml.features",
     "hypervector.data.hl",
     "hypervector.data.pipeline",
     "hypervector.commands.paper",
-    "hypervector.commands.shadow",
 )
 # ``paper check`` reads live readiness metadata on purpose; nothing else may load.
 ALLOWED_LIVE = frozenset({"hypervector.live", "hypervector.live.policy"})

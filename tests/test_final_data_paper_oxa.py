@@ -105,7 +105,7 @@ def _pipeline(root: Path, *flags: str) -> list[str]:
         "pipeline",
         "run",
         "--strategy",
-        "crown_stack_long",
+        "test_sma_cross_long",
         *market,
         "--n-trials",
         "2",
@@ -189,7 +189,7 @@ def test_export_start_model_training_stays_offline_with_no_network(
     root = tmp_path / "data"
     strict_bundle(root / "exports", "cand", timeframe="1h", lookback_days=LOOKBACK)
     venues = Venues(monkeypatch, _hourly(_now()))
-    flags = ["--strategy", "crown_stack_long", "--export", "cand", "--no-network"]
+    flags = ["--strategy", "test_sma_cross_long", "--export", "cand", "--no-network"]
     flags += ["--train-model", "--no-nautilus"]
     base = ["--data-root", str(root), "pipeline", "run", *flags]
 
@@ -337,7 +337,7 @@ def test_model_training_forwards_the_cache_policy_and_the_bundles_strict_flag(
         root / "exports",
         run_id="run-strict",
         meta=meta,
-        params={"strategy": "crown_stack_long", "role": "uptrend"},
+        params={"strategy": "test_sma_cross_long", "role": "uptrend"},
         metrics={"net_pnl": -5.0, "trade_count": 2},
         candidate_id="strict",
         strict=True,
@@ -416,31 +416,6 @@ def test_paper_start_survives_a_binance_outage_without_a_cache(
     result = _paper_start(tmp_path, root, now)
     assert result.warm_bars > 0
     assert venues.calls == ["hl", "binance"]
-
-
-def test_forced_warm_up_refresh_never_falls_back_to_a_cached_window(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    from hypervector.paper.runner import _load_warm_history
-
-    root = tmp_path / "data"
-    now = _now()
-    # A cached window exists, but a forced refresh must not be served from it.
-    _seed(monkeypatch, root, _hourly(now - pd.Timedelta(days=2)), at=now)
-
-    def broken(*_args: object) -> pd.DataFrame:
-        raise ConnectionError("HL candles unavailable")
-
-    monkeypatch.setattr(history, "live_hl_fetcher", broken)
-    with pytest.raises(ConnectionError):
-        _load_warm_history(
-            root,
-            symbol="BTC",
-            timeframe="1h",
-            lookback_days=LOOKBACK,
-            strict_hl_only=False,
-            force_refresh=True,
-        )
 
 
 def test_kept_hl_only_note_does_not_promise_a_flag_to_every_caller(

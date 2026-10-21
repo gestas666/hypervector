@@ -26,7 +26,7 @@ def _register_strategies() -> None:
 def _write_strict_export(
     root: Path,
     *,
-    strategy: str = "ma_cross_long",
+    strategy: str = "test_sma_cross_long",
     params: dict | None = None,
 ) -> Path:
     """Strict Phase 1.5 export for Phase 2 readiness (same pattern as actor tests)."""
@@ -34,10 +34,8 @@ def _write_strict_export(
         "strategy": strategy,
         "exit_mode": "fixed_rr",
     }
-    if strategy == "ma_cross_long":
+    if strategy == "test_sma_cross_long":
         base_params.update({"fast": 5, "slow": 20})
-    elif strategy.startswith("crown_stack"):
-        base_params.update({"bbwp_lookback": 50, "bbwp_threshold": 50.0})
     if params:
         base_params.update(params)
     return export_candidate(
@@ -108,7 +106,7 @@ def test_run_phase2_backtest_writes_summary_offline(tmp_path: Path) -> None:
     assert result.orders_count >= 1
     assert isinstance(result.pnl, float)
     assert isinstance(result.loadout_summary, dict)
-    assert result.loadout_summary.get("strategy_name") == "ma_cross_long"
+    assert result.loadout_summary.get("strategy_name") == "test_sma_cross_long"
 
     summary = json.loads(result.report_path.read_text())
     assert summary["orders_count"] == result.orders_count
@@ -135,7 +133,7 @@ def test_run_phase2_backtest_creates_data_layout(tmp_path: Path) -> None:
     assert (data_root / "exports").is_dir()
 
 
-def test_backend_arms_30x_sim_leverage_only_for_hypervelocity() -> None:
+def test_sim_leverage_is_the_declared_leverage_else_1x() -> None:
     base = {
         "role": None,
         "params": {},
@@ -146,12 +144,10 @@ def test_backend_arms_30x_sim_leverage_only_for_hypervelocity() -> None:
         "exits": None,
         "export_dir": Path("/tmp"),
     }
-    hypervelocity = StrategyLoadout(
-        strategy_name="hypervelocity_1m_scalper_short", **base
-    )
-    ordinary = StrategyLoadout(strategy_name="ma_cross_long", **base)
+    declared = StrategyLoadout(strategy_name="test_managed_short", **base)
+    ordinary = StrategyLoadout(strategy_name="test_sma_cross_long", **base)
 
-    assert _default_leverage(hypervelocity) == 30
+    assert _default_leverage(declared) == 10
     assert _default_leverage(ordinary) == 1
 
 
@@ -171,10 +167,10 @@ def test_run_phase2_backtest_respects_max_bars(tmp_path: Path) -> None:
     assert summary["bars"] == 80
 
 
-def test_hypervelocity_runner_reports_dedicated_venue_model(tmp_path: Path) -> None:
+def test_strategy_managed_exits_run_without_brackets(tmp_path: Path) -> None:
     export_dir = _write_strict_export(
         tmp_path,
-        strategy="hypervelocity_1m_scalper",
+        strategy="test_managed_long",
     )
     result = run_phase2_backtest(
         export_dir=export_dir,
@@ -186,7 +182,6 @@ def test_hypervelocity_runner_reports_dedicated_venue_model(tmp_path: Path) -> N
     summary = json.loads(result.report_path.read_text())
     assert summary["data_fidelity"] == "ohlcv_bar"
     assert summary["venue_model"] == "phase2_bar_only"
-    assert summary["event_venue_model_available"] == "hypervelocity_event_friction_v1"
-    assert summary["event_venue_model_ready"] is False
-    assert "native_liquidation" in summary["event_venue_model_gaps"]
-    assert "proportional_target_resize" in summary["event_venue_model_gaps"]
+    assert summary["event_venue_model_gaps"] == ["native_liquidation"]
+    assert summary["bracket_same_bar_tp_fills"] is None
+    assert summary["margin"]["sim_leverage"] == 10.0

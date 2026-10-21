@@ -56,7 +56,7 @@ def test_cli_status_lists_legacy_aliases_and_retired_names(
     assert rep["legacy_aliases"]["status"] == "system status"
     assert set(rep["legacy_aliases"]) == set(LEGACY_ALIASES)
     assert rep["retired"] == RETIRED
-    assert "research maker-replay" in rep["retired"]
+    assert "research db-journal-append" in rep["retired"]
 
 
 def test_cli_status_reports_oxa_key_presence_only(tmp_path, capsys, monkeypatch):
@@ -86,13 +86,19 @@ def test_all_cli_commands_registered():
     assert registered == set(CLI_COMMANDS)
     root_help = parser.format_help()
     assert "cohort-tui" not in root_help
-    assert "hypervelocity-tui" not in root_help
     assert {
         "live start",
         "live audit",
         "db import-cohort",
-        "paper shadow-reset",
+        "paper run",
     } <= set(CLI_COMMANDS)
+    assert not {
+        "paper shadow",
+        "paper shadow-reset",
+        "paper compare",
+        "regime align",
+        "tune regime",
+    } & set(CLI_COMMANDS)
 
 
 def test_root_description_names_pipeline():

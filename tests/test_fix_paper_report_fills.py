@@ -17,7 +17,7 @@ def _engine(root: Path, *, run_id: str = "run-a") -> ExplicitFillEngine:
         cost_provider=CostProvider(fee_tier=0),
         run_id=run_id,
         export_id="exp",
-        strategy_name="hypervelocity_1m_scalper_long",
+        strategy_name="test_managed_long",
         symbol="BTC",
         timeframe="1m",
         conviction=0.5,
@@ -141,5 +141,5 @@ def test_report_filters_by_run_and_strategy(tmp_path: Path) -> None:
     assert report["rows"] == 1
     assert report["market_fills"] == 1
     assert report["filters"] == {"run_id": "run-b", "strategy": None}
-    none = report_from_data_root(root, strategy="crown_stack_short")
+    none = report_from_data_root(root, strategy="test_sma_cross_short")
     assert none["rows"] == 0

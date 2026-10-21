@@ -84,7 +84,7 @@ def _strict_export(
         data / "exports",
         run_id=f"run-{name}",
         meta=meta,
-        params={"strategy": "crown_stack_short", "role": "downtrend"},
+        params={"strategy": "test_sma_cross_short", "role": "downtrend"},
         metrics={"net_pnl": -5.0, "trade_count": 2},
         candidate_id=name,
         strict=True,
@@ -339,7 +339,7 @@ def test_tune_strategy_passes_objective_and_train_fraction(
     def fake(**kwargs: object) -> SimpleNamespace:
         seen.update(kwargs)
         return SimpleNamespace(
-            strategy_name="crown_stack_long",
+            strategy_name="test_sma_cross_long",
             symbol="BTC",
             timeframe="1m",
             lookback_days=90,
@@ -363,6 +363,7 @@ def test_tune_strategy_passes_objective_and_train_fraction(
 
     monkeypatch.setattr("hypervector.sweep.autotune.run_optuna_autotune", fake)
     argv = ["--data-root", str(tmp_path), "tune", "strategy", "--n-trials", "5"]
+    argv += ["--strategy", "test_sma_cross_long"]
     assert main([*argv, "--objective", "sharpe", "--train-fraction", "1.0"]) == 0
     captured = capsys.readouterr()
     out = json.loads(captured.out)
@@ -408,65 +409,6 @@ def test_sampler_help_lists_only_the_two_samplers() -> None:
     assert "hybrid" not in sampler["options"]["help"]
 
 
-# --- tune regime durable board -------------------------------------------------------------
-
-
-def _regime_inputs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    import pandas as pd
-
-    bars = _bars(240)
-    monkeypatch.setattr(
-        "hypervector.commands.regime._load_bars",
-        lambda _args: (bars, {"source": "fixture"}),
-    )
-    stamps = pd.to_datetime(bars["timestamp"], utc=True)
-    positions = pd.DataFrame(
-        {
-            "open_time_utc": [stamps.iloc[i].isoformat() for i in (60, 120, 180)],
-            "side": ["long", "short", "long"],
-            "symbol": ["BTC", "BTC", "BTC"],
-        }
-    )
-    path = tmp_path / "positions.csv"
-    positions.to_csv(path, index=False)
-    return path
-
-
-def test_tune_regime_publishes_a_durable_board_under_logs_research(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    positions = _regime_inputs(tmp_path, monkeypatch)
-    data = tmp_path / "data"
-    argv = ["--data-root", str(data), "tune", "regime", "--positions", str(positions)]
-    assert main([*argv, "--n-trials", "2", "--forward-bars", "5"]) == 0
-    out = json.loads(capsys.readouterr().out)
-    board = Path(out["board_path"])
-    assert board.parent == (data / "logs" / "research").resolve()
-    assert board.name.startswith("regime_autotune_")
-    stored = json.loads(board.read_text(encoding="utf-8"))
-    assert stored["data_provenance"] == {"source": "fixture"}
-    assert stored["data_window"]["bar_count"] == 240
-    assert stored["report_only"] is True and len(stored["tuning_board"]["trials"]) == 2
-
-
-def test_tune_regime_out_is_exclusive_and_refused_before_loading(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    positions = _regime_inputs(tmp_path, monkeypatch)
-    out = tmp_path / "boards" / "board.json"
-    argv = ["--data-root", str(tmp_path / "data"), "tune", "regime"]
-    argv += ["--positions", str(positions), "--n-trials", "2", "--out", str(out)]
-    assert main(argv) == 0
-    assert json.loads(out.read_text(encoding="utf-8"))["ok"] is True
-    capsys.readouterr()
-    monkeypatch.setattr(
-        "hypervector.commands.regime._load_bars",
-        lambda _args: pytest.fail("data loaded before the --out check"),
-    )
-    assert main(argv) == 2
-    assert "overwrite" in json.loads(capsys.readouterr().err)["error"]
-
-
 # --- backtest run / sweep -------------------------------------------------------------------
 
 
@@ -478,6 +420,7 @@ def test_backtest_leverage_above_the_venue_cap_is_refused_before_loading(
         lambda _args: pytest.fail("data loaded before the leverage check"),
     )
     argv = ["--data-root", str(tmp_path), "backtest", "run", "--symbol", "ETH"]
+    argv += ["--strategy", "test_sma_cross_long"]
     assert main([*argv, "--leverage", "30"]) == 2
     assert "venue cap of 25x" in json.loads(capsys.readouterr().err)["error"]
     assert main([*argv, "--leverage", "nan"]) == 2
@@ -488,7 +431,7 @@ def test_backtest_passes_symbol_and_normalized_direction_and_reports_provenance(
 ) -> None:
     import pandas as pd
 
-    from hypervector.strategies.registry import StrategySpec
+    from hypervector.strategies.registry import StrategySpec, register
 
     bars = _bars(120)
     provenance = summarize_provenance(bars)
@@ -498,10 +441,9 @@ def test_backtest_passes_symbol_and_normalized_direction_and_reports_provenance(
 
     def build(df: pd.DataFrame, **_kwargs: object):
         flags = pd.Series(False, index=df.index)
-        return flags, flags, "impulse_1m_short"
+        return flags, flags, "breakout_short"
 
-    spec = StrategySpec("impulse_fake", "downtrend", {}, build)
-    monkeypatch.setattr("hypervector.commands.backtest.get_strategy", lambda _n: spec)
+    register(StrategySpec("tagged_fake", "downtrend", {}, build))
     seen: dict[str, object] = {}
 
     def fake_metrics(*_args: object, **kwargs: object) -> dict[str, object]:
@@ -525,7 +467,7 @@ def test_backtest_passes_symbol_and_normalized_direction_and_reports_provenance(
 
     monkeypatch.setattr("hypervector.sweep.metrics.compute_trial_metrics", fake_metrics)
     argv = ["--data-root", str(tmp_path), "backtest", "run", "--symbol", "SOL"]
-    assert main([*argv, "--strategy", "impulse_fake", "--leverage", "20"]) == 0
+    assert main([*argv, "--strategy", "tagged_fake", "--leverage", "20"]) == 0
     out = json.loads(capsys.readouterr().out)
     assert (seen["symbol"], seen["direction"]) == ("SOL", "short")
     assert seen["risk_cfg"].max_size_frac == 20.0  # type: ignore[attr-defined]
@@ -556,6 +498,7 @@ def test_sweep_refuses_leverage_above_the_cap_and_passes_the_symbol(
 
     monkeypatch.setattr("hypervector.sweep.search.run_grid_search", fake_search)
     base = ["--data-root", str(tmp_path), "backtest", "sweep", "--track", "uptrend"]
+    base += ["--strategy", "test_sma_cross_long"]
     assert main([*base, "--symbol", "SOL", "--leverage", "25"]) == 2
     assert "venue cap of 20x" in json.loads(capsys.readouterr().err)["error"]
     assert history == []
@@ -768,7 +711,7 @@ def test_nautilus_run_technical_failure_carries_the_first_error(
 
     def broken(**_kwargs: object) -> None:
         raise Phase2TechnicalFailure(
-            "strategy raised on bar 7", strategy="crown_stack_short", first_error="boom"
+            "strategy raised on bar 7", strategy="test_sma_cross_short", first_error="boom"
         )
 
     monkeypatch.setattr("hypervector.nautilus.runner.run_phase2_backtest", broken)
@@ -777,7 +720,7 @@ def test_nautilus_run_technical_failure_carries_the_first_error(
     assert main(["--data-root", str(data), "nautilus", "run", "--export", "btc"]) == 1
     error = json.loads(capsys.readouterr().err)
     assert error["error_type"] == "Phase2TechnicalFailure"
-    assert (error["strategy"], error["first_error"]) == ("crown_stack_short", "boom")
+    assert (error["strategy"], error["first_error"]) == ("test_sma_cross_short", "boom")
 
 
 def test_nautilus_run_engine_unsupported_symbol_exits_two(
@@ -849,8 +792,8 @@ def test_paper_report_filters_reach_the_report(
     ledger.parent.mkdir(parents=True)
     ledger.write_text("", encoding="utf-8")
     argv = ["--data-root", str(tmp_path), "paper", "report"]
-    assert main([*argv, "--run-id", "r7", "--strategy", "crown_stack_long"]) == 0
-    assert (seen["run_id"], seen["strategy"]) == ("r7", "crown_stack_long")
+    assert main([*argv, "--run-id", "r7", "--strategy", "test_sma_cross_long"]) == 0
+    assert (seen["run_id"], seen["strategy"]) == ("r7", "test_sma_cross_long")
     assert json.loads(capsys.readouterr().out)["filters"] == {"run_id": "r7"}
 
 
@@ -1079,7 +1022,7 @@ def test_research_config_defaults_to_the_base_taker_fee() -> None:
 def test_trial_evaluator_passes_the_symbol_only_when_known() -> None:
     import pandas as pd
 
-    from hypervector.strategies.registry import StrategySpec
+    from hypervector.strategies.registry import ExecutionProfile, StrategySpec
     from hypervector.sweep.autotune_evaluation import TrialEvaluator
     from hypervector.sweep.costs import resolve_cost_model
 
@@ -1094,7 +1037,9 @@ def test_trial_evaluator_passes_the_symbol_only_when_known() -> None:
 
     cost = resolve_cost_model("hl_base_taker")
     for symbol in (None, "ETH"):
-        evaluator = TrialEvaluator(bars, spec, "long", cost, False, calculate, symbol=symbol)
+        evaluator = TrialEvaluator(
+            bars, spec, "long", cost, ExecutionProfile(), calculate, symbol=symbol
+        )
         evaluator.measure({}, {"mode": "atr", "leverage": 2.0})
     assert "symbol" not in seen[0]
     assert seen[1]["symbol"] == "ETH"
@@ -1120,7 +1065,7 @@ def test_autotune_measures_every_trial_at_the_symbol_venue_cap(
 
     monkeypatch.setattr(autotune, "compute_trial_metrics", recording)
     result = autotune.run_optuna_autotune(
-        strategy_name="crown_stack_long",
+        strategy_name="test_sma_cross_long",
         symbol="ETH",
         timeframe="1m",
         lookback_days=30,

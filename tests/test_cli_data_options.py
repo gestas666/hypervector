@@ -14,8 +14,14 @@ class HistoryBoundaryReached(Exception):
 @pytest.mark.parametrize(
     ("command", "loader"),
     [
-        (["backtest", "run"], "hypervector.data.pipeline.load_research_history"),
-        (["tune", "strategy"], "hypervector.sweep.autotune.load_research_history"),
+        (
+            ["backtest", "run", "--strategy", "test_sma_cross_long"],
+            "hypervector.data.pipeline.load_research_history",
+        ),
+        (
+            ["tune", "strategy", "--strategy", "test_sma_cross_long"],
+            "hypervector.sweep.autotune.load_research_history",
+        ),
         (
             ["data", "book-align", "--book-path", "fixture.jsonl"],
             "hypervector.data.pipeline.load_research_history",

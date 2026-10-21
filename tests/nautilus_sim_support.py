@@ -25,9 +25,9 @@ from nautilus_trader.trading.strategy import Strategy
 from hypervector.data.hl_events import BookLevel, L2SnapshotEvent
 from hypervector.nautilus.bars import synthetic_btc_perp_instrument
 from hypervector.nautilus.hl_catalog import convert_hyperliquid_events
-from hypervector.nautilus.hypervelocity_sim import (
-    HypervelocitySimulationConfig,
-    build_hypervelocity_venue,
+from hypervector.nautilus.event_sim import (
+    EventSimulationConfig,
+    build_event_venue,
 )
 
 
@@ -193,10 +193,10 @@ def partial_fill_signature() -> tuple[tuple[float, float, float], ...]:
     instrument = synthetic_btc_perp_instrument()
     strategy = AggressiveLimitStrategy(instrument.id)
     try:
-        build_hypervelocity_venue(
+        build_event_venue(
             engine,
             init_cash=10_000.0,
-            config=HypervelocitySimulationConfig(
+            config=EventSimulationConfig(
                 submit_latency_ms=0,
                 cancel_latency_ms=0,
                 random_seed=11,

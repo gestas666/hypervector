@@ -73,17 +73,17 @@ def test_windowed_failure_reports_first_failing_bar(tmp_path: Path) -> None:
     assert first["bar_open"].startswith("2026-01-01T10:00")
 
 
-def test_hypervelocity_contract_violation_is_not_ok_with_zero_orders(
+def test_builder_rejection_is_not_ok_with_zero_orders(
     tmp_path: Path,
 ) -> None:
-    """Repro: leverage=20 hypervelocity export used to print ok:true, 0 orders."""
+    """Repro: params a builder rejects used to print ok:true with 0 orders."""
     export_dir = write_export(
         tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
-        params={"leverage": 20.0, "target_margin_pct": 12.0},
+        strategy="test_sma_cross_long",
+        params={"fast": 30, "slow": 10},
         timeframe="1m",
     )
-    with pytest.raises(Phase2TechnicalFailure, match="leverage must be 30.0"):
+    with pytest.raises(Phase2TechnicalFailure, match="fast must be < slow"):
         run_phase2_backtest(
             export_dir=export_dir,
             data_root=tmp_path / "data",
@@ -137,8 +137,8 @@ def test_check_rejects_unknown_strategy(tmp_path: Path) -> None:
 def test_check_signal_probe_flags_rejected_params(tmp_path: Path) -> None:
     export_dir = write_export(
         tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
-        params={"leverage": 20.0, "target_margin_pct": 12.0},
+        strategy="test_sma_cross_long",
+        params={"fast": 30, "slow": 10},
         timeframe="1m",
     )
     report = phase2_check_report(
@@ -146,7 +146,7 @@ def test_check_signal_probe_flags_rejected_params(tmp_path: Path) -> None:
     )
     assert report["ok"] is False
     assert report["signal_probe"]["ok"] is False
-    assert "leverage must be 30.0" in report["signal_probe"]["error"]
+    assert "fast must be < slow" in report["signal_probe"]["error"]
 
 
 def test_check_signal_probe_passes_valid_export(tmp_path: Path) -> None:

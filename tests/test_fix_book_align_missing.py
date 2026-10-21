@@ -3,31 +3,21 @@
 Regressions:
 - bars with no snapshot within tolerance (or with no book at all) received
   spread_bps=1.5, obi_5=0, depth 10/10, ratio 1.0 and so on, indistinguishable
-  from real microstructure, and the gate then treated them as real;
-- ``.zst`` snapshots were decompressed through ``shell=True`` with the path
-  interpolated in single quotes and a hard-coded Homebrew binary;
-- the SQLite connection leaked when the feature query failed.
+  from real microstructure, and the gate then treated them as real.
 """
 
 from __future__ import annotations
 
-import shutil
-import sqlite3
-import subprocess
-from pathlib import Path
-from typing import Any
 
 import numpy as np
 import pandas as pd
 import pytest
 
-import hypervector.data.book_align as book_align
 from hypervector.data.book_align import (
     BOOK_FEATURE_COLUMNS,
     align_orderbook_to_ohlcv,
     book_coverage_summary,
     gate_signals_by_orderbook,
-    load_l2_sqlite_feature_samples,
 )
 
 _T0 = 1_784_827_380_000  # bar timestamps, one minute apart
@@ -137,84 +127,3 @@ def test_gate_passes_signals_through_where_the_book_is_missing() -> None:
     assert gated.tolist() == [False, True, True, True]
 
 
-# --- sqlite / zstd loading --------------------------------------------------
-
-
-def _feature_db(path: Path, *, with_table: bool = True) -> None:
-    with sqlite3.connect(path) as conn:
-        if with_table:
-            conn.execute(
-                "CREATE TABLE feature_samples (coin TEXT, feature_time INTEGER, mid REAL,"
-                " micro_price REAL, spread_bps REAL, obi_5 REAL, obi_10 REAL,"
-                " bid_depth_10 REAL, ask_depth_10 REAL, aggressor_ratio_5s REAL,"
-                " cancel_rate_5s REAL)"
-            )
-            conn.execute(
-                "INSERT INTO feature_samples VALUES ('BTC', ?, 100, 100.01, 1, 0.1, 0.1, 5, 4, 0.5, 0.1)",
-                (_T0,),
-            )
-        else:
-            conn.execute("CREATE TABLE other (x INTEGER)")
-    conn.close()
-
-
-def test_sqlite_connection_is_closed_when_the_query_fails(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    db = tmp_path / "no_features.sqlite"
-    _feature_db(db, with_table=False)
-    opened: list[sqlite3.Connection] = []
-    real_connect = sqlite3.connect
-
-    def tracking_connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
-        conn = real_connect(*args, **kwargs)
-        opened.append(conn)
-        return conn
-
-    monkeypatch.setattr(book_align.sqlite3, "connect", tracking_connect)
-
-    with pytest.raises(Exception, match="feature_samples"):
-        load_l2_sqlite_feature_samples(db)
-
-    assert len(opened) == 1
-    with pytest.raises(sqlite3.ProgrammingError):
-        opened[0].execute("SELECT 1")
-
-
-def test_zstd_is_invoked_without_a_shell(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    src = tmp_path / "x.sqlite.zst"
-    src.write_bytes(b"not used")
-    seen: dict[str, Any] = {}
-
-    def fake_run(args: Any, **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
-        seen["args"] = args
-        seen["kwargs"] = kwargs
-        return subprocess.CompletedProcess(args, 1, stdout=b"", stderr=b"boom")
-
-    monkeypatch.setattr(book_align.subprocess, "run", fake_run)
-    monkeypatch.setattr(book_align.shutil, "which", lambda _name: "/usr/bin/true")
-
-    with pytest.raises(RuntimeError, match="zstd decompression failed: boom"):
-        load_l2_sqlite_feature_samples(src)
-
-    assert isinstance(seen["args"], list)
-    assert seen["args"][-2:] == ["--", str(src)]
-    assert not seen["kwargs"].get("shell")
-    assert not list(tmp_path.glob("*.sqlite")), "temp sqlite must be removed on failure"
-
-
-@pytest.mark.skipif(
-    shutil.which("zstd") is None and not Path("/opt/homebrew/bin/zstd").is_file(),
-    reason="zstd executable not installed",
-)
-def test_zst_path_with_a_single_quote_loads(tmp_path: Path) -> None:
-    db = tmp_path / "plain.sqlite"
-    _feature_db(db)
-    zstd = shutil.which("zstd") or "/opt/homebrew/bin/zstd"
-    quoted = tmp_path / "o'brien.sqlite.zst"
-    subprocess.run([zstd, "-q", "-o", str(quoted), "--", str(db)], check=True)
-
-    frame = load_l2_sqlite_feature_samples(quoted)
-
-    assert len(frame) == 1
-    assert frame["ts_ms"].iloc[0] == _T0

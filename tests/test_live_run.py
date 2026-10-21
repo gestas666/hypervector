@@ -93,7 +93,7 @@ class RecordingTransport:
         return {"status": "ok", "oid": "cancel-batch-1"}
 
 
-def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> Path:
+def _write_strict_export(root: Path, *, strategy: str = "test_sma_cross_short") -> Path:
     track = "downtrend" if "short" in strategy else "uptrend"
     return export_candidate(
         root / "exports",
@@ -200,17 +200,17 @@ def test_start_live_daemon_refuses_without_secrets_flag(tmp_path: Path):
     assert transport.calls == []
 
 
-def test_generic_live_daemon_refuses_hypervelocity_export(tmp_path: Path) -> None:
-    """Market-IOC live routing cannot execute the post-only strategy contract."""
+def test_generic_live_daemon_refuses_declared_post_only_entries(tmp_path: Path) -> None:
+    """Market-IOC live routing cannot execute a strategy that declares post-only entries."""
     from hypervector.live.runner import start_live_daemon
 
     export = _write_strict_export(
         tmp_path,
-        strategy="hypervelocity_1m_scalper_long",
+        strategy="test_managed_long",
     )
     transport = RecordingTransport()
 
-    with pytest.raises(RuntimeError, match="use hypervelocity-live-run"):
+    with pytest.raises(RuntimeError, match="declares post-only entries"):
         start_live_daemon(
             export_dir=export,
             data_root=tmp_path / "data",
@@ -327,7 +327,7 @@ def test_live_fill_engine_place_failure_stamps_error(tmp_path: Path):
         ),
         run_id="r1",
         export_id="e1",
-        strategy_name="crown_stack_short",
+        strategy_name="test_sma_cross_short",
         symbol="BTC",
         timeframe="1m",
         conviction=0.5,
@@ -368,7 +368,7 @@ def test_live_fill_engine_warm_no_place(tmp_path: Path):
         ),
         run_id="r1",
         export_id="e1",
-        strategy_name="crown_stack_short",
+        strategy_name="test_sma_cross_short",
         symbol="BTC",
         timeframe="1m",
         conviction=0.5,

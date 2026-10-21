@@ -9,7 +9,7 @@ from pathlib import Path
 
 from hypervector.regime.composite import classify_multitimeframe
 from hypervector.regime.snapshot_export import build_regime_snapshots
-from hypervector.strategies.hypervelocity_contract import faithful_regime_config
+from hypervector.regime.classifier import hyperliquid_native_regime_config
 
 
 def _bars(count: int = 240) -> pd.DataFrame:
@@ -29,7 +29,7 @@ def _bars(count: int = 240) -> pd.DataFrame:
 
 def test_snapshot_states_and_score_match_canonical_backend(tmp_path: Path) -> None:
     bars = _bars()
-    canonical = classify_multitimeframe(bars, faithful_regime_config()).iloc[-1]
+    canonical = classify_multitimeframe(bars, hyperliquid_native_regime_config()).iloc[-1]
 
     latest = build_regime_snapshots(bars, data_root=tmp_path, max_bars=1)[0]
 

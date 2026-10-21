@@ -2,27 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
 
 from hypervector.export.phase2 import export_candidate
-from hypervector.strategies.hypervelocity_profile import (
-    HypervelocityProfile,
-    load_hypervelocity_profile,
-)
-
-FAITHFUL_PROFILE = Path(__file__).resolve().parent / "fixtures" / "profiles" / (
-    "hypervelocity_shadow.toml"
-)
-_FAITHFUL_EXPORT = "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1"
+from synthetic_strategies import SYNTHETIC_SHORT
 
 
 def write_strict_export(
     root: Path,
     *,
-    strategy: str = "crown_stack_short",
+    strategy: str = SYNTHETIC_SHORT,
     timeframe: str = "1m",
     run_id: str = "paperfix1",
 ) -> Path:
@@ -62,8 +53,8 @@ def write_strict_export(
         },
         params={
             "strategy": strategy,
-            "bbwp_lookback": 100,
-            "bbwp_threshold": 20.0,
+            "fast": 5,
+            "slow": 20,
             "exit_mode": "fixed_rr",
             "role": track,
         },
@@ -76,14 +67,6 @@ def write_strict_export(
         candidate_id="paper_fix",
         strict=True,
     )
-
-
-def faithful_profile(tmp_path: Path, export: Path) -> HypervelocityProfile:
-    """Load the faithful profile pointed at a temporary export, models off."""
-    text = FAITHFUL_PROFILE.read_text(encoding="utf-8")
-    path = tmp_path / "profile.toml"
-    path.write_text(text.replace(_FAITHFUL_EXPORT, str(export)), encoding="utf-8")
-    return replace(load_hypervelocity_profile(path), metalabel_mode="off")
 
 
 def hl_bars(start: str, count: int, *, step: str = "1min", close: float = 100.0):

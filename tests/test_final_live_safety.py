@@ -143,13 +143,7 @@ def test_every_live_backend_refuses_while_the_generic_daemon_runs(
     from hypervector import runtime_lock
 
     live_root = tmp_path / "live"
-    backends = (
-        runtime_lock.bidirectional_live_runtime_lock,
-        runtime_lock.sol_live_runtime_lock,
-        runtime_lock.source_follow_live_runtime_lock,
-        runtime_lock.apex_mm_live_runtime_lock,
-        runtime_lock.hulk_smash_live_runtime_lock,
-    )
+    backends = (runtime_lock.bidirectional_live_runtime_lock,)
     with runtime_lock.generic_live_runtime_lock(live_root) as lock_path:
         assert lock_path == live_root / "generic_live" / "process.lock"
         for backend in backends:
@@ -171,13 +165,7 @@ def test_generic_lock_refuses_every_other_live_owner(tmp_path: Path) -> None:
     from hypervector import runtime_lock
 
     live_root = tmp_path / "live"
-    owners = (
-        "bidirectional_cohort",
-        "hulk_smash",
-        "sol_range_onset_canary",
-        "apex_regime_mm",
-        "hypervelocity_source_follow",
-    )
+    owners = ("bidirectional_cohort",)
     for owner in owners:
         with runtime_lock._runtime_lock(live_root / owner / "process.lock", owner):
             with pytest.raises(runtime_lock.RuntimeLockError):

@@ -257,26 +257,34 @@ def test_indicators_are_uncached_outside_a_cache_scope() -> None:
 
 def test_grid_search_results_match_uncached_per_trial_evaluation() -> None:
     from hypervector.data.sources import fixture_ohlcv
-    from hypervector.strategies.registry import clear_registry, get_strategy
-    from hypervector.strategies.trend_ride import register_trend_ride
+    from hypervector.strategies.registry import StrategySpec
     from hypervector.sweep.costs import resolve_cost_model
     from hypervector.sweep.metrics import compute_trial_metrics
     from hypervector.sweep.search import run_grid_search
 
-    clear_registry()
-    try:
-        register_trend_ride()
-        spec = get_strategy("trend_ride_long")
-        df = fixture_ohlcv(n_bars=1_200, drift=4.0, wave_period=80)
-        grid = {"st_atr": [10], "st_mult": [2.5, 3.0], "chop_max": [45.0, 60.0]}
-        cost = resolve_cost_model("hl_base_taker")
-        results = run_grid_search(df, spec, param_grid=grid, cost=cost)
-        assert all(r.status == "ok" for r in results)
-        for r in results:
-            build = {k: v for k, v in r.params.items() if k != "exit_mode"}
-            entries, exits, direction = spec.build_signals(df, **build)
-            fresh = compute_trial_metrics(df["close"], entries, exits, direction=direction, df=df, cost=cost)
-            assert r.metrics["net_pnl"] == fresh["net_pnl"]
-            assert r.metrics["trade_count"] == fresh["trade_count"]
-    finally:
-        clear_registry()
+    def supertrend_chop_long(
+        df: pd.DataFrame, st_atr: int = 10, st_mult: float = 3.0, chop_max: float = 60.0
+    ):
+        """Test builder over cached indicators (supertrend, choppiness)."""
+        _, trend = ind.supertrend(
+            df["high"], df["low"], df["close"], atr_period=st_atr, multiplier=st_mult
+        )
+        chop = ind.choppiness_index(df["high"], df["low"], df["close"], 14)
+        turned_up = (trend == 1) & (trend.shift(1) == -1)
+        turned_down = (trend == -1) & (trend.shift(1) == 1)
+        entries = (turned_up & (chop < chop_max)).fillna(False)
+        return entries.astype(bool), turned_down.fillna(False).astype(bool), "long"
+
+    spec = StrategySpec("test_supertrend_chop_long", "uptrend", {}, supertrend_chop_long)
+    df = fixture_ohlcv(n_bars=1_200, drift=0.5, wave_period=80)
+    grid = {"st_atr": [10], "st_mult": [2.5, 3.0], "chop_max": [45.0, 60.0]}
+    cost = resolve_cost_model("hl_base_taker")
+    results = run_grid_search(df, spec, param_grid=grid, cost=cost)
+    assert all(r.status == "ok" for r in results)
+    assert any(r.metrics["trade_count"] > 0 for r in results)
+    for r in results:
+        build = {k: v for k, v in r.params.items() if k != "exit_mode"}
+        entries, exits, direction = spec.build_signals(df, **build)
+        fresh = compute_trial_metrics(df["close"], entries, exits, direction=direction, df=df, cost=cost)
+        assert r.metrics["net_pnl"] == fresh["net_pnl"]
+        assert r.metrics["trade_count"] == fresh["trade_count"]

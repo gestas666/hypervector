@@ -33,7 +33,6 @@ def test_resolve_uses_data_root_models_metalabel(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.delenv(ENV_ROOT, raising=False)
-    monkeypatch.delenv("HYPERVECTOR_IMPULSE_BTC_ROOT", raising=False)
     data = tmp_path / "data"
     bundle = data / "models" / "metalabel"
     bundle.mkdir(parents=True)
@@ -48,7 +47,6 @@ def test_probe_metalabel_reports_loadable_fields(
     from hypervector.ml.metalabel import probe_metalabel
 
     monkeypatch.delenv(ENV_ROOT, raising=False)
-    monkeypatch.delenv("HYPERVECTOR_IMPULSE_BTC_ROOT", raising=False)
     data = tmp_path / "data"
     bundle = data / "models" / "metalabel"
     bundle.mkdir(parents=True)
@@ -58,17 +56,6 @@ def test_probe_metalabel_reports_loadable_fields(
     assert p["model_present"] is True
     # loadable may be False without lightgbm parseable model; root still resolved
     assert p["bundle_root"] == str(bundle.resolve())
-
-
-def test_resolve_accepts_legacy_env(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    root = tmp_path / "bundle"
-    root.mkdir()
-    (root / "metalabel_lgbm.txt").write_text("tree", encoding="utf-8")
-    monkeypatch.delenv(ENV_ROOT, raising=False)
-    monkeypatch.setenv("HYPERVECTOR_IMPULSE_BTC_ROOT", str(root))
-    assert resolve_metalabel_root() == root.resolve()
 
 
 def test_from_env_missing_root_raises(
@@ -201,18 +188,8 @@ def test_predict_missing_feature_raises(
 
 
 def test_real_bundle_smoke_optional() -> None:
-    """Optional smoke: load any real local metalabel bundle if present."""
-    candidates = [
-        Path(
-            "/Users/gestas/Prototypes/hypertrader/backend/app/backtest/"
-            "impulse_metalabel/models"
-        ),
-        Path("/Users/gestas/dev/hyper-pi/services/ml-service/models/impulse-mr"),
-        Path(
-            "/Users/gestas/dev/hyper-pi/services/ml-service/"
-            "external-strategies/impulse_1m_btc/models"
-        ),
-    ]
+    """Optional smoke: load the project's own metalabel bundle if present."""
+    candidates = [Path(__file__).resolve().parents[1] / "data" / "models" / "metalabel"]
     root = next(
         (p for p in candidates if (p / "metalabel_lgbm.txt").is_file()),
         None,

@@ -13,6 +13,14 @@ pytest.register_assert_rewrite(
 
 
 @pytest.fixture(autouse=True)
+def register_synthetic_strategies() -> None:
+    """Register the test-only strategy family; src/ registers none."""
+    import synthetic_strategies
+
+    synthetic_strategies.register_family()
+
+
+@pytest.fixture(autouse=True)
 def forbid_cli_process_replacement(monkeypatch: pytest.MonkeyPatch) -> None:
     """An operation command must never replace the pytest process."""
     from hypervector.commands import operations

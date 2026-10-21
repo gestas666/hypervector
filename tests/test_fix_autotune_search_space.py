@@ -5,8 +5,8 @@ Regression tests:
   book path was given, so 14 strategies failed every trial with TypeError, and a
   missing book file was silently ignored;
 - the Karpathy adaptive phase only moved float grid values and ``sl_atr_mult``,
-  never deduplicated, and Hypervelocity on a non-BTC symbol failed every trial
-  only after the whole search had run.
+  never deduplicated, and a declared leverage above a symbol's venue cap failed
+  every trial only after the whole search had run.
 """
 
 from __future__ import annotations
@@ -21,23 +21,67 @@ import pytest
 
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.strategies import register_all_strategies
-from hypervector.strategies.registry import get_strategy
+from hypervector.strategies.registry import (
+    ExecutionProfile,
+    StrategySpec,
+    get_strategy,
+    register,
+)
 from hypervector.sweep import autotune, autotune_search
 from hypervector.sweep.autotune_evaluation import TrialEvaluator
+from hypervector.sweep.autotune_sampling import strategy_managed_exit_dict
 from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.metrics import compute_trial_metrics
+from synthetic_strategies import (
+    MANAGED_EXECUTION,
+    MANAGED_LONG,
+    SYNTHETIC_LONG,
+    SYNTHETIC_SHORT,
+    sma_cross_signals,
+)
 
 _BOOK_KEYS = {"book_gate", "max_spread_bps", "min_obi"}
-_BOOK_STRATEGIES = {
-    "crown_stack_long",
-    "crown_stack_short",
-    "pine_composite_long",
-    "pine_composite_short",
-    "oi_divergence_long",
-    "oi_divergence_short",
-    "funding_momentum_long",
-    "funding_momentum_short",
-}
+_BOOK_STRATEGIES = {SYNTHETIC_LONG, SYNTHETIC_SHORT}
+_NO_BOOK_LONG = "test_no_book_long"
+_SINGLE_MANAGED = "test_single_managed_long"
+_HIGH_LEVERAGE = "test_high_leverage_long"
+
+
+@pytest.fixture(autouse=True)
+def _local_specs() -> None:
+    """Specs this module needs beyond the shared synthetic family."""
+
+    def no_book(df: pd.DataFrame, fast: int = 5, slow: int = 20):
+        return sma_cross_signals(df, fast=fast, slow=slow, direction="long")
+
+    register(
+        StrategySpec(
+            name=_NO_BOOK_LONG,
+            role="uptrend",
+            param_grid={"fast": [5, 10], "slow": [20, 30]},
+            build_signals=no_book,
+        )
+    )
+    register(
+        StrategySpec(
+            name=_SINGLE_MANAGED,
+            role="uptrend",
+            param_grid={"fast": [5], "slow": [20]},
+            build_signals=no_book,
+            execution=MANAGED_EXECUTION,
+        )
+    )
+    register(
+        StrategySpec(
+            name=_HIGH_LEVERAGE,
+            role="uptrend",
+            param_grid={"fast": [5], "slow": [20]},
+            build_signals=no_book,
+            execution=ExecutionProfile(
+                fixed_margin_fraction=0.7, leverage=30.0, strategy_managed_exits=True
+            ),
+        )
+    )
 
 
 def _stub_metrics(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -64,7 +108,9 @@ def test_missing_book_file_fails_before_any_read(
     )
     with pytest.raises(FileNotFoundError, match="book data path"):
         autotune.run_autotune(
-            data_root=tmp_path, book_data_path=tmp_path / "missing.jsonl"
+            data_root=tmp_path,
+            strategy_name=SYNTHETIC_LONG,
+            book_data_path=tmp_path / "missing.jsonl",
         )
 
 
@@ -95,11 +141,11 @@ class _RecordingTrial:
 @pytest.mark.parametrize(
     ("strategy", "columns", "book_path", "expected"),
     [
-        ("trend_ride_long", True, "book.jsonl", False),
-        ("ma_cross_long", True, "book.jsonl", False),
-        ("crown_stack_long", True, "book.jsonl", True),
-        ("crown_stack_long", False, "book.jsonl", False),
-        ("oi_divergence_short", True, None, True),
+        (_NO_BOOK_LONG, True, "book.jsonl", False),
+        (MANAGED_LONG, True, "book.jsonl", False),
+        (SYNTHETIC_LONG, True, "book.jsonl", True),
+        (SYNTHETIC_LONG, False, "book.jsonl", False),
+        (SYNTHETIC_SHORT, True, None, True),
     ],
 )
 def test_optuna_book_dimensions_need_support_and_aligned_columns(
@@ -112,14 +158,14 @@ def test_optuna_book_dimensions_need_support_and_aligned_columns(
     captured: dict[str, object] = {}
     evaluator = SimpleNamespace(
         strategy=get_strategy(strategy),
-        hypervelocity=False,
+        execution=get_strategy(strategy).execution,
         bars=bars,
         evaluate=lambda params, exits, number: captured.update(params) or 0.0,
     )
     settings = SimpleNamespace(symbol="BTC", book_data_path=book_path)
     tools = SimpleNamespace(
         clamp=lambda params, _symbol: params,
-        optuna_exits=lambda _trial, hypervelocity: {"mode": "atr"},
+        optuna_exits=lambda _trial, execution: {"mode": "atr"},
     )
     trial = _RecordingTrial()
 
@@ -132,7 +178,7 @@ def test_optuna_book_dimensions_need_support_and_aligned_columns(
 def test_optuna_with_book_data_runs_for_a_strategy_without_book_support(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """trend_ride rejects book kwargs; the search must not inject them."""
+    """A builder that rejects book kwargs must never be handed them."""
     import hypervector.data.book_align as book_align
 
     bars = fixture_ohlcv(n_bars=160, drift=1.0)
@@ -149,7 +195,7 @@ def test_optuna_with_book_data_runs_for_a_strategy_without_book_support(
 
     result = autotune.run_autotune(
         data_root=tmp_path,
-        strategy_name="trend_ride_long",
+        strategy_name=_NO_BOOK_LONG,
         sampler="optuna",
         n_trials=3,
         book_data_path=book,
@@ -237,7 +283,7 @@ def test_exit_mutation_moves_the_fields_the_mode_uses(mode: str, moving: set[str
 
 
 def test_strategy_managed_exits_are_never_mutated() -> None:
-    elite = autotune._hypervelocity_exit_dict()
+    elite = strategy_managed_exit_dict(MANAGED_EXECUTION)
     rng = np.random.default_rng(5)
     assert all(autotune_search._mutate_exits(rng, elite) == elite for _ in range(50))
 
@@ -251,7 +297,7 @@ def test_karpathy_never_repeats_an_effective_configuration(
 
     result = autotune.run_autotune(
         data_root=tmp_path,
-        strategy_name="ma_cross_long",
+        strategy_name=SYNTHETIC_LONG,
         n_trials=40,
         train_fraction=1.0,
         no_export=True,
@@ -261,10 +307,10 @@ def test_karpathy_never_repeats_an_effective_configuration(
     register_all_strategies()
     evaluator = TrialEvaluator(
         bars,
-        get_strategy("ma_cross_long"),
+        get_strategy(SYNTHETIC_LONG),
         "long",
         resolve_cost_model("hl_base_taker"),
-        False,
+        ExecutionProfile(),
         compute_trial_metrics,
     )
     keys = [
@@ -282,13 +328,13 @@ def test_karpathy_never_repeats_an_effective_configuration(
 def test_discrete_space_stops_early_and_reports_exhaustion(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Hypervelocity has exactly one configuration; 99 repeats are not trials."""
+    """A one-point grid with fixed managed exits has exactly one configuration."""
     bars = fixture_ohlcv(n_bars=180, drift=1.0)
     monkeypatch.setattr(autotune, "load_research_history", lambda *_a, **_k: (bars, {}))
 
     result = autotune.run_autotune(
         data_root=tmp_path,
-        strategy_name="hypervelocity_1m_scalper_long",
+        strategy_name=_SINGLE_MANAGED,
         n_trials=5,
         train_fraction=1.0,
         no_export=True,
@@ -305,7 +351,7 @@ def test_discrete_space_stops_early_and_reports_exhaustion(
 
 
 @pytest.mark.parametrize("symbol", ["SOL", "ETH", "kPEPE"])
-def test_hypervelocity_contract_leverage_is_checked_before_reads(
+def test_declared_leverage_is_checked_before_reads(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, symbol: str
 ) -> None:
     monkeypatch.setattr(
@@ -316,6 +362,6 @@ def test_hypervelocity_contract_leverage_is_checked_before_reads(
     with pytest.raises(ValueError, match="leverage"):
         autotune.run_autotune(
             data_root=tmp_path,
-            strategy_name="hypervelocity_1m_scalper_long",
+            strategy_name=_HIGH_LEVERAGE,
             symbol=symbol,
         )

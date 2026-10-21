@@ -48,9 +48,9 @@ def _short_window(monkeypatch: pytest.MonkeyPatch, max_lookback: int) -> None:
 @pytest.mark.parametrize(
     ("strategy", "exit_mode", "params"),
     [
-        ("ma_cross_long", "fixed_rr", {"fast": 5, "slow": 20}),
-        ("crown_stack_long", "trail", {"bbwp_lookback": 50, "bbwp_threshold": 50.0}),
-        ("donchian_trend_short", "atr", {}),
+        ("test_sma_cross_long", "fixed_rr", {"fast": 5, "slow": 20}),
+        ("test_sma_cross_long", "trail", {"fast": 10, "slow": 30}),
+        ("test_sma_cross_short", "atr", {}),
     ],
 )
 def test_precomputed_matches_windowed_exactly(
@@ -143,7 +143,7 @@ def test_long_replay_runs_within_budget(tmp_path: Path) -> None:
     """6,000 x 15m bars (62 days): the per-bar rebuild path took minutes."""
     export_dir = write_export(
         tmp_path,
-        strategy="crown_stack_long",
+        strategy="test_sma_cross_long",
         exit_mode="trail",
         params={"bbwp_lookback": 50, "bbwp_threshold": 50.0},
     )

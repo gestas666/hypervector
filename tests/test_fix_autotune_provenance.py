@@ -20,7 +20,6 @@ import pandas as pd
 import pytest
 
 from hypervector.data.sources import fixture_ohlcv
-from hypervector.regime import tuning
 from hypervector.sweep import autotune
 from hypervector.sweep.autotune_models import SEARCH_SEED
 from hypervector.sweep.costs import resolve_cost_model
@@ -53,7 +52,7 @@ def test_board_carries_reproduction_provenance(
 
     result = autotune.run_autotune(
         data_root=tmp_path,
-        strategy_name="ma_cross_long",
+        strategy_name="test_sma_cross_long",
         n_trials=4,
         fee_model="hl_vip1_taker",
         train_fraction=0.75,
@@ -96,7 +95,7 @@ def test_hybrid_is_an_explicit_alias_recorded_as_requested(
 
     result = autotune.run_autotune(
         data_root=tmp_path,
-        strategy_name="ma_cross_long",
+        strategy_name="test_sma_cross_long",
         sampler="hybrid",
         n_trials=2,
         train_fraction=1.0,
@@ -180,41 +179,3 @@ def _regime_inputs() -> tuple[pd.DataFrame, pd.DataFrame]:
         }
     )
     return bars, positions
-
-
-def test_regime_tuning_board_is_durable_and_exclusive(tmp_path: Path) -> None:
-    bars, positions = _regime_inputs()
-    candidates = tuning.generate_candidate_parameters(n_trials=2, seed=11)
-    board = tuning.autotune_regime_candidates(
-        bars, positions, candidates, train_fraction=2.0 / 3.0, forward_horizon=5
-    )
-    document = tuning.regime_tuning_document(
-        board,
-        bars=bars,
-        data_provenance={"source": "fixture"},
-        seed=11,
-        n_trials=2,
-        train_fraction=2.0 / 3.0,
-        forward_horizon=5,
-        target_price_fraction=0.002,
-    )
-
-    first = tuning.publish_regime_tuning_board(document, tmp_path / "logs" / "research")
-    second = tuning.publish_regime_tuning_board(document, tmp_path / "logs" / "research")
-
-    assert first != second
-    assert first.parent == second.parent == tmp_path / "logs" / "research"
-    saved = json.loads(first.read_text())
-    assert saved["schema"] == "regime_tuning_board/v1"
-    assert saved["report_only"] is True
-    assert saved["seed"] == 11
-    assert saved["n_trials_requested"] == 2
-    assert saved["train_fraction"] == pytest.approx(2.0 / 3.0)
-    assert saved["data_provenance"] == {"source": "fixture"}
-    assert saved["data_window"]["bar_count"] == 300
-    assert re.fullmatch(r"[0-9a-f]{64}", saved["code_identity"]["source_tree_sha256"])
-    assert saved["tuning_board"]["selection_basis"] == "train_only"
-    fixed = tuning.publish_regime_tuning_board(document, tmp_path / "x", name="fixed.json")
-    assert fixed == tmp_path / "x" / "fixed.json"
-    with pytest.raises(FileExistsError):
-        tuning.publish_regime_tuning_board(document, tmp_path / "x", name="fixed.json")

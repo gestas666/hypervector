@@ -48,7 +48,7 @@ def _write_phase15_export(root: Path) -> Path:
             "data_provenance": {"sources": {"fixture": 200}},
         },
         params={
-            "strategy": "crown_stack_short",
+            "strategy": "test_sma_cross_short",
             "bbwp_lookback": 252,
             "bbwp_threshold": 20.0,
             "exit_mode": "atr",
@@ -59,14 +59,14 @@ def _write_phase15_export(root: Path) -> Path:
             "sharpe": -0.5,
             "trade_count": 10,
         },
-        candidate_id="stub_crown",
+        candidate_id="stub_synthetic",
     )
 
 
 def test_load_strategy_loadout_from_fixture_export(tmp_path: Path):
     export_dir = _write_phase15_export(tmp_path)
     loadout = load_strategy_loadout(export_dir, strict=True)
-    assert loadout.strategy_name == "crown_stack_short"
+    assert loadout.strategy_name == "test_sma_cross_short"
     assert loadout.role == "downtrend"
     assert loadout.symbol == "BTC"
     assert loadout.timeframe == "1m"
@@ -107,7 +107,7 @@ def test_build_phase2_stub_config_offline(tmp_path: Path):
     assert stub.catalog_path == (data_root / "nautilus" / "backtest").resolve()
     assert stub.log_path == (data_root / "logs" / "nautilus").resolve()
     d = stub.to_dict()
-    assert d["loadout"]["strategy_name"] == "crown_stack_short"
+    assert d["loadout"]["strategy_name"] == "test_sma_cross_short"
     assert d["venue"] == "HYPERLIQUID"
     assert any("paper run" in n for n in d["notes"])
     assert any("live start" in n for n in d["notes"])

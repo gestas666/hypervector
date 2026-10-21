@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import threading
 from pathlib import Path
 
 import pytest
@@ -16,12 +15,8 @@ from hypervector.paper.ledger import (
     PaperLedgerError,
     append_paper_decision,
 )
-from hypervector.paper.maker_execution import PostOnlyLimitFillModel
-from hypervector.paper.peak_observer_persistence import load_peak_observer_state
 from hypervector.paper.report import report_from_data_root
-from hypervector.paper.resume import ShadowResumeError, load_shadow_portfolio_resume
 from hypervector.paper.session import PaperSession
-from hypervector.shadow_reset import reset_shadow_state
 
 FRAGMENT = b'{"feed_ts":"2026-07-26T21:00:00Z","action":"regime_observ'
 
@@ -105,7 +100,7 @@ def test_append_creates_no_live_tree_and_refuses_symlinked_ledger(
 
 
 def test_readers_tolerate_only_a_torn_final_line(tmp_path: Path) -> None:
-    export = write_strict_export(tmp_path, strategy="hypervelocity_1m_scalper_long")
+    export = write_strict_export(tmp_path)
     root = tmp_path / "data"
     original = PaperSession(export_dir=export, data_root=root, execution_mode="shadow")
     original.ensure_session_identity()
@@ -115,56 +110,17 @@ def test_readers_tolerate_only_a_torn_final_line(tmp_path: Path) -> None:
         side="buy",
         qty=0.01,
         mark_px=100.0,
-        fill_model=PostOnlyLimitFillModel(),
     )
     path = _ledger(root)
     with path.open("ab") as handle:
         handle.write(FRAGMENT)
 
-    resumed = load_shadow_portfolio_resume(
-        path, symbol="BTC", timeframe="1m", expected_spec=None
-    )
-    assert resumed is not None and resumed.position_qty == pytest.approx(0.01)
     report = report_from_data_root(root)
     assert report["market_fills"] == 1
     assert report["torn_tail_skipped"] is True
-    assert (
-        load_peak_observer_state(path, run_id=original.run_id, candidate_id="x")
-        is None
-    )
 
     # Interior corruption stays fail-closed.
     lines = path.read_bytes().split(b"\n")
     path.write_bytes(lines[0] + b"\n" + FRAGMENT + b"\n" + lines[1] + b"\n")
-    with pytest.raises(ShadowResumeError, match="line 2"):
-        load_shadow_portfolio_resume(
-            path, symbol="BTC", timeframe="1m", expected_spec=None
-        )
     with pytest.raises(ValueError, match="invalid JSONL"):
         report_from_data_root(root)
-
-
-def test_shadow_reset_waits_for_the_ledger_append_lock(tmp_path: Path) -> None:
-    import fcntl
-    import os
-
-    root = tmp_path / "data"
-    path = append_paper_decision(root, {"feed_ts": "t0", "action": "close"})
-    fd = os.open(path, os.O_RDWR)
-    fcntl.flock(fd, fcntl.LOCK_EX)
-    done = threading.Event()
-
-    def reset() -> None:
-        reset_shadow_state(root, confirmed=True)
-        done.set()
-
-    worker = threading.Thread(target=reset)
-    worker.start()
-    try:
-        assert not done.wait(0.3)
-    finally:
-        fcntl.flock(fd, fcntl.LOCK_UN)
-        os.close(fd)
-    worker.join(5.0)
-    assert done.is_set()
-    assert path.read_text() == ""

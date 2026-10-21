@@ -287,10 +287,7 @@ def test_environment_loading_follows_the_spec(
     if "oxa" in declared:
         assert ("OXA_API_KEY",) in unarmed
     if "models" in declared:
-        assert (
-            "HYPERVECTOR_IMPULSE_BTC_ROOT",
-            "HYPERVECTOR_METALABEL_ROOT",
-        ) in unarmed
+        assert ("HYPERVECTOR_METALABEL_ROOT",) in unarmed
     if not declared:
         assert unarmed == []
     if "live-credentials" in declared:

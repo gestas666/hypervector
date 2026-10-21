@@ -64,7 +64,7 @@ def _write_strict_export(root: Path) -> Path:
             "data_provenance": {"sources": {"fixture": 200}},
         },
         params={
-            "strategy": "crown_stack_long",
+            "strategy": "test_sma_cross_long",
             "bbwp_lookback": 100,
             "bbwp_threshold": 20.0,
             "exit_mode": "fixed_rr",
@@ -75,7 +75,7 @@ def _write_strict_export(root: Path) -> Path:
             "sharpe": 0.5,
             "trade_count": 5,
         },
-        candidate_id="actor_crown",
+        candidate_id="actor_synthetic",
         strict=True,
     )
 
@@ -119,13 +119,13 @@ def test_strategy_config_from_loadout(tmp_path: Path):
     assert cfg.costs is not None
     assert cfg.costs["taker_fee"] == 0.00035
     assert cfg.conviction == 0.5
-    assert cfg.loadout_summary["strategy_name"] == "crown_stack_long"
+    assert cfg.loadout_summary["strategy_name"] == "test_sma_cross_long"
     assert cfg.loadout_summary["exit_mode"] == "fixed_rr"
 
 
 def test_config_from_loadout_overrides_instrument_and_conviction():
     loadout = StrategyLoadout(
-        strategy_name="crown_stack_short",
+        strategy_name="test_sma_cross_short",
         role="downtrend",
         params={"bbwp_lookback": 50},
         meta={},
@@ -149,7 +149,7 @@ def test_config_from_loadout_overrides_instrument_and_conviction():
 
 def test_config_fills_exits_mode_from_exit_mode_when_exits_sparse():
     loadout = StrategyLoadout(
-        strategy_name="crown_stack_long",
+        strategy_name="test_sma_cross_long",
         role=None,
         params={},
         meta={},
@@ -166,9 +166,9 @@ def test_config_fills_exits_mode_from_exit_mode_when_exits_sparse():
     assert cfg.exits["sl_pct"] == 0.02
 
 
-def test_hypervelocity_uses_only_strategy_emitted_tp_exit() -> None:
-    assert _uses_strategy_exits_only("hypervelocity_1m_scalper_long") is True
-    assert _uses_strategy_exits_only("crown_stack_long") is False
+def test_declared_strategy_managed_exits_use_only_strategy_exits() -> None:
+    assert _uses_strategy_exits_only("test_managed_long") is True
+    assert _uses_strategy_exits_only("test_sma_cross_long") is False
 
 
 def test_bar_ohlcv_record_and_buffer_to_df():
@@ -275,7 +275,7 @@ def test_strategy_instantiates_and_does_not_touch_signals_parquet(tmp_path: Path
         bar_type="BTC-PERP.HYPERLIQUID-1-MINUTE-LAST-EXTERNAL",
     )
     strategy = HypervectorStrategy(config=cfg)
-    assert strategy.config.strategy_name == "crown_stack_long"
+    assert strategy.config.strategy_name == "test_sma_cross_long"
     assert strategy.execution_mode == "phase2_historical"
     assert strategy.max_lookback == DEFAULT_MAX_LOOKBACK
 
@@ -291,7 +291,7 @@ def test_buffer_intent_path_uses_registry_not_parquet(tmp_path: Path):
     )
     strategy = HypervectorStrategy(config=cfg)
 
-    # Build enough synthetic bars for crown_stack lookbacks (bbwp_lookback=100).
+    # Build enough synthetic bars for the SMA lookbacks.
     for i in range(250):
         px = 100.0 + (i % 20) * 0.5
         bar = _synthetic_bar(

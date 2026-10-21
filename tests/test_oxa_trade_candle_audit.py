@@ -27,10 +27,6 @@ from hypervector.data.oxa_trades import (
     TRADE_NORMALIZATION_VERSION,
     trade_output_directory,
 )
-from hypervector.research.hypertrader_source_adapter import (
-    load_hyperliquid_candles,
-    resample_hyperliquid_5m,
-)
 
 
 def test_trade_candle_audit_marks_only_incomplete_execution_minutes(
@@ -260,8 +256,22 @@ def test_reconstruction_bundle_is_immutable_and_source_bound(tmp_path: Path) -> 
     assert manifest["input_candle"] == file_evidence(candles)
     assert manifest["trade_manifest_fingerprint"] == report.trade_manifest_fingerprint
     assert manifest["files"]["candles.parquet"] == file_evidence(stored)
-    loaded = load_hyperliquid_candles([stored])
-    assert len(resample_hyperliquid_5m(loaded)) == 12
+    loaded = pd.read_parquet(stored)
+    stamps = pd.DatetimeIndex(
+        pd.to_datetime(loaded["timestamp"] if "timestamp" in loaded else loaded.index, utc=True)
+    )
+    assert len(stamps) == 60
+    assert stamps.to_series().diff().iloc[1:].eq(pd.Timedelta(minutes=1)).all()
+    assert (
+        loaded[["open", "high", "low", "close", "volume"]]
+        .reset_index(drop=True)
+        .set_index(stamps)
+        .resample("5min", label="left", closed="left")
+        .size()
+        .eq(5)
+        .sum()
+        == 12
+    )
     with pytest.raises(FileExistsError, match="already exists"):
         store_reconstructed_trade_candles(config, candles, output)
 

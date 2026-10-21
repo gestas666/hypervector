@@ -83,7 +83,7 @@ def test_validate_invalid_tp_sl_mode(tmp_path: Path):
         tmp_path / "exports",
         run_id="badmode",
         meta=_phase15_meta(tp_sl_mode="yolo"),
-        params={"strategy": "crown_stack_short"},
+        params={"strategy": "test_sma_cross_short"},
         metrics={"net_pnl": 0.0},
         candidate_id="badmode",
         validate=False,
@@ -98,14 +98,14 @@ def test_validate_strict_requires_phase15_fields(tmp_path: Path):
         tmp_path / "exports",
         run_id="min",
         meta={"symbol": "BTC", "timeframe": "1m"},
-        params={"strategy": "ma_cross_long"},
+        params={"strategy": "test_sma_cross_long"},
         metrics={"net_pnl": 1.0},
         candidate_id="min",
     )
     # non-strict: basic fields only
     report = validate_export_dir(out, strict=False)
     assert report["ok"] is True
-    assert report["strategy"] == "ma_cross_long"
+    assert report["strategy"] == "test_sma_cross_long"
 
     with pytest.raises(ExportSchemaError) as ei:
         validate_export_dir(out, strict=True)
@@ -123,7 +123,7 @@ def test_export_write_round_trip_validates(tmp_path: Path):
         run_id="rt01",
         meta=_phase15_meta(),
         params={
-            "strategy": "crown_stack_short",
+            "strategy": "test_sma_cross_short",
             "bbwp_lookback": 252,
             "bbwp_threshold": 20.0,
         },
@@ -138,7 +138,7 @@ def test_export_write_round_trip_validates(tmp_path: Path):
     report = validate_export_dir(out, strict=True)
     assert report["ok"] is True
     assert report["schema_version"] == EXPORT_SCHEMA_VERSION
-    assert report["strategy"] == "crown_stack_short"
+    assert report["strategy"] == "test_sma_cross_short"
     assert report["run_id"] == "rt01"
     assert report["has_costs"] is True
     assert report["has_risk"] is True
@@ -147,7 +147,7 @@ def test_export_write_round_trip_validates(tmp_path: Path):
 
     meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
     assert meta["schema_version"] == EXPORT_SCHEMA_VERSION
-    assert meta["strategy"] == "crown_stack_short"
+    assert meta["strategy"] == "test_sma_cross_short"
 
 
 def test_validate_bad_costs_shape(tmp_path: Path):

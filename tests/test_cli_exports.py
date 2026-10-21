@@ -40,7 +40,7 @@ def _bundle(
     *,
     created: str | None = "2026-10-01T00:00:00+00:00",
     strict: bool = True,
-    strategy: str = "crown_stack_long",
+    strategy: str = "test_sma_cross_long",
     symbol: str = "BTC",
     timeframe: str = "1m",
 ) -> Path:
@@ -99,8 +99,8 @@ def test_resolve_export_accepts_a_candidate_id_under_the_data_root(
     tmp_path: Path,
 ) -> None:
     data = tmp_path / "data"
-    bundle = _bundle(data / "exports", "uptrend_crown_stack_long_abc")
-    assert resolve_export("uptrend_crown_stack_long_abc", data) == bundle.resolve()
+    bundle = _bundle(data / "exports", "uptrend_test_sma_cross_long_abc")
+    assert resolve_export("uptrend_test_sma_cross_long_abc", data) == bundle.resolve()
 
 
 def test_latest_is_the_newest_strictly_valid_bundle(tmp_path: Path) -> None:
@@ -223,13 +223,13 @@ def test_export_list_filters_and_never_creates_directories(
     data = tmp_path / "data"
     _bundle(data / "exports", "btc", symbol="BTC", timeframe="5m")
     _bundle(data / "exports", "eth", symbol="ETH", timeframe="5m")
-    _bundle(data / "exports", "short", strategy="crown_stack_short", symbol="ETH")
+    _bundle(data / "exports", "short", strategy="test_sma_cross_short", symbol="ETH")
     argv = ["--data-root", str(data), "export", "list", "--symbol", "ETH"]
     assert main([*argv, "--timeframe", "5m"]) == 0
     assert [
         e["candidate_id"] for e in json.loads(capsys.readouterr().out)["exports"]
     ] == ["eth"]
-    assert main([*argv, "--strategy", "crown_stack_short"]) == 0
+    assert main([*argv, "--strategy", "test_sma_cross_short"]) == 0
     assert [
         e["candidate_id"] for e in json.loads(capsys.readouterr().out)["exports"]
     ] == ["short"]
@@ -246,7 +246,7 @@ def test_export_show_reports_contents_and_strict_validation(
     assert report["export_dir"] == str((data / "exports" / "good").resolve())
     assert report["strict_valid"] is True
     assert report["meta"]["symbol"] == "BTC"
-    assert report["params"]["strategy"] == "crown_stack_long"
+    assert report["params"]["strategy"] == "test_sma_cross_long"
     assert report["metrics"]["net_pnl"] == -12.5
     # Showing an invalid bundle still works; validity is reported, not gated.
     assert main(["--data-root", str(data), "export", "show", "--export", "loose"]) == 0
@@ -322,7 +322,7 @@ def _row(
     *,
     run_id: str = "r1",
     track: str = "uptrend",
-    strategy: str = "crown_stack_long",
+    strategy: str = "test_sma_cross_long",
     symbol: str = "BTC",
     timeframe: str = "1m",
     apply_costs: bool = True,
@@ -355,7 +355,7 @@ def test_selection_filters_by_every_given_field() -> None:
         _row(1, 90.0, symbol="ETH"),
         _row(2, 80.0, timeframe="5m"),
         _row(3, 70.0, run_id="r2"),
-        _row(4, 60.0, track="downtrend", strategy="crown_stack_short"),
+        _row(4, 60.0, track="downtrend", strategy="test_sma_cross_short"),
         _row(5, 50.0),
     ]
     assert select_export_trial(rows)["id"] == 1
@@ -370,7 +370,7 @@ def test_selection_filters_by_every_given_field() -> None:
         )["id"]
         == 5
     )
-    assert select_export_trial(rows, strategy="crown_stack_short")["id"] == 4
+    assert select_export_trial(rows, strategy="test_sma_cross_short")["id"] == 4
     assert select_export_trial(rows, symbol="SOL") is None
 
 
@@ -404,7 +404,7 @@ def _store_trials(data: Path) -> None:
         return TrialRow(
             run_id=run_id,
             track="uptrend",
-            strategy="crown_stack_long",
+            strategy="test_sma_cross_long",
             params={"fast": 5, "slow": 20},
             net_pnl=pnl,
             total_return_pct=pnl / 100,

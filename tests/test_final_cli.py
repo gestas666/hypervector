@@ -100,7 +100,7 @@ def _pipeline(data: Path, *extra: str) -> list[str]:
         "pipeline",
         "run",
         "--strategy",
-        "crown_stack_long",
+        "test_sma_cross_long",
         "--timeframe",
         TF,
         "--lookback-days",
@@ -172,7 +172,7 @@ def test_run_autotune_offline_load_serves_stale_and_fails_on_a_miss(
     def settings(root: Path) -> SearchSettings:
         return SearchSettings(
             root=root,
-            strategy_name="crown_stack_long",
+            strategy_name="test_sma_cross_long",
             symbol="BTC",
             timeframe=TF,
             lookback_days=LOOKBACK,
@@ -235,7 +235,7 @@ def test_model_stage_from_an_export_reads_a_stale_cache_offline(
         "pipeline",
         "run",
         "--strategy",
-        "crown_stack_long",
+        "test_sma_cross_long",
         *flags,
     ]
     assert main(argv) == 0, capsys.readouterr().err
@@ -287,7 +287,7 @@ def test_strict_pipeline_from_an_export_reads_the_hl_only_cache(
         "pipeline",
         "run",
         "--strategy",
-        "crown_stack_long",
+        "test_sma_cross_long",
         "--export",
         "cand",
         "--strict-hl-only",
@@ -381,7 +381,7 @@ def test_tune_strategy_zero_trials_is_refused_before_any_load(
     )
     data = tmp_path / "data"
     argv = ["--data-root", str(data), "tune", "strategy"]
-    assert main([*argv, "--strategy", "crown_stack_long", "--n-trials", "0"]) == 2
+    assert main([*argv, "--strategy", "test_sma_cross_long", "--n-trials", "0"]) == 2
     error = _error(capsys.readouterr().err)
     assert error["error_type"] == "CommandRefused"
     assert "--n-trials" in error["error"]
@@ -419,7 +419,6 @@ def test_in_process_refusals_and_failures_emit_the_shared_error_shape(
         ),
         ([*request, "--settings", str(tmp_path / "s.json")], 2, "live request"),
         ([*request, "--submit"], 2, "live request"),
-        (["paper", "shadow", "--config", str(tmp_path / "nope.toml")], 1, "paper shadow"),
         (["live", "report", "--decisions", str(paper_ledger)], 1, "live report"),
         (["paper", "report", "--decisions", str(live_ledger)], 1, "paper report"),
     ]
@@ -431,23 +430,10 @@ def test_in_process_refusals_and_failures_emit_the_shared_error_shape(
         assert captured.out == "", words
 
 
-def test_shadow_reset_failure_emits_the_shared_error_shape(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    def broken(*_a: object, **_k: object) -> None:
-        raise RuntimeError("reset backup failed")
-
-    monkeypatch.setattr("hypervector.shadow_reset.reset_shadow_state", broken)
-    assert main(["--data-root", str(tmp_path / "data"), "paper", "shadow-reset"]) == 1
-    error = _error(capsys.readouterr().err)
-    assert (error["command"], error["error_type"]) == ("paper shadow-reset", "RuntimeError")
-
-
 def test_paper_run_refusals_are_command_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     from hypervector.commands import paper
-    from hypervector.runtime_lock import RuntimeLockError
 
     data = tmp_path / "data"
     strict_bundle(data / "exports", "cand")
@@ -460,16 +446,6 @@ def test_paper_run_refusals_are_command_refused(
     assert main(argv) == 2
     error = _error(capsys.readouterr().err)
     assert (error["command"], error["error_type"]) == ("paper run", "CommandRefused")
-
-    monkeypatch.setattr(paper, "_paper_options", lambda *_a, **_k: {"execution_mode": "paper"})
-
-    def locked(**_kwargs: object) -> None:
-        raise RuntimeLockError("another session holds the lock")
-
-    monkeypatch.setattr(paper, "start_paper_daemon", locked)
-    assert main(argv) == 2
-    error = _error(capsys.readouterr().err)
-    assert error["error_type"] == "CommandRefused" and "lock" in error["error"]
 
 
 def test_research_database_failures_name_the_command_and_type(
@@ -648,4 +624,3 @@ def test_nautilus_run_and_export_validate_share_the_validation_shape(
     assert nautilus["report_path"].endswith("summary.json")
     assert export == {"strict": True, "valid": True}
     assert set(export) <= set(nautilus)
-

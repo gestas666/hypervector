@@ -69,7 +69,7 @@ def strict_bundle(
     exports: Path,
     name: str,
     *,
-    strategy: str = "crown_stack_long",
+    strategy: str = "test_sma_cross_long",
     symbol: str = "BTC",
     timeframe: str = "1m",
     lookback_days: int = 30,
@@ -285,14 +285,14 @@ def test_dry_run_prints_the_plan_and_writes_nothing(
     tmp_path: Path, fakes: Fakes, capsys: pytest.CaptureFixture[str]
 ) -> None:
     data = tmp_path / "data"
-    argv = _run(data, "--strategy", "crown_stack_long", "--timeframe", "5m")
+    argv = _run(data, "--strategy", "test_sma_cross_long", "--timeframe", "5m")
     assert main([*argv, "--dry-run"]) == 0
     plan = json.loads(capsys.readouterr().out)
     assert not data.exists()
     assert fakes.calls == {}
     assert plan["status"] == "planned" and plan["dry_run"] is True
     assert plan["pipeline_id"].startswith("pl-")
-    assert plan["pipeline_id"].endswith("-crown_stack_long-BTC-5m")
+    assert plan["pipeline_id"].endswith("-test_sma_cross_long-BTC-5m")
     assert plan["out_dir"] == str(
         data.resolve() / "runs" / "pipeline" / plan["pipeline_id"]
     )
@@ -305,7 +305,7 @@ def test_dry_run_prints_the_plan_and_writes_nothing(
     assert (
         "data history --symbol BTC --timeframe 5m --lookback-days 90" in words["data"]
     )
-    assert "tune strategy --strategy crown_stack_long" in words["search"]
+    assert "tune strategy --strategy test_sma_cross_long" in words["search"]
     assert "export validate --export <export>" in words["export"]
     assert words["nautilus"].endswith("--lookback-days 90 --no-network")
     assert words["paper"].endswith("paper run --export <export> --mode shadow")
@@ -319,7 +319,7 @@ def test_dry_run_from_an_export_writes_nothing(
     data = tmp_path / "data"
     strict_bundle(data / "exports", "cand", lookback_days=45, timeframe="5m")
     before = _tree(data)
-    argv = _run(data, "--strategy", "crown_stack_long", "--export", "cand")
+    argv = _run(data, "--strategy", "test_sma_cross_long", "--export", "cand")
     assert main([*argv, "--dry-run"]) == 0
     plan = json.loads(capsys.readouterr().out)
     assert _tree(data) == before
@@ -355,7 +355,7 @@ def test_stage_zero_refusals_exit_two_without_writes(
     extra: list[str],
 ) -> None:
     data = tmp_path / "data"
-    assert main([*_run(data, "--strategy", "crown_stack_long"), *extra]) == 2
+    assert main([*_run(data, "--strategy", "test_sma_cross_long"), *extra]) == 2
     error = json.loads(capsys.readouterr().err)
     assert error["ok"] is False and error["command"] == "pipeline run"
     assert not data.exists()
@@ -366,16 +366,16 @@ def test_bundle_and_strategy_refusals_exit_two(
     tmp_path: Path, fakes: Fakes, capsys: pytest.CaptureFixture[str]
 ) -> None:
     data = tmp_path / "data"
-    strict_bundle(data / "exports", "cand", strategy="crown_stack_long")
+    strict_bundle(data / "exports", "cand", strategy="test_sma_cross_long")
     before = _tree(data)
     refused = [
         ["--strategy", "no_such_strategy"],
-        ["--strategy", "impulse_1m_range_long", "--search", "sweep"],
-        ["--strategy", "crown_stack_long", "--export", "missing"],
-        ["--strategy", "crown_stack_short", "--export", "cand"],
-        ["--strategy", "crown_stack_long", "--export", "cand", "--symbol", "ETH"],
-        ["--strategy", "crown_stack_long", "--export", "cand", "--refresh"],
-        ["--strategy", "crown_stack_long", "--out-dir", str(data / "exports")],
+        ["--strategy", "range_breakout_long", "--search", "sweep"],
+        ["--strategy", "test_sma_cross_long", "--export", "missing"],
+        ["--strategy", "test_sma_cross_short", "--export", "cand"],
+        ["--strategy", "test_sma_cross_long", "--export", "cand", "--symbol", "ETH"],
+        ["--strategy", "test_sma_cross_long", "--export", "cand", "--refresh"],
+        ["--strategy", "test_sma_cross_long", "--out-dir", str(data / "exports")],
     ]
     for extra in refused:
         assert main(_run(data, *extra)) == 2, extra
@@ -391,7 +391,7 @@ def test_full_run_pins_the_window_and_reports_parity(
     tmp_path: Path, fakes: Fakes, capsys: pytest.CaptureFixture[str]
 ) -> None:
     data = tmp_path / "data"
-    argv = _run(data, "--strategy", "crown_stack_long", "--lookback-days", "30")
+    argv = _run(data, "--strategy", "test_sma_cross_long", "--lookback-days", "30")
     assert main([*argv, "--train-model"]) == 0
     manifest = json.loads(capsys.readouterr().out)
     assert manifest == _manifest_on_disk(data)
@@ -487,7 +487,7 @@ def test_manifest_is_replaced_atomically_after_every_stage(
         real_replace(source, target)
 
     monkeypatch.setattr(pipeline.os, "replace", recording_replace)
-    assert main(_run(data, "--strategy", "crown_stack_long", "--no-nautilus")) == 0
+    assert main(_run(data, "--strategy", "test_sma_cross_long", "--no-nautilus")) == 0
     # initial + data, search, export, paper + final status
     assert len(snapshots) == 6
     assert snapshots[0]["status"] == "running"
@@ -510,7 +510,7 @@ def test_stage_failure_exits_one_with_a_partial_manifest(
 ) -> None:
     data = tmp_path / "data"
     fakes.fail = {failing}
-    assert main(_run(data, "--strategy", "crown_stack_long")) == 1
+    assert main(_run(data, "--strategy", "test_sma_cross_long")) == 1
     captured = capsys.readouterr()
     manifest = _manifest_on_disk(data)
     assert json.loads(captured.out) == manifest
@@ -537,7 +537,7 @@ def test_an_interrupt_records_the_stage_and_exits_130(
 
     monkeypatch.setattr("hypervector.sweep.autotune.run_autotune", interrupted)
     data = tmp_path / "data"
-    assert main(_run(data, "--strategy", "crown_stack_long")) == 130
+    assert main(_run(data, "--strategy", "test_sma_cross_long")) == 130
     manifest = _manifest_on_disk(data)
     assert manifest["status"] == "failed"
     search = _stages(manifest)["search"]
@@ -563,7 +563,7 @@ def test_a_stage_calling_sys_exit_is_a_technical_failure(
     monkeypatch.delenv("HYPERVECTOR_DEBUG", raising=False)
     monkeypatch.setattr("hypervector.sweep.autotune.run_autotune", exits)
     data = tmp_path / "data"
-    assert main(_run(data, "--strategy", "crown_stack_long")) == 1
+    assert main(_run(data, "--strategy", "test_sma_cross_long")) == 1
     manifest = _manifest_on_disk(data)
     assert json.loads(capsys.readouterr().out) == manifest
     assert manifest["status"] == "failed"
@@ -601,7 +601,7 @@ def test_no_network_model_training_never_fetches_a_missing_window(
     monkeypatch.setattr(data_pipeline, "_fetch", refuse)
     data = tmp_path / "data"
     strict_bundle(data / "exports", "cand", lookback_days=30)
-    flags = ["--strategy", "crown_stack_long", "--export", "cand", "--no-network"]
+    flags = ["--strategy", "test_sma_cross_long", "--export", "cand", "--no-network"]
     flags += ["--train-model", "--no-nautilus"]
 
     missing = tmp_path / "missing"
@@ -639,7 +639,7 @@ def test_too_few_model_labels_is_a_result_not_a_failure(
 
     monkeypatch.setattr("hypervector.commands.model.train_metalabel_bundle", too_few)
     data = tmp_path / "data"
-    argv = _run(data, "--strategy", "crown_stack_long", "--no-nautilus")
+    argv = _run(data, "--strategy", "test_sma_cross_long", "--no-nautilus")
     assert main([*argv, "--train-model"]) == 0
     manifest = json.loads(capsys.readouterr().out)
     assert manifest["status"] == "ok"
@@ -658,7 +658,7 @@ def test_an_invalid_export_fails_the_export_stage(
 ) -> None:
     data = tmp_path / "data"
     fakes.loose_export = True
-    assert main(_run(data, "--strategy", "crown_stack_long")) == 1
+    assert main(_run(data, "--strategy", "test_sma_cross_long")) == 1
     manifest = _manifest_on_disk(data)
     assert _stages(manifest)["export"]["status"] == "failed"
     assert _stages(manifest)["export"]["error_type"] == "ExportSchemaError"
@@ -681,7 +681,7 @@ def test_unsupported_symbol_skips_nautilus_and_continues(
         extra = ["--export", "doge-cand"]
     else:
         extra = ["--symbol", "DOGE", "--lookback-days", "30"]
-    assert main(_run(data, "--strategy", "crown_stack_long", *extra)) == 0
+    assert main(_run(data, "--strategy", "test_sma_cross_long", *extra)) == 0
     manifest = json.loads(capsys.readouterr().out)
     nautilus_stage = _stages(manifest)["nautilus"]
     assert nautilus_stage["status"] == "skipped"
@@ -705,7 +705,7 @@ def test_nautilus_skip_follows_the_engine_symbol_predicate(
     """A symbol the engine resolves (built-in ETH venue geometry) runs Nautilus."""
     data = tmp_path / "data"
     strict_bundle(data / "exports", "eth-cand", symbol="ETH")
-    argv = _run(data, "--strategy", "crown_stack_long", "--export", "eth-cand")
+    argv = _run(data, "--strategy", "test_sma_cross_long", "--export", "eth-cand")
     assert main(argv) == 0
     manifest = json.loads(capsys.readouterr().out)
     assert _stages(manifest)["nautilus"]["status"] == "ok"
@@ -720,7 +720,7 @@ def test_window_mismatch_is_reported_not_gated(
 ) -> None:
     data = tmp_path / "data"
     fakes.nautilus_bars = BARS - 1
-    argv = _run(data, "--strategy", "crown_stack_long", "--lookback-days", "30")
+    argv = _run(data, "--strategy", "test_sma_cross_long", "--lookback-days", "30")
     assert main(argv) == 0
     parity = json.loads(capsys.readouterr().out)["parity"]
     assert parity["window_mismatch"] is True
@@ -738,13 +738,13 @@ def test_start_paper_daemon_runs_only_with_paper_bars(
 ) -> None:
     install(monkeypatch.setattr, fakes, paper=True)
     first = tmp_path / "first"
-    assert main(_run(first, "--strategy", "crown_stack_long", "--no-nautilus")) == 0
+    assert main(_run(first, "--strategy", "test_sma_cross_long", "--no-nautilus")) == 0
     handoff = json.loads(capsys.readouterr().out)
     assert fakes.calls["paper"] == []
     assert _stages(handoff)["paper"]["metrics"]["mode"] == "handoff"
 
     second = tmp_path / "second"
-    argv = _run(second, "--strategy", "crown_stack_long", "--no-nautilus")
+    argv = _run(second, "--strategy", "test_sma_cross_long", "--no-nautilus")
     assert main([*argv, "--paper-bars", "3"]) == 0
     session = json.loads(capsys.readouterr().out)
     [call] = fakes.calls["paper"]
@@ -776,7 +776,7 @@ def test_paper_session_is_refused_unless_bounded_by_paper_bars(
 
     monkeypatch.setattr(paper_commands, "_paper_options", unbounded)
     data = tmp_path / "data"
-    argv = _run(data, "--strategy", "crown_stack_long", "--no-nautilus")
+    argv = _run(data, "--strategy", "test_sma_cross_long", "--no-nautilus")
     assert main([*argv, "--paper-bars", "3"]) == 1
     paper = _stages(_manifest_on_disk(data))["paper"]
     assert (paper["status"], paper["error_type"]) == ("failed", "RuntimeError")
@@ -794,7 +794,7 @@ def test_sweep_search_reads_the_pinned_window_offline(
     argv = _run(
         data,
         "--strategy",
-        "crown_stack_short",
+        "test_sma_cross_short",
         "--search",
         "sweep",
         "--lookback-days",
@@ -828,7 +828,7 @@ def test_pipeline_never_imports_execution_modules(
 ) -> None:
     """A fresh process records sys.modules around a fake-engine run."""
     data = tmp_path / "data"
-    argv = _run(data, "--strategy", "crown_stack_long", "--train-model")
+    argv = _run(data, "--strategy", "test_sma_cross_long", "--train-model")
     if paper_bars:
         argv += ["--paper-bars", "2"]
     result = tmp_path / "result.json"
@@ -836,6 +836,8 @@ def test_pipeline_never_imports_execution_modules(
         "import importlib, json, sys\n"
         f"sys.path.insert(0, {str(TESTS_DIR)!r})\n"
         "import test_cli_pipeline as t\n"
+        "import synthetic_strategies\n"
+        "synthetic_strategies.register_family()\n"
         "def patch(target, value):\n"
         "    module, name = target.rsplit('.', 1)\n"
         "    setattr(importlib.import_module(module), name, value)\n"
@@ -875,7 +877,7 @@ def _write_run(
     pipeline_id: str,
     *,
     created: str,
-    strategy: str = "crown_stack_long",
+    strategy: str = "test_sma_cross_long",
     symbol: str = "BTC",
     timeframe: str = "5m",
     status: str = "ok",
@@ -910,7 +912,7 @@ def _fixture_runs(data: Path) -> None:
         data,
         "pl-b",
         created="2026-10-03T00:00:00Z",
-        strategy="crown_stack_short",
+        strategy="test_sma_cross_short",
         status="failed",
     )
     _write_run(data, "pl-c", created="2026-10-02T00:00:00Z", symbol="ETH")
@@ -939,7 +941,7 @@ def test_list_is_newest_first_filters_and_flags_broken_manifests(
     assert [
         e["pipeline_id"] for e in json.loads(capsys.readouterr().out)["pipelines"]
     ] == ["pl-c"]
-    assert main([*base, "--strategy", "crown_stack_short", "--timeframe", "5m"]) == 0
+    assert main([*base, "--strategy", "test_sma_cross_short", "--timeframe", "5m"]) == 0
     assert [
         e["pipeline_id"] for e in json.loads(capsys.readouterr().out)["pipelines"]
     ] == ["pl-b"]
@@ -985,7 +987,7 @@ def test_show_reads_a_real_run(
     tmp_path: Path, fakes: Fakes, capsys: pytest.CaptureFixture[str]
 ) -> None:
     data = tmp_path / "data"
-    assert main(_run(data, "--strategy", "crown_stack_long", "--no-nautilus")) == 0
+    assert main(_run(data, "--strategy", "test_sma_cross_long", "--no-nautilus")) == 0
     produced = json.loads(capsys.readouterr().out)
     assert main(["--data-root", str(data), "pipeline", "show"]) == 0
     assert json.loads(capsys.readouterr().out) == produced

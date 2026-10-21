@@ -1,11 +1,12 @@
-"""Behaviour-neutral session split cleanup keeps the public identity byte-stable."""
+"""The generic paper session identity keeps a stable, meaning-named shape."""
 
 from __future__ import annotations
 
 import ast
 from pathlib import Path
 
-from paper_fix_fixtures import faithful_profile, write_strict_export
+from paper_fix_fixtures import write_strict_export
+from synthetic_strategies import MANAGED_LONG
 
 from hypervector.paper import session_identity
 from hypervector.paper.session import PaperSession
@@ -16,49 +17,40 @@ SESSION_SOURCE = (
 )
 
 IDENTITY_KEYS = [
-    "feed_ts", "run_id", "export_id", "strategy_name", "profile_id", "symbol",
-    "timeframe", "data_root", "action", "execution_model", "execution_data_source",
-    "execution_evidence_fresh", "execution_submit_latency_ms",
-    "execution_cancel_latency_ms", "execution_update_latency_ms",
-    "execution_queue_ahead_qty", "execution_requested_qty", "cumulative_filled_qty",
-    "remaining_qty", "liquidity_side", "margin_model", "liquidation_execution_model",
-    "partial_liquidation_supported", "backstop_liquidation_supported", "conviction",
-    "metalabel_mode", "metalabel_policy", "metalabel_bundle_id", "strategy_params",
-    "position_policy", "regime_policy", "peak_observer", "portfolio_spec",
-    "portfolio_fingerprint", "portfolio_profile_changed_from", "exits", "risk",
-    "execution", "costs", "runtime", "orderbook_archive", "bars_processed",
-    "execution_mode", "submitted", "network", "position_qty", "position_avg_px",
-    "liquidation_price", "realized_pnl", "unrealized_pnl", "equity", "init_cash",
-    "resumed_shadow_portfolio", "portfolio_state_asof", "position_opened_at",
-    "maximum_hold_seconds", "no_submit",
+    "feed_ts", "run_id", "export_id", "strategy_name", "symbol", "timeframe",
+    "data_root", "action", "execution_model", "conviction", "metalabel_mode",
+    "metalabel_bundle_id", "strategy_params", "execution_profile", "portfolio_spec",
+    "portfolio_fingerprint", "exits", "risk", "execution", "costs", "runtime",
+    "bars_processed", "execution_mode", "submitted", "network", "position_qty",
+    "position_avg_px", "realized_pnl", "unrealized_pnl", "equity", "init_cash",
+    "no_submit",
 ]
 
 
-def test_identity_key_order_is_unchanged(tmp_path: Path) -> None:
-    legacy = PaperSession(
+def test_identity_key_order_is_the_same_for_every_declared_profile(
+    tmp_path: Path,
+) -> None:
+    standard = PaperSession(
         export_dir=write_strict_export(tmp_path / "a"), data_root=tmp_path / "a" / "d"
     )
-    export = write_strict_export(tmp_path / "b", strategy="hypervelocity_1m_scalper_long")
-    profiled = PaperSession(
-        export_dir=export,
+    declared = PaperSession(
+        export_dir=write_strict_export(tmp_path / "b", strategy=MANAGED_LONG),
         data_root=tmp_path / "b" / "d",
         execution_mode="shadow",
-        hypervelocity_profile=faithful_profile(tmp_path / "b", export),
     )
-    assert list(session_identity_payload(legacy)) == IDENTITY_KEYS
-    assert list(session_identity_payload(profiled)) == IDENTITY_KEYS
+    assert list(session_identity_payload(standard)) == IDENTITY_KEYS
+    assert list(session_identity_payload(declared)) == IDENTITY_KEYS
 
 
 def test_identity_sections_are_named_by_meaning() -> None:
     names = {name for name in vars(session_identity) if name.startswith("_section_")}
     assert names == {
         "_section_identity",
-        "_section_execution_model",
+        "_section_model",
         "_section_strategy_policy",
         "_section_risk_costs",
         "_section_runtime",
         "_section_portfolio_state",
-        "_section_event_hold_state",
     }
 
 

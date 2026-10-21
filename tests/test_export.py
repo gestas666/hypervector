@@ -29,7 +29,7 @@ def test_export_bundle_minimum_artifacts(tmp_path: Path):
             "fee_model": "hl_taker_default",
             "data_provenance": {"sources": {"fixture": 50}},
         },
-        params={"strategy": "ma_cross_long", "role": "uptrend", "fast": 5, "slow": 20},
+        params={"strategy": "test_sma_cross_long", "role": "uptrend", "fast": 5, "slow": 20},
         metrics={
             "net_pnl": 12.5,
             "total_return_pct": 1.25,
@@ -57,10 +57,10 @@ def test_export_bundle_minimum_artifacts(tmp_path: Path):
     assert meta["symbol"] == "BTC"
     assert "package_version" in meta
     assert meta["schema_version"] == "1"
-    assert meta["strategy"] == "ma_cross_long"
+    assert meta["strategy"] == "test_sma_cross_long"
 
     params = json.loads((out / "params.json").read_text())
-    assert params["strategy"] == "ma_cross_long"
+    assert params["strategy"] == "test_sma_cross_long"
 
     metrics = json.loads((out / "metrics.json").read_text())
     assert metrics["net_pnl"] == 12.5

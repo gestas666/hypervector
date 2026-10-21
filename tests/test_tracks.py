@@ -8,7 +8,6 @@ import pytest
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.regime.detectors import REGIME_LABELS, detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
-from hypervector.strategies.classic import register_classic_baselines
 from hypervector.strategies.registry import (
     clear_registry,
     get_strategy,
@@ -16,12 +15,13 @@ from hypervector.strategies.registry import (
 )
 from hypervector.sweep.metrics import REQUIRED_METRIC_KEYS, compute_trial_metrics
 from hypervector.sweep.search import run_grid_search
+from synthetic_strategies import SYNTHETIC_LONG, SYNTHETIC_SHORT, register_family
 
 
 @pytest.fixture(autouse=True)
 def _fresh_registry():
     clear_registry()
-    register_classic_baselines()
+    register_family()
     yield
     clear_registry()
 
@@ -49,7 +49,7 @@ def test_regime_downtrend_detects_down():
 
 def test_uptrend_search_ranks_by_net_pnl():
     df = fixture_ohlcv(n_bars=400, drift=25.0, source="fixture", wave_period=30)
-    strat = get_strategy("ma_cross_long")
+    strat = get_strategy(SYNTHETIC_LONG)
     assert strat.role == "uptrend"
     results = run_grid_search(
         df,
@@ -71,7 +71,7 @@ def test_uptrend_search_ranks_by_net_pnl():
 
 def test_downtrend_search_produces_ranked_metrics():
     df = fixture_ohlcv(n_bars=400, drift=-25.0, source="fixture", wave_period=30)
-    strat = get_strategy("ma_cross_short")
+    strat = get_strategy(SYNTHETIC_SHORT)
     assert strat.role == "downtrend"
     results = run_grid_search(
         df,
@@ -103,7 +103,7 @@ def test_compute_trial_metrics_drives_vectorbt():
 
 def test_technical_failure_does_not_abort_other_trials():
     df = fixture_ohlcv(n_bars=100, drift=1.0)
-    strat = get_strategy("ma_cross_long")
+    strat = get_strategy(SYNTHETIC_LONG)
 
     def flaky(df, fast=5, slow=20):
         if fast == 5:

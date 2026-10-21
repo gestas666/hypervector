@@ -80,7 +80,7 @@ def test_metalabel_observe_records_probability_without_changing_conviction():
     """Observe mode annotates a signal without changing sizing or eligibility."""
 
     class FakeML:
-        root = type("R", (), {"name": "hypervelocity-long-v001"})()
+        root = type("R", (), {"name": "directional-long-v001"})()
         feature_names = ["a"]
 
         def predict_probability(self, features):
@@ -98,7 +98,7 @@ def test_metalabel_observe_records_probability_without_changing_conviction():
     assert result.conviction == 0.5
     assert result.source == "metalabel_observe"
     assert result.metalabel_p == 0.2
-    assert result.metalabel_bundle_id == "hypervelocity-long-v001"
+    assert result.metalabel_bundle_id == "directional-long-v001"
     assert result.allow_entry is True
 
 
@@ -234,7 +234,7 @@ def test_session_default_uses_fixed_conviction(tmp_path):
             "data_provenance": {"sources": {"fixture": 50}},
         },
         params={
-            "strategy": "crown_stack_short",
+            "strategy": "test_sma_cross_short",
             "bbwp_lookback": 20,
             "bbwp_threshold": 20.0,
             "exit_mode": "fixed_rr",

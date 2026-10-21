@@ -56,7 +56,7 @@ def synth_ohlcv(
 def write_export(
     root: Path,
     *,
-    strategy: str = "ma_cross_long",
+    strategy: str = "test_sma_cross_long",
     params: dict[str, Any] | None = None,
     exit_mode: str = "fixed_rr",
     symbol: str = "BTC",
@@ -107,7 +107,7 @@ def write_export(
     if extra_meta:
         meta.update(extra_meta)
     base_params: dict[str, Any] = {"strategy": strategy, "exit_mode": exit_mode}
-    if strategy == "ma_cross_long" and not params:
+    if strategy == "test_sma_cross_long" and not params:
         base_params.update({"fast": 5, "slow": 20})
     if params:
         base_params.update(params)

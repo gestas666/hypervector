@@ -19,7 +19,7 @@ from hypervector.regime.composite import (
     compose_regimes,
 )
 from hypervector.regime.ultimate import detect_ultimate_regime
-from hypervector.strategies.hypervelocity_contract import faithful_regime_config
+from hypervector.regime.classifier import hyperliquid_native_regime_config
 
 
 def _bars(close: np.ndarray, volume: np.ndarray | None = None) -> pd.DataFrame:
@@ -422,7 +422,7 @@ def test_real_features_emit_long_trigger_only_after_full_tactical_alignment() ->
 
     result = classify_multitimeframe(
         _bars(close, volume),
-        faithful_regime_config(),
+        hyperliquid_native_regime_config(),
     )
     latest = result.iloc[-1]
 

@@ -16,7 +16,7 @@ from hypervector.paper.report import report_from_data_root
 from hypervector.paper.runner import start_paper_daemon
 
 
-def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> Path:
+def _write_strict_export(root: Path, *, strategy: str = "test_sma_cross_short") -> Path:
     track = "downtrend" if "short" in strategy else "uptrend"
     return export_candidate(
         root / "exports",
@@ -146,7 +146,7 @@ def test_matrix_shadow_default_stamps_and_intents(tmp_path: Path):
         cost_provider=CostProvider(fee_tier=0),
         run_id="matrix",
         export_id="matrix",
-        strategy_name="crown_stack_short",
+        strategy_name="test_sma_cross_short",
         symbol="BTC",
         timeframe="1m",
         conviction=0.5,

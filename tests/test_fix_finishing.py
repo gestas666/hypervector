@@ -24,7 +24,7 @@ from hypervector.cli import main
 from hypervector.data.provenance import summarize_provenance
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.strategies import register_all_strategies
-from hypervector.strategies.registry import _REGISTRY, StrategySpec
+from hypervector.strategies.registry import ExecutionProfile, _REGISTRY, StrategySpec
 from hypervector.sweep import autotune
 
 _STUB_METRICS = {
@@ -79,7 +79,16 @@ def test_tune_strategy_cache_flags_reach_the_history_loader(
         raise HistoryBoundary
 
     monkeypatch.setattr("hypervector.sweep.autotune.load_research_history", capture)
-    base = ["--data-root", str(tmp_path), "tune", "strategy", "--n-trials", "2"]
+    base = [
+        "--data-root",
+        str(tmp_path),
+        "tune",
+        "strategy",
+        "--strategy",
+        "test_sma_cross_long",
+        "--n-trials",
+        "2",
+    ]
     with pytest.raises(HistoryBoundary):
         main(base)
     assert "max_cache_age" not in calls[-1]  # neither flag: the loader default
@@ -117,7 +126,9 @@ def test_run_autotune_refuses_contradictory_cache_policy_before_reads(
         lambda *_a, **_k: pytest.fail("history read before cache policy check"),
     )
     with pytest.raises(ValueError, match="pin_cache|max_cache_age_hours"):
-        autotune.run_autotune(data_root=tmp_path, **kwargs)
+        autotune.run_autotune(
+            data_root=tmp_path, strategy_name="test_sma_cross_long", **kwargs
+        )
 
 
 def test_board_records_the_cache_policy(
@@ -126,7 +137,11 @@ def test_board_records_the_cache_policy(
     calls = _offline_history(monkeypatch, _bars())
     _recording_metrics(monkeypatch)
     result = autotune.run_autotune(
-        data_root=tmp_path, n_trials=2, no_export=True, pin_cache=True
+        data_root=tmp_path,
+        strategy_name="test_sma_cross_long",
+        n_trials=2,
+        no_export=True,
+        pin_cache=True,
     )
     assert calls[-1]["max_cache_age"] is None
     board = json.loads(result.board_path.read_text())
@@ -155,7 +170,7 @@ def _register(monkeypatch: pytest.MonkeyPatch, name: str, tag: str) -> None:
 def test_autotune_uses_the_builder_tag_not_a_name_substring(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """'shortcut_breakout_long' trades long; impulse-style tags are normalised."""
+    """'shortcut_breakout_long' trades long; descriptive tags are normalised."""
     _offline_history(monkeypatch, _bars())
     seen = _recording_metrics(monkeypatch)
     _register(monkeypatch, "shortcut_breakout_long", "long")
@@ -169,10 +184,10 @@ def test_autotune_uses_the_builder_tag_not_a_name_substring(
     assert json.loads(result.board_path.read_text())["direction"] == "long"
 
     seen.clear()
-    _register(monkeypatch, "fix_impulse_tagged", "impulse_1m_short")
+    _register(monkeypatch, "fix_descriptive_tagged", "breakout_short")
     result = autotune.run_autotune(
         data_root=tmp_path,
-        strategy_name="fix_impulse_tagged",
+        strategy_name="fix_descriptive_tagged",
         n_trials=2,
         no_export=True,
     )
@@ -205,14 +220,14 @@ def test_trial_evaluator_refuses_a_tag_that_contradicts_the_expected_direction()
     bars = _bars(60)
     flags = pd.Series(False, index=bars.index)
     spec = StrategySpec(
-        "fake", "uptrend", {}, lambda df, **_k: (flags, flags, "impulse_1m_short")
+        "fake", "uptrend", {}, lambda df, **_k: (flags, flags, "breakout_short")
     )
     evaluator = TrialEvaluator(
         bars,
         spec,
         "long",
         resolve_cost_model("hl_base_taker"),
-        False,
+        ExecutionProfile(),
         lambda *a, **k: {},
     )
     evaluator.evaluate({}, {"mode": "atr", "leverage": 2.0}, 0)
@@ -221,11 +236,11 @@ def test_trial_evaluator_refuses_a_tag_that_contradicts_the_expected_direction()
 
 
 @pytest.mark.parametrize(
-    ("strategy", "expected"),
-    [("impulse_1m_long", "long"), ("impulse_1m_range_short", "short")],
+    ("tag", "expected"),
+    [("breakout_long", "long"), ("range_breakout_short", "short")],
 )
-def test_nautilus_signal_adapter_normalises_impulse_tags(
-    strategy: str, expected: str
+def test_nautilus_signal_adapter_normalises_descriptive_tags(
+    monkeypatch: pytest.MonkeyPatch, tag: str, expected: str
 ) -> None:
     """The actor/paper/live intent only acts on long|short; raw tags never traded."""
     from hypervector.nautilus.actor import _action_from_intent
@@ -236,6 +251,8 @@ def test_nautilus_signal_adapter_normalises_impulse_tags(
         signals_from_ohlcv,
     )
 
+    strategy = "fix_descriptive_tag"
+    _register(monkeypatch, strategy, tag)
     frame = _bars(400).set_index("timestamp")[
         ["open", "high", "low", "close", "volume"]
     ]
@@ -292,7 +309,7 @@ def _export(root: Path, symbol: str, **extra: object) -> dict[str, object]:
         root / "exports",
         run_id="fin01",
         meta=_meta(symbol, **extra),
-        params={"strategy": "ma_cross_long", "fast": 5, "slow": 20},
+        params={"strategy": "test_sma_cross_long", "fast": 5, "slow": 20},
         metrics={"net_pnl": 0.0},
         candidate_id=f"fin_{symbol.replace(':', '_')}",
         strict=True,
@@ -419,7 +436,7 @@ def test_autotune_export_writes_conviction_fee_models_and_instrument(
     _offline_history(monkeypatch, _bars())
     seen = _recording_metrics(monkeypatch)
     result = autotune.run_autotune(
-        data_root=tmp_path, symbol="kPEPE", strategy_name="ma_cross_long", n_trials=2
+        data_root=tmp_path, symbol="kPEPE", strategy_name="test_sma_cross_long", n_trials=2
     )
     assert result.export_dir is not None
     meta = json.loads((Path(result.export_dir) / "meta.json").read_text())
@@ -516,7 +533,7 @@ def test_board_and_result_record_a_fee_model_override(
     _recording_metrics(monkeypatch)
     result = autotune.run_autotune(
         data_root=tmp_path,
-        strategy_name="hypervelocity_1m_scalper_long",
+        strategy_name="test_managed_long",
         fee_model="hl_base_taker",
         n_trials=1,
     )
@@ -542,12 +559,16 @@ def test_board_records_the_fee_model_without_override(
     _offline_history(monkeypatch, _bars())
     _recording_metrics(monkeypatch)
     result = autotune.run_autotune(
-        data_root=tmp_path, fee_model="hl_maker", n_trials=1, no_export=True
+        data_root=tmp_path,
+        strategy_name="test_sma_cross_long",
+        fee_model="hl_maker",
+        n_trials=1,
+        no_export=True,
     )
     board = json.loads(result.board_path.read_text())
     assert board["fee_model_requested"] == board["fee_model_used"] == "hl_maker"
     assert board["fee_model_overridden"] is False
-    assert not any("strategy contract override" in w for w in board["warnings"])
+    assert not any("execution profile declares" in w for w in board["warnings"])
     assert (result.fee_model_requested, result.fee_model_used) == (
         "hl_maker",
         "hl_maker",
@@ -565,7 +586,7 @@ def test_tune_strategy_cli_reports_both_fee_models(
         "tune",
         "strategy",
         "--strategy",
-        "hypervelocity_1m_scalper_long",
+        "test_managed_long",
         "--n-trials",
         "1",
         "--no-export",
@@ -595,18 +616,18 @@ def test_precompute_has_no_trail_distance_and_still_probes_trail_stops() -> None
     ]
     exits = {"mode": "trail", "sl_pct": 0.01, "trail_atr_mult": 2.0, "atr_length": 14}
     intents = precompute.precompute_intents(
-        frame, "ma_cross_long", {"fast": 5, "slow": 20}, exits
+        frame, "test_sma_cross_long", {"fast": 5, "slow": 20}, exits
     )
     params = {"fast": 5, "slow": 20}
     probe = precompute.probe_precomputed(
-        intents, frame, "ma_cross_long", params, exits, max_lookback=1_000
+        intents, frame, "test_sma_cross_long", params, exits, max_lookback=1_000
     )
     assert probe["sampled"] > 0 and probe["mismatches"] == 0
     stop, tp = intents.stop_tp(len(intents) - 1)
     assert tp is None and stop > 0.0  # trail distance lives in the stop fraction
     # A window too short for the ATR warmup still shows up, as a stop mismatch.
     short = precompute.probe_precomputed(
-        intents, frame, "ma_cross_long", params, exits, max_lookback=200
+        intents, frame, "test_sma_cross_long", params, exits, max_lookback=200
     )
     assert short["mismatches"] > 0
     assert all(

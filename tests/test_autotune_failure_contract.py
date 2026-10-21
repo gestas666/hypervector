@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from hypervector.data.sources import fixture_ohlcv
+from hypervector.strategies.registry import ExecutionProfile
 from hypervector.sweep import autotune
 
 
@@ -36,7 +37,7 @@ def test_all_technical_failures_preserve_board_and_raise(
     with pytest.raises(RuntimeError, match="no successful trials"):
         autotune.run_autotune(
             data_root=tmp_path,
-            strategy_name="ma_cross_long",
+            strategy_name="test_sma_cross_long",
             n_trials=2,
             no_export=True,
         )
@@ -75,7 +76,7 @@ def test_negative_valid_trials_remain_eligible_for_adaptation(
 
     monkeypatch.setattr(autotune, "_mutate_grid_params", mutate)
     result = autotune.run_autotune(
-        data_root=tmp_path, strategy_name="ma_cross_long", n_trials=10, no_export=True
+        data_root=tmp_path, strategy_name="test_sma_cross_long", n_trials=10, no_export=True
     )
     assert result.best_metrics["net_pnl"] == -100.0
     assert mutated
@@ -95,4 +96,4 @@ def test_optuna_bounds_are_exact_points_on_their_declared_grid() -> None:
             assert math.isclose((high - low) / step, round((high - low) / step))
             return low
 
-    autotune._optuna_exit_dict(StrictTrial(), hypervelocity=False)
+    autotune._optuna_exit_dict(StrictTrial(), execution=ExecutionProfile())

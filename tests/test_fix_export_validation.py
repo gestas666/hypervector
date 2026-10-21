@@ -44,7 +44,7 @@ def _write(root: Path, meta: dict, metrics: dict) -> Path:
     root.mkdir(parents=True, exist_ok=True)
     full = {"schema_version": "1", "run_id": "r1", "package_version": "0", **meta}
     (root / "meta.json").write_text(json.dumps(full), encoding="utf-8")
-    (root / "params.json").write_text(json.dumps({"strategy": "ma_cross_long"}), encoding="utf-8")
+    (root / "params.json").write_text(json.dumps({"strategy": "test_sma_cross_long"}), encoding="utf-8")
     (root / "metrics.json").write_text(json.dumps(metrics), encoding="utf-8")
     return root
 
@@ -98,7 +98,7 @@ def test_failed_strict_export_leaves_no_partial_bundle(tmp_path: Path) -> None:
             tmp_path / "exports",
             "run1",
             meta={"symbol": "BTC", "timeframe": "1m"},
-            params={"strategy": "ma_cross_long"},
+            params={"strategy": "test_sma_cross_long"},
             metrics=_METRICS,
             candidate_id="cand",
             strict=True,
@@ -115,7 +115,7 @@ def test_failed_reexport_keeps_the_previous_valid_bundle(tmp_path: Path) -> None
         tmp_path / "exports",
         "run1",
         meta=_meta(),
-        params={"strategy": "ma_cross_long"},
+        params={"strategy": "test_sma_cross_long"},
         metrics={**_METRICS, "net_pnl": 12.5},
         candidate_id="cand",
         strict=True,
@@ -127,7 +127,7 @@ def test_failed_reexport_keeps_the_previous_valid_bundle(tmp_path: Path) -> None
             tmp_path / "exports",
             "run2",
             meta={"symbol": "BTC", "timeframe": "1m"},
-            params={"strategy": "ma_cross_long"},
+            params={"strategy": "test_sma_cross_long"},
             metrics=_METRICS,
             candidate_id="cand",
             strict=True,
@@ -138,7 +138,7 @@ def test_failed_reexport_keeps_the_previous_valid_bundle(tmp_path: Path) -> None
 
 
 def test_successful_reexport_replaces_bundle_files(tmp_path: Path) -> None:
-    kwargs = dict(params={"strategy": "ma_cross_long"}, candidate_id="cand", strict=True)
+    kwargs = dict(params={"strategy": "test_sma_cross_long"}, candidate_id="cand", strict=True)
     export_candidate(tmp_path / "exports", "run1", meta=_meta(), metrics={**_METRICS, "net_pnl": 1.0}, **kwargs)
     out = export_candidate(tmp_path / "exports", "run2", meta=_meta(), metrics={**_METRICS, "net_pnl": 2.0}, **kwargs)
 

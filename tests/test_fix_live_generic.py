@@ -339,7 +339,7 @@ def _hip3_info(**kwargs: Any) -> FakeInfo:
 
 
 def _write_export(
-    root: Path, *, timeframe: str = "1m", strategy: str = "crown_stack_short"
+    root: Path, *, timeframe: str = "1m", strategy: str = "test_sma_cross_short"
 ) -> Path:
     track = "downtrend" if "short" in strategy else "uptrend"
     return export_candidate(
@@ -1249,7 +1249,7 @@ def test_client_and_engine_refuse_invalid_cap(tmp_path: Path, cap: float) -> Non
             ),
             run_id="r",
             export_id="e",
-            strategy_name="crown_stack_short",
+            strategy_name="test_sma_cross_short",
             symbol="BTC",
             timeframe="1m",
             conviction=0.5,
@@ -1272,7 +1272,7 @@ def test_engine_refuses_non_finite_qty_or_mark_before_placing(
         cost_provider=CostProvider(fee_tier=0, slippage_bps=2.0, funding_rate_hourly=0.0),
         run_id="r",
         export_id="e",
-        strategy_name="crown_stack_short",
+        strategy_name="test_sma_cross_short",
         symbol="BTC",
         timeframe="1m",
         conviction=0.5,

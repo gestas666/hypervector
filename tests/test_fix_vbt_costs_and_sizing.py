@@ -9,8 +9,6 @@ import pytest
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.strategies.registry import (
     StrategySpec,
-    clear_registry,
-    get_strategy,
     normalize_direction,
 )
 from hypervector.sweep import costs
@@ -146,28 +144,28 @@ def test_effective_risk_matches_request_when_the_cap_does_not_bind() -> None:
 def test_normalize_direction() -> None:
     assert normalize_direction("long") == "long"
     assert normalize_direction(" SHORT ") == "short"
-    assert normalize_direction("impulse_1m_long") == "long"
-    assert normalize_direction("impulse_1m_range_short") == "short"
+    assert normalize_direction("breakout_long") == "long"
+    assert normalize_direction("range_breakout_short") == "short"
     for bad in ("", "both", "longshort", "shortish", None, "flat"):
         with pytest.raises(ValueError, match="direction"):
             normalize_direction(bad)  # type: ignore[arg-type]
 
 
-def test_grid_search_runs_impulse_strategies_with_tagged_directions() -> None:
-    from hypervector.strategies.impulse_1m import register_impulse_1m
+def test_grid_search_runs_builders_with_descriptive_direction_tags() -> None:
+    from synthetic_strategies import sma_cross_signals
 
-    clear_registry()
-    try:
-        register_impulse_1m()
-        df = fixture_ohlcv(n_bars=1_500, drift=-4.0, wave_period=45)
-        for name, grid in (
-            ("impulse_1m_long", {"long_ema": [-15.0], "long_di": [-20.0], "long_roc": [-0.10]}),
-            ("impulse_1m_short", {"short_ema": [15.0], "short_di": [15.0], "short_roc": [0.10]}),
-        ):
-            results = run_grid_search(df, get_strategy(name), param_grid=grid, cost=ZERO_COST)
-            assert [r.status for r in results] == ["ok"], [r.error for r in results]
-    finally:
-        clear_registry()
+    df = fixture_ohlcv(n_bars=1_500, drift=-4.0, wave_period=45)
+    for tag, direction in (("breakout_long", "long"), ("range_breakout_short", "short")):
+
+        def build(frame: pd.DataFrame, fast: int = 5, slow: int = 20, _d=direction, _t=tag):
+            entries, exits, _ = sma_cross_signals(
+                frame, fast=fast, slow=slow, direction=_d
+            )
+            return entries, exits, _t
+
+        spec = StrategySpec(tag, "other", {"fast": [5], "slow": [20]}, build)
+        results = run_grid_search(df, spec, cost=ZERO_COST)
+        assert [r.status for r in results] == ["ok"], [r.error for r in results]
 
 
 def test_trial_metrics_still_rejects_unknown_directions() -> None:

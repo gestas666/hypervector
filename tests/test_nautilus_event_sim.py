@@ -1,4 +1,4 @@
-"""Tests for the dedicated Hypervelocity Nautilus simulation configuration."""
+"""Tests for the Nautilus L2 event-tape simulation configuration."""
 
 from __future__ import annotations
 
@@ -21,9 +21,9 @@ from nautilus_trader.model.enums import (
 )
 
 from hypervector.nautilus.bars import synthetic_btc_perp_instrument
-from hypervector.nautilus.hypervelocity_sim import (
-    HypervelocitySimulationConfig,
-    build_hypervelocity_venue,
+from hypervector.nautilus.event_sim import (
+    EventSimulationConfig,
+    build_event_venue,
     detect_nautilus_simulation_capabilities,
 )
 from nautilus_sim_support import (
@@ -39,21 +39,31 @@ from nautilus_sim_support import (
 )
 
 
-def test_hypervelocity_venue_enables_deterministic_event_friction() -> None:
+def test_event_venue_uses_the_declared_leverage() -> None:
     engine = RecordingEngine()
-    config = HypervelocitySimulationConfig(
+    build_event_venue(
+        engine, init_cash=10_000.0, config=EventSimulationConfig(default_leverage=10)
+    )
+    assert engine.arguments is not None
+    assert engine.arguments["default_leverage"] == Decimal("10")
+
+
+def test_event_venue_enables_deterministic_event_friction() -> None:
+    engine = RecordingEngine()
+    config = EventSimulationConfig(
         submit_latency_ms=37,
         cancel_latency_ms=83,
         random_seed=19,
     )
 
-    build_hypervelocity_venue(engine, init_cash=10_000.0, config=config)
+    build_event_venue(engine, init_cash=10_000.0, config=config)
 
     assert engine.arguments is not None
     args = engine.arguments
     assert args["account_type"] == AccountType.MARGIN
     assert args["oms_type"] == OmsType.NETTING
-    assert args["default_leverage"] == Decimal("30")
+    # Neutral 1x default; callers pass the strategy's declared leverage.
+    assert args["default_leverage"] == Decimal("1")
     assert args["book_type"] == BookType.L2_MBP
     assert args["liquidity_consumption"] is True
     assert args["queue_position"] is True
@@ -72,11 +82,11 @@ def test_hypervelocity_venue_enables_deterministic_event_friction() -> None:
 
 def test_simulation_config_rejects_invalid_inputs() -> None:
     with pytest.raises(ValueError, match="submit_latency_ms"):
-        HypervelocitySimulationConfig(submit_latency_ms=-1)
+        EventSimulationConfig(submit_latency_ms=-1)
     with pytest.raises(ValueError, match="default_leverage"):
-        HypervelocitySimulationConfig(default_leverage=0)
+        EventSimulationConfig(default_leverage=0)
     with pytest.raises(ValueError, match="maker_fill_probability"):
-        HypervelocitySimulationConfig(maker_fill_probability=1.1)
+        EventSimulationConfig(maker_fill_probability=1.1)
 
 
 def test_installed_nautilus_liquidation_gap_is_reported_not_hidden() -> None:
@@ -94,7 +104,7 @@ def test_installed_nautilus_liquidation_gap_is_reported_not_hidden() -> None:
 
 
 def test_same_configuration_produces_identical_models() -> None:
-    config = HypervelocitySimulationConfig(
+    config = EventSimulationConfig(
         submit_latency_ms=25,
         cancel_latency_ms=40,
         random_seed=7,
@@ -102,8 +112,8 @@ def test_same_configuration_produces_identical_models() -> None:
     first = RecordingEngine()
     second = RecordingEngine()
 
-    build_hypervelocity_venue(first, init_cash=120.0, config=config)
-    build_hypervelocity_venue(second, init_cash=120.0, config=config)
+    build_event_venue(first, init_cash=120.0, config=config)
+    build_event_venue(second, init_cash=120.0, config=config)
 
     assert first.arguments is not None
     assert second.arguments is not None
@@ -130,10 +140,10 @@ def test_nautilus_rejects_crossing_post_only_order() -> None:
     instrument = synthetic_btc_perp_instrument()
     strategy = CrossingPostOnlyStrategy(instrument.id)
     try:
-        build_hypervelocity_venue(
+        build_event_venue(
             engine,
             init_cash=10_000.0,
-            config=HypervelocitySimulationConfig(
+            config=EventSimulationConfig(
                 submit_latency_ms=0,
                 cancel_latency_ms=0,
             ),
@@ -156,10 +166,10 @@ def test_nautilus_consumes_l2_levels_and_assesses_partial_fill_fees() -> None:
     instrument = synthetic_btc_perp_instrument()
     strategy = AggressiveLimitStrategy(instrument.id)
     try:
-        build_hypervelocity_venue(
+        build_event_venue(
             engine,
             init_cash=10_000.0,
-            config=HypervelocitySimulationConfig(
+            config=EventSimulationConfig(
                 submit_latency_ms=0,
                 cancel_latency_ms=0,
             ),
@@ -189,10 +199,10 @@ def test_cancel_latency_completes_before_later_trade_can_fill() -> None:
     instrument = synthetic_btc_perp_instrument()
     strategy = CancelBeforeTradeStrategy(instrument.id)
     try:
-        build_hypervelocity_venue(
+        build_event_venue(
             engine,
             init_cash=10_000.0,
-            config=HypervelocitySimulationConfig(
+            config=EventSimulationConfig(
                 submit_latency_ms=37,
                 cancel_latency_ms=83,
             ),
@@ -221,10 +231,10 @@ def test_native_partial_oto_release_does_not_resize_target_quantity() -> None:
     instrument = synthetic_btc_perp_instrument()
     strategy = PartialBracketStrategy(instrument.id)
     try:
-        build_hypervelocity_venue(
+        build_event_venue(
             engine,
             init_cash=10_000.0,
-            config=HypervelocitySimulationConfig(
+            config=EventSimulationConfig(
                 submit_latency_ms=0,
                 cancel_latency_ms=0,
             ),

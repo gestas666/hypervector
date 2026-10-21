@@ -36,7 +36,7 @@ def _strict_export(
     data: Path,
     name: str = "cand",
     *,
-    strategy: str = "crown_stack_short",
+    strategy: str = "test_sma_cross_short",
     lookback_days: int = 45,
     symbol: str = "BTC",
 ) -> Path:
@@ -122,10 +122,10 @@ def test_sweep_prints_json_and_exports_the_selected_trial(
 ) -> None:
     data = tmp_path / "data"
     argv = ["--data-root", str(data), "backtest", "sweep", "--track", "uptrend"]
-    assert main([*argv, "--strategy", "crown_stack_long", "--lookback-days", "30"]) == 0
+    assert main([*argv, "--strategy", "test_sma_cross_long", "--lookback-days", "30"]) == 0
     result = json.loads(capsys.readouterr().out)
     assert result["ok"] is True and result["track"] == "uptrend"
-    assert result["strategy"] == "crown_stack_long"
+    assert result["strategy"] == "test_sma_cross_long"
     assert result["trials"] == result["ok_trials"] + result["failed_trials"]
     assert result["artifacts"]["board"] == str(
         (data / "runs" / "hypervector.db").resolve()
@@ -133,7 +133,7 @@ def test_sweep_prints_json_and_exports_the_selected_trial(
     export_dir = Path(result["artifacts"]["export"])
     assert export_dir.is_dir() and result["export_dir"] == str(export_dir)
     params = json.loads((export_dir / "params.json").read_text())
-    assert params["strategy"] == "crown_stack_long"
+    assert params["strategy"] == "test_sma_cross_long"
     database = RunsDB(data / "runs" / "hypervector.db")
     try:
         rows = database.list_trials(run_id=result["run_id"])
@@ -148,7 +148,7 @@ def test_sweep_role_mismatch_is_refused_before_loading_data(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], history: list[dict[str, object]]
 ) -> None:
     argv = ["--data-root", str(tmp_path / "data"), "backtest", "sweep"]
-    assert main([*argv, "--track", "uptrend", "--strategy", "crown_stack_short"]) == 2
+    assert main([*argv, "--track", "uptrend", "--strategy", "test_sma_cross_short"]) == 2
     assert "expected 'uptrend'" in json.loads(capsys.readouterr().err)["error"]
     assert history == []
 
@@ -164,11 +164,11 @@ def test_sweep_with_every_trial_failing_is_a_technical_failure(
     monkeypatch.setattr(
         "hypervector.sweep.search.run_grid_search",
         lambda *_a, **_k: [
-            TrialResult("crown_stack_long", "uptrend", {}, status="error", error="boom")
+            TrialResult("test_sma_cross_long", "uptrend", {}, status="error", error="boom")
         ],
     )
     argv = ["--data-root", str(tmp_path / "data"), "backtest", "sweep"]
-    assert main([*argv, "--track", "uptrend", "--strategy", "crown_stack_long"]) == 1
+    assert main([*argv, "--track", "uptrend", "--strategy", "test_sma_cross_long"]) == 1
     # stderr carries the settings and board first; the error document is last.
     error = json.loads(capsys.readouterr().err.strip().splitlines()[-1])
     assert "every sweep trial failed" in error["error"]
@@ -189,7 +189,7 @@ def test_run_sweep_honours_no_network_for_pipeline_callers(
             "--track",
             "downtrend",
             "--strategy",
-            "crown_stack_short",
+            "test_sma_cross_short",
             "--no-export",
         ]
     )
@@ -210,13 +210,13 @@ def _board_fixture(data: Path) -> None:
                 _trial(
                     50.0,
                     run_id="sweep-a",
-                    strategy="crown_stack_long",
+                    strategy="test_sma_cross_long",
                     research_meta={"symbol": "BTC", "timeframe": "1m"},
                 ),
                 _trial(
                     -20.0,
                     run_id="sweep-b",
-                    strategy="crown_stack_long",
+                    strategy="test_sma_cross_long",
                     research_meta={"symbol": "ETH", "timeframe": "5m"},
                 ),
             ]
@@ -226,7 +226,7 @@ def _board_fixture(data: Path) -> None:
     logs = data / "logs" / "research"
     logs.mkdir(parents=True)
     board = {
-        "strategy": "crown_stack_short",
+        "strategy": "test_sma_cross_short",
         "symbol": "BTC",
         "timeframe": "5m",
         "lookback_days": 90,
@@ -237,7 +237,7 @@ def _board_fixture(data: Path) -> None:
             {"params": {"a": 2}, "metrics": {}, "status": "error"},
         ],
     }
-    (logs / "autotune_crown_stack_short_5m_x.json").write_text(json.dumps(board))
+    (logs / "autotune_test_sma_cross_short_5m_x.json").write_text(json.dumps(board))
     (logs / "autotune_broken.json").write_text("{")
 
 
@@ -444,20 +444,9 @@ def daemon_calls(
     calls: list[dict[str, object]] = []
 
     def fake_daemon(**kwargs: object) -> PaperDaemonResult:
-        from hypervector.runtime_lock import (
-            RuntimeLockError,
-            hypervelocity_runtime_lock,
-        )
-
-        try:
-            with hypervelocity_runtime_lock(Path(str(kwargs["data_root"]))):
-                locked = False
-        except RuntimeLockError:
-            locked = True
         calls.append(
             {
                 **kwargs,
-                "lock_held": locked,
                 "metalabel_root": os.environ.get("HYPERVECTOR_METALABEL_ROOT"),
             }
         )
@@ -501,34 +490,10 @@ def test_paper_run_resolves_candidate_ids_and_metalabel_bundles(
         "model": str(model.resolve()),
         "paper": str(tmp_path / "decisions.jsonl"),
     }
-    assert call["lock_held"] is False and out["hypervelocity_runtime_lock"] is False
     # The model override lasts for the session only.
     assert "HYPERVECTOR_METALABEL_ROOT" not in os.environ
     assert main([*argv, "--metalabel-bundle", "nope"]) == 2
     assert main(["--data-root", str(data), "paper", "run", "--export", "gone"]) == 2
-
-
-def test_hypervelocity_shadow_paper_run_holds_the_runtime_lock(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    daemon_calls: list[dict[str, object]],
-) -> None:
-    from hypervector.runtime_lock import hypervelocity_runtime_lock
-
-    data = tmp_path / "data"
-    _strict_export(data, "hv", strategy="hypervelocity_1m_scalper_long")
-    argv = ["--data-root", str(data), "paper", "run", "--export", "hv"]
-    assert main(argv) == 0
-    assert json.loads(capsys.readouterr().out)["hypervelocity_runtime_lock"] is True
-    assert daemon_calls[-1]["lock_held"] is True
-
-    assert main([*argv, "--mode", "paper"]) == 0
-    assert daemon_calls[-1]["lock_held"] is False
-
-    with hypervelocity_runtime_lock(data):
-        assert main(argv) == 2
-    assert "already running" in capsys.readouterr().err
-    assert len(daemon_calls) == 2
 
 
 # --- model train ------------------------------------------------------------------
@@ -630,19 +595,6 @@ def test_regime_classify_refuses_bad_detector_options_before_loading(
 
     monkeypatch.setattr("hypervector.commands.regime._load_bars", fail)
     assert main(["--data-root", str(tmp_path), "regime", "classify", *extra]) == 2
-
-
-@pytest.mark.parametrize("command", [["regime", "align"], ["tune", "regime"]])
-def test_positions_are_checked_before_loading_data(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, command: list[str], capsys
-) -> None:
-    def fail(_args: argparse.Namespace) -> None:
-        raise AssertionError("data loaded before validation")
-
-    monkeypatch.setattr("hypervector.commands.regime._load_bars", fail)
-    argv = ["--data-root", str(tmp_path), *command, "--positions", "missing.csv"]
-    assert main(argv) == 2
-    assert "positions file not found" in json.loads(capsys.readouterr().err)["error"]
 
 
 # --- live check -------------------------------------------------------------------
@@ -820,7 +772,7 @@ def test_tune_strategy_reports_board_and_export_artifacts(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     result = SimpleNamespace(
-        strategy_name="crown_stack_long",
+        strategy_name="test_sma_cross_long",
         symbol="BTC",
         timeframe="1m",
         lookback_days=90,
@@ -835,9 +787,8 @@ def test_tune_strategy_reports_board_and_export_artifacts(
     monkeypatch.setattr(
         "hypervector.sweep.autotune.run_optuna_autotune", lambda **_kwargs: result
     )
-    assert (
-        main(["--data-root", str(tmp_path), "tune", "strategy", "--n-trials", "2"]) == 0
-    )
+    argv = ["--data-root", str(tmp_path), "tune", "strategy", "--n-trials", "2"]
+    assert main([*argv, "--strategy", "test_sma_cross_long"]) == 0
     out = json.loads(capsys.readouterr().out)
     assert out["artifacts"] == {
         "board": str(tmp_path / "board.json"),
@@ -846,7 +797,7 @@ def test_tune_strategy_reports_board_and_export_artifacts(
     assert out["candidate_id"] == "auto_1"
 
 
-# --- data history and paper compare -------------------------------------------------
+# --- data history -------------------------------------------------------------------
 
 
 def test_data_history_reports_the_dataset_artifact(
@@ -863,32 +814,6 @@ def test_data_history_reports_the_dataset_artifact(
     assert dataset["cache_path"] == str(
         (data / "cache" / "BTC_1m_30d.parquet").resolve()
     )
-
-
-def test_paper_compare_lives_in_the_shadow_module(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    from hypervector.commands.registry import spec_for
-
-    assert spec_for("paper compare")["handler"] == (
-        "hypervector.commands.shadow:cmd_shadow_compare"
-    )
-    with pytest.raises(ImportError):
-        __import__("hypervector.commands.replay")
-    argv = [
-        "--data-root",
-        str(tmp_path),
-        "paper",
-        "compare",
-        "--shadow-ledger",
-        str(tmp_path / "missing.jsonl"),
-        "--positions",
-        str(tmp_path / "missing.csv"),
-        "--run-id",
-        "r1",
-    ]
-    assert main(argv) == 1
-    assert "shadow ledger not found" in json.loads(capsys.readouterr().err)["error"]
 
 
 def test_trial_rows_with_failed_queries_still_close_the_database(

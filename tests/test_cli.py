@@ -125,11 +125,13 @@ def test_cli_sweep_up_and_down(tmp_path: Path, capsys, inject_history):
 
     data = tmp_path / "data"
     sweep = ["--data-root", str(data), "backtest", "sweep", "--lookback-days", "30"]
-    assert main([*sweep, "--track", "uptrend"]) == 0
+    up = ["--track", "uptrend", "--strategy", "test_sma_cross_long"]
+    assert main([*sweep, *up]) == 0
     up_out = capsys.readouterr().out
-    assert "net_pnl" in up_out or "ma_cross" in up_out
+    assert "net_pnl" in up_out
 
-    assert main([*sweep, "--track", "downtrend"]) == 0
+    down = ["--track", "downtrend", "--strategy", "test_sma_cross_short"]
+    assert main([*sweep, *down]) == 0
     assert (data / "runs" / "hypervector.db").is_file()
     report = ["--data-root", str(data), "backtest", "report", "--track", "uptrend"]
     assert main(report) == 0
@@ -257,7 +259,7 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
                 "--lookback-days",
                 "30",
                 "--strategy",
-                "crown_stack_short",
+                "test_sma_cross_short",
                 "--initial-cash",
                 "10000",
                 "--exit-mode",
@@ -292,7 +294,7 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
     )
     val = json.loads(capsys.readouterr().out)
     assert val["ok"] is True
-    assert val["strategy"] == "crown_stack_short"
+    assert val["strategy"] == "test_sma_cross_short"
     assert val["has_costs"] is True
     assert val["has_exits"] is True
 
@@ -312,7 +314,7 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
     captured = capsys.readouterr()
     report = json.loads(captured.out)
     assert report["ok"] is True
-    assert report["phase2_stub"]["loadout"]["strategy_name"] == "crown_stack_short"
+    assert report["phase2_stub"]["loadout"]["strategy_name"] == "test_sma_cross_short"
     assert report["phase2_stub"]["exits"]["mode"] == "atr"
     assert report["paper_live"]["implemented"] is True
     assert report["paper_live"]["paper_dry_run"]["implemented"] is True
@@ -414,7 +416,7 @@ def _strict_export_for_phase2(exports_root: Path) -> Path:
             "data_provenance": {"sources": {"fixture": 200}},
         },
         params={
-            "strategy": "ma_cross_long",
+            "strategy": "test_sma_cross_long",
             "exit_mode": "fixed_rr",
             "fast": 5,
             "slow": 20,
@@ -466,7 +468,7 @@ def test_cli_phase2_run_offline(tmp_path: Path, capsys, inject_history):
     assert "pnl" in summary
     assert "report_path" in summary
     assert Path(summary["report_path"]).is_file()
-    assert summary["loadout"]["strategy_name"] == "ma_cross_long"
+    assert summary["loadout"]["strategy_name"] == "test_sma_cross_long"
     # Historical only — do not claim paper/live ran
     assert "paper/live not implemented" not in captured.err
     assert "paper ran" not in captured.err.lower()
@@ -555,7 +557,7 @@ def test_cli_autotune_wires_current_runner_arguments(
             "tune",
             "strategy",
             "--strategy",
-            "hypervelocity_1m_scalper_long",
+            "test_managed_long",
             "--timeframe",
             "1m",
             "--fee-model",

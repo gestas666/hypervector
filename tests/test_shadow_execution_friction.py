@@ -1,4 +1,4 @@
-"""Deterministic event-friction tests for Hypervelocity shadow execution."""
+"""Deterministic event-friction tests for the event shadow execution port."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from hypervector.data.hl_events import (
     StreamGap,
 )
 from hypervector.execution import OrderCommand
-from hypervector.nautilus.hypervelocity_sim import HypervelocitySimulationConfig
+from hypervector.nautilus.event_sim import EventSimulationConfig
 from hypervector.paper.nautilus_shadow import NautilusShadowExecutionPort
 
 BASE_MS = 1_785_103_200_000
@@ -115,7 +115,7 @@ def port(
     return NautilusShadowExecutionPort(
         symbol="BTC",
         initial_cash_usd=initial_cash_usd,
-        simulation_config=HypervelocitySimulationConfig(
+        simulation_config=EventSimulationConfig(
             submit_latency_ms=submit_ms,
             cancel_latency_ms=cancel_ms,
             update_latency_ms=50,

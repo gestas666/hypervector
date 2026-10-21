@@ -36,11 +36,29 @@ def test_ordinary_strategy_margin_is_one_x(tmp_path: Path, monkeypatch) -> None:
 
 
 @pytest.mark.parametrize(("symbol", "expected"), [("BTC", 30.0), ("ETH", 25.0)])
-def test_hypervelocity_leverage_capped_by_venue_max(
+def test_declared_leverage_capped_by_venue_max(
     tmp_path: Path, symbol: str, expected: float
 ) -> None:
+    from hypervector.strategies.registry import (
+        ExecutionProfile,
+        StrategySpec,
+        register,
+    )
+    from synthetic_strategies import sma_cross_long
+
+    register(
+        StrategySpec(
+            name="test_leverage_30_long",
+            role="uptrend",
+            param_grid={},
+            build_signals=sma_cross_long,
+            execution=ExecutionProfile(
+                fixed_margin_fraction=0.7, leverage=30.0, strategy_managed_exits=True
+            ),
+        )
+    )
     export_dir = write_export(
-        tmp_path, strategy="hypervelocity_1m_scalper", timeframe="1m", symbol=symbol
+        tmp_path, strategy="test_leverage_30_long", timeframe="1m", symbol=symbol
     )
     base = 40_000.0 if symbol == "BTC" else 3_000.0
     result = run_phase2_backtest(

@@ -70,7 +70,7 @@ def test_pipeline_tune_stage_never_refreshes_the_pinned_window(
             "pipeline",
             "run",
             "--strategy",
-            "crown_stack_long",
+            "test_sma_cross_long",
             "--timeframe",
             "1h",
             "--lookback-days",
