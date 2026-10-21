@@ -46,7 +46,6 @@ def refresh_warm_history(
     symbol: str,
     timeframe: str,
     now: pd.Timestamp,
-    resume_state_asof: str | pd.Timestamp | None = None,
     fetcher: WarmTailFetcher | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Return warm-up bars whose tail is current at ``now`` plus provenance."""
@@ -67,13 +66,6 @@ def refresh_warm_history(
         return cached, provenance
 
     floor_start = observed - step * (DEFAULT_MAX_LOOKBACK + 1)
-    reconcile_from = _optional_utc(resume_state_asof)
-    if reconcile_from is not None:
-        # Replay needs the full indicator buffer that preceded the persisted
-        # state, not just the bars after it (HL retention permitting).
-        floor_start = min(
-            floor_start, reconcile_from - step * (DEFAULT_MAX_LOOKBACK + 1)
-        )
     # Start one bar early: the window round-trips through float days and
     # millisecond truncation, and the last cached candle must be re-fetched.
     connects = last_open - step >= floor_start
@@ -145,15 +137,6 @@ def _normalized_tail(tail: pd.DataFrame | None) -> pd.DataFrame:
         drop=True
     )
 
-
-def _optional_utc(value: str | pd.Timestamp | None) -> pd.Timestamp | None:
-    """Parse a persisted reconciliation timestamp; unknown markers are ignored."""
-    if value is None:
-        return None
-    try:
-        return _utc(value)
-    except (TypeError, ValueError):
-        return None
 
 
 def _utc(value: str | pd.Timestamp) -> pd.Timestamp:

@@ -61,10 +61,6 @@ from hypervector.live.spcx_cash_session_breakout_provider import (
     SPCX_CASH_SESSION_LONG_STRATEGY,
     SpcxCashSessionBreakoutCollector,
 )
-from hypervector.live.source_follow_cohort_provider import (
-    SOURCE_FOLLOW_COHORT_STRATEGY,
-    configured_source_follow_collector,
-)
 from hypervector.live.zec_donchian_provider import (
     ZEC_DONCHIAN_LONG_STRATEGY,
     ZecDonchianLongCollector,
@@ -174,11 +170,6 @@ def _native_collector(
                 config.mode == "live" and "ETH" in provider.execution_symbols
             )
         )
-    if strategy == SOURCE_FOLLOW_COHORT_STRATEGY:
-        collector = configured_source_follow_collector(config)
-        if collector is None:
-            raise MultiAssetIntentPollerError("source-follow collector is unavailable")
-        return collector
     if strategy == btc_structural.BTC_STRUCTURAL_FIXED60_STRATEGY:
         return btc_structural.BtcStructuralOneBlockerCollector(
             cohort_ledger=config.cohort_ledger,

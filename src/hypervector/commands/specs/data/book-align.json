@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "help": "Align recorded L2 orderbook data (JSONL or SQLite) with OHLCV bars",
+  "help": "Align recorded L2 orderbook snapshots (JSONL) with OHLCV bars",
   "kind": "inprocess",
   "handler": "hypervector.commands.market:cmd_book_align",
   "authority": "none",
@@ -22,7 +22,7 @@
       "options": {
         "dest": "book_path",
         "default": null,
-        "help": "L2 orderbook file: JSONL snapshots or a calibration SQLite (.sqlite.zst)"
+        "help": "L2 orderbook snapshot JSONL (as written by data book-record)"
       },
       "required": true
     },

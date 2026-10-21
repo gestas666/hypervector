@@ -153,32 +153,16 @@ def run_sweep(args: argparse.Namespace, role: str) -> dict[str, Any]:
 
 
 def _select_sweep_strategy(args: argparse.Namespace, role: str) -> StrategySpec:
-    """Resolve the requested family; a role that does not match the track is refused."""
-    from hypervector.strategies.registry import get_strategy, list_strategies
+    """Resolve ``--strategy``; a role that does not match the track is refused."""
+    from hypervector.commands.common import registered_strategy
 
     name = getattr(args, "strategy", None)
-    if name:
-        try:
-            strategy = get_strategy(name)
-        except KeyError as exc:
-            raise CommandRefused(f"unknown strategy: {name}") from exc
-        if strategy.role != role:
-            raise CommandRefused(
-                f"strategy {name!r} has role={strategy.role!r}, expected {role!r}"
-            )
-        return strategy
-    preferred = (
-        f"trend_ride_{'long' if role == 'uptrend' else 'short'}",
-        f"crown_stack_{'long' if role == 'uptrend' else 'short'}",
-    )
-    specs = list_strategies(role=role)
-    by_name = {spec.name: spec for spec in specs}
-    for candidate in preferred:
-        if candidate in by_name:
-            return by_name[candidate]
-    if specs:
-        return specs[0]
-    raise CommandRefused(f"no strategies for role={role}")
+    strategy = registered_strategy(name)
+    if strategy.role != role:
+        raise CommandRefused(
+            f"strategy {name!r} has role={strategy.role!r}, expected {role!r}"
+        )
+    return strategy
 
 
 def _sweep_settings(

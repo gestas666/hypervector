@@ -138,7 +138,6 @@ def cmd_book_align(args: argparse.Namespace) -> int:
         align_orderbook_to_ohlcv,
         book_coverage_summary,
         load_l2_jsonl,
-        load_l2_sqlite_feature_samples,
     )
 
     minimum = getattr(args, "min_coverage", None)
@@ -154,10 +153,7 @@ def cmd_book_align(args: argparse.Namespace) -> int:
     except (RuntimeError, OSError) as exc:
         return history_failure(args, exc)
 
-    if str(book_path).endswith(".jsonl"):
-        df_book = load_l2_jsonl(book_path)
-    else:
-        df_book = load_l2_sqlite_feature_samples(book_path, coin=args.symbol)
+    df_book = load_l2_jsonl(book_path)
 
     aligned = align_orderbook_to_ohlcv(df_bars, df_book)
     coverage = book_coverage_summary(aligned)

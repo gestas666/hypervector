@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from hypervector.data.hl_events import L2SnapshotEvent
 from hypervector.execution import OrderCommand, VenueOrderEvent
-from hypervector.nautilus.hypervelocity_sim import HypervelocitySimulationConfig
+from hypervector.nautilus.event_sim import EventSimulationConfig
 from hypervector.paper.shadow_execution_models import (
     EXECUTION_MODEL,
     MARGIN_MODEL,
@@ -25,7 +25,7 @@ class ShadowMarketExitMixin:
     _taker_fee_rate: float
     _orders: dict[str, ShadowOrder]
     _records: list[ShadowExecutionRecord]
-    _config: HypervelocitySimulationConfig
+    _config: EventSimulationConfig
     _last_observed_at: str
     _last_source: str | None
 

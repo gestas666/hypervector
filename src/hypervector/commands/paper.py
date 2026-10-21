@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Iterator
-from contextlib import AbstractContextManager, contextmanager, nullcontext
+from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
@@ -17,7 +17,6 @@ from hypervector.nautilus.load_export import load_strategy_loadout
 from hypervector.paper.fill_models import DEFAULT_MAX_BOOK_AGE_MS, FILL_MODEL_L2_WALK_V1
 from hypervector.paper.order_intent import NETWORK_MAINNET
 from hypervector.paper.report import default_decisions_path, report_from_data_root
-from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 
 if TYPE_CHECKING:
     from hypervector.paper.runner import PaperDaemonResult
@@ -51,13 +50,7 @@ def resolve_metalabel_mode(**options: Any) -> str:
 
 
 def cmd_paper_run(args: argparse.Namespace) -> int:
-    """Run one explicitly configured no-submit paper/shadow session.
-
-    A Hypervelocity bundle in shadow mode takes the Hypervelocity runtime lock,
-    so it can neither run beside nor resume into another Hypervelocity shadow.
-    """
-    from hypervector.runtime_lock import RuntimeLockError
-
+    """Run one explicitly configured no-submit paper/shadow session."""
     path = resolve_export(args.export, args.data_root)
     bundle = (
         resolve_metalabel_bundle(args.metalabel_bundle, args.data_root)
@@ -69,16 +62,10 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         options = _paper_options(args, path, strategy_name)
     except PaperArgumentsError as exc:
         raise CommandRefused(f"paper run refused: {exc}") from exc
-    hypervelocity_shadow = (
-        is_hypervelocity_strategy(strategy_name)
-        and options["execution_mode"] == "shadow"
-    )
     try:
         ensure_data_layout(Path(args.data_root))
-        with _runtime_guard(args, hypervelocity_shadow), _metalabel_root(bundle):
+        with _metalabel_root(bundle):
             result = start_paper_daemon(**options)
-    except RuntimeLockError as exc:
-        raise CommandRefused(f"paper run refused: {exc}") from exc
     except Exception as exc:  # noqa: BLE001 - session failures are technical (exit 1)
         if os.environ.get("HYPERVECTOR_DEBUG") == "1":
             raise
@@ -86,7 +73,6 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
             args, exc, error=f"paper run failed: {exc}", export_dir=str(path)
         )
     report = _paper_result(args, result, options)
-    report["hypervelocity_runtime_lock"] = hypervelocity_shadow
     report["metalabel_bundle"] = str(bundle) if bundle is not None else None
     report["artifacts"] = {
         "export": str(path),
@@ -148,16 +134,6 @@ def _metalabel_root(bundle: Path | None) -> Iterator[None]:
             os.environ[METALABEL_ROOT_ENV] = previous
 
 
-def _runtime_guard(
-    args: argparse.Namespace, hypervelocity_shadow: bool
-) -> AbstractContextManager[Any]:
-    if not hypervelocity_shadow:
-        return nullcontext()
-    from hypervector.runtime_lock import hypervelocity_runtime_lock
-
-    return hypervelocity_runtime_lock(Path(args.data_root))
-
-
 def _paper_options(
     args: argparse.Namespace, path: Path, strategy_name: str
 ) -> dict[str, object]:
@@ -200,7 +176,11 @@ def _paper_options(
 def _paper_model_options(
     args: argparse.Namespace, strategy_name: str
 ) -> tuple[str, bool, bool, float]:
-    """Preserve explicit model policy and Hypervelocity annotation-only authority."""
+    """Preserve explicit model policy; fixed-sized strategies are annotation-only.
+
+    A strategy that declares fixed sizing is never scaled or filtered by a
+    model, so ``scale``/``filter`` resolve to ``observe`` for it.
+    """
     legacy_metalabel = getattr(args, "metalabel", None)
     metalabel_min_p = float(getattr(args, "metalabel_min_p", 0.5))
     metalabel_filter = bool(getattr(args, "metalabel_filter", True))
@@ -216,14 +196,19 @@ def _paper_model_options(
         filter_entries=metalabel_filter,
         requested=requested_metalabel_mode,
     )
-    if is_hypervelocity_strategy(strategy_name) and metalabel_mode in (
-        "scale",
-        "filter",
-    ):
+    if metalabel_mode in ("scale", "filter") and _declares_fixed_sizing(strategy_name):
         metalabel_mode = "observe"
         metalabel_filter = False
     metalabel_enabled = metalabel_mode != "off"
     return metalabel_mode, metalabel_enabled, metalabel_filter, metalabel_min_p
+
+
+def _declares_fixed_sizing(strategy_name: str) -> bool:
+    from hypervector.strategies import register_all_strategies
+    from hypervector.strategies.registry import execution_profile
+
+    register_all_strategies()
+    return execution_profile(strategy_name).fixed_sizing
 
 
 def _paper_result(

@@ -8,9 +8,9 @@ The process is fixed; **bundles** are versioned instances:
     → caller maps p → skip floor / conviction / risk (policy elsewhere)
 
 No training, no asset-specific classes. Point ``from_root`` / env at any
-compatible bundle (impulse BTC 1m, ETH short, HAZEMA 15m, future crown
-metalabel, …). Spin a new version by training a new bundle directory —
-do not fork this module unless the *process* changes.
+compatible bundle (any symbol, interval or strategy). Spin a new version by
+training a new bundle directory — do not fork this module unless the
+*process* changes.
 """
 
 from __future__ import annotations
@@ -24,10 +24,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-# Primary env: any metalabel bundle root (dir with metalabel_lgbm.txt or models/).
+# Env: any metalabel bundle root (dir with metalabel_lgbm.txt or models/).
 ENV_ROOT = "HYPERVECTOR_METALABEL_ROOT"
-# Legacy alias kept so existing shells keep working until callers migrate.
-ENV_ROOT_LEGACY = "HYPERVECTOR_IMPULSE_BTC_ROOT"
 
 # Project-local layout under --data-root (I2): data/models/metalabel/
 REL_BUNDLE_UNDER_DATA = Path("models") / "metalabel"
@@ -85,15 +83,12 @@ def resolve_metalabel_root(
 
     Order:
       1. ``HYPERVECTOR_METALABEL_ROOT``
-      2. ``HYPERVECTOR_IMPULSE_BTC_ROOT`` (legacy)
-      3. ``{data_root}/models/metalabel`` when ``data_root`` is set
-      4. known local discovery paths (first usable real model file)
+      2. ``{data_root}/models/metalabel`` when ``data_root`` is set
+      3. known local discovery paths (first usable real model file)
     """
     environ = env if env is not None else os.environ
-    for key in (ENV_ROOT, ENV_ROOT_LEGACY):
-        raw = environ.get(key)
-        if not raw:
-            continue
+    raw = environ.get(ENV_ROOT)
+    if raw:
         root = _normalize_bundle_root(Path(raw))
         if root is not None:
             return root
@@ -115,7 +110,7 @@ def resolve_metalabel_root(
 
     raise MetalabelError(
         "metalabel bundle not found: set "
-        f"{ENV_ROOT} (or legacy {ENV_ROOT_LEGACY}) to a directory containing "
+        f"{ENV_ROOT} to a directory containing "
         f"{_MODEL_NAME} (or place bundle at data/models/metalabel/)"
     )
 
@@ -132,9 +127,6 @@ def probe_metalabel(
     """
     out: dict[str, Any] = {
         "env_root_set": bool((env if env is not None else os.environ).get(ENV_ROOT)),
-        "legacy_env_set": bool(
-            (env if env is not None else os.environ).get(ENV_ROOT_LEGACY)
-        ),
         "bundle_resolved": False,
         "bundle_root": None,
         "model_present": False,

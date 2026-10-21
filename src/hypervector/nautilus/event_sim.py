@@ -1,4 +1,4 @@
-"""Nautilus simulated-venue configuration for Hypervelocity event tapes.
+"""Nautilus simulated-venue configuration for L2 event tape replays.
 
 This module only enables features exposed by the installed ``BacktestEngine``.
 Hyperliquid-specific isolated liquidation is deliberately handled separately.
@@ -41,7 +41,7 @@ class VenueRegistrar(Protocol):
 
 
 @dataclass(frozen=True)
-class HypervelocitySimulationConfig:
+class EventSimulationConfig:
     """Deterministic execution-friction settings for an L2 event replay."""
 
     submit_latency_ms: int = 50
@@ -50,7 +50,9 @@ class HypervelocitySimulationConfig:
     maker_fill_probability: float = 1.0
     slippage_probability: float = 0.0
     random_seed: int = 7
-    default_leverage: int = 30
+    #: Venue leverage of the simulated account; callers pass the strategy's
+    #: declared leverage (standard path: 1x), never above the venue cap.
+    default_leverage: int = 1
 
     def __post_init__(self) -> None:
         """Reject settings Nautilus cannot interpret safely."""
@@ -80,14 +82,14 @@ class NautilusSimulationCapabilities:
     native_liquidation_detail: str
 
 
-def build_hypervelocity_venue(
+def build_event_venue(
     engine: VenueRegistrar,
     *,
     init_cash: float,
-    config: HypervelocitySimulationConfig | None = None,
+    config: EventSimulationConfig | None = None,
     venue: str = _VENUE,
 ) -> None:
-    """Register a deterministic L2 simulated venue for Hypervelocity.
+    """Register a deterministic L2 simulated venue for event-tape replays.
 
     Bar execution stays off because this path requires archived Hyperliquid
     L2/trade events. The existing bar-only runner remains a separate,
@@ -95,7 +97,7 @@ def build_hypervelocity_venue(
     """
     if not math.isfinite(init_cash) or init_cash <= 0.0:
         raise ValueError("init_cash must be finite and positive")
-    settings = config or HypervelocitySimulationConfig()
+    settings = config or EventSimulationConfig()
     latency = _latency_model(settings)
     fill = FillModel(
         prob_fill_on_limit=settings.maker_fill_probability,
@@ -160,7 +162,7 @@ def detect_nautilus_simulation_capabilities() -> NautilusSimulationCapabilities:
     )
 
 
-def _latency_model(config: HypervelocitySimulationConfig) -> LatencyModel:
+def _latency_model(config: EventSimulationConfig) -> LatencyModel:
     return LatencyModel(
         base_latency_nanos=0,
         insert_latency_nanos=config.submit_latency_ms * _NANOS_PER_MILLISECOND,

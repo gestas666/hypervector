@@ -9,19 +9,22 @@ import math
 
 import pandas as pd
 
-from hypervector.strategies.hypervelocity_contract import HypervelocityContract
-from hypervector.strategies.registry import StrategySpec, normalize_direction
+from hypervector.strategies.registry import (
+    STRATEGY_MANAGED_EXIT_MODE,
+    ExecutionProfile,
+    StrategySpec,
+    normalize_direction,
+)
 from hypervector.sweep.autotune_models import DEFAULT_OBJECTIVE, OBJECTIVES
 from hypervector.sweep.autotune_sampling import (
-    _hypervelocity_exit_dict,
     effective_exit_key,
+    strategy_managed_exit_dict,
 )
 from hypervector.sweep.costs import CostModel
 from hypervector.sweep.exits import ExitConfig, stop_distance_frac
 from hypervector.sweep.sizing import RiskConfig
 
 _INITIAL_CASH = 10_000.0
-_STRATEGY_TARGET_ONLY = "strategy_target_only"
 logger = logging.getLogger(__name__)
 
 
@@ -106,12 +109,14 @@ class TrialEvaluator:
     bars: pd.DataFrame
     strategy: StrategySpec
     #: Expected trade direction, or ``None`` to take the builder's tag. The tag
-    #: is always normalised (``impulse_1m_short`` -> ``short``); a tag that is
+    #: is always normalised (``breakout_short`` -> ``short``); a tag that is
     #: not long/short, or one disagreeing with an expected direction, is a
     #: technical failure of that trial.
     direction: str | None
     cost: CostModel
-    hypervelocity: bool
+    #: The strategy's declared options: fixed sizing and strategy-managed exits
+    #: replace the sampled exits and the risk-sized position.
+    execution: ExecutionProfile
     calculate: Callable[..., dict[str, object]]
     objective: str = DEFAULT_OBJECTIVE
     trials: list[dict[str, object]] = field(default_factory=list)
@@ -130,7 +135,9 @@ class TrialEvaluator:
     ) -> tuple[object, ...]:
         """Identify the effective configuration a trial would measure."""
         exit_key: tuple[object, ...] = (
-            (_STRATEGY_TARGET_ONLY,) if self.hypervelocity else effective_exit_key(exits)
+            (STRATEGY_MANAGED_EXIT_MODE,)
+            if self.execution.strategy_managed_exits
+            else effective_exit_key(exits)
         )
         return (_freeze(params), exit_key)
 
@@ -212,11 +219,12 @@ class TrialEvaluator:
         if evaluation_start:
             entries = entries.iloc[evaluation_start:]
             exit_signals = exit_signals.iloc[evaluation_start:]
-        contract = HypervelocityContract() if self.hypervelocity else None
-        exit_config, leverage = self._exits(exits, contract)
+        execution = self.execution
+        managed = execution.strategy_managed_exits
+        exit_config, leverage = self._exits(exits)
         venue = {} if self.symbol is None else {"symbol": self.symbol}
         warmup: dict[str, object] = {}
-        if evaluation_start and contract is None:
+        if evaluation_start and not managed:
             stops = stop_distance_frac(self.bars, exit_config)
             warmup["stop_distance"] = stops.iloc[evaluation_start:]
         metrics = self.calculate(
@@ -230,17 +238,17 @@ class TrialEvaluator:
             exit_cfg=exit_config,
             risk_cfg=RiskConfig(max_size_frac=leverage),
             apply_costs=True,
-            fixed_notional_fraction=contract.notional_fraction if contract else None,
-            fixed_margin_fraction=contract.margin_fraction if contract else None,
-            strategy_managed_exits=self.hypervelocity,
+            fixed_notional_fraction=execution.fixed_notional_fraction,
+            fixed_margin_fraction=execution.fixed_margin_fraction,
+            strategy_managed_exits=managed,
             **venue,
             **warmup,
         )
-        if contract is not None:
+        if managed:
             # The run used strategy-managed exits with no stop; report that
             # instead of the placeholder ExitConfig mode.
-            metrics = {**metrics, "exit_mode": _STRATEGY_TARGET_ONLY}
-            reported = _hypervelocity_exit_dict()
+            metrics = {**metrics, "exit_mode": STRATEGY_MANAGED_EXIT_MODE}
+            reported = strategy_managed_exit_dict(execution)
         else:
             reported = {**exit_config.to_dict(), "leverage": leverage}
         return metrics, reported
@@ -255,11 +263,10 @@ class TrialEvaluator:
         self.observed_direction = direction
         return direction
 
-    def _exits(
-        self, exits: dict[str, object], contract: HypervelocityContract | None
-    ) -> tuple[ExitConfig, float]:
-        if contract is not None:
-            return ExitConfig(), contract.leverage
+    def _exits(self, exits: dict[str, object]) -> tuple[ExitConfig, float]:
+        execution = self.execution
+        if execution.strategy_managed_exits and execution.leverage is not None:
+            return ExitConfig(), float(execution.leverage)
         return ExitConfig(
             mode=exits.get("mode", "atr"),  # type: ignore[arg-type]
             sl_pct=exits.get("sl_pct", 0.01),  # type: ignore[arg-type]

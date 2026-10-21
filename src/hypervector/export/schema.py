@@ -54,17 +54,22 @@ OPTIONAL_FILES: tuple[str, ...] = (
 )
 
 VALID_TP_SL_MODES: frozenset[str] = frozenset({"fixed_rr", "atr", "trail"})
-#: Strategy-managed lifecycle with a fixed target and no stop. Valid only for
-#: Hypervelocity bundles, so no other consumer can apply it by mistake.
-STRATEGY_TARGET_ONLY = "strategy_target_only"
+#: Lifecycle whose only exits are the strategy's own exit signals (no stop).
+#: Valid only for bundles whose registered strategy declares
+#: ``ExecutionProfile.strategy_managed_exits``, so no other consumer can apply
+#: it by mistake. Mirrors ``strategies.registry.STRATEGY_MANAGED_EXIT_MODE``
+#: (kept literal so the loader path imports no strategy module; a test pins it).
+STRATEGY_MANAGED = "strategy_managed"
 
 
-def _strategy_target_only_allowed(strategy: Any) -> bool:
-    from hypervector.strategies.hypervelocity_contract import (
-        is_hypervelocity_strategy,
-    )
+def _strategy_managed_allowed(strategy: Any) -> bool:
+    if not strategy:
+        return False
+    from hypervector.strategies import register_all_strategies
+    from hypervector.strategies.registry import execution_profile
 
-    return bool(strategy) and is_hypervelocity_strategy(str(strategy))
+    register_all_strategies()
+    return execution_profile(str(strategy)).strategy_managed_exits
 
 
 class ExportSchemaError(ValueError):
@@ -125,23 +130,16 @@ def _check_risk(risk: Any, errors: list[str], *, prefix: str = "meta.risk") -> N
         pass
 
 
-def _check_target_only_exits(
+def _check_strategy_managed_exits(
     exits: dict[str, Any], errors: list[str], *, prefix: str, strategy: Any
 ) -> None:
-    if not _strategy_target_only_allowed(strategy):
+    if not _strategy_managed_allowed(strategy):
         errors.append(
-            f"{prefix}.mode={STRATEGY_TARGET_ONLY!r} is only valid for "
-            f"strategy-managed Hypervelocity bundles (strategy={strategy!r})"
+            f"{prefix}.mode={STRATEGY_MANAGED!r} is only valid for a strategy "
+            f"that declares strategy-managed exits (strategy={strategy!r})"
         )
-    target = exits.get("target_price_fraction")
-    try:
-        valid_target = target is not None and float(target) > 0.0
-    except (TypeError, ValueError):
-        valid_target = False
-    if not valid_target:
-        errors.append(f"{prefix}.target_price_fraction must be a number > 0")
     if exits.get("stop") is not None:
-        errors.append(f"{prefix}.stop must be null for {STRATEGY_TARGET_ONLY}")
+        errors.append(f"{prefix}.stop must be null for {STRATEGY_MANAGED}")
 
 
 def _check_exits(
@@ -157,8 +155,8 @@ def _check_exits(
     mode = exits.get("mode")
     if mode is None or mode == "":
         errors.append(f"{prefix}.mode missing")
-    elif str(mode) == STRATEGY_TARGET_ONLY:
-        _check_target_only_exits(exits, errors, prefix=prefix, strategy=strategy)
+    elif str(mode) == STRATEGY_MANAGED:
+        _check_strategy_managed_exits(exits, errors, prefix=prefix, strategy=strategy)
         return
     elif str(mode) not in VALID_TP_SL_MODES:
         errors.append(
@@ -252,11 +250,11 @@ def validate_export_dir(
 
     if "tp_sl_mode" in meta and meta["tp_sl_mode"] is not None:
         mode = str(meta["tp_sl_mode"])
-        if mode == STRATEGY_TARGET_ONLY:
-            if not _strategy_target_only_allowed(strategy):
+        if mode == STRATEGY_MANAGED:
+            if not _strategy_managed_allowed(strategy):
                 errors.append(
-                    f"meta.tp_sl_mode={mode!r} is only valid for strategy-managed "
-                    f"Hypervelocity bundles (strategy={strategy!r})"
+                    f"meta.tp_sl_mode={mode!r} is only valid for a strategy that "
+                    f"declares strategy-managed exits (strategy={strategy!r})"
                 )
         elif mode not in VALID_TP_SL_MODES:
             errors.append(

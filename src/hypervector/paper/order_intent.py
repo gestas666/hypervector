@@ -1,12 +1,11 @@
+"""Auditable no-submit order intents recorded beside paper/shadow fills."""
+
 from __future__ import annotations
 
 import time
 from typing import Any
 
-from hypervector.strategies.hypervelocity_contract import (
-    HypervelocityContract,
-    is_hypervelocity_strategy,
-)
+from hypervector.strategies.registry import execution_profile
 
 ORDER_INTENT_SCHEMA = "hv_order_intent_v1"
 NETWORK_MAINNET = "mainnet"
@@ -60,7 +59,11 @@ def shadow_order_intent(
     mark_px: float,
     action: str,
 ) -> dict[str, Any]:
-    """Build the auditable no-submit intent for one shadow accounting action."""
+    """Build the auditable no-submit intent for one shadow accounting action.
+
+    Entries of a strategy that declares post-only entries are recorded as
+    limit post-only orders at ``mark_px``; every other action is market IOC.
+    """
     if action == "backstop_liquidation":
         return build_order_intent(
             symbol=symbol,
@@ -82,21 +85,24 @@ def shadow_order_intent(
             notes="venue-enforced shadow liquidation; not sent",
         )
     reduce_only = action == "close"
-    if not is_hypervelocity_strategy(strategy_name):
+    post_only_entry = (
+        action in {"enter_long", "enter_short"}
+        and execution_profile(strategy_name).post_only_entries
+    )
+    if not post_only_entry:
         return build_order_intent(
             symbol=symbol,
             side=side,
             qty=qty,
             reduce_only=reduce_only,
         )
-    contract = HypervelocityContract()
     return build_order_intent(
         symbol=symbol,
         side=side,
         qty=qty,
-        order_type=contract.order_type,
-        time_in_force=contract.time_in_force,
+        order_type="limit",
+        time_in_force="post_only",
         limit_px=mark_px,
-        reduce_only=reduce_only,
+        reduce_only=False,
         notes="shadow post-only intent; not sent",
     )

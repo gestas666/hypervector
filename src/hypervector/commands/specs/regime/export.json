@@ -45,7 +45,7 @@
       "options": {
         "dest": "book_path",
         "default": null,
-        "help": "optional L2 orderbook file aligned to the bars: JSONL, or .sqlite/.sqlite3/.db/.zst feature samples"
+        "help": "optional L2 orderbook snapshot JSONL (as written by data book-record) aligned to the bars"
       }
     },
     {

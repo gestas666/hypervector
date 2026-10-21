@@ -5,12 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import pandas as pd
-from hypervector.strategies import register_all_strategies
-from hypervector.strategies.registry import (
-    StrategySpec,
-    get_strategy,
-    normalize_direction,
-)
+from hypervector.strategies.registry import StrategySpec, normalize_direction
 from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.sizing import RiskConfig, validate_leverage
 from hypervector.commands.common import (
@@ -21,6 +16,7 @@ from hypervector.commands.common import (
     book_path_or_refuse,
     cache_age_options,
     exit_config_from_args,
+    registered_strategy,
 )
 
 
@@ -59,6 +55,9 @@ def cmd_backtest(args: argparse.Namespace) -> int:
         cost=cost,
         exit_cfg=exit_cfg,
         risk_cfg=risk_cfg,
+        fixed_notional_fraction=spec.execution.fixed_notional_fraction,
+        fixed_margin_fraction=spec.execution.fixed_margin_fraction,
+        strategy_managed_exits=spec.execution.strategy_managed_exits,
         symbol=args.symbol,
     )
 
@@ -122,11 +121,7 @@ def _backtest_report(
 
 def _validated_strategy(args: argparse.Namespace) -> StrategySpec:
     """Refuse an unknown strategy or a missing book file before any data load."""
-    register_all_strategies()
-    try:
-        spec = get_strategy(args.strategy)
-    except KeyError as exc:
-        raise CommandRefused(f"unknown strategy: {args.strategy}") from exc
+    spec = registered_strategy(getattr(args, "strategy", None))
     book_path_or_refuse(args)
     cache_age_options(args)
     return spec

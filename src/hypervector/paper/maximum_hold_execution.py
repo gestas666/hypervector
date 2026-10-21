@@ -5,7 +5,7 @@ from __future__ import annotations
 from hypervector.execution import OrderCommand, VenueOrderEvent
 from hypervector.paper.book import BookSnapshot
 from hypervector.paper.fill_models import FillResult
-from hypervector.paper.hypervelocity_order_telemetry import timestamp
+from hypervector.paper.shadow_order_telemetry import timestamp
 from hypervector.paper.order_intent import build_order_intent
 
 MAXIMUM_HOLD_FILL_MODEL = "fresh_bbo_taker_v1"

@@ -102,99 +102,6 @@ SELECT
     json_extract_string(payload, '$.entry_direction') AS entry_direction
 FROM shadow_ledger_events
 WHERE action = 'regime_observation' AND observed_at IS NOT NULL;
-CREATE OR REPLACE VIEW shadow_completed_5m_bars AS
-WITH unique_minutes AS (
-    SELECT * EXCLUDE (ordinal)
-    FROM (
-        SELECT *, row_number() OVER (
-            PARTITION BY run_id, symbol, bar_open_at
-            ORDER BY event_id
-        ) AS ordinal
-        FROM shadow_regime_observations
-        WHERE timeframe = '1m'
-          AND open IS NOT NULL AND high IS NOT NULL AND low IS NOT NULL
-          AND close IS NOT NULL AND volume IS NOT NULL
-    )
-    WHERE ordinal = 1
-), grouped AS (
-    SELECT
-        run_id,
-        symbol,
-        time_bucket(INTERVAL '5 minutes', bar_open_at) AS bar_open_at,
-        max(observed_at) AS available_at,
-        arg_min(open, bar_open_at) AS open,
-        max(high) AS high,
-        min(low) AS low,
-        arg_max(close, bar_open_at) AS close,
-        sum(volume) AS volume,
-        arg_max(primary_regime, bar_open_at) AS backend_primary,
-        arg_max(state_5m, bar_open_at) AS backend_state_5m,
-        arg_max(entry_direction, bar_open_at) AS backend_entry_direction,
-        count(*) AS source_minutes,
-        min(bar_open_at) AS first_minute,
-        max(bar_open_at) AS last_minute
-    FROM unique_minutes
-    GROUP BY run_id, symbol, time_bucket(INTERVAL '5 minutes', bar_open_at)
-)
-SELECT * EXCLUDE (first_minute, last_minute)
-FROM grouped
-WHERE source_minutes = 5
-  AND last_minute - first_minute = INTERVAL 4 MINUTES;
-CREATE TABLE IF NOT EXISTS hypertrader_regime_annotations (
-    revision VARCHAR NOT NULL,
-    classifier_role VARCHAR NOT NULL,
-    symbol VARCHAR NOT NULL,
-    timeframe VARCHAR NOT NULL,
-    label_time_utc TIMESTAMPTZ NOT NULL,
-    available_at TIMESTAMPTZ NOT NULL,
-    primary_code VARCHAR NOT NULL,
-    secondary_code VARCHAR,
-    confidence DOUBLE NOT NULL,
-    raw_primary_code VARCHAR NOT NULL,
-    raw_secondary_code VARCHAR,
-    raw_confidence DOUBLE NOT NULL,
-    volume_ratio DOUBLE,
-    labels_sha256 VARCHAR NOT NULL,
-    metadata_sha256 VARCHAR NOT NULL,
-    report_only BOOLEAN NOT NULL,
-    execution_authority VARCHAR NOT NULL,
-    ingested_at TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    PRIMARY KEY (revision, symbol, timeframe, label_time_utc),
-    CHECK (classifier_role IN ('strict', 'legacy')),
-    CHECK (report_only),
-    CHECK (execution_authority = 'none')
-);
-CREATE OR REPLACE VIEW shadow_hypertrader_regime_comparison AS
-SELECT
-    bars.run_id,
-    bars.symbol,
-    bars.bar_open_at,
-    bars.available_at AS bar_available_at,
-    bars.backend_primary,
-    bars.backend_state_5m,
-    bars.backend_entry_direction,
-    strict.available_at AS strict_available_at,
-    legacy.available_at AS legacy_available_at,
-    strict.primary_code AS strict_primary,
-    strict.secondary_code AS strict_secondary,
-    strict.confidence AS strict_confidence,
-    legacy.primary_code AS legacy_primary,
-    legacy.secondary_code AS legacy_secondary,
-    legacy.confidence AS legacy_confidence,
-    strict.primary_code IS DISTINCT FROM legacy.primary_code AS label_disagrees
-FROM shadow_completed_5m_bars AS bars
-INNER JOIN hypertrader_regime_annotations AS strict
-    ON strict.symbol = bars.symbol
-   AND strict.timeframe = '5m'
-   AND strict.classifier_role = 'strict'
-   AND strict.label_time_utc = bars.bar_open_at
-   AND strict.available_at <= bars.available_at
-INNER JOIN hypertrader_regime_annotations AS legacy
-    ON legacy.symbol = bars.symbol
-   AND legacy.timeframe = '5m'
-   AND legacy.classifier_role = 'legacy'
-   AND legacy.label_time_utc = bars.bar_open_at
-   AND legacy.available_at <= bars.available_at;
 CREATE OR REPLACE VIEW shadow_completed_trade_attribution AS
 WITH extracted AS (
     SELECT
@@ -340,13 +247,7 @@ WITH extracted AS (
         coalesce(intent.intent_at, priced.entry_at) AS attribution_at,
         backend.primary_regime AS backend_primary_at_entry,
         backend.state_5m AS backend_state_5m_at_entry,
-        backend.entry_direction AS backend_entry_direction_at_entry,
-        strict.revision AS strict_revision,
-        strict.primary_code AS strict_primary_at_entry,
-        strict.secondary_code AS strict_secondary_at_entry,
-        legacy.revision AS legacy_revision,
-        legacy.primary_code AS legacy_primary_at_entry,
-        legacy.secondary_code AS legacy_secondary_at_entry
+        backend.entry_direction AS backend_entry_direction_at_entry
     FROM priced
     LEFT JOIN LATERAL (
         SELECT observed_at AS intent_at
@@ -370,41 +271,13 @@ WITH extracted AS (
         ORDER BY observed_at DESC, source_line DESC
         LIMIT 1
     ) AS backend ON true
-    LEFT JOIN LATERAL (
-        SELECT revision, primary_code, secondary_code
-        FROM hypertrader_regime_annotations
-        WHERE symbol = priced.symbol
-          AND timeframe = '5m'
-          AND classifier_role = 'strict'
-          AND available_at <= coalesce(intent.intent_at, priced.entry_at)
-        ORDER BY available_at DESC, label_time_utc DESC, ingested_at DESC
-        LIMIT 1
-    ) AS strict ON true
-    LEFT JOIN LATERAL (
-        SELECT revision, primary_code, secondary_code
-        FROM hypertrader_regime_annotations
-        WHERE symbol = priced.symbol
-          AND timeframe = '5m'
-          AND classifier_role = 'legacy'
-          AND available_at <= coalesce(intent.intent_at, priced.entry_at)
-        ORDER BY available_at DESC, label_time_utc DESC, ingested_at DESC
-        LIMIT 1
-    ) AS legacy ON true
 )
 SELECT
     * EXCLUDE (entry_action, entry_notional, exit_notional),
     exit_quantity - entry_quantity AS quantity_difference,
     abs(exit_quantity - entry_quantity) <= 0.000000000001
         AS quantity_reconciled,
-    gross_pnl_usd - fees_usd - funding_payment_usd AS net_pnl_usd,
-    strict_primary_at_entry IS NOT NULL
-        AND backend_primary_at_entry IS NOT NULL
-        AND strict_primary_at_entry IS DISTINCT FROM backend_primary_at_entry
-        AS backend_strict_disagrees,
-    legacy_primary_at_entry IS NOT NULL
-        AND backend_primary_at_entry IS NOT NULL
-        AND legacy_primary_at_entry IS DISTINCT FROM backend_primary_at_entry
-        AS backend_legacy_disagrees
+    gross_pnl_usd - fees_usd - funding_payment_usd AS net_pnl_usd
 FROM contextual;
 """
 

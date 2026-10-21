@@ -68,7 +68,7 @@
       "options": {
         "dest": "strategy",
         "default": null,
-        "help": "strategy name (default: the track's trend_ride_*, then crown_stack_*)"
+        "help": "registered strategy name with the track's role (required; families register in hypervector.strategies.STRATEGY_FAMILY_MODULES)"
       }
     },
     {

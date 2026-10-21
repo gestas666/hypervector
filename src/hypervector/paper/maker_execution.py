@@ -1,4 +1,4 @@
-"""Causal post-only mechanics for the Hypervelocity paper backend."""
+"""Causal post-only (maker) order mechanics for the paper backend."""
 
 from __future__ import annotations
 

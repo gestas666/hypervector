@@ -1,58 +1,40 @@
-"""Lazy public exports for Hypervector strategies services."""
+"""Strategy registry and the place where strategy families are registered.
+
+A strategy family is a module that defines its signal builders and a
+``register_family()`` function calling
+:func:`hypervector.strategies.registry.register` once per
+:class:`~hypervector.strategies.registry.StrategySpec` (each spec declares
+its :class:`~hypervector.strategies.registry.ExecutionProfile`). To make a
+family available to every command (backtest, sweep, tune, pipeline,
+Nautilus, paper, live), add its dotted module path to
+:data:`STRATEGY_FAMILY_MODULES`. No family is built in.
+"""
 
 from importlib import import_module
 
+#: Dotted paths of the strategy family modules :func:`register_all_strategies`
+#: imports; each must define ``register_family()``. This is the one place a
+#: new family is added.
+STRATEGY_FAMILY_MODULES: tuple[str, ...] = ()
+
 _EXPORTS = {
-    "register_classic_baselines": (
-        "hypervector.strategies.classic",
-        "register_classic_baselines",
-    ),
-    "register_crown_stack": (
-        "hypervector.strategies.crown_stack",
-        "register_crown_stack",
-    ),
-    "register_funding_momentum": (
-        "hypervector.strategies.funding_momentum",
-        "register_funding_momentum",
-    ),
-    "register_hypervelocity": (
-        "hypervector.strategies.hypervelocity",
-        "register_hypervelocity",
-    ),
-    "register_impulse_1m": ("hypervector.strategies.impulse_1m", "register_impulse_1m"),
-    "register_oi_divergence": (
-        "hypervector.strategies.oi_divergence",
-        "register_oi_divergence",
-    ),
-    "register_pine_composite": (
-        "hypervector.strategies.pine_composite",
-        "register_pine_composite",
-    ),
+    "ExecutionProfile": ("hypervector.strategies.registry", "ExecutionProfile"),
     "StrategySpec": ("hypervector.strategies.registry", "StrategySpec"),
+    "execution_profile": ("hypervector.strategies.registry", "execution_profile"),
     "get_strategy": ("hypervector.strategies.registry", "get_strategy"),
     "list_strategies": ("hypervector.strategies.registry", "list_strategies"),
     "register": ("hypervector.strategies.registry", "register"),
-    "register_source_derived": (
-        "hypervector.strategies.source_derived",
-        "register_source_derived",
-    ),
-    "register_trend_ride": ("hypervector.strategies.trend_ride", "register_trend_ride"),
 }
 
 __all__ = [
+    "ExecutionProfile",
+    "STRATEGY_FAMILY_MODULES",
     "StrategySpec",
+    "execution_profile",
     "get_strategy",
     "list_strategies",
     "register",
     "register_all_strategies",
-    "register_classic_baselines",
-    "register_crown_stack",
-    "register_trend_ride",
-    "register_pine_composite",
-    "register_oi_divergence",
-    "register_funding_momentum",
-    "register_source_derived",
-    "register_hypervelocity",
 ]
 
 
@@ -67,23 +49,16 @@ def __getattr__(name: str) -> object:
 
 
 def register_all_strategies() -> None:
-    """Register every retained strategy family only when research needs it."""
-    from hypervector.strategies.classic import register_classic_baselines
-    from hypervector.strategies.crown_stack import register_crown_stack
-    from hypervector.strategies.trend_ride import register_trend_ride
-    from hypervector.strategies.pine_composite import register_pine_composite
-    from hypervector.strategies.oi_divergence import register_oi_divergence
-    from hypervector.strategies.funding_momentum import register_funding_momentum
-    from hypervector.strategies.impulse_1m import register_impulse_1m
-    from hypervector.strategies.source_derived import register_source_derived
-    from hypervector.strategies.hypervelocity import register_hypervelocity
+    """Register every family listed in :data:`STRATEGY_FAMILY_MODULES`.
 
-    register_classic_baselines()
-    register_crown_stack()
-    register_trend_ride()
-    register_pine_composite()
-    register_oi_divergence()
-    register_funding_momentum()
-    register_impulse_1m()
-    register_source_derived()
-    register_hypervelocity()
+    Idempotent: a family re-registers its specs by name. Specs registered
+    directly with ``register()`` stay registered.
+    """
+    for module_path in STRATEGY_FAMILY_MODULES:
+        module = import_module(module_path)
+        register_family = getattr(module, "register_family", None)
+        if not callable(register_family):
+            raise TypeError(
+                f"strategy family module {module_path} must define register_family()"
+            )
+        register_family()

@@ -1,6 +1,6 @@
 """Orderbook L2 alignment and microstructure feature extraction.
 
-Aligns historical L2 snapshots (JSONL or SQLite feature_samples) to OHLCV bar
+Aligns historical L2 snapshots (book-record JSONL) to OHLCV bar
 timestamps with zero lookahead (point-in-time merge_asof).
 
 Pipeline:
@@ -10,12 +10,6 @@ Pipeline:
 from __future__ import annotations
 
 import json
-import os
-import shutil
-import sqlite3
-import subprocess
-import tempfile
-from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -24,8 +18,6 @@ import pandas as pd
 
 from hypervector.data.oxa_storage import open_text_reader
 
-# Fallback for launchd-style environments whose PATH lacks Homebrew.
-_HOMEBREW_ZSTD = "/opt/homebrew/bin/zstd"
 DEFAULT_MAX_TOLERANCE_MS = 300_000
 # Book feature columns an aligned frame carries; NaN where no snapshot matched.
 BOOK_FEATURE_COLUMNS = (
@@ -123,79 +115,6 @@ def load_l2_jsonl(path: Path | str) -> pd.DataFrame:
         df["ts_ms"] = df["ts_ms"].astype(np.int64)
         df = df.sort_values("ts_ms").reset_index(drop=True)
     return df
-
-
-def load_l2_sqlite_feature_samples(
-    zst_or_sqlite_path: Path | str, coin: str = "BTC"
-) -> pd.DataFrame:
-    """Load orderbook features from impulse_calibration_snapshot.sqlite (.zst or raw)."""
-    p = Path(zst_or_sqlite_path)
-    if not p.is_file():
-        raise FileNotFoundError(f"Orderbook snapshot file not found: {p}")
-
-    temp_sqlite: str | None = None
-    target_path = str(p)
-    try:
-        if str(p).endswith(".zst"):
-            # Decompress to a temp file without a shell: the path is one argv
-            # element and "--" stops a leading "-" being read as an option.
-            zstd = shutil.which("zstd") or _HOMEBREW_ZSTD
-            if not Path(zstd).is_file():
-                raise RuntimeError(
-                    "zstd executable is required to read .zst orderbook snapshots"
-                )
-            with tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False) as tmp:
-                temp_sqlite = tmp.name
-            with open(temp_sqlite, "wb") as out:
-                res = subprocess.run(
-                    [zstd, "-dc", "--", str(p)],
-                    stdout=out,
-                    stderr=subprocess.PIPE,
-                    check=False,
-                )
-            if res.returncode != 0:
-                detail = (res.stderr or b"").decode("utf-8", errors="replace").strip()
-                raise RuntimeError(f"zstd decompression failed: {detail}")
-            target_path = temp_sqlite
-
-        query = """
-            SELECT
-                feature_time as ts_ms,
-                mid,
-                micro_price,
-                spread_bps,
-                obi_5,
-                obi_10,
-                bid_depth_10,
-                ask_depth_10,
-                aggressor_ratio_5s,
-                cancel_rate_5s
-            FROM feature_samples
-            WHERE coin = ?
-            ORDER BY feature_time ASC
-        """
-        with closing(sqlite3.connect(target_path)) as conn:
-            df = pd.read_sql_query(query, conn, params=(coin,))
-
-        if not df.empty:
-            df["ts_ms"] = df["ts_ms"].astype(np.int64)
-            df["book_depth_ratio"] = np.where(
-                df["ask_depth_10"] > 0,
-                df["bid_depth_10"] / df["ask_depth_10"],
-                1.0,
-            )
-            df["micro_price_delta_bps"] = np.where(
-                df["mid"] > 0,
-                (df["micro_price"] - df["mid"]) / df["mid"] * 10_000.0,
-                0.0,
-            )
-        return df
-    finally:
-        if temp_sqlite and os.path.exists(temp_sqlite):
-            try:
-                os.remove(temp_sqlite)
-            except OSError:
-                pass
 
 
 def _to_ts_ms_series(ts_col: pd.Series | pd.DatetimeIndex) -> np.ndarray:

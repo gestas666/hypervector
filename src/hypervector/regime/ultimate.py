@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 import pandas as pd
@@ -20,18 +19,6 @@ UltimateRegimeState = Literal[
 ]
 
 
-@dataclass(frozen=True)
-class RegimePolicy:
-    """Entry policy derived from one canonical regime state."""
-
-    state: UltimateRegimeState
-    long_weight: float
-    short_weight: float
-    max_leverage: float
-    allow_taker: bool
-    recommended_exit_mode: str
-
-
 def _entry_weights(classified: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     direction = classified["entry_direction"]
     long_allowed = direction.eq("long")
@@ -47,7 +34,11 @@ def detect_ultimate_regime(
     htf_resample_rule: str = "15min",
     config: RegimeClassifierConfig | None = None,
 ) -> pd.DataFrame:
-    """Return canonical state and no-entry-safe policy from completed bars."""
+    """Return canonical state and directional entry weights from completed bars.
+
+    The output describes the market only; execution policy (leverage, order
+    type) belongs to the strategy's declared execution options.
+    """
     if htf_resample_rule != "15min" and df_15m is None:
         raise ValueError("custom HTF rules require an explicit df_15m frame")
     classified = classify_multitimeframe(
@@ -57,7 +48,6 @@ def detect_ultimate_regime(
         df_15m=df_15m,
     )
     long_weight, short_weight = _entry_weights(classified)
-    allowed = (long_weight + short_weight) > 0.0
     return pd.DataFrame(
         {
             "regime_state": classified["primary_regime"],
@@ -81,9 +71,6 @@ def detect_ultimate_regime(
             "prior_range_low": classified["prior_range_low"],
             "long_weight": long_weight,
             "short_weight": short_weight,
-            "max_leverage": allowed.astype(float) * 40.0,
-            "dynamic_leverage": allowed.astype(float) * 40.0,
-            "allow_taker": False,
         },
         index=df_1m.index,
     )

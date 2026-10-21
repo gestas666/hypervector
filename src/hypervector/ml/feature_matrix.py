@@ -1,7 +1,9 @@
-"""Vectorized metalabel feature matrix (matches impulse BTC 1m schema).
+"""Vectorized point-in-time metalabel feature matrix (generic bar features).
 
-Feature names are stable for the installed LightGBM bundle. PIT: each row uses
-only information available at that bar close (no future peek).
+``FEATURE_NAMES`` is the default feature set that training writes into a
+bundle's metadata; inference always reads a bundle's own ``feature_names``.
+PIT: each row uses only information available at that bar close (no future
+peek).
 """
 
 from __future__ import annotations
@@ -13,7 +15,7 @@ import pandas as pd
 
 from hypervector.strategies.indicators import atr, ema, rsi
 
-# Stable schema — keep in sync with data/models/metalabel/metalabel_metadata.json
+# Default bar feature set (trend, momentum, volatility, range position, calendar).
 FEATURE_NAMES: list[str] = [
     "close_vs_ema21_bps",
     "di_delta_1m",

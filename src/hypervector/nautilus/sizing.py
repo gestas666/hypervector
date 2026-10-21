@@ -17,10 +17,7 @@ from hypervector.sweep.sizing import (
     risk_pct_from_conviction,
     size_frac_from_risk,
 )
-from hypervector.strategies.hypervelocity_contract import (
-    HypervelocityContract,
-    is_hypervelocity_strategy,
-)
+from hypervector.strategies.registry import execution_profile
 
 
 def exit_config_from_loadout(loadout: StrategyLoadout) -> ExitConfig:
@@ -75,11 +72,13 @@ def position_size_frac(
     """Equity fraction to deploy from loadout risk band + stop distance.
 
     ``equity`` is accepted for API stability (notional conversion later);
-    size is fraction-of-equity via existing sizing helpers.
+    size is fraction-of-equity via existing sizing helpers. A strategy that
+    declares fixed sizing deploys its fixed notional fraction instead.
     """
     del equity  # reserved for future notional conversion
-    if is_hypervelocity_strategy(loadout.strategy_name):
-        return HypervelocityContract().notional_fraction
+    fixed = execution_profile(loadout.strategy_name).fixed_notional_fraction
+    if fixed is not None:
+        return float(fixed)
     cfg = _risk_config_from_loadout(loadout)
     risk_pct = float(risk_pct_from_conviction(float(conviction), cfg))
     stop = pd.Series([float(stop_frac)])

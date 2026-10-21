@@ -85,7 +85,7 @@ def signals_from_ohlcv(
     """Build entry/exit series for ``df`` via the registered strategy builder.
 
     Returns ``(entries, exits, direction)`` aligned to ``df`` index, with the
-    builder's tag normalised to ``long``/``short`` (``impulse_1m_short`` ->
+    builder's tag normalised to ``long``/``short`` (``breakout_short`` ->
     ``short``) so actors, paper and live sessions can act on it. A tag that is
     neither is a ValueError (a strategy error), never a silent no-trade.
     """

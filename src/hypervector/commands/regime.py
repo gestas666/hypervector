@@ -12,7 +12,6 @@ from hypervector.commands.common import (
     _load_bars,
     align_book,
     book_path_or_refuse,
-    cache_age_options,
 )
 
 if TYPE_CHECKING:
@@ -124,82 +123,6 @@ def cmd_regime_eval(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_regime_align(args: argparse.Namespace) -> int:
-    """Report Hypervelocity regime alignment with recorded entries (never a gate)."""
-    from hypervector.regime.hypervelocity_eval import evaluate_hypervelocity_regimes
-
-    positions_path = _positions_path(args)
-    df, provenance = _load_bars(args)
-    report = evaluate_hypervelocity_regimes(
-        df,
-        _read_positions(positions_path),
-        forward_horizon=args.forward_horizon,
-    )
-    out = {
-        "ok": True,
-        "report_only": True,
-        "data_provenance": provenance,
-        **report.to_dict(),
-    }
-    _emit(out, args.out)
-    return 0
-
-
-def cmd_regime_tune(args: argparse.Namespace) -> int:
-    """Tune causal regime parameters and retain every trial result.
-
-    Every run publishes a durable board with its provenance (exclusive
-    create): under ``<data-root>/logs/research`` by default, or at ``--out``,
-    which is refused before any data load when it already exists.
-    """
-    from hypervector.infra import paths_for
-    from hypervector.regime.tuning import (
-        autotune_regime_candidates,
-        generate_candidate_parameters,
-        publish_regime_tuning_board,
-        regime_tuning_document,
-    )
-
-    positions_path = _positions_path(args)
-    out_path = Path(args.out) if args.out else None
-    if out_path is not None and out_path.exists():
-        raise CommandRefused(f"refusing to overwrite an existing board: {out_path}")
-    cache_age_options(args)
-    df, provenance = _load_bars(args)
-    candidates = generate_candidate_parameters(n_trials=args.n_trials, seed=args.seed)
-    board = autotune_regime_candidates(
-        df,
-        _read_positions(positions_path),
-        candidates,
-        train_fraction=args.train_fraction,
-        forward_horizon=args.forward_horizon,
-    )
-    document = regime_tuning_document(
-        board,
-        bars=df,
-        data_provenance=provenance,
-        seed=args.seed,
-        n_trials=args.n_trials,
-        train_fraction=args.train_fraction,
-        forward_horizon=args.forward_horizon,
-    )
-    if out_path is not None:
-        board_path = publish_regime_tuning_board(
-            document, out_path.parent, name=out_path.name
-        )
-    else:
-        board_path = publish_regime_tuning_board(
-            document, paths_for(args.data_root).logs_research
-        )
-    out = {
-        **document,
-        "board_path": str(board_path.resolve()),
-        "artifacts": {"board": str(board_path.resolve())},
-    }
-    print(json.dumps(out, indent=2, default=str))
-    return 0
-
-
 def cmd_regime_challengers(args: argparse.Namespace) -> int:
     """Run point-in-time statistical regimes as annotations only."""
     from hypervector.regime.challengers import evaluate_regime_challengers
@@ -239,20 +162,6 @@ def cmd_regime_export(args: argparse.Namespace) -> int:
     summary["data_provenance"] = prov
     print(json.dumps(summary, indent=2, default=str))
     return 0
-
-
-def _positions_path(args: argparse.Namespace) -> Path:
-    """Refuse a missing recorded-entries CSV before any data load."""
-    path = Path(args.positions)
-    if not path.is_file():
-        raise CommandRefused(f"positions file not found: {path}")
-    return path
-
-
-def _read_positions(path: Path) -> pd.DataFrame:
-    import pandas as pd
-
-    return pd.read_csv(path)
 
 
 def _emit(out: dict[str, Any], destination: Path | str | None) -> None:

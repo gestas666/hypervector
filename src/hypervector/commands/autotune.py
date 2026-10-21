@@ -9,7 +9,11 @@ import math
 from pathlib import Path
 import sys
 
-from hypervector.commands.common import CommandRefused, cache_age_options
+from hypervector.commands.common import (
+    CommandRefused,
+    cache_age_options,
+    registered_strategy,
+)
 
 
 def cmd_autotune(args: argparse.Namespace) -> int:
@@ -105,12 +109,5 @@ def cmd_autotune(args: argparse.Namespace) -> int:
     return 0
 
 
-def _require_registered_strategy(name: str) -> None:
-    from hypervector.strategies import register_all_strategies
-    from hypervector.strategies.registry import get_strategy
-
-    register_all_strategies()
-    try:
-        get_strategy(name)
-    except KeyError as exc:
-        raise CommandRefused(f"unknown strategy: {name}") from exc
+def _require_registered_strategy(name: str | None) -> None:
+    registered_strategy(name)

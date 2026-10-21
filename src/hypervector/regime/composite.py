@@ -1,4 +1,4 @@
-"""Causal 1m/5m/15m regime composition for Hypervelocity."""
+"""Causal 1m/5m/15m regime composition (1m execution, 15m higher-timeframe context)."""
 
 from __future__ import annotations
 

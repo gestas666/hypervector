@@ -81,7 +81,7 @@ def run_karpathy(
                 exits = _mutate_exits(rng, elite_exits)
             else:
                 params = tools.sample(rng, evaluator.strategy.param_grid)
-                exits = tools.random_exits(rng, hypervelocity=evaluator.hypervelocity)
+                exits = tools.random_exits(rng, execution=evaluator.execution)
             params = tools.clamp(params, settings.symbol)
             key = evaluator.config_key(params, exits)
             if key not in seen:
@@ -111,8 +111,7 @@ def _mutate_exits(
 ) -> dict[str, object]:
     """Mutate the exit fields the elite's mode uses; keep fixed lifecycles fixed.
 
-    Strategy-managed exits (e.g. Hypervelocity ``strategy_target_only``) are
-    returned unchanged. Occasionally the mode switches or the sizing cap steps
+    Strategy-managed exits (``strategy_managed``) are returned unchanged. Occasionally the mode switches or the sizing cap steps
     to a neighbouring level.
     """
     exits = dict(elite)
@@ -137,11 +136,9 @@ def _mutate_exits(
 
 def searches_book_dimensions(evaluator: TrialEvaluator) -> bool:
     """Book dimensions exist only for book-gating builders with aligned book data."""
-    return (
-        not evaluator.hypervelocity
-        and bool(getattr(evaluator.strategy, "supports_book_gate", False))
-        and BOOK_COLUMNS.issubset(evaluator.bars.columns)
-    )
+    return bool(
+        getattr(evaluator.strategy, "supports_book_gate", False)
+    ) and BOOK_COLUMNS.issubset(evaluator.bars.columns)
 
 
 def optuna_objective(
@@ -162,5 +159,5 @@ def optuna_objective(
             "max_spread_bps", 1.5, 10.0, step=0.5
         )
         params["min_obi"] = trial.suggest_float("min_obi", -0.5, 0.4, step=0.1)
-    exits = tools.optuna_exits(trial, hypervelocity=evaluator.hypervelocity)
+    exits = tools.optuna_exits(trial, execution=evaluator.execution)
     return evaluator.evaluate(tools.clamp(params, settings.symbol), exits, trial.number)

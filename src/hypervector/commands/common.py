@@ -12,6 +12,7 @@ from hypervector.infra import DataPaths, ensure_data_layout
 if TYPE_CHECKING:
     import pandas as pd
 
+    from hypervector.strategies.registry import StrategySpec
     from hypervector.sweep.exits import ExitConfig
 
 SECRET_ENV_WALLET = "HYPERVECTOR_HL_WALLET_ADDRESS"
@@ -20,6 +21,24 @@ SECRET_ENV_API_KEY = "HYPERVECTOR_HL_API_PRIVATE_KEY"
 
 class CommandRefused(Exception):
     """A refusal before any side effect; the CLI maps it to exit code 2."""
+
+
+def registered_strategy(name: str | None) -> StrategySpec:
+    """Resolve ``--strategy`` against the registry, or refuse (exit 2).
+
+    A missing or unknown name is refused with the registered names and where a
+    strategy family registers, before any data load.
+    """
+    from hypervector.strategies import register_all_strategies
+    from hypervector.strategies.registry import get_strategy, unknown_strategy_message
+
+    register_all_strategies()
+    if not name:
+        raise CommandRefused(unknown_strategy_message(None))
+    try:
+        return get_strategy(str(name))
+    except KeyError as exc:
+        raise CommandRefused(unknown_strategy_message(str(name))) from exc
 
 
 def exit_config_from_args(args: argparse.Namespace) -> ExitConfig:
@@ -91,9 +110,6 @@ def _load_bars(args: argparse.Namespace) -> tuple[pd.DataFrame, dict[str, object
     )
 
 
-BOOK_SQLITE_SUFFIXES = frozenset({".sqlite", ".sqlite3", ".db", ".zst"})
-
-
 def book_path_or_refuse(args: argparse.Namespace) -> Path | None:
     """The explicit ``--book-path`` as a file, or a refusal before any data load."""
     value = getattr(args, "book_path", None)
@@ -106,13 +122,11 @@ def book_path_or_refuse(args: argparse.Namespace) -> Path | None:
 
 
 def align_book(bars: pd.DataFrame, path: Path, symbol: str) -> pd.DataFrame:
-    """Align a JSONL snapshot file or SQLite feature samples onto the bars."""
+    """Align a recorded L2 snapshot JSONL file (``data book-record``) onto the bars."""
     from hypervector.data import book_align
 
-    if path.suffix.lower() in BOOK_SQLITE_SUFFIXES:
-        book = book_align.load_l2_sqlite_feature_samples(path, coin=symbol)
-    else:
-        book = book_align.load_l2_jsonl(path)
+    del symbol  # a book-record file holds one symbol's snapshots
+    book = book_align.load_l2_jsonl(path)
     return book_align.align_orderbook_to_ohlcv(bars, book)
 
 

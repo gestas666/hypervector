@@ -40,7 +40,7 @@
       "options": {
         "dest": "strategy",
         "default": null,
-        "help": "registered strategy name, e.g. crown_stack_long"
+        "help": "registered strategy name (families register in hypervector.strategies.STRATEGY_FAMILY_MODULES)"
       },
       "required": true
     },

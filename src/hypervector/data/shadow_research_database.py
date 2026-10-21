@@ -19,7 +19,6 @@ class ShadowLedgerIngestReport:
     imported_events: int
     skipped_events: int
     regime_observations: int
-    completed_5m_bars: int
 
     def to_dict(self) -> dict[str, int]:
         """Return a JSON-safe report."""
@@ -90,14 +89,12 @@ def ingest_shadow_ledger(
                 connection.execute("ROLLBACK")
         after = _count(connection, "shadow_ledger_events")
         regimes = _count(connection, "shadow_regime_observations")
-        completed = _count(connection, "shadow_completed_5m_bars")
     imported = after - before
     return ShadowLedgerIngestReport(
         source_events=len(events),
         imported_events=imported,
         skipped_events=len(events) - imported,
         regime_observations=regimes,
-        completed_5m_bars=completed,
     )
 
 
@@ -107,7 +104,6 @@ def shadow_summary(database_path: Path) -> dict[str, int]:
         return {
             "shadow_events": _count(connection, "shadow_ledger_events"),
             "regime_observations": _count(connection, "shadow_regime_observations"),
-            "completed_5m_bars": _count(connection, "shadow_completed_5m_bars"),
         }
 
 
@@ -186,7 +182,6 @@ def _count(connection: duckdb.DuckDBPyConnection, relation: str) -> int:
     allowed = {
         "shadow_ledger_events",
         "shadow_regime_observations",
-        "shadow_completed_5m_bars",
     }
     if relation not in allowed:
         raise ValueError(f"unsupported shadow relation: {relation}")

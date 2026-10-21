@@ -75,6 +75,34 @@ class RegimeClassifierConfig:
         _require_positive("breakout_volume_multiple", self.breakout_volume_multiple)
 
 
+def hyperliquid_native_regime_config() -> RegimeClassifierConfig:
+    """Stability-aware thresholds measured on Hyperliquid-native 1m candles.
+
+    Compared with the defaults it accepts weaker trends (50th/40th strength
+    percentiles, 1 bps EMA gap), a tighter 3 bps coil and a 90-bar breakout
+    range; ``regime export`` uses it for its per-bar snapshots.
+    """
+    return RegimeClassifierConfig(
+        ema_fast=21,
+        ema_slow=55,
+        warmup_bars=60,
+        structure_lookback=240,
+        trend_strength_percentile=50.0,
+        range_strength_percentile=40.0,
+        minimum_trend_gap_bps=1.0,
+        range_filter="bbwp",
+        bbwp_length=20,
+        bbwp_lookback=240,
+        bbwp_compression_threshold=25.0,
+        rsi_length=14,
+        rsi_signal_length=7,
+        coiling_width_bps=3.0,
+        breakout_lookback=90,
+        breakout_clearance_bps=8.0,
+        breakout_volume_multiple=2.5,
+    )
+
+
 def _require_integer(name: str, value: int, *, minimum: int) -> None:
     if not isinstance(value, int) or isinstance(value, bool) or value < minimum:
         raise ValueError(f"{name} must be an integer >= {minimum}")

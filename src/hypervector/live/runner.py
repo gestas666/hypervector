@@ -40,7 +40,8 @@ from hypervector.paper.live_node import (
     timeframe_delta,
 )
 from hypervector.runtime_lock import canonical_live_root, generic_live_runtime_lock
-from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
+from hypervector.strategies import register_all_strategies
+from hypervector.strategies.registry import execution_profile
 
 logger = logging.getLogger(__name__)
 
@@ -136,10 +137,11 @@ def start_live_daemon(
     if not export_path.is_dir():
         raise FileNotFoundError(f"export_dir not found: {export_path}")
     loadout = load_strategy_loadout(export_path, strict=True)
-    if is_hypervelocity_strategy(loadout.strategy_name):
+    register_all_strategies()
+    if execution_profile(loadout.strategy_name).post_only_entries:
         raise RuntimeError(
             "generic live-run uses market IOC execution and cannot execute "
-            "Hypervelocity; use hypervelocity-live-run"
+            "a strategy that declares post-only entries"
         )
     timeframe = loadout.timeframe
     bar_interval = timeframe_delta(timeframe)  # unsupported timeframe: refuse now

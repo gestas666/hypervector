@@ -7,9 +7,20 @@ from importlib.util import find_spec
 import numpy as np
 import pandas as pd
 
-from hypervector.regime.hypervelocity_eval import _datetime_bars
-
 UNASSIGNED = "UNASSIGNED"
+
+
+def _datetime_bars(bars: pd.DataFrame) -> pd.DataFrame:
+    if isinstance(bars.index, pd.DatetimeIndex):
+        result = bars.copy()
+    elif "timestamp" in bars.columns:
+        result = bars.copy()
+        result.index = pd.DatetimeIndex(pd.to_datetime(result["timestamp"], utc=True))
+    else:
+        raise ValueError("bars require a DatetimeIndex or timestamp column")
+    if result.index.has_duplicates or not result.index.is_monotonic_increasing:
+        raise ValueError("bars require a unique, increasing timestamp index")
+    return result
 
 
 def expanding_volatility_terciles(

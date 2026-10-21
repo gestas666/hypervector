@@ -32,21 +32,11 @@ def shadow_trade_attribution_summary(database_path: Path) -> dict[str, object]:
                 coalesce(sum(fees_usd), 0.0) AS fees_usd,
                 coalesce(sum(funding_payment_usd), 0.0)
                     AS funding_payment_usd,
-                coalesce(sum(net_pnl_usd), 0.0) AS net_pnl_usd,
-                count(*) FILTER (
-                    WHERE strict_primary_at_entry IS NOT NULL
-                      AND legacy_primary_at_entry IS NOT NULL
-                ) AS source_labeled_trades,
-                count(*) FILTER (
-                    WHERE backend_strict_disagrees
-                ) AS backend_strict_disagreements,
-                count(*) FILTER (
-                    WHERE backend_legacy_disagrees
-                ) AS backend_legacy_disagreements
+                coalesce(sum(net_pnl_usd), 0.0) AS net_pnl_usd
             FROM shadow_completed_trade_attribution
             """
         ).fetchone()
-    if row is None or len(row) != 13:
+    if row is None or len(row) != 10:
         raise RuntimeError("shadow trade attribution returned an invalid summary")
     return {
         "report_only": True,
@@ -64,13 +54,6 @@ def shadow_trade_attribution_summary(database_path: Path) -> dict[str, object]:
         "fees_usd": _number(row[7], "fees_usd"),
         "funding_payment_usd": _number(row[8], "funding_payment_usd"),
         "net_pnl_usd": _number(row[9], "net_pnl_usd"),
-        "source_labeled_trades": _integer(row[10], "source_labeled_trades"),
-        "backend_strict_disagreements": _integer(
-            row[11], "backend_strict_disagreements"
-        ),
-        "backend_legacy_disagreements": _integer(
-            row[12], "backend_legacy_disagreements"
-        ),
     }
 
 

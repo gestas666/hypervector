@@ -17,16 +17,11 @@ from typing import Any, Callable
 import pandas as pd
 
 from hypervector.config import DEFAULT_LOOKBACK, FLOOR_LOOKBACK
-from hypervector.data.hl import fetch_hl_funding_history
 from hypervector.data.pipeline import load_research_history
 from hypervector.nautilus.load_export import load_strategy_loadout
 from hypervector.paper.fill_models import (
     DEFAULT_MAX_BOOK_AGE_MS,
     FILL_MODEL_L2_WALK_V1,
-)
-from hypervector.paper.event_stream_pump import (
-    EventStreamPump,
-    HypervelocityEventStreamPump,
 )
 from hypervector.paper.live_node import (
     DEFAULT_POLL_INTERVAL_SECS,
@@ -34,17 +29,8 @@ from hypervector.paper.live_node import (
     make_rest_poll_fn,
     partition_live_bars,
 )
-from hypervector.paper.replay import (
-    FundingHistoryFetcher,
-    historical_funding_rates,
-    split_resume_history,
-)
 from hypervector.paper.session import PaperSession
 from hypervector.paper.warmup import WarmTailFetcher, refresh_warm_history
-from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
-from hypervector.strategies.source_follow_profile import (
-    SourceFollowHypervelocityProfile,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -76,10 +62,6 @@ class PaperDaemonResult:
     warmup_provenance: dict[str, Any] | None = None
 
 
-def _requires_fresh_warmup(profile: HypervelocityProfile | None) -> bool:
-    return isinstance(profile, SourceFollowHypervelocityProfile)
-
-
 def _load_warm_history(
     root: Path,
     *,
@@ -87,7 +69,6 @@ def _load_warm_history(
     timeframe: str,
     lookback_days: int,
     strict_hl_only: bool,
-    force_refresh: bool,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Cache-first warm-up history that a failed research refresh cannot block.
 
@@ -95,9 +76,8 @@ def _load_warm_history(
     tops the tail up from HL afterwards (fail-closed). So when refreshing the
     research window fails (for example a Binance or Bybit outage during the CEX
     backfill), the fresher of the cached window and the HL-only window the
-    failed load just kept is served as is. A forced refresh (source-follow
-    profiles) never falls back to cached bars, and with no cached window the
-    failure stands.
+    failed load just kept is served as is. With no cached window the failure
+    stands.
     """
     try:
         return load_research_history(
@@ -106,11 +86,8 @@ def _load_warm_history(
             timeframe=timeframe,
             lookback_days=lookback_days,
             strict_hl_only=strict_hl_only,
-            force_refresh=force_refresh,
         )
     except (RuntimeError, OSError) as exc:  # a failed refresh (network, backfill)
-        if force_refresh:
-            raise
         cached = _cached_warm_history(
             root,
             symbol=symbol,
@@ -191,26 +168,21 @@ def start_paper_daemon(
     metalabel_filter: bool = True,
     metalabel_mode: str | None = None,
     execution_mode: str = "shadow",
-    hypervelocity_profile: HypervelocityProfile | None = None,
     now_fn: Callable[[], pd.Timestamp] | None = None,
     enforce_live_boundary: bool | None = None,
-    funding_history_fn: FundingHistoryFetcher | None = None,
-    event_stream_pump: EventStreamPump | None = None,
     warm_tail_fn: WarmTailFetcher | None = None,
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
 
     Offline-testable via ``warm_ohlcv``, ``poll_fn``, ``max_live_bars``,
     ``stop_file``, and ``sleep_fn``. Never constructs a live order client.
-
-    Generic REST shadow may poll funding. The authoritative Hypervelocity event
-    runtime instead requires public ``activeAssetCtx`` observations and rejects
-    a competing REST refresh authority.
+    The live REST feed refreshes funding (unless disabled) and polls L2 after
+    warm-up.
 
     Default ``execution_mode`` is ``shadow`` (mainnet-honest intents, no submit).
     Offline tests that need paper stamps may pass ``execution_mode="paper"``.
 
-    The injected feed, clock, sleeper, stream, and bounded bar count make the
+    The injected feed, clock, sleeper and bounded bar count make the
     lifecycle deterministic in tests without changing its no-submit contract.
 
     Cached warm-up history is topped up from public Hyperliquid candles before
@@ -221,7 +193,6 @@ def start_paper_daemon(
     _print_banner(mode)
     sleep = sleep_fn if sleep_fn is not None else time.sleep
     clock = now_fn if now_fn is not None else _utc_now
-    funding_fetcher = funding_history_fn or fetch_hl_funding_history
     export_path = Path(export_dir)
     root = Path(data_root)
 
@@ -239,19 +210,9 @@ def start_paper_daemon(
     # must never poll live book (wrong prices + REST spam). Offline injected
     # poll_fn keeps book off-network unless the caller sets enable_book_poll later.
     live_rest_feed = poll_fn is None
-    event_authority = (
-        hypervelocity_profile is not None
-        and hypervelocity_profile.shadow_execution_model == "nautilus_event_v1"
-    )
-    if event_authority:
-        if enable_funding_refresh is True:
-            raise ValueError(
-                "nautilus_event_v1 funding/mark authority is activeAssetCtx"
-            )
-        enable_funding_refresh = False
-    elif enable_funding_refresh is None:
+    if enable_funding_refresh is None:
         enable_funding_refresh = live_rest_feed
-    live_book_enabled = live_rest_feed and not event_authority
+    live_book_enabled = live_rest_feed
     enforce_boundary = (
         live_rest_feed if enforce_live_boundary is None else bool(enforce_live_boundary)
     )
@@ -272,21 +233,8 @@ def start_paper_daemon(
         metalabel_filter=bool(metalabel_filter),
         metalabel_mode=metalabel_mode,
         execution_mode=mode,
-        hypervelocity_profile=hypervelocity_profile,
         lookback_days=lb,
-        initial_cash_usd=(
-            hypervelocity_profile.initial_cash_usd
-            if hypervelocity_profile is not None
-            else None
-        ),
     )
-    if hypervelocity_profile is not None:
-        funding_rate = session.initialize_hypervelocity_venue()
-        logger.info(
-            "validated Hyperliquid venue state symbol=%s funding_rate_hourly=%s",
-            loadout.symbol,
-            funding_rate,
-        )
 
     # --- warm-up (cache-first history or injected frame) ---
     warmup_provenance: dict[str, Any] = {"mode": "injected"}
@@ -298,12 +246,7 @@ def start_paper_daemon(
             symbol=loadout.symbol,
             timeframe=loadout.timeframe,
             lookback_days=lb,
-            strict_hl_only=(
-                hypervelocity_profile.strict_hl_only
-                if hypervelocity_profile is not None
-                else False
-            ),
-            force_refresh=_requires_fresh_warmup(hypervelocity_profile),
+            strict_hl_only=False,
         )
         logger.info(
             "paper warm-up loaded bars=%s provenance=%s",
@@ -316,12 +259,6 @@ def start_paper_daemon(
                 symbol=loadout.symbol,
                 timeframe=loadout.timeframe,
                 now=clock(),
-                resume_state_asof=(
-                    session.resume_state_asof
-                    if session.downtime_reconciliation_enabled
-                    or session.engine.position.qty != 0.0
-                    else None
-                ),
                 fetcher=warm_tail_fn,
             )
             logger.info("paper warm-up freshness %s", warmup_provenance)
@@ -346,65 +283,8 @@ def start_paper_daemon(
         )
         if warm_df.empty:
             raise RuntimeError("warm-up has no causally completed bars at activation")
-    session.enable_live_telemetry(activated_at=activated_at)
-    if event_authority:
-        session.activate_hypervelocity_event_runtime(
-            observed_at=activated_at.isoformat()
-        )
-    # Only a position that was already open at restart owes downtime funding;
-    # one the event stream opens after activation must not be charged for
-    # pre-activation catch-up bars.
-    resumed_event_funding = session.event_downtime_funding_enabled
-    if resumed_event_funding:
-        state_asof = session.resume_state_asof
-        if state_asof is None:
-            raise RuntimeError("active resumed state has no reconciliation timestamp")
-        seed, replay = split_resume_history(
-            warm_df,
-            state_asof=state_asof,
-            timeframe=loadout.timeframe,
-            observed_at=activated_at,
-        )
-        warm_bars = session.warm_up(seed) if not seed.empty else 0
-        rates = historical_funding_rates(
-            replay,
-            symbol=loadout.symbol,
-            timeframe=loadout.timeframe,
-            fetcher=funding_fetcher,
-        )
-        warm_bars += session.reconcile_event_downtime_funding(
-            replay,
-            funding_rates=rates,
-        )
-    elif session.downtime_reconciliation_enabled:
-        state_asof = session.resume_state_asof
-        if state_asof is None:
-            raise RuntimeError("active resumed state has no reconciliation timestamp")
-        seed, replay = split_resume_history(
-            warm_df,
-            state_asof=state_asof,
-            timeframe=loadout.timeframe,
-            observed_at=activated_at,
-        )
-        warm_bars = session.warm_up(seed) if not seed.empty else 0
-        rates = historical_funding_rates(
-            replay,
-            symbol=loadout.symbol,
-            timeframe=loadout.timeframe,
-            fetcher=funding_fetcher,
-        )
-        warm_bars += session.reconcile_downtime(replay, funding_rates=rates)
-    else:
-        warm_bars = session.warm_up(warm_df)
-    stream = event_stream_pump
-    if event_authority:
-        if stream is None:
-            stream = HypervelocityEventStreamPump(
-                data_root=root,
-                symbol=loadout.symbol,
-            )
-    elif stream is not None:
-        raise ValueError("event_stream_pump requires nautilus_event_v1 authority")
+    session.mark_live(activated_at=activated_at)
+    warm_bars = session.warm_up(warm_df)
     session.ensure_session_identity()
     after_ts = session.last_timestamp
 
@@ -413,7 +293,7 @@ def start_paper_daemon(
     book_armed_logged = False
     poll_book_in_loop = False
     if live_book_enabled:
-        snapshot = session.refresh_book_telemetry()
+        snapshot = session.refresh_book()
         if snapshot is not None:
             logger.info(
                 "paper live book armed source=%s bid=%s ask=%s",
@@ -458,15 +338,9 @@ def start_paper_daemon(
     live_bars = 0
     empty_polls = 0
     max_empty_when_capped = 3
-    stream_started = False
 
     try:
-        if stream is not None:
-            stream.start()
-            stream_started = True
         while not stop_state["stop"]:
-            if stream is not None:
-                stream.pump(session)
             if stop_file is not None and Path(stop_file).exists():
                 _request_stop("stop_file")
                 break
@@ -476,7 +350,7 @@ def start_paper_daemon(
                 break
 
             if poll_book_in_loop:
-                snapshot = session.refresh_book_telemetry()
+                snapshot = session.refresh_book()
                 if snapshot is not None and not book_armed_logged:
                     logger.info(
                         "paper live book armed source=%s bid=%s ask=%s",
@@ -539,31 +413,7 @@ def start_paper_daemon(
                     observed_at=clock(),
                 )
                 if not catchup.empty:
-                    if (
-                        resumed_event_funding
-                        and session.event_downtime_funding_enabled
-                    ):
-                        # A resumed event position still owes funding for every
-                        # hourly boundary in bars the warm-up did not cover.
-                        rates = historical_funding_rates(
-                            catchup,
-                            symbol=loadout.symbol,
-                            timeframe=loadout.timeframe,
-                            fetcher=funding_fetcher,
-                        )
-                        session.reconcile_event_downtime_funding(
-                            catchup, funding_rates=rates
-                        )
-                    elif session.downtime_reconciliation_enabled:
-                        rates = historical_funding_rates(
-                            catchup,
-                            symbol=loadout.symbol,
-                            timeframe=loadout.timeframe,
-                            fetcher=funding_fetcher,
-                        )
-                        session.reconcile_downtime(catchup, funding_rates=rates)
-                    else:
-                        session.warm_up(catchup)
+                    session.warm_up(catchup)
                     after_ts = pd.Timestamp(catchup["timestamp"].iloc[-1])
                     logger.info("paper catch-up seeded bars=%s", len(catchup))
                 if frame.empty:
@@ -596,12 +446,6 @@ def start_paper_daemon(
                 break
             sleep(float(poll_interval_secs))
     finally:
-        if stream is not None:
-            try:
-                if stream_started:
-                    stream.pump(session)
-            finally:
-                stream.close()
         for sig, handler in prev_handlers.items():
             try:
                 signal.signal(sig, handler)

@@ -284,52 +284,6 @@ def cmd_research_db_live_event_import(args: argparse.Namespace) -> int:
     return _print_success(report)
 
 
-def cmd_research_db_regime_label_import(args: argparse.Namespace) -> int:
-    """Import exact source labels with immutable annotation-only provenance."""
-    import duckdb
-
-    from hypervector.data.research_database import ResearchDatabase
-
-    path = _research_database_path(args)
-    try:
-        database = ResearchDatabase(path)
-        ingest = database.ingest_hypertrader_labels(
-            Path(args.labels), Path(args.metadata)
-        )
-        report: dict[str, object] = {
-            "ok": True,
-            "report_only": True,
-            "execution_authority": "none",
-            "database_path": str(path.resolve()),
-            "ingest": ingest.to_dict(),
-        }
-    except (duckdb.Error, json.JSONDecodeError, OSError, ValueError) as exc:
-        return _print_failure(exc, args)
-    return _print_success(report)
-
-
-def cmd_research_db_regime_compare(args: argparse.Namespace) -> int:
-    """Report causal source-revision disagreement without execution gates."""
-    import duckdb
-
-    from hypervector.data.research_database import ResearchDatabase
-
-    path = _research_database_path(args)
-    if not path.is_file():
-        return _print_failure(
-            FileNotFoundError(f"research database is missing: {path}"), args
-        )
-    try:
-        report = {
-            "ok": True,
-            "database_path": str(path.resolve()),
-            **ResearchDatabase(path).regime_comparison_summary(),
-        }
-    except (duckdb.Error, OSError, ValueError) as exc:
-        return _print_failure(exc, args)
-    return _print_success(report)
-
-
 def _research_database_path(args: argparse.Namespace) -> Path:
     from hypervector.infra import paths_for
 

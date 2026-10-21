@@ -10,10 +10,6 @@ import pandas as pd
 
 from hypervector.strategies.indicators import indicator_cache
 from hypervector.strategies.registry import StrategySpec, normalize_direction
-from hypervector.strategies.hypervelocity_contract import (
-    HypervelocityContract,
-    is_hypervelocity_strategy,
-)
 from hypervector.sweep.costs import DEFAULT_COST_MODEL, CostModel, resolve_cost_model
 from hypervector.sweep.exits import ExitConfig
 from hypervector.sweep.metrics import compute_trial_metrics
@@ -95,6 +91,8 @@ def run_grid_search(
     computed once per search via a scoped indicator cache; results are
     identical to per-trial evaluation. ``symbol`` / ``venue_max_leverage``
     select the venue leverage cap and maintenance margin for every trial.
+    The strategy's declared :class:`ExecutionProfile` selects fixed sizing and
+    strategy-managed exits for every trial.
     """
     cost = cost or resolve_cost_model(DEFAULT_COST_MODEL)
     exit_cfg = exit_cfg or ExitConfig(mode="atr")
@@ -103,7 +101,7 @@ def run_grid_search(
     combos = _param_product(grid)
     results: list[TrialResult] = []
     close = df["close"]
-    faithful = is_hypervelocity_strategy(strategy.name)
+    execution = strategy.execution
 
     with indicator_cache():
         for params in combos:
@@ -128,11 +126,10 @@ def run_grid_search(
                     k: v for k, v in params.items() if k not in _EXIT_PARAM_KEYS
                 }
                 entries, exits, tag = strategy.build_signals(df, **build_kwargs)
-                # Builders may return a descriptive tag (e.g. impulse_1m_long).
+                # Builders may return a descriptive tag (e.g. breakout_long).
                 direction = normalize_direction(tag)
                 # Optional per-bar conviction from strategy params
                 conv = params.get("conviction", conviction)
-                contract = HypervelocityContract() if faithful else None
                 metrics = compute_trial_metrics(
                     close,
                     entries,
@@ -145,13 +142,9 @@ def run_grid_search(
                     risk_cfg=risk_cfg,
                     conviction=conv,
                     apply_costs=apply_costs,
-                    fixed_notional_fraction=(
-                        contract.notional_fraction if contract is not None else None
-                    ),
-                    fixed_margin_fraction=(
-                        contract.margin_fraction if contract is not None else None
-                    ),
-                    strategy_managed_exits=faithful,
+                    fixed_notional_fraction=execution.fixed_notional_fraction,
+                    fixed_margin_fraction=execution.fixed_margin_fraction,
+                    strategy_managed_exits=execution.strategy_managed_exits,
                     symbol=symbol,
                     venue_max_leverage=venue_max_leverage,
                 )

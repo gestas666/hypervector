@@ -24,8 +24,8 @@
       ],
       "options": {
         "dest": "strategy",
-        "default": "crown_stack_long",
-        "help": "registered strategy name, e.g. crown_stack_long"
+        "default": null,
+        "help": "registered strategy name (required; families register in hypervector.strategies.STRATEGY_FAMILY_MODULES)"
       }
     },
     {
@@ -79,7 +79,7 @@
       "options": {
         "dest": "book_path",
         "default": null,
-        "help": "optional L2 orderbook file aligned to the bars: JSONL, or .sqlite/.sqlite3/.db/.zst feature samples"
+        "help": "optional L2 orderbook snapshot JSONL (as written by data book-record) aligned to the bars"
       }
     },
     {

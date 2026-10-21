@@ -1,4 +1,4 @@
-"""Typed execution boundary for Hypervelocity shadow and live runtimes."""
+"""Typed execution boundary for event-shadow and live runtimes."""
 
 from hypervector.execution.models import AccountSnapshot, OrderCommand, VenueOrderEvent
 from hypervector.execution.port import ExecutionPort

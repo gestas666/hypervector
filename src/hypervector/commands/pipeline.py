@@ -211,14 +211,9 @@ def validate_request(args: argparse.Namespace) -> Plan:
 
 
 def _registered_role(name: str) -> str:
-    from hypervector.strategies import register_all_strategies
-    from hypervector.strategies.registry import get_strategy
+    from hypervector.commands.common import registered_strategy
 
-    register_all_strategies()
-    try:
-        return str(get_strategy(name).role)
-    except KeyError as exc:
-        raise CommandRefused(f"unknown strategy: {name}") from exc
+    return str(registered_strategy(name).role)
 
 
 def _validate_search(args: argparse.Namespace, role: str) -> None:
@@ -967,9 +962,7 @@ class PipelineRun:
             FILL_MODEL_L2_WALK_V1,
         )
         from hypervector.paper.order_intent import NETWORK_MAINNET
-        from hypervector.strategies.hypervelocity_contract import (
-            is_hypervelocity_strategy,
-        )
+        from hypervector.strategies.registry import execution_profile
 
         loadout = self.loadout
         identity = {
@@ -992,7 +985,7 @@ class PipelineRun:
             "max_book_age_ms": DEFAULT_MAX_BOOK_AGE_MS,
             "metalabel_mode": "observe" if self.model_dir else "off",
             "metalabel_bundle": str(self.model_dir) if self.model_dir else None,
-            "hypervelocity": is_hypervelocity_strategy(loadout.strategy_name),
+            "execution_profile": execution_profile(loadout.strategy_name).to_dict(),
         }
         entry["artifacts"] = {
             "export": str(path),
@@ -1002,16 +995,9 @@ class PipelineRun:
         entry["metrics"] = {"mode": "handoff", "identity": identity}
 
     def _paper_session(self, entry: dict[str, Any], path: Path) -> None:
-        from hypervector.commands.paper import (
-            _metalabel_root,
-            _paper_options,
-            _runtime_guard,
-        )
+        from hypervector.commands.paper import _metalabel_root, _paper_options
         from hypervector.commands.registry import build_parser
         from hypervector.paper import runner as paper_runner
-        from hypervector.strategies.hypervelocity_contract import (
-            is_hypervelocity_strategy,
-        )
 
         namespace = _parse_canonical(build_parser(), entry["argv"])
         strategy = self.loadout.strategy_name
@@ -1023,11 +1009,7 @@ class PipelineRun:
                 "the pipeline paper session must stop after --paper-bars "
                 f"{self.args.paper_bars} live bars; got {options['max_live_bars']!r}"
             )
-        hypervelocity_shadow = is_hypervelocity_strategy(strategy)
-        with (
-            _runtime_guard(namespace, hypervelocity_shadow),
-            _metalabel_root(self.model_dir),
-        ):
+        with _metalabel_root(self.model_dir):
             result = paper_runner.start_paper_daemon(**options)
         entry["artifacts"] = {
             "export": str(path),
@@ -1044,7 +1026,6 @@ class PipelineRun:
             "bars_processed": result.bars_processed,
             "fills_count": result.fills_count,
             "stop_reason": result.stop_reason,
-            "hypervelocity_runtime_lock": hypervelocity_shadow,
         }
         self.manifest["next"].append(
             shlex.join(

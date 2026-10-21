@@ -45,7 +45,7 @@ from hypervector.nautilus.trail import (
     trail_ratchet,
     trail_start,
 )
-from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
+from hypervector.strategies.registry import execution_profile
 from hypervector.sweep.exits import stop_distance_frac, tp_distance_frac
 
 if TYPE_CHECKING:
@@ -62,7 +62,8 @@ _OHLCV_COLS = ("open", "high", "low", "close", "volume")
 
 
 def _uses_strategy_exits_only(strategy_name: str) -> bool:
-    return is_hypervelocity_strategy(strategy_name)
+    """Whether the registered strategy declares strategy-managed exits."""
+    return execution_profile(strategy_name).strategy_managed_exits
 
 
 class HypervectorStrategyConfig(StrategyConfig, frozen=True):

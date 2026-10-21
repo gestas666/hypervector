@@ -37,11 +37,6 @@ from hypervector.data.cohort_research_database import (
 )
 from hypervector.data.cohort_research_sql import COHORT_LIVE_SCHEMA_SQL
 from hypervector.data import portfolio_research_journal as journal
-from hypervector.data.regime_annotation_database import (
-    RegimeAnnotationIngestReport,
-    ingest_hypertrader_labels,
-    regime_comparison_summary,
-)
 from hypervector.data.shadow_research_database import (
     ShadowLedgerIngestReport,
     ingest_shadow_ledger,
@@ -169,14 +164,6 @@ class ResearchDatabase:
         """Return causal completed-trade and entry-regime metrics."""
         return shadow_trade_attribution_summary(self._path)
 
-    def ingest_hypertrader_labels(
-        self,
-        labels_path: Path,
-        metadata_path: Path,
-    ) -> RegimeAnnotationIngestReport:
-        """Import source-pinned observe-only regime annotations."""
-        return ingest_hypertrader_labels(self._path, labels_path, metadata_path)
-
     def ingest_live_event_archive(
         self,
         data_root: Path,
@@ -210,10 +197,6 @@ class ResearchDatabase:
     def portfolio_research_history(self, hypothesis_id: str) -> dict[str, object]:
         """Return ordered revisions and evidence integrity for one hypothesis."""
         return journal.portfolio_research_history(self._path, hypothesis_id)
-
-    def regime_comparison_summary(self) -> dict[str, object]:
-        """Return report-only backend versus source-revision label metrics."""
-        return regime_comparison_summary(self._path)
 
     def _connect(self) -> duckdb.DuckDBPyConnection:
         return duckdb.connect(str(self._path))

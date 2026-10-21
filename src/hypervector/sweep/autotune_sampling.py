@@ -6,7 +6,7 @@ strategy/metric JSON fields rather than an unvalidated execution interface.
 
 from __future__ import annotations
 from typing import Any
-from hypervector.strategies.hypervelocity_contract import HypervelocityContract
+from hypervector.strategies.registry import ExecutionProfile
 from hypervector.sweep.exits import EXIT_MODES, ExitConfig
 
 # The single research venue-cap table (SRS_HV1_VENUE_SPEC) lives in sizing;
@@ -112,23 +112,18 @@ def _clamp_strategy_leverage(params: dict[str, Any], symbol: str) -> dict[str, A
     return clamped
 
 
-def _hypervelocity_exit_dict() -> dict[str, Any]:
-    """Return the fixed strategy-managed exit contract for trial reporting."""
-    contract = HypervelocityContract()
-    return {
-        "mode": "strategy_target_only",
-        "target_margin_pct": contract.target_margin_pct,
-        "target_price_fraction": contract.target_price_fraction,
-        "stop": None,
-        "leverage": contract.leverage,
-        "range_policy": contract.open_position_range_policy,
-    }
+def strategy_managed_exit_dict(execution: ExecutionProfile) -> dict[str, Any]:
+    """Return the fixed strategy-managed exit lifecycle for trial reporting."""
+    exits = execution.exit_dict()
+    if exits is None:
+        raise ValueError("the strategy does not declare strategy-managed exits")
+    return {**exits, "leverage": execution.leverage}
 
 
-def _optuna_exit_dict(trial: Any, *, hypervelocity: bool) -> dict[str, Any]:
-    """Sample generic exits or return the immutable Hypervelocity lifecycle."""
-    if hypervelocity:
-        return _hypervelocity_exit_dict()
+def _optuna_exit_dict(trial: Any, *, execution: ExecutionProfile) -> dict[str, Any]:
+    """Sample generic exits or return the declared strategy-managed lifecycle."""
+    if execution.strategy_managed_exits:
+        return strategy_managed_exit_dict(execution)
     return {
         "mode": trial.suggest_categorical("exit_mode", ["atr", "trail", "fixed_rr"]),
         "sl_pct": trial.suggest_float("sl_pct", 0.003, 0.03, step=0.003),
@@ -139,10 +134,10 @@ def _optuna_exit_dict(trial: Any, *, hypervelocity: bool) -> dict[str, Any]:
     }
 
 
-def _random_exit_dict(rng: Any, *, hypervelocity: bool) -> dict[str, Any]:
-    """Sample generic exits or return the immutable Hypervelocity lifecycle."""
-    if hypervelocity:
-        return _hypervelocity_exit_dict()
+def _random_exit_dict(rng: Any, *, execution: ExecutionProfile) -> dict[str, Any]:
+    """Sample generic exits or return the declared strategy-managed lifecycle."""
+    if execution.strategy_managed_exits:
+        return strategy_managed_exit_dict(execution)
     return {
         "mode": _sample_grid_params(rng, {"mode": ["atr", "trail", "fixed_rr"]})[
             "mode"
@@ -157,10 +152,10 @@ def _random_exit_dict(rng: Any, *, hypervelocity: bool) -> dict[str, Any]:
     }
 
 
-def exit_space(*, hypervelocity: bool, sampler: str) -> dict[str, Any]:
+def exit_space(*, execution: ExecutionProfile, sampler: str) -> dict[str, Any]:
     """Describe the exit dimensions a sampler searches, for board provenance."""
-    if hypervelocity:
-        return {"fixed": _hypervelocity_exit_dict()}
+    if execution.strategy_managed_exits:
+        return {"fixed": strategy_managed_exit_dict(execution)}
     if sampler == "karpathy":
         return {
             "mode": ["atr", "trail", "fixed_rr"],

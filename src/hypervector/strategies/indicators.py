@@ -1,4 +1,4 @@
-"""Indicator building blocks for research strategies (pure pandas/numpy).
+"""Indicator building blocks for strategies (pure pandas/numpy).
 
 Expensive indicators are pure functions of their input values, index and
 parameters. Inside an :func:`indicator_cache` scope (opened by the grid search
@@ -304,18 +304,10 @@ def ema_bias(
     return bias.fillna(0).astype(int)
 
 
-# Back-compat alias — older name implied daily; implementation is chart-TF.
-def daily_ema_bias(
-    df: pd.DataFrame,
-    *,
-    fast: int = 21,
-    slow: int = 55,
-) -> pd.Series:
-    """Deprecated name: chart-TF EMA bias from df['close'] (not daily)."""
-    return ema_bias(df["close"], fast=fast, slow=slow)
-
-
-def crown_emas(close: pd.Series, fast: int = 9, mid: int = 21, slow: int = 55):
+def triple_ema(
+    close: pd.Series, fast: int = 9, mid: int = 21, slow: int = 55
+) -> tuple[pd.Series, pd.Series, pd.Series]:
+    """Fast, mid and slow EMAs of one series (an EMA ribbon)."""
     return ema(close, fast), ema(close, mid), ema(close, slow)
 
 
@@ -350,7 +342,7 @@ def supertrend(
     atr_period: int = 10,
     multiplier: float = 3.0,
 ) -> tuple[pd.Series, pd.Series]:
-    """Classic Supertrend (supetrend.pine). Returns (line, direction) dir=1 up / -1 down."""
+    """Classic Supertrend. Returns (line, direction) dir=1 up / -1 down."""
     h = high.astype(float).to_numpy()
     lows = low.astype(float).to_numpy()
     c = close.astype(float).to_numpy()
@@ -396,7 +388,7 @@ def supertrend(
 
 
 def zero_lag_ema(close: pd.Series, length: int = 70) -> pd.Series:
-    """ZLEMA from zero_lag_trend_signals.pine."""
+    """Zero-lag EMA (ZLEMA): EMA of the lag-compensated close."""
     lag = int((length - 1) // 2)
     c = close.astype(float)
     return ema(c + (c - c.shift(lag)), length)
@@ -435,7 +427,7 @@ def zero_lag_trend(
     c = close.astype(float)
     zlema = zero_lag_ema(c, length)
     ap = atr_period or length
-    # pine uses highest(atr, length*3)*mult as volatility band
+    # The reference band is highest(atr, length*3)*mult.
     # we only have close here — approximate ATR from close range via rolling high-low if H/L not passed
     # Caller should prefer full OHLC version; use close-only TR proxy
     tr_proxy = c.diff().abs()
@@ -473,7 +465,7 @@ def choppiness_index(
     close: pd.Series,
     length: int = 14,
 ) -> pd.Series:
-    """Choppiness Index (CIB) from choppines_indicator.pine. Low = trending."""
+    """Choppiness Index (CIB). Low = trending."""
     h = high.astype(float)
     lows = low.astype(float)
     c = close.astype(float)
@@ -533,7 +525,7 @@ def squeeze_momentum(
 
 
 def _rolling_linreg_last(src: pd.Series, length: int) -> pd.Series:
-    """Pine ``linreg(src, length, 0)``: least-squares fit value at each window's end.
+    """``linreg(src, length, 0)``: least-squares fit value at each window's end.
 
     Vectorised over sliding windows with the same per-window arithmetic as the
     former ``rolling(length).apply`` implementation (centred x, centred y,
@@ -571,7 +563,7 @@ def vortex(
     close: pd.Series,
     length: int = 14,
 ) -> tuple[pd.Series, pd.Series]:
-    """Vortex VI+ / VI- from vortex.pine."""
+    """Vortex indicator VI+ / VI-."""
     h = high.astype(float)
     lows = low.astype(float)
     c = close.astype(float)

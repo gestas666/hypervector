@@ -1,4 +1,4 @@
-"""Ledger metadata for Hypervelocity shadow order and fill events."""
+"""Ledger metadata for event-shadow order and fill events."""
 
 from __future__ import annotations
 

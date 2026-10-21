@@ -100,7 +100,7 @@ from hypervector.nautilus.precompute import (
 from hypervector.nautilus.trail import TRAIL_EXIT_MODEL
 from hypervector.nautilus.venue_spec import VenueInstrumentSpec, resolve_venue_spec
 from hypervector.strategies import get_strategy, register_all_strategies
-from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
+from hypervector.strategies.registry import execution_profile
 
 _DEFAULT_INIT_CASH = 10_000.0
 _VENUE = "HYPERLIQUID"
@@ -132,15 +132,15 @@ class Phase2Result:
     extras: dict[str, Any] = field(default_factory=dict)
 
 
-def _default_leverage(loadout: StrategyLoadout) -> int:
-    return 30 if is_hypervelocity_strategy(loadout.strategy_name) else 1
+def _default_leverage(loadout: StrategyLoadout) -> Decimal:
+    """The strategy's declared leverage, else 1x."""
+    declared = execution_profile(loadout.strategy_name).leverage
+    return Decimal(str(declared)) if declared is not None else Decimal(1)
 
 
 def _sim_leverage(loadout: StrategyLoadout, spec: VenueInstrumentSpec) -> Decimal:
     """Configured sim leverage, never above the venue/charter max for the asset."""
-    return min(
-        Decimal(_default_leverage(loadout)), Decimal(str(spec.venue_max_leverage))
-    )
+    return min(_default_leverage(loadout), Decimal(str(spec.venue_max_leverage)))
 
 
 def _require_registered_strategy(loadout: StrategyLoadout, export_path: Path) -> None:
@@ -226,7 +226,7 @@ def run_phase2_backtest(
     spec = resolve_venue_spec(loadout.symbol, loadout.meta)
     costs = resolve_phase2_costs(loadout)
     conviction_value, conviction_source = resolve_phase2_conviction(loadout, conviction)
-    hypervelocity = is_hypervelocity_strategy(loadout.strategy_name)
+    managed_exits = execution_profile(loadout.strategy_name).strategy_managed_exits
 
     df = _resolve_ohlcv(
         ohlcv=ohlcv,
@@ -272,7 +272,7 @@ def run_phase2_backtest(
     )
     strategy = HypervectorStrategy(config=strategy_config)
     # Same rule as the actor: SL/TP brackets unless the strategy owns exits.
-    brackets = not hypervelocity and str(
+    brackets = not managed_exits and str(
         (strategy_config.exits or {}).get("mode")
     ) in ("fixed_rr", "atr")
     signal_info = _prepare_signals(
@@ -365,8 +365,6 @@ def run_phase2_backtest(
 
     loadout_summary = loadout.summary()
     gaps = ["native_liquidation"]
-    if hypervelocity:
-        gaps.append("proportional_target_resize")
     if brackets:
         gaps.append("bracket_same_bar_sl_tp_ohlc_order")
     payload: dict[str, Any] = {
@@ -386,10 +384,6 @@ def run_phase2_backtest(
         "bar_timestamps": "close",
         "data_fidelity": "ohlcv_bar",
         "venue_model": "phase2_bar_only",
-        "event_venue_model_available": (
-            "hypervelocity_event_friction_v1" if hypervelocity else None
-        ),
-        "event_venue_model_ready": False if hypervelocity else None,
         "event_venue_model_gaps": gaps,
         "margin": {
             "sim_leverage": float(sim_leverage),

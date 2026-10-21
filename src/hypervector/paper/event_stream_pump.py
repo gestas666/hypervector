@@ -51,7 +51,7 @@ class EventStreamPump(Protocol):
         """Stop capture and flush durable evidence."""
 
 
-class HypervelocityEventStreamPump:
+class HyperliquidEventStreamPump:
     """Archive public evidence before routing it to shadow execution."""
 
     def __init__(

@@ -10,9 +10,7 @@
     "market"
   ],
   "fragment_overrides": {},
-  "legacy": [
-    "hypervelocity-regime-challengers"
-  ],
+  "legacy": [],
   "exclusive_groups": [],
   "arguments": [
     {

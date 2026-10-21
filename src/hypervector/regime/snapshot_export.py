@@ -1,4 +1,4 @@
-"""Export canonical backend regime telemetry for read-only TUI playback."""
+"""Export canonical backend regime telemetry as per-bar JSON snapshots."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from hypervector.regime.classifier import hyperliquid_native_regime_config
 from hypervector.regime.ultimate import detect_ultimate_regime
-from hypervector.strategies.hypervelocity_contract import faithful_regime_config
 
 SnapshotValue = str | int | float | bool | None
 Snapshot = dict[str, SnapshotValue]
@@ -123,7 +123,7 @@ def build_regime_snapshots(
     indexed = _merge_book_features(indexed, Path(data_root), symbol, timeframe)
     regime = detect_ultimate_regime(
         indexed,
-        config=faithful_regime_config(),
+        config=hyperliquid_native_regime_config(),
     )
     opi, spread, depth, microstructure_source = _microstructure(indexed)
     funding_zscore, funding_source = _funding_zscore(indexed)
@@ -215,9 +215,6 @@ def _regime_snapshot(regime: pd.DataFrame, position: int) -> Snapshot:
         "trend_15m": str(regime["context_15m"].iloc[position]),
         "long_weight": _rounded(regime["long_weight"].iloc[position], 2),
         "short_weight": _rounded(regime["short_weight"].iloc[position], 2),
-        "max_leverage": _rounded(regime["max_leverage"].iloc[position], 2),
-        "dynamic_leverage": _rounded(regime["dynamic_leverage"].iloc[position], 2),
-        "taker_allowed": False,
     }
 
 

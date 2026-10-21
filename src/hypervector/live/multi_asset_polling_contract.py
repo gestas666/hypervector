@@ -30,7 +30,6 @@ from hypervector.live.hip3_cash_open_gap_provider import (
 from hypervector.live.sol_aligned_range_contract import (
     SOL_ALIGNED_RANGE_FIXED60_STRATEGY,
 )
-from hypervector.live.source_follow_cohort_provider import SOURCE_FOLLOW_COHORT_STRATEGY
 from hypervector.live.spcx_cash_session_breakout_provider import (
     SPCX_CASH_SESSION_LONG_STRATEGY,
 )
@@ -51,7 +50,6 @@ SOURCE_TIMEFRAMES = {
     RANGE_STRATEGY: "1m",
     directional_range.ETH_RANGE_LONG_STRATEGY: "1m",
     directional_range.SOL_RANGE_SHORT_STRATEGY: "1m",
-    SOURCE_FOLLOW_COHORT_STRATEGY: "1m",
     hype.HYPE_BREAKOUT_COHORT_STRATEGY: "1m",
     hype_native.HYPE_NATIVE_BREAKOUT_STRATEGY: "1m",
     hype_native.HYPE_NATIVE_BREAKOUT_LONG_STRATEGY: "1m",
@@ -82,7 +80,6 @@ READINESS_SEED_LOOKBACK_MINUTES = {
     RANGE_STRATEGY: 2,
     directional_range.ETH_RANGE_LONG_STRATEGY: 2 * _MINUTES_PER_DAY,
     directional_range.SOL_RANGE_SHORT_STRATEGY: 2 * _MINUTES_PER_DAY,
-    SOURCE_FOLLOW_COHORT_STRATEGY: 6,
     hype.HYPE_BREAKOUT_COHORT_STRATEGY: 2,
     hype_native.HYPE_NATIVE_BREAKOUT_STRATEGY: 2,
     hype_native.HYPE_NATIVE_BREAKOUT_LONG_STRATEGY: 2,

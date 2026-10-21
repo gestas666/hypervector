@@ -16,9 +16,7 @@ from hypervector.commands.registry import (
     spec_for,
 )
 
-MODEL_ENVIRONMENT = frozenset(
-    {"HYPERVECTOR_METALABEL_ROOT", "HYPERVECTOR_IMPULSE_BTC_ROOT"}
-)
+MODEL_ENVIRONMENT = frozenset({"HYPERVECTOR_METALABEL_ROOT"})
 OXA_ENVIRONMENT = frozenset({"OXA_API_KEY"})
 
 

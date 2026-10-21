@@ -9,7 +9,6 @@ from importlib import import_module
 
 _EXPORTS = {
     "ENV_ROOT": ("hypervector.ml.metalabel", "ENV_ROOT"),
-    "ENV_ROOT_LEGACY": ("hypervector.ml.metalabel", "ENV_ROOT_LEGACY"),
     "MetalabelError": ("hypervector.ml.metalabel", "MetalabelError"),
     "Metalabeler": ("hypervector.ml.metalabel", "Metalabeler"),
     "probe_metalabel": ("hypervector.ml.metalabel", "probe_metalabel"),

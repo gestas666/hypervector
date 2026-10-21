@@ -1,7 +1,7 @@
 """Record HL public L2 book snapshots under data/cache/book/ (jsonl).
 
-This is **storage only** — crown/trend strategies still trade on OHLCV.
-Paper fills already poll live L2; this archive is for future book-feature
+This is **storage only**: strategies trade on OHLCV; the recorded books feed
+``data book-align`` and the optional book gate. Paper fills already poll live L2; this archive is for future book-feature
 research and offline fill replay.
 """
 

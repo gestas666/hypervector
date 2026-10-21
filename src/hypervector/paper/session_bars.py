@@ -7,8 +7,7 @@ close timestamps, and hourly Hyperliquid funding boundaries.
 
 from __future__ import annotations
 
-import math
-from typing import Any, Mapping
+from typing import Any
 
 import pandas as pd
 
@@ -91,50 +90,3 @@ def _is_funding_boundary(
 ) -> bool:
     closed_at = _bar_close_timestamp(record, timeframe=timeframe)
     return closed_at.minute == 0 and closed_at.second == 0
-
-
-def _resume_timestamp(value: str) -> pd.Timestamp:
-    """Parse an authoritative ledger timestamp or fail closed."""
-    try:
-        timestamp = pd.Timestamp(value)
-    except (TypeError, ValueError) as exc:
-        raise RuntimeError(
-            f"invalid shadow portfolio state timestamp: {value!r}"
-        ) from exc
-    if timestamp.tzinfo is None:
-        return timestamp.tz_localize("UTC")
-    return timestamp.tz_convert("UTC")
-
-
-def _bars_closing_after(
-    frame: pd.DataFrame,
-    *,
-    cutoff: pd.Timestamp,
-    timeframe: str,
-) -> pd.DataFrame:
-    """Return timestamp-ordered bars whose close follows persisted state."""
-    normalized = frame.copy()
-    timestamps = pd.to_datetime(normalized["timestamp"], utc=True)
-    normalized = normalized.assign(timestamp=timestamps).sort_values("timestamp")
-    closes = normalized["timestamp"] + pd.Timedelta(
-        minutes=_timeframe_minutes(timeframe)
-    )
-    return normalized.loc[closes > cutoff].reset_index(drop=True)
-
-
-def _normalized_funding_rates(
-    rates: Mapping[pd.Timestamp, float],
-) -> dict[pd.Timestamp, float]:
-    """Normalize historical funding keys to exact UTC timestamps."""
-    normalized: dict[pd.Timestamp, float] = {}
-    for raw_timestamp, raw_rate in rates.items():
-        timestamp = pd.Timestamp(raw_timestamp)
-        if timestamp.tzinfo is None:
-            timestamp = timestamp.tz_localize("UTC")
-        else:
-            timestamp = timestamp.tz_convert("UTC")
-        rate = float(raw_rate)
-        if not math.isfinite(rate):
-            raise RuntimeError(f"non-finite funding history at {timestamp.isoformat()}")
-        normalized[timestamp] = rate
-    return normalized

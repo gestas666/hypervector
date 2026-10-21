@@ -10,11 +10,7 @@ import pandas as pd
 from hypervector.config import DEFAULT_LOOKBACK, DEFAULT_SYMBOL, DEFAULT_TIMEFRAME
 from hypervector.data.pipeline import load_research_history
 from hypervector.strategies import register_all_strategies
-from hypervector.strategies.hypervelocity_contract import (
-    HypervelocityContract,
-    is_hypervelocity_strategy,
-)
-from hypervector.strategies.registry import get_strategy
+from hypervector.strategies.registry import ExecutionProfile, get_strategy
 from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.metrics import compute_trial_metrics
 from hypervector.sweep.autotune_models import (
@@ -43,7 +39,6 @@ from hypervector.sweep.autotune_sampling import (
     _sample_grid_params as _sample_grid_params,
     _mutate_grid_params as _mutate_grid_params,
     _clamp_strategy_leverage as _clamp_strategy_leverage,
-    _hypervelocity_exit_dict as _hypervelocity_exit_dict,
     _random_exit_dict as _random_exit_dict,
     _optuna_exit_dict as _optuna_exit_dict,
     exit_space,
@@ -55,10 +50,7 @@ try:
 except ImportError:
     optuna = None
 HAVE_OPTUNA = optuna is not None
-_SQLITE_BOOK_SUFFIXES = frozenset({".sqlite", ".sqlite3", ".db", ".zst"})
 _HYBRID_NOTE = "sampler 'hybrid' is a deprecated alias of optuna TPE"
-#: Hypervelocity's contract is measured with maker fees whatever was requested.
-_HYPERVELOCITY_FEE_MODEL = "hl_maker"
 
 
 def run_autotune(
@@ -68,7 +60,7 @@ def run_autotune(
     symbol: str = DEFAULT_SYMBOL,
     timeframe: str = DEFAULT_TIMEFRAME,
     lookback_days: int = DEFAULT_LOOKBACK,
-    strategy_name: str = "crown_stack_long",
+    strategy_name: str,
     n_trials: int = 100,
     fee_model: str = "hl_base_taker",
     book_data_path: str | Path | None = None,
@@ -98,9 +90,10 @@ def run_autotune(
     ``force_refresh``. ``allow_network=False`` never fetches: a stale cached
     window is served as is and a cache miss raises ``FileNotFoundError``.
 
-    A strategy contract may replace ``fee_model`` (Hypervelocity is measured
-    with ``hl_maker``); the board and result record both the requested and
-    the used fee model.
+    A strategy that declares ``ExecutionProfile.fee_model`` is measured with
+    that cost model whatever ``fee_model`` requested; the board and result
+    record both the requested and the used fee model. A declared leverage
+    above the symbol's venue cap is refused before any data load.
     """
     if type(n_trials) is not int or n_trials <= 0:
         raise ValueError("n_trials must be a positive integer")
@@ -126,10 +119,10 @@ def run_autotune(
     selected_root = _resolve_root(root, data_root)
     if book_data_path not in (None, "") and not Path(book_data_path).is_file():  # type: ignore[arg-type]
         raise FileNotFoundError(f"book data path is not a file: {book_data_path}")
-    hypervelocity = is_hypervelocity_strategy(strategy_name)
-    if hypervelocity:
-        _check_hypervelocity_leverage(symbol)
-    fee_model_used = _HYPERVELOCITY_FEE_MODEL if hypervelocity else fee_model
+    register_all_strategies()
+    execution = get_strategy(strategy_name).execution
+    _check_declared_leverage(execution, symbol)
+    fee_model_used = execution.fee_model or fee_model
     settings = SearchSettings(
         root=selected_root,
         strategy_name=strategy_name,
@@ -195,13 +188,15 @@ def _resolve_root(root: Path | None, data_root: Path | None) -> Path:
     return Path(selected)
 
 
-def _check_hypervelocity_leverage(symbol: str) -> None:
-    """The fixed Hypervelocity contract cannot run above a venue's leverage cap."""
-    required = HypervelocityContract().leverage
+def _check_declared_leverage(execution: ExecutionProfile, symbol: str) -> None:
+    """A strategy's declared leverage cannot run above a venue's leverage cap."""
+    required = execution.leverage
+    if required is None:
+        return
     cap = venue_leverage_cap(symbol)
-    if required > cap:
+    if float(required) > cap:
         raise ValueError(
-            f"Hypervelocity's fixed {required:g}x contract leverage exceeds the "
+            f"the strategy's declared {float(required):g}x leverage exceeds the "
             f"{symbol} venue leverage cap of {cap:g}x"
         )
 
@@ -224,12 +219,7 @@ def _load_inputs(settings: SearchSettings) -> tuple[pd.DataFrame, dict[str, obje
     if settings.book_data_path:
         from hypervector.data import book_align
 
-        path = Path(settings.book_data_path)
-        book = (
-            book_align.load_l2_sqlite_feature_samples(path, coin=settings.symbol)
-            if path.suffix.lower() in _SQLITE_BOOK_SUFFIXES
-            else book_align.load_l2_jsonl(path)
-        )
+        book = book_align.load_l2_jsonl(Path(settings.book_data_path))
         bars = book_align.align_orderbook_to_ohlcv(bars, book)
     return bars, provenance
 
@@ -250,7 +240,7 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
     register_all_strategies()
     bars, provenance = _load_inputs(settings)
     strategy = get_strategy(settings.strategy_name)
-    hypervelocity = is_hypervelocity_strategy(settings.strategy_name)
+    execution = strategy.execution
     cut = _train_cut(bars, settings.train_fraction)
     cost = resolve_cost_model(settings.fee_model)
 
@@ -259,10 +249,10 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
             frame,
             strategy,
             # The builder's own tag decides, through normalize_direction
-            # (impulse_1m_short -> short); never a substring of the name.
+            # (breakout_short -> short); never a substring of the name.
             None,
             cost,
-            hypervelocity,
+            execution,
             compute_trial_metrics,
             objective=settings.objective,
             # Venue cap and maintenance margin of the traded symbol, as in
@@ -339,7 +329,8 @@ def _run_search(settings: SearchSettings) -> AutotuneResult:
         holdout_window=bars_window(bars.iloc[cut:]) if cut < len(bars) else None,
         search_space={
             "param_grid": strategy.param_grid,
-            "exit_space": exit_space(hypervelocity=hypervelocity, sampler=settings.sampler),
+            "exit_space": exit_space(execution=execution, sampler=settings.sampler),
+            "execution_profile": execution.to_dict(),
             "book_dimensions": book_dimensions,
         },
         costs=cost.to_dict(),

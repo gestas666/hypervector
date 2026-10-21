@@ -7,14 +7,11 @@ from __future__ import annotations
 from pathlib import Path
 from hypervector.export.phase2 import export_candidate
 from typing import Any
-from hypervector.strategies.hypervelocity_contract import (
-    HypervelocityContract,
-    is_hypervelocity_strategy,
-)
+from hypervector.strategies.registry import execution_profile
 from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.exits import ExitConfig
 from hypervector.sweep.sizing import RiskConfig
-from hypervector.sweep.autotune_sampling import _hypervelocity_exit_dict
+from hypervector.sweep.autotune_sampling import strategy_managed_exit_dict
 
 
 def _export_settings(
@@ -22,16 +19,18 @@ def _export_settings(
 ) -> tuple[dict[str, Any], str, RiskConfig]:
     """Return the measured exit lifecycle, its mode and the sizing contract.
 
-    Hypervelocity is measured with strategy-managed exits and no stop, so it
-    exports ``strategy_target_only`` rather than a symmetric stop at the target.
+    A strategy that declares strategy-managed exits is measured with no stop,
+    so it exports the ``strategy_managed`` mode with its fixed margin and
+    notional fractions rather than a stop at some distance.
     """
-    if is_hypervelocity_strategy(strategy_name):
-        contract = HypervelocityContract()
-        exits = _hypervelocity_exit_dict()
+    execution = execution_profile(strategy_name)
+    if execution.strategy_managed_exits:
+        exits = strategy_managed_exit_dict(execution)
+        margin = float(execution.fixed_margin_fraction or 0.0)
         risk_cfg = RiskConfig(
-            risk_pct_min=contract.margin_fraction,
-            risk_pct_max=contract.margin_fraction,
-            max_size_frac=contract.notional_fraction,
+            risk_pct_min=margin,
+            risk_pct_max=margin,
+            max_size_frac=float(execution.fixed_notional_fraction or 0.0),
         )
         return exits, str(exits["mode"]), risk_cfg
     exit_cfg = ExitConfig(
@@ -85,11 +84,7 @@ def _export_autotune_candidate(
             "fee_model": fee_model,
             "fee_model_requested": fee_model_requested or fee_model,
             "conviction": risk_cfg.default_conviction,
-            "hypervelocity_contract": (
-                _hypervelocity_exit_dict()
-                if is_hypervelocity_strategy(strategy_name)
-                else None
-            ),
+            "execution_profile": execution_profile(strategy_name).to_dict(),
             "evaluation": evaluation,
         },
         params={

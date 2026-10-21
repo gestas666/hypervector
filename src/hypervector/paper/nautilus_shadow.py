@@ -1,4 +1,4 @@
-"""Event-driven Hypervelocity shadow port with Nautilus-aligned friction."""
+"""Event-driven shadow execution port with Nautilus-aligned friction."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from hypervector.data.hl_events import L2SnapshotEvent, PublicTradeEvent, StreamGap
 from hypervector.execution import AccountSnapshot, OrderCommand, VenueOrderEvent
 from hypervector.nautilus.hyperliquid_margin import IsolatedMarginPosition
-from hypervector.nautilus.hypervelocity_sim import HypervelocitySimulationConfig
+from hypervector.nautilus.event_sim import EventSimulationConfig
 from hypervector.paper.shadow_execution_models import (
     EXECUTION_MODEL,
     MARGIN_MODEL,
@@ -51,7 +51,7 @@ class NautilusShadowExecutionPort(
         *,
         symbol: str,
         initial_cash_usd: float,
-        simulation_config: HypervelocitySimulationConfig,
+        simulation_config: EventSimulationConfig,
         maker_fee_rate: float,
         taker_fee_rate: float,
         leverage: float,
