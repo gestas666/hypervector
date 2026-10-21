@@ -21,7 +21,7 @@ from hypervector.live.multi_asset_cohort_telemetry import (
     SharedAccountFacts,
 )
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll, CohortMarketBar
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.sol_range_onset_engine_contract import StopRaiseOutcome
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot
 

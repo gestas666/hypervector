@@ -17,7 +17,7 @@ from hypervector.live.multi_asset_readiness_seed import (
     RECOVERY_SCAN_END_METRIC,
     RECOVERY_SCAN_START_METRIC,
 )
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.sol_range_onset_state import SolLiveState
 
 _PREACTIVATION_READINESS_REASON = "pre_activation_readiness_seed"

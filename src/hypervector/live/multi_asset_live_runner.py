@@ -71,7 +71,7 @@ from hypervector.live.multi_asset_operator_runtime import (
     CohortOperatorExecutionError,
     OperatorCommandSourceProtocol,
 )
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.process_signal_stop import ProcessStopRequested
 from hypervector.live.sol_range_onset_state import SolLiveState
 from hypervector.live.transient_transport import transient_read_failure_reason

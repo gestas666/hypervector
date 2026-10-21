@@ -6,7 +6,7 @@ import pytest
 
 from hypervector.live.bidirectional_intents import StrategyIntent
 from hypervector.live.cohort_regime_routing import attach_regime_preferences
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 

@@ -42,8 +42,8 @@ from hypervector.live.multi_asset_live_config import (
     StrategyProviderConfig,
 )
 from hypervector.live.multi_asset_market_bars import MultiAssetIntentPollerError
+from hypervector.live.provider_evaluation import IntentBatch
 from hypervector.live.multi_asset_signal_source import (
-    IntentBatch,
     collect_hulk_bidirectional_intents,
     collect_range_onset_bidirectional_intents,
 )

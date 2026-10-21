@@ -10,7 +10,7 @@ from hypervector.live.directional_range_onset_provider import (
     ETH_RANGE_LONG_STRATEGY,
     DirectionalRangeOnsetCollector,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 _BASE = pd.Timestamp("2026-08-07T14:00:00Z")

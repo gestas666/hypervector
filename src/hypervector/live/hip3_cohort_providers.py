@@ -27,7 +27,7 @@ from hypervector.live.hip3_provider_evaluations import (
     breakout_evaluation,
     swing_evaluation,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.research.hip3_breakout_pressure_signals import (
     Hip3BreakoutPressureConfig,
     build_breakout_pressure_signals,

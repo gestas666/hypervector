@@ -48,7 +48,7 @@ from hypervector.live.hyperliquid_sol_factory import (
     SolSdkFactoryError,
 )
 from hypervector.live.process_signal_stop import install_process_signal_stop
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.perp_venue_identity import configured_perp_dexes
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger, SolLiveLedgerError
 from hypervector.runtime_lock import (

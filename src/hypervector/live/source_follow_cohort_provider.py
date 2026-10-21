@@ -9,7 +9,7 @@ import pandas as pd
 
 from hypervector.live.bidirectional_intents import StrategyIntent
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.regime.pinned_hypertrader import PinnedHypertraderClassifier
 from hypervector.regime.source_follow_runtime import (

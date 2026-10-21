@@ -12,7 +12,7 @@ from hypervector.live.hip3_cash_open_gap_provider import (
     Hip3CashOpenGapCollector,
 )
 from hypervector.live.multi_asset_readiness_seed import collect_readiness_seed
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.research.hip3_cash_open_gap_reversal_signals import (
     cash_session_bar_opens,

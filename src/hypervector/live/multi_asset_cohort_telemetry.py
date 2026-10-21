@@ -52,7 +52,7 @@ from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.live.multi_asset_market_telemetry import (
     unseen_market_candle_payload,
 )
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.multi_asset_strategy_evidence import (
     strategy_evidence_payloads,
 )

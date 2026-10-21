@@ -9,12 +9,12 @@ import pandas as pd
 import pytest
 
 from hypervector.live.hulk_smash_live_decisions import HulkSmashLiveDecision
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.multi_asset_signal_source import (
     build_hulk_bidirectional_intents,
     build_range_onset_bidirectional_intents,
     collect_hulk_bidirectional_intents,
     collect_range_onset_bidirectional_intents,
-    ProviderEvaluation,
 )
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_range_onset_controller import SolLiveDecision

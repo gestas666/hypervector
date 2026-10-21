@@ -10,7 +10,7 @@ from hypervector.live.hype_breakout_retest_provider import (
     HYPE_BREAKOUT_RETEST_STRATEGY,
     HypeBreakoutRetestCollector,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 _START = pd.Timestamp("2026-08-06T00:00:00Z")

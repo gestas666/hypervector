@@ -46,7 +46,7 @@ from hypervector.live.multi_asset_poll_validation import (
     record_fresh_intents,
     validate_intent_batch,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.multi_asset_readiness_seed import (
     ProviderIntentCollectorProtocol,
     collect_provider_batch,

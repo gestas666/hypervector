@@ -10,10 +10,7 @@ from hypervector.live.bidirectional_intents import StrategyIntent
 from hypervector.live.btc_liquidity_sweep_readiness import (
     liquidity_sweep_long_readiness,
 )
-from hypervector.live.multi_asset_signal_source import (
-    IntentBatch,
-    ProviderEvaluation,
-)
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.research.liquidity_sweep_long import (
     build_liquidity_sweep_long_decisions,
     completed_hourly_bars,

@@ -17,7 +17,7 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 from hypervector.live.multi_asset_polling_contract import (
     READINESS_SEED_LOOKBACK_MINUTES,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 _CONFIG = Path(

@@ -15,7 +15,7 @@ from hypervector.live.multi_asset_poll_validation import validate_intent_batch
 from hypervector.live.multi_asset_polling_contract import (
     READINESS_SEED_LOOKBACK_MINUTES,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 
 _PREACTIVATION_READINESS_REASON = "pre_activation_readiness_seed"
 RECOVERY_SCAN_START_METRIC = "pre_activation_scan_start_ms"

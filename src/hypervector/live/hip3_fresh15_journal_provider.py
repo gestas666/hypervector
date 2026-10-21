@@ -32,7 +32,7 @@ from hypervector.live.hip3_fresh15_journal_contracts import (
 )
 from hypervector.live.hip3_provider_inputs import completed_hip3_inputs
 from hypervector.live.hip3_provider_availability import Hip3ObserverUnavailableError
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.research.live_ledger_snapshot import snapshot_decision_ledger
 

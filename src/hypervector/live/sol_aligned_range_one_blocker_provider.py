@@ -12,9 +12,8 @@ import pandas as pd
 
 from hypervector.live.bidirectional_intents import StrategyIntent
 from hypervector.live.cohort_candidate_entry_clock import AcceptedEntryClock
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.multi_asset_signal_source import (
-    IntentBatch,
-    ProviderEvaluation,
     collect_range_onset_bidirectional_intents,
 )
 from hypervector.live.provider_readiness import ReadinessMetric, SignalReadiness

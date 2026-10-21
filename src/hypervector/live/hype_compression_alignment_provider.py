@@ -13,7 +13,7 @@ from hypervector.live.breakout_feature_filter_provider import (
 from hypervector.live.hype_breakout_compression_provider import (
     HypeCompressionBreakoutCollector,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 
 HYPE_COMPRESSION_ALIGNMENT_STRATEGY = (
     "hype_breakout_compression_alignment_bidirectional_v2"

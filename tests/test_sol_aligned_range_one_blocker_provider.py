@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_aligned_range_contract import (
     SOL_ALIGNED_RANGE_FIXED60_STRATEGY,

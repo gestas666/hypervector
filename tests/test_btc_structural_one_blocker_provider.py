@@ -12,7 +12,7 @@ from hypervector.live.btc_structural_contract import BTC_STRUCTURAL_FIXED60_STRA
 from hypervector.live.btc_structural_one_blocker_provider import (
     BtcStructuralOneBlockerCollector,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 _BASE = pd.Timestamp("2026-08-04T20:00:00Z")

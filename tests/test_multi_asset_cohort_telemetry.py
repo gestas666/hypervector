@@ -29,7 +29,7 @@ from hypervector.live.multi_asset_cohort_telemetry import (
 from hypervector.live import multi_asset_strategy_evidence
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.multi_asset_intent_poller import CohortMarketBar
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.multi_asset_strategy_evidence_models import (
     StrategyDirectionalEvidence,
     StrategyResearchEvidence,

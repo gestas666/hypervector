@@ -11,7 +11,7 @@ from hypervector.live.hype_breakout_cohort_provider import (
     HYPE_BREAKOUT_COHORT_STRATEGY,
     HypeBreakoutOnsetCollector,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 
 HYPE_NATIVE_BREAKOUT_STRATEGY = "hype_native_breakout_onset_bidirectional_v2"
 HYPE_NATIVE_BREAKOUT_LONG_STRATEGY = "hype_native_breakout_onset_long_v3"

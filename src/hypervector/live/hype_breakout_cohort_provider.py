@@ -10,7 +10,7 @@ from hypervector.live.bidirectional_intents import StrategyIntent
 from hypervector.live.hype_breakout_entry_telemetry import (
     build_hype_entry_feature_telemetry,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import ReadinessMetric, SignalReadiness
 from hypervector.live.sol_range_onset_controller import SolLiveDecision
 from hypervector.live.sol_range_onset_decision_source import (

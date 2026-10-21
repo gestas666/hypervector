@@ -8,8 +8,8 @@ from typing import Protocol
 
 import pandas as pd
 
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.multi_asset_signal_source import (
-    ProviderEvaluation,
     RangeDecisionBuilderProtocol,
     range_decision_evaluation,
 )

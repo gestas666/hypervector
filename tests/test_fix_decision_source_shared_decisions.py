@@ -16,7 +16,7 @@ import pytest
 from hypervector.live import sol_range_onset_decision_source as ranges
 from hypervector.live.multi_asset_intent_poller import ConfiguredMultiAssetIntentPoller
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.regime.composite import classify_multitimeframe
 from hypervector.regime.component_telemetry import build_regime_component_frame

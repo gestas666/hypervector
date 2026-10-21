@@ -12,7 +12,7 @@ from hypervector.live.hip3_provider_inputs import (
     completed_hip3_inputs,
     decision_time_ms,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.research.donchian_atr_breakout_signals import (
     DonchianAtrBreakoutConfig,

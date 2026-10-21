@@ -16,7 +16,7 @@ from hypervector.live.cohort_maximum_hold_policy import (
     maximum_hold_exit_reason,
     update_latest_evaluations,
 )
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 

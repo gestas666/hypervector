@@ -21,7 +21,7 @@ from hypervector.live.cohort_adaptive_exit_policy import (
 from hypervector.live.canonical_regime_telemetry import (
     CANONICAL_REGIME_TELEMETRY_STRATEGY,
 )
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 

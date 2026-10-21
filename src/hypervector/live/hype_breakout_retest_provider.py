@@ -13,7 +13,7 @@ from hypervector.live.hype_breakout_retest_policy import (
     BreakoutRetestResult,
     HypeBreakoutRetestPolicy,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import ReadinessMetric, SignalReadiness
 
 HYPE_BREAKOUT_RETEST_STRATEGY = "hype_breakout_retest_bidirectional_v2"

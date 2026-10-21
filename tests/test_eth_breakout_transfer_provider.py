@@ -12,7 +12,7 @@ from hypervector.live.eth_breakout_transfer_provider import (
     ETH_BREAKOUT_TRANSFER_STRATEGY,
     EthBreakoutTransferCollector,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 _DECISION_MS = int(pd.Timestamp("2026-08-05T23:00:00Z").timestamp() * 1_000)

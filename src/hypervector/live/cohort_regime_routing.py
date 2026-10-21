@@ -12,7 +12,7 @@ from hypervector.live.bidirectional_intents import (
 from hypervector.live.canonical_regime_telemetry import (
     latest_canonical_evaluation_at_or_before,
 )
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 
 _ALIGNMENT_BASIS = "canonical_1m_5m_15m_1_3_2_v1"
 _STATE_WEIGHTS = (("state_1m", 1.0), ("state_5m", 3.0), ("context_15m", 2.0))

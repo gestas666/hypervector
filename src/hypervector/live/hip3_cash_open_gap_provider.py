@@ -8,7 +8,7 @@ from typing import Protocol
 import pandas as pd
 
 from hypervector.live.bidirectional_intents import StrategyIntent
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.research.hip3_cash_open_gap_reversal_signals import (
     Hip3CashOpenGapReversalConfig,

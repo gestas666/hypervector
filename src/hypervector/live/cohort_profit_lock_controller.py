@@ -28,7 +28,7 @@ from hypervector.live.cohort_adaptive_exit_controller import (
     retention_breakeven_requested,
 )
 from hypervector.live.cohort_adaptive_exit_policy import RETENTION_EXIT_POLICY
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.multi_asset_live_protocols import (
     CohortTelemetryProtocol,
     MultiAssetEngineProtocol,

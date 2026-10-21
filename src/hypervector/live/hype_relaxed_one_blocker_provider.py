@@ -21,7 +21,7 @@ from hypervector.live.hype_relaxed_contract import (
     HYPE_RELAXED_TARGET20_STRATEGY,
     require_hype_relaxed_strategy,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import ReadinessMetric, SignalReadiness
 from hypervector.live.sol_range_onset_decision_source import (
     build_completed_live_decisions,

@@ -19,7 +19,7 @@ from hypervector.live.multi_asset_observer_runner import (
     MultiAssetObserverRunner,
     MultiAssetObserverRunnerError,
 )
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.hyperliquid_protocol import SolBookLevel, SolBookSnapshot
 

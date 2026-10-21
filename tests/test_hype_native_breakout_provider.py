@@ -19,7 +19,7 @@ from hypervector.live.hype_native_breakout_provider import (
     HYPE_NATIVE_BREAKOUT_STRATEGY,
     HypeNativeBreakoutOnsetCollector,
 )
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 _DECISION_MS = 1_786_944_600_000

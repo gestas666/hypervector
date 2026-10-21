@@ -24,7 +24,7 @@ from hypervector.live.cohort_execution_plan import BoundExecutionPlan
 from hypervector.live.hyperliquid_protocol import SolBookSnapshot
 from hypervector.live.multi_asset_live_runner_support import entry_provider_strategy_id
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 
 

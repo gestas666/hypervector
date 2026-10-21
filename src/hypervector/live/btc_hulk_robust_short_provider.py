@@ -14,10 +14,7 @@ from hypervector.live.hulk_smash_live_decisions import (
     HulkSmashLiveDecision,
     build_completed_hulk_decisions,
 )
-from hypervector.live.multi_asset_signal_source import (
-    IntentBatch,
-    ProviderEvaluation,
-)
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.research.market_cipher_strategy_research import (
     resolve_hulk_research_profile,

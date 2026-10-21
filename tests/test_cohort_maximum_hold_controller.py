@@ -9,7 +9,7 @@ from hypervector.live.cohort_maximum_hold_controller import (
     CohortMaximumHoldController,
 )
 from hypervector.live.cohort_maximum_hold_policy import EvaluationKey
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 

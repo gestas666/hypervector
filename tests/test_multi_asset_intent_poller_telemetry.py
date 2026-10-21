@@ -10,7 +10,7 @@ from hypervector.live.multi_asset_intent_poller import (
     ConfiguredMultiAssetIntentPoller,
 )
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 _OBSERVED = datetime(2026, 8, 1, 12, tzinfo=UTC)

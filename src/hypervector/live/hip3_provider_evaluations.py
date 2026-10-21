@@ -11,7 +11,7 @@ import pandas as pd
 
 from hypervector.live.hip3_ledger_pressure import Hip3PressureObservation
 from hypervector.live.hip3_provider_inputs import decision_time_ms
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.research.hip3_breakout_pressure_signals import (
     Hip3BreakoutPressureConfig,
