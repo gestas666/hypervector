@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
 from hypervector.live.canonical_regime_telemetry import latest_canonical_evaluation
 from hypervector.live.multi_asset_live_runner_support import entry_provider_strategy_id
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 
 EvaluationKey = tuple[str, str]
 EvaluationMap = Mapping[EvaluationKey, ProviderEvaluation]

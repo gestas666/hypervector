@@ -10,7 +10,7 @@ from hypervector.live.multi_asset_intent_poller import (
     ConfiguredMultiAssetIntentPoller,
 )
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
 
 _START = datetime(2026, 8, 1, 12, 0, tzinfo=UTC)
 _RECOVERY = datetime(2026, 8, 1, 12, 12, tzinfo=UTC)
@@ -86,7 +86,7 @@ def test_recovery_fetch_bridges_an_outage_longer_than_incremental_window() -> No
     collectors = {
         provider.strategy_id: _ContiguousCollector(
             provider.strategy_id,
-            5 if provider.timeframe == "30m" else 1,
+            {"1m": 1, "5m": 5, "15m": 15}[provider.timeframe],
         )
         for provider in config.providers
     }

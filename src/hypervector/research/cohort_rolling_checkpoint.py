@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 import json
 from pathlib import Path
 
@@ -29,12 +29,7 @@ def publish_rolling_checkpoint(
     config_path: Path,
     once: bool,
     venue_portfolio: Mapping[str, object] | None,
-    opportunity_matrix_path: Path | None,
-    supplemental_opportunity_matrix_paths: Sequence[Path],
-    eligible_policy_forward: bool,
-    funding_evidence_fn: object,
     portfolio_archive: Mapping[str, object] | None,
-    asymmetric_forward_journal_path: Path | None,
     current_run_only: bool = False,
     accounting_epoch: CohortAccountingEpoch | None = None,
     research_sync: Mapping[str, object] | None = None,
@@ -55,15 +50,10 @@ def publish_rolling_checkpoint(
         _selected_run_id(requested_run_id, complete),
         config_path,
         venue_portfolio,
-        opportunity_matrix_path,
-        supplemental_opportunity_matrix_paths,
-        eligible_policy_forward,
-        funding_evidence_fn,
         portfolio_archive
         or load_cached_portfolio_archive(
             destination, accounting_epoch=accounting_epoch
         ),
-        asymmetric_forward_journal_path,
         complete,
         bounded_current_run,
     )
@@ -227,12 +217,7 @@ def _publish_options(
     run_id: str | None,
     config_path: Path,
     venue_portfolio: Mapping[str, object] | None,
-    opportunity_matrix_path: Path | None,
-    supplemental_paths: Sequence[Path],
-    eligible_policy_forward: bool,
-    funding_evidence_fn: object,
     portfolio_archive: Mapping[str, object] | None,
-    asymmetric_forward_journal_path: Path | None,
     complete: Mapping[str, object] | None,
     current_run_only: bool,
 ) -> dict[str, object]:
@@ -240,13 +225,8 @@ def _publish_options(
         "run_id": run_id,
         "config_path": config_path,
         "venue_portfolio": venue_portfolio,
-        "opportunity_matrix_path": opportunity_matrix_path,
-        "supplemental_opportunity_matrix_paths": tuple(supplemental_paths),
-        "eligible_policy_forward": eligible_policy_forward,
-        "funding_evidence_fn": funding_evidence_fn,
         "portfolio_archive": portfolio_archive,
         "current_run_only": current_run_only,
-        "asymmetric_forward_journal_path": asymmetric_forward_journal_path,
         "compatible_execution_history": (complete is not None and not current_run_only),
         "complete_historical_checkpoint": (None if current_run_only else complete),
     }

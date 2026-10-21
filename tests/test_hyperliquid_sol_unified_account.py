@@ -1,4 +1,4 @@
-"""Unified-account contract tests for the read-only SOL venue boundary."""
+"""Unified-account contract tests for the read-only perpetual venue boundary."""
 
 from __future__ import annotations
 
@@ -7,8 +7,7 @@ import pytest
 from hypervector.live.hyperliquid_perp_parsing import (
     parse_account_mode_for_symbol,
 )
-from hypervector.live.hyperliquid_sol_account import parse_account_for_mode
-from hypervector.live.hyperliquid_sol_reader import SolHyperliquidReader
+from hypervector.live.hyperliquid_perp_reader import HyperliquidPerpReader
 
 
 class UnifiedInfo:
@@ -97,9 +96,10 @@ def _open_unified_states() -> tuple[dict[str, object], dict[str, object]]:
 
 def test_unified_account_uses_spot_clearinghouse_usdc_as_equity() -> None:
     """A unified account must not be misreported as an empty perp account."""
-    reader = SolHyperliquidReader(
+    reader = HyperliquidPerpReader(
         info=UnifiedInfo(),  # type: ignore[arg-type]
         account_address="0x1111111111111111111111111111111111111111",
+        symbol="SOL",
     )
 
     account = reader.account_snapshot()
@@ -114,10 +114,11 @@ def test_sol_unified_equity_does_not_add_position_pnl_twice() -> None:
     """The unified USDC total already includes open-position economics."""
     perp_state, spot_state = _open_unified_states()
 
-    account = parse_account_for_mode(
+    account = parse_account_mode_for_symbol(
         mode="unifiedAccount",
         perp_state=perp_state,
         spot_state=spot_state,
+        symbol="SOL",
     )
 
     assert account.account_value_usd == pytest.approx(503.54133149)
@@ -127,10 +128,11 @@ def test_sol_unified_available_balance_does_not_subtract_margin_twice() -> None:
     """The unified USDC hold already reserves isolated position margin."""
     perp_state, spot_state = _open_unified_states()
 
-    account = parse_account_for_mode(
+    account = parse_account_mode_for_symbol(
         mode="unifiedAccount",
         perp_state=perp_state,
         spot_state=spot_state,
+        symbol="SOL",
     )
 
     assert account.withdrawable_usd == pytest.approx(493.27839249)
@@ -156,10 +158,11 @@ def test_legacy_parsers_identify_the_perp_clearinghouse_source() -> None:
     perp_state, _ = _open_unified_states()
 
     accounts = (
-        parse_account_for_mode(
+        parse_account_mode_for_symbol(
             mode="disabled",
             perp_state=perp_state,
             spot_state=None,
+            symbol="SOL",
         ),
         parse_account_mode_for_symbol(
             mode="disabled",
@@ -176,9 +179,10 @@ def test_legacy_parsers_identify_the_perp_clearinghouse_source() -> None:
 
 def test_preflight_reports_the_validated_account_abstraction_mode() -> None:
     """Operators must see which balance model supplied live sizing equity."""
-    reader = SolHyperliquidReader(
+    reader = HyperliquidPerpReader(
         info=UnifiedInfo(),  # type: ignore[arg-type]
         account_address="0x1111111111111111111111111111111111111111",
+        symbol="SOL",
     )
 
     preflight = reader.preflight(expected_max_leverage=20)

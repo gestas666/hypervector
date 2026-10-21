@@ -35,11 +35,11 @@ def test_portfolio_opportunity_dedup_counts_shared_provider_path_once() -> None:
         {
             "group_count": 1,
             "providers": [
-                {"blocker": "awaiting_breakout", "strategy_id": STRATEGY},
                 {
                     "blocker": "awaiting_hourly_cross",
-                    "strategy_id": "range_onset_bidirectional_v1",
+                    "strategy_id": "test_breakout_1m",
                 },
+                {"blocker": "awaiting_breakout", "strategy_id": STRATEGY},
             ],
         }
     ]
@@ -66,7 +66,7 @@ def _two_provider_rows() -> list[dict[str, object]]:
     assert isinstance(readiness, dict)
     readiness["blockers"] = ["awaiting_breakout"]
     second = deepcopy(first)
-    second["strategy_id"] = "range_onset_bidirectional_v1"
+    second["strategy_id"] = "test_breakout_1m"
     second_readiness = second["readiness"]
     assert isinstance(second_readiness, dict)
     second_readiness["blockers"] = ["awaiting_hourly_cross"]
@@ -91,11 +91,11 @@ def _assert_attribution(row: dict[str, object]) -> None:
         "single_minute_episodes": 1,
     }
     assert row["providers"] == [
-        {"blocker": "awaiting_breakout", "strategy_id": STRATEGY},
         {
             "blocker": "awaiting_hourly_cross",
-            "strategy_id": "range_onset_bidirectional_v1",
+            "strategy_id": "test_breakout_1m",
         },
+        {"blocker": "awaiting_breakout", "strategy_id": STRATEGY},
     ]
     _assert_path(row["horizons"]["5"])
 

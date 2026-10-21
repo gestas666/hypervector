@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from hypervector.research.cohort_live_audit_values import provider_cadence_minutes
+from hypervector.research.cohort_signal_candidates import is_technical_unavailability
 from hypervector.research.cohort_observer_audit_values import (
     Evaluation,
     Pair,
@@ -23,7 +24,6 @@ from hypervector.research.cohort_observer_audit_values import (
 )
 
 _POLL_GAP = "observer_heartbeat_gap_exceeds_entry_delay"
-_POLLING_STATUS_REASONS = {"cash_open_trade_bars_incomplete"}
 Schedule = tuple[int, int]
 
 
@@ -152,7 +152,8 @@ def _pair_schedule_observations(
 
 
 def _is_polling_status(evaluation: Record) -> bool:
-    return evaluation.get("backend_non_action_reason") in _POLLING_STATUS_REASONS
+    """An off-cadence provider-source outage row still proves the provider polled."""
+    return is_technical_unavailability(evaluation)
 
 
 def _has_timely_polling_status(

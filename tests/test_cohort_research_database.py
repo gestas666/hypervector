@@ -257,13 +257,13 @@ def test_snapshot_fills_are_deduplicated_and_attributed_to_close_orders(
         ).fetchone()
 
     assert attributed == [
-        (10, "hype_breakout_onset_bidirectional_v1", "entry"),
-        (11, "hype_breakout_onset_bidirectional_v1", "reduce_only_close"),
+        (10, "test_fade_1m", "entry"),
+        (11, "test_fade_1m", "reduce_only_close"),
         (12, "cohort_maximum_hold", "reduce_only_close"),
     ]
     assert close == (
         "HYPE",
-        "hype_breakout_onset_bidirectional_v1",
+        "test_fade_1m",
         "cohort_maximum_hold",
         9,
         0.5,
@@ -311,7 +311,7 @@ def test_portfolio_archive_reconciles_all_symbols_and_entry_leverage(
         fill["origin_run_id"] = "run-1"
     for fill in (btc_entry, btc_close):
         fill["symbol"] = "BTC"
-        fill["strategy_id"] = "hulk_expansion_bidirectional_tuned_v2"
+        fill["strategy_id"] = "test_trend_5m"
         fill["price"] = 201.0 if fill["operation"] != "entry" else 200.0
         fill["entry_price"] = 200.0 if fill["operation"] != "entry" else None
         fill["entry_venue_timestamp_ms"] = (
@@ -408,8 +408,8 @@ def test_portfolio_archive_reconciles_all_symbols_and_entry_leverage(
     assert total["fees_usd"] == pytest.approx(0.07)
     assert total["funding_usd"] == pytest.approx(0.005)
     assert set(archive["performance"]["by_provider_symbol"]) == {
-        "hulk_expansion_bidirectional_tuned_v2|BTC",
-        "hype_breakout_onset_bidirectional_v1|HYPE",
+        "test_trend_5m|BTC",
+        "test_fade_1m|HYPE",
     }
 
 
@@ -479,7 +479,7 @@ def test_namespaced_asset_identity_reconciles_archive_entry_margin(
     ResearchDatabase(database_path).ingest_cohort_live_ledger(root)
     archive = load_cohort_live_portfolio_archive(database_path)
 
-    assert archive["symbols"] == ["xyz:SPCX"]
+    assert archive["symbols"] == ["xyz:BBB"]
     assert archive["performance"]["total"]["entry_margin_used_usd"] == 15.0
 
 
@@ -491,13 +491,13 @@ def test_namespaced_asset_identity_repairs_legacy_uppercase_rows(
     database = ResearchDatabase(database_path)
     database.ingest_cohort_live_ledger(root)
     with duckdb.connect(str(database_path)) as connection:
-        connection.execute("UPDATE cohort_live_events SET ledger_symbol = 'XYZ:SPCX'")
-        connection.execute("UPDATE cohort_live_sources SET ledger_symbol = 'XYZ:SPCX'")
+        connection.execute("UPDATE cohort_live_events SET ledger_symbol = 'XYZ:BBB'")
+        connection.execute("UPDATE cohort_live_sources SET ledger_symbol = 'XYZ:BBB'")
 
     database.ingest_cohort_live_ledger(root)
     archive = load_cohort_live_portfolio_archive(database_path)
 
-    assert archive["symbols"] == ["xyz:SPCX"]
+    assert archive["symbols"] == ["xyz:BBB"]
     assert archive["performance"]["total"]["entry_margin_used_usd"] == 15.0
 
 
@@ -506,9 +506,9 @@ def _namespaced_archive_fixture(tmp_path: Path) -> tuple[Path, Path]:
     entry = _attributed_fill(50, 50, "entry", 0.0, 0.5)
     close = _attributed_fill(51, 51, "protective_stop", -0.4, 0.5)
     for fill in (entry, close):
-        fill["symbol"] = "xyz:SPCX"
+        fill["symbol"] = "xyz:BBB"
         fill["origin_run_id"] = "run-1"
-        fill["strategy_id"] = "hip3_swing_ha_sp500_spcx_bidirectional_v2"
+        fill["strategy_id"] = "test_band_a_15m"
     close["net_pnl_usd"] = -0.45
     close["lifecycle_fees_usd"] = 0.05
     close["lifecycle_funding_usd"] = 0.0
@@ -517,9 +517,9 @@ def _namespaced_archive_fixture(tmp_path: Path) -> tuple[Path, Path]:
         [_event(1, "cohort_snapshot", {"recent_fills": [entry, close]})],
     )
     _write(
-        root / "xyz:spcx.jsonl",
+        root / "xyz:bbb.jsonl",
         [
-            _event(1, "configuration_identity", {"symbol": "xyz:SPCX"}),
+            _event(1, "configuration_identity", {"symbol": "xyz:BBB"}),
             _event(
                 2,
                 "order_acknowledgement",
@@ -570,7 +570,7 @@ def _attributed_lifecycle_fills() -> list[dict[str, object]]:
     entry = _attributed_fill(10, 1, "entry", 0.0, 0.5)
     entry.update(
         {
-            "strategy_id": "hype_breakout_onset_bidirectional_v1",
+            "strategy_id": "test_fade_1m",
             "entry_venue_timestamp_ms": None,
         }
     )
@@ -590,7 +590,7 @@ def _attributed_fill(
     closing = operation != "entry"
     return {
         "symbol": "HYPE",
-        "strategy_id": "hype_breakout_onset_bidirectional_v1",
+        "strategy_id": "test_fade_1m",
         "exit_controller_id": "cohort_maximum_hold" if closing else None,
         "origin_run_id": "entry-run",
         "operation": operation,

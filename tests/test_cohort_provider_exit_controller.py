@@ -16,12 +16,12 @@ from hypervector.live.cohort_provider_exit_controller import (
     CohortProviderExitController,
 )
 from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunnerError
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 
-_PROVIDER = "hip3_swing_ha_sndk_gold_brent_bidirectional_v1"
-_SYMBOL = "xyz:GOLD"
+_PROVIDER = "test_band_b_15m"
+_SYMBOL = "xyz:DDD"
 _OPENED_MS = 1_785_584_600_000
 _DECISION_MS = 1_785_585_600_000
 
@@ -96,7 +96,7 @@ def _evaluation(
         reference_price=4_350.0,
         decision_action=f"close_{exit_side}",
         eligible=False,
-        reason="hip3_swing_ha_flip",
+        reason="provider_exit_signal",
         side=exit_side,
         readiness=SignalReadiness(
             exit_side,
@@ -107,7 +107,7 @@ def _evaluation(
             {"exit_mode": "ha_flip"},
         ),
         exit_sides=frozenset({exit_side}),
-        exit_reason="hip3_swing_ha_flip",
+        exit_reason="provider_exit_signal",
     )
 
 
@@ -144,7 +144,7 @@ def test_exact_bound_provider_exit_preserves_reason_and_current_mark() -> None:
     assert actions[0].strategy_id == _PROVIDER
     assert actions[0].side == "long"
     assert actions[0].reference_price == 4_349.5
-    assert actions[0].exit_reason == "hip3_swing_ha_flip"
+    assert actions[0].exit_reason == "provider_exit_signal"
 
 
 def test_manual_provider_entry_retains_automatic_recipe_exit() -> None:
@@ -221,7 +221,7 @@ def test_persisted_recipe_exit_replays_after_controller_restart() -> None:
     assert len(recovered) == 1
     assert recovered[0].decision_time_ms == _DECISION_MS
     assert recovered[0].reference_price == 4_351.0
-    assert recovered[0].exit_reason == "hip3_swing_ha_flip"
+    assert recovered[0].exit_reason == "provider_exit_signal"
 
 
 def test_restart_closes_when_recipe_exit_scan_does_not_cover_open_lifecycle() -> None:

@@ -325,10 +325,10 @@ def _hip3_info(**kwargs: Any) -> FakeInfo:
     return FakeInfo(
         metas={
             "xyz": {
-                "universe": [{"name": "xyz:TSLA", "szDecimals": 3, "maxLeverage": 10}]
+                "universe": [{"name": "xyz:FFF", "szDecimals": 3, "maxLeverage": 10}]
             }
         },
-        mids={"xyz": {"xyz:TSLA": "251.37"}},
+        mids={"xyz": {"xyz:FFF": "251.37"}},
         **kwargs,
     )
 
@@ -957,28 +957,28 @@ def test_sdk_transport_addresses_hip3_namespaced_coin() -> None:
     from hypervector.live.exec_client import _SdkPlaceTransport
 
     info = _hip3_info(
-        positions={"xyz": [{"coin": "xyz:TSLA", "szi": "-1.5"}]},
+        positions={"xyz": [{"coin": "xyz:FFF", "szi": "-1.5"}]},
     )
     exchange = FakeExchange()
     builder = FakeBuilder(info, exchange)
     transport = _SdkPlaceTransport(sdk_builder=builder)
 
     transport.place_market(
-        coin="xyz:TSLA",
+        coin="xyz:FFF",
         is_buy=True,
         sz=0.123456,
         wallet_address=WALLET,
         private_key=KEY,
         reduce_only=True,
     )
-    position = transport.position(wallet_address=WALLET, private_key=KEY, coin="xyz:TSLA")
+    position = transport.position(wallet_address=WALLET, private_key=KEY, coin="xyz:FFF")
 
     assert builder.builds == [{"account_address": WALLET, "perp_dexes": ("xyz",)}]
     assert ("meta", "xyz") in info.calls
     assert ("all_mids", "xyz") in info.calls
     assert ("user_state", "xyz") in info.calls
     order = exchange.orders[0]
-    assert order["coin"] == "xyz:TSLA"
+    assert order["coin"] == "xyz:FFF"
     assert order["sz"] == 0.123
     assert order["reduce_only"] is True
     assert position == -1.5

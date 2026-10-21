@@ -31,7 +31,7 @@ def test_prior_book_consumption_precedes_pending_ioc_matching() -> None:
     second = replay.execution("order:1").match
     assert first.filled_quantity == second.filled_quantity == D(".15")
     assert second.requested_quantity == D(".25") and second.unfilled_quantity == D(".10")
-    assert replay.account.snapshot().positions["xyz:SNDK"].quantity_signed == D(".15")
+    assert replay.account.snapshot().positions["xyz:CCC"].quantity_signed == D(".15")
 
 
 @pytest.mark.parametrize("time", [1099, 1101])

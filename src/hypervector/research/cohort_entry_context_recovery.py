@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 
-from hypervector.live.canonical_regime_telemetry import CANONICAL_REGIME_STRATEGIES
+from hypervector.live.canonical_regime_telemetry import CANONICAL_REGIME_TELEMETRY_STRATEGY
 from hypervector.live.sol_range_onset_live_journal import build_live_journal
 from hypervector.research.cohort_live_audit_summaries import rebased
 from hypervector.research.cohort_live_audit_values import (
@@ -75,7 +75,7 @@ def _entry_keys(
             regime = mapping(trade.get('entry_regime'), 'lifecycle entry regime')
             strategy = text(regime.get('strategy_id'), 'entry strategy')
             decision = nonnegative_int(regime.get('decision_time_ms'), 'entry decision')
-            for provider in (strategy, *CANONICAL_REGIME_STRATEGIES):
+            for provider in (strategy, CANONICAL_REGIME_TELEMETRY_STRATEGY):
                 keys.add((run, provider, symbol, decision))
     return frozenset(keys)
 

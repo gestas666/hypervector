@@ -80,7 +80,7 @@ def test_entry_intent_precedes_authenticated_submission() -> None:
 
 def test_order_intent_is_a_durable_live_ledger_event(tmp_path: Path) -> None:
     """The append-only ledger accepts intent before any venue acknowledgement."""
-    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    path = tmp_path / "data/live/bidirectional_cohort/sol.jsonl"
     ledger = SolLiveLedger(
         path=path,
         profile_id="profile",

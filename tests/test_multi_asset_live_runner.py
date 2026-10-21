@@ -14,6 +14,7 @@ from multi_asset_live_runner_fixtures import (
     venue_snapshot as _venue,
 )
 
+from hypervector.live.canonical_regime_telemetry import CANONICAL_REGIME_TELEMETRY_STRATEGY
 from hypervector.live.bidirectional_intents import (
     BidirectionalIntentRouter,
     StrategyCapability,
@@ -35,7 +36,7 @@ from hypervector.live.multi_asset_intent_poller import (
     CohortMarketBar,
 )
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 
@@ -275,7 +276,7 @@ class _Commands:
 
 def _intent(symbol: str, side: str) -> StrategyIntent:
     return StrategyIntent(
-        "hulk",
+        "test_trend_provider",
         symbol,
         side,
         1_785_585_600_000,
@@ -286,7 +287,7 @@ def _intent(symbol: str, side: str) -> StrategyIntent:
 
 def _router() -> BidirectionalIntentRouter:
     capabilities = tuple(
-        StrategyCapability("hulk", symbol, frozenset({"long", "short"}), 10)
+        StrategyCapability("test_trend_provider", symbol, frozenset({"long", "short"}), 10)
         for symbol in _SYMBOLS
     )
     return BidirectionalIntentRouter(capabilities, maximum_positions=2)
@@ -311,7 +312,7 @@ def _runner(
     engines = {symbol: _Engine(symbol) for symbol in _SYMBOLS}
     telemetry = _Telemetry(transition_drain)
     executable_pairs = executable_provider_symbols or frozenset(
-        ("hulk", symbol) for symbol in _SYMBOLS
+        ("test_trend_provider", symbol) for symbol in _SYMBOLS
     )
     runner = MultiAssetLiveRunner(
         symbols=_SYMBOLS,
@@ -332,7 +333,7 @@ def _runner(
         execution_contracts=(
             execution_contracts
             if execution_contracts is not None
-            else {"hulk": _contract()}
+            else {"test_trend_provider": _contract()}
         ),
         maximum_entry_delay_ms_by_provider_symbol={
             pair: 60_000 for pair in executable_pairs
@@ -369,7 +370,7 @@ def test_runner_persists_canonical_regime_outside_provider_routing_rows(
 
 
 def _operator(action: str, symbol: str, *, side: str | None) -> CohortOperatorCommand:
-    provider = "hulk" if action == "manual_enter" else None
+    provider = "test_trend_provider" if action == "manual_enter" else None
     return CohortOperatorCommand(
         request_id=("a" if action == "manual_enter" else "b") * 32,
         run_id="fixture-run",
@@ -393,7 +394,7 @@ def test_manual_entry_uses_backend_risk_path_and_suppresses_strategy_reentry(
         tmp_path,
         (_intent("BTC", "short"),),
         operator_commands=commands,
-        provider_entry_sizing={("hulk", "BTC"): sizing},
+        provider_entry_sizing={("test_trend_provider", "BTC"): sizing},
     )
 
     assert runner.run(max_polls=1) == 1
@@ -401,7 +402,7 @@ def test_manual_entry_uses_backend_risk_path_and_suppresses_strategy_reentry(
     assert engines["BTC"].entries == [("long", 100.0, 1_785_585_600_000)]
     assert engines["BTC"].entry_sizing == [sizing]
     assert engines["BTC"].decisions[0]["execution_plan"]["strategy_id"] == (
-        "operator_override:hulk"
+        "operator_override:test_trend_provider"
     )
     assert engines["BTC"].decisions[0]["entry_sizing"] == sizing.as_payload()
     assert engines["BTC"].exits == []
@@ -425,7 +426,7 @@ def test_manual_entry_rejects_a_side_without_directional_authority(
         tmp_path,
         (),
         operator_commands=commands,
-        executable_provider_directions=frozenset({("hulk", "BTC", "long")}),
+        executable_provider_directions=frozenset({("test_trend_provider", "BTC", "long")}),
     )
 
     assert runner.run(max_polls=1) == 1
@@ -460,11 +461,11 @@ def test_intent_clock_is_sampled_after_reconciliation(tmp_path: Path) -> None:
         poll_seconds=15.0,
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
-        execution_contracts={"hulk": _contract()},
+        execution_contracts={"test_trend_provider": _contract()},
         maximum_entry_delay_ms_by_provider_symbol={
-            ("hulk", symbol): 60_000 for symbol in _SYMBOLS
+            ("test_trend_provider", symbol): 60_000 for symbol in _SYMBOLS
         },
-        executable_provider_symbols=frozenset(("hulk", symbol) for symbol in _SYMBOLS),
+        executable_provider_symbols=frozenset(("test_trend_provider", symbol) for symbol in _SYMBOLS),
     )
 
     runner.start(activation_time_ms=int(before.timestamp() * 1_000))
@@ -497,11 +498,11 @@ def test_post_reconcile_intent_clock_does_not_advance_funding_cursor(
         poll_seconds=15.0,
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
-        execution_contracts={"hulk": _contract()},
+        execution_contracts={"test_trend_provider": _contract()},
         maximum_entry_delay_ms_by_provider_symbol={
-            ("hulk", symbol): 60_000 for symbol in _SYMBOLS
+            ("test_trend_provider", symbol): 60_000 for symbol in _SYMBOLS
         },
-        executable_provider_symbols=frozenset(("hulk", symbol) for symbol in _SYMBOLS),
+        executable_provider_symbols=frozenset(("test_trend_provider", symbol) for symbol in _SYMBOLS),
     )
 
     runner.start(activation_time_ms=int(activation.timestamp() * 1_000))
@@ -540,7 +541,7 @@ def test_provider_symbol_sizing_is_bound_to_the_selected_automatic_intent(
     runner, engines, _ = _runner(
         tmp_path,
         (_intent("SOL", "long"), _intent("HYPE", "short")),
-        provider_entry_sizing={("hulk", "SOL"): sizing},
+        provider_entry_sizing={("test_trend_provider", "SOL"): sizing},
     )
 
     assert runner.run(max_polls=1) == 1
@@ -559,11 +560,11 @@ def test_directional_sizing_precedes_provider_symbol_fallback(tmp_path: Path) ->
         tmp_path,
         (_intent("SOL", "long"), _intent("HYPE", "short")),
         provider_entry_sizing={
-            ("hulk", "SOL"): fallback,
-            ("hulk", "HYPE"): fallback,
+            ("test_trend_provider", "SOL"): fallback,
+            ("test_trend_provider", "HYPE"): fallback,
         },
         provider_directional_entry_sizing={
-            ("hulk", "SOL", "long"): long_policy,
+            ("test_trend_provider", "SOL", "long"): long_policy,
         },
     )
 
@@ -633,7 +634,7 @@ def test_manual_close_suppresses_one_cycle_then_automatic_strategy_resumes(
 
     assert engines["BTC"].exits == [(100.0, "operator_manual_close")]
     assert engines["BTC"].entries == [("long", 100.0, 1_785_585_600_000)]
-    assert telemetry.routings[1][1].actions[0].strategy_id == "hulk"
+    assert telemetry.routings[1][1].actions[0].strategy_id == "test_trend_provider"
 
 
 def test_transition_drain_withholds_flat_entries_and_stops_at_clean_boundary(
@@ -777,7 +778,7 @@ def test_one_process_routes_two_coins_and_attributes_capacity(tmp_path: Path) ->
     assert telemetry.heartbeats == 1
     plan = engines["BTC"].decisions[0]["execution_plan"]
     assert isinstance(plan, dict)
-    assert plan["strategy_id"] == "hulk"
+    assert plan["strategy_id"] == "test_trend_provider"
 
 
 def test_opposite_intent_closes_without_same_cycle_reversal(tmp_path: Path) -> None:
@@ -825,7 +826,7 @@ def test_open_position_uses_its_persisted_provider_maximum_hold(tmp_path: Path) 
     """Provider hold overrides the legacy symbol fallback after an entry."""
     runner, engines, _ = _runner(tmp_path, ())
     plan = _contract(maximum_hold_seconds=30).bind(
-        strategy_id="hulk",
+        strategy_id="test_trend_provider",
         stop_anchor=None,
     )
     engines["BTC"].current = SolLiveSnapshot(
@@ -846,13 +847,13 @@ def test_open_position_uses_its_persisted_provider_maximum_hold(tmp_path: Path) 
 def test_bound_provider_recipe_exit_closes_open_lifecycle(tmp_path: Path) -> None:
     """A recipe exit closes only the lifecycle bound to that provider."""
     evaluation = ProviderEvaluation(
-        strategy_id="hulk",
+        strategy_id="test_trend_provider",
         symbol="BTC",
         decision_time_ms=1_785_585_600_000,
         reference_price=100.0,
         decision_action="close_long",
         eligible=False,
-        reason="hip3_swing_ha_flip",
+        reason="provider_exit_signal",
         side="long",
         readiness=SignalReadiness(
             "long",
@@ -863,7 +864,7 @@ def test_bound_provider_recipe_exit_closes_open_lifecycle(tmp_path: Path) -> Non
             {"exit_mode": "ha_flip"},
         ),
         exit_sides=frozenset({"long"}),
-        exit_reason="hip3_swing_ha_flip",
+        exit_reason="provider_exit_signal",
     )
     runner, engines, telemetry = _runner(tmp_path, (), evaluations=(evaluation,))
     engines["BTC"].current = SolLiveSnapshot(
@@ -873,16 +874,16 @@ def test_bound_provider_recipe_exit_closes_open_lifecycle(tmp_path: Path) -> Non
         position_size_signed=1.0,
         opened_at_ms=1_785_584_600_000,
         execution_plan=replace(_contract(), provider_recipe_exit_policy="honor").bind(
-            strategy_id="hulk", stop_anchor=None
+            strategy_id="test_trend_provider", stop_anchor=None
         ),
     )
 
     runner.start(activation_time_ms=1_785_585_600_000, start_engines=False)
     assert runner.poll_once() == 1
 
-    assert engines["BTC"].exits == [(100.0, "hip3_swing_ha_flip")]
-    assert telemetry.routings[0][1].actions[0].strategy_id == "hulk"
-    assert engines["BTC"].decisions[0]["exit_reason"] == "hip3_swing_ha_flip"
+    assert engines["BTC"].exits == [(100.0, "provider_exit_signal")]
+    assert telemetry.routings[0][1].actions[0].strategy_id == "test_trend_provider"
+    assert engines["BTC"].decisions[0]["exit_reason"] == "provider_exit_signal"
 
 
 def test_supported_soft_deadline_is_journaled_once(tmp_path: Path) -> None:
@@ -890,8 +891,8 @@ def test_supported_soft_deadline_is_journaled_once(tmp_path: Path) -> None:
     observed_ms = int(datetime(2026, 8, 1, 12, tzinfo=UTC).timestamp() * 1_000)
     opened_at_ms = observed_ms - 28_800_000
     evaluations = (
-        _regime_evaluation("hulk", "HYPE", observed_ms),
-        _regime_evaluation("range_onset_bidirectional_v1", "HYPE", observed_ms),
+        _regime_evaluation("test_trend_provider", "HYPE", observed_ms),
+        _regime_evaluation(CANONICAL_REGIME_TELEMETRY_STRATEGY, "HYPE", observed_ms),
     )
     runner, engines, telemetry = _runner(tmp_path, (), evaluations=evaluations)
     plan = ProviderExecutionContract(
@@ -903,7 +904,7 @@ def test_supported_soft_deadline_is_journaled_once(tmp_path: Path) -> None:
         maximum_hold_policy="extend_while_regime_supported",
         hard_maximum_hold_seconds=86_400,
         maximum_hold_evidence_maximum_age_seconds=60,
-    ).bind(strategy_id="hulk", stop_anchor=None)
+    ).bind(strategy_id="test_trend_provider", stop_anchor=None)
     engines["HYPE"].current = SolLiveSnapshot(
         state=SolLiveState.OPEN,
         entry_oid=99,
@@ -923,7 +924,7 @@ def test_supported_soft_deadline_is_journaled_once(tmp_path: Path) -> None:
             "decision_stage": "soft",
             "lifecycle_id": "HYPE:99",
             "symbol": "HYPE",
-            "strategy_id": "hulk",
+            "strategy_id": "test_trend_provider",
             "side": "long",
             "decision_time_ms": observed_ms,
             "opened_at_ms": opened_at_ms,
@@ -984,11 +985,11 @@ def test_runner_uses_configured_start_to_start_poll_period(tmp_path: Path) -> No
         poll_seconds=15.0,
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
-        execution_contracts={"hulk": _contract()},
+        execution_contracts={"test_trend_provider": _contract()},
         maximum_entry_delay_ms_by_provider_symbol={
-            ("hulk", symbol): 60_000 for symbol in _SYMBOLS
+            ("test_trend_provider", symbol): 60_000 for symbol in _SYMBOLS
         },
-        executable_provider_symbols=frozenset(("hulk", symbol) for symbol in _SYMBOLS),
+        executable_provider_symbols=frozenset(("test_trend_provider", symbol) for symbol in _SYMBOLS),
     )
 
     assert runner.run(max_polls=2) == 2
@@ -1011,7 +1012,7 @@ def test_profit_lock_candle_gap_remains_the_latest_health_state(tmp_path: Path) 
     runner, engines, telemetry = _runner(
         tmp_path,
         (),
-        execution_contracts={"hulk": contract},
+        execution_contracts={"test_trend_provider": contract},
     )
     runner.start(activation_time_ms=1_785_585_600_000, start_engines=False)
     engines["BTC"].current = SolLiveSnapshot(
@@ -1020,7 +1021,7 @@ def test_profit_lock_candle_gap_remains_the_latest_health_state(tmp_path: Path) 
         stop_oid=2,
         position_size_signed=1.0,
         opened_at_ms=1_785_585_450_000,
-        execution_plan=contract.bind(strategy_id="hulk", stop_anchor=None),
+        execution_plan=contract.bind(strategy_id="test_trend_provider", stop_anchor=None),
     )
 
     assert runner.poll_once() == 0
@@ -1037,7 +1038,7 @@ def test_observe_only_provider_symbol_is_journaled_but_not_executed(
     runner, engines, telemetry = _runner(
         tmp_path,
         (_intent("BTC", "long"), _intent("SOL", "short")),
-        executable_provider_symbols=frozenset({("hulk", "SOL")}),
+        executable_provider_symbols=frozenset({("test_trend_provider", "SOL")}),
     )
 
     assert runner.run(max_polls=1) == 1
@@ -1059,8 +1060,8 @@ def test_observe_only_provider_direction_is_journaled_but_not_executed(
         (_intent("ETH", "short"), _intent("SOL", "long")),
         executable_provider_directions=frozenset(
             {
-                ("hulk", "ETH", "long"),
-                ("hulk", "SOL", "long"),
+                ("test_trend_provider", "ETH", "long"),
+                ("test_trend_provider", "SOL", "long"),
             }
         ),
     )
@@ -1129,7 +1130,7 @@ def test_read_failure_after_order_submission_is_never_degraded(
     engines = {symbol: _Engine(symbol) for symbol in _SYMBOLS}
     engines["BTC"] = _ReadFailureAfterSubmission("BTC")
     telemetry = _Telemetry(None)
-    executable_pairs = frozenset(("hulk", symbol) for symbol in _SYMBOLS)
+    executable_pairs = frozenset(("test_trend_provider", symbol) for symbol in _SYMBOLS)
     runner = MultiAssetLiveRunner(
         symbols=_SYMBOLS,
         engines=engines,
@@ -1142,7 +1143,7 @@ def test_read_failure_after_order_submission_is_never_degraded(
         poll_seconds=15.0,
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
-        execution_contracts={"hulk": _contract()},
+        execution_contracts={"test_trend_provider": _contract()},
         maximum_entry_delay_ms_by_provider_symbol={
             pair: 60_000 for pair in executable_pairs
         },

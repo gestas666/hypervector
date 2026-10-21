@@ -20,15 +20,11 @@ SECRET_ENV_API_KEY = "HYPERVECTOR_HL_API_PRIVATE_KEY"
 
 
 def preflight_start(args: argparse.Namespace) -> None:
-    """Load the profile in observe mode and check provider dependencies before exec."""
-    from hypervector.live.cohort_process_commands import (
-        require_live_provider_dependencies,
-    )
+    """Load the profile in observe mode (registered providers only) before exec."""
     from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 
     try:
-        config = load_multi_asset_live_config(args.config, mode="observe")
-        require_live_provider_dependencies(config)
+        load_multi_asset_live_config(args.config, mode="observe")
     except (OSError, ValueError) as exc:
         raise CommandRefused(f"live start refused: {exc}") from exc
 
@@ -114,14 +110,13 @@ def _credential_readiness(blockers: list[str]) -> dict[str, object]:
 
 
 def _profile_readiness(path: Path, blockers: list[str]) -> dict[str, object]:
-    """Observe-mode profile load, dependency check, STOP and drain markers."""
+    """Observe-mode profile load (registered providers), STOP and drain markers."""
     report: dict[str, object] = {
         "config": str(path),
         "mode": "observe",
         "loaded": False,
         "profile_id": None,
         "profile_fingerprint": None,
-        "provider_dependencies_ok": None,
         "stop_file": None,
         "transition_drain": None,
     }
@@ -140,17 +135,6 @@ def _profile_readiness(path: Path, blockers: list[str]) -> dict[str, object]:
         profile_id=config.profile_id,
         profile_fingerprint=config.profile_fingerprint,
     )
-    try:
-        from hypervector.live.cohort_process_commands import (
-            require_live_provider_dependencies,
-        )
-
-        require_live_provider_dependencies(config)
-        report["provider_dependencies_ok"] = True
-    except Exception as exc:  # noqa: BLE001 - every dependency failure is a blocker
-        report["provider_dependencies_ok"] = False
-        report["provider_dependencies_error"] = f"{type(exc).__name__}: {exc}"
-        blockers.append(f"provider dependencies not ready: {exc}")
     stop_file = Path(config.stop_file)
     report["stop_file"] = {"path": str(stop_file), "present": stop_file.exists()}
     if stop_file.exists():

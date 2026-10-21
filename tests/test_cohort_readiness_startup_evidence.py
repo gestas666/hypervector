@@ -7,7 +7,7 @@ def test_readiness_summary_retains_latest_metrics_and_backend_reason() -> None:
     """A causal startup seed remains inspectable without becoming a trade signal."""
     identity = {
         "payload": {
-            "providers": [{"strategy_id": "pressure_v3", "symbols": ["xyz:SP500"]}]
+            "providers": [{"strategy_id": "pressure_v3", "symbols": ["xyz:AAA"]}]
         }
     }
     records = [
@@ -17,7 +17,7 @@ def test_readiness_summary_retains_latest_metrics_and_backend_reason() -> None:
                 "evaluations": [
                     {
                         "strategy_id": "pressure_v3",
-                        "symbol": "xyz:SP500",
+                        "symbol": "xyz:AAA",
                         "eligible": False,
                         "reason": "fresh_breakout_onset_absent",
                         "backend_non_action_reason": "pre_activation_readiness_seed",
@@ -38,7 +38,7 @@ def test_readiness_summary_retains_latest_metrics_and_backend_reason() -> None:
     ]
 
     route = readiness_summary(records, identity)["by_provider_symbol"][
-        "pressure_v3|xyz:SP500"
+        "pressure_v3|xyz:AAA"
     ]
 
     assert route["latest_backend_non_action_reason"] == (

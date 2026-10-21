@@ -6,7 +6,7 @@ import copy
 
 import pytest
 
-SYMBOLS = ("xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL")
+SYMBOLS = ("xyz:BBB", "xyz:CCC", "xyz:EEE")
 
 
 class _Info:
@@ -29,7 +29,7 @@ def _response(value: object = "-0.000025") -> list[object]:
         {
             "universe": [
                 {"name": symbol}
-                for symbol in ("xyz:OTHER", "xyz:BRENTOIL", "xyz:SPCX", "xyz:SNDK")
+                for symbol in ("xyz:OTHER", "xyz:EEE", "xyz:BBB", "xyz:CCC")
             ]
         },
         [
@@ -53,7 +53,7 @@ def test_funding_uses_one_unsigned_exact_dex_request_and_preserves_hourly_units(
     rates = Hip3RosterFundingReader(info=info, symbols=SYMBOLS).snapshot()
 
     assert info.calls == [("/info", {"type": "metaAndAssetCtxs", "dex": "xyz"})]
-    assert rates == {"xyz:SPCX": -0.000025, "xyz:SNDK": 0.0, "xyz:BRENTOIL": 0.0000125}
+    assert rates == {"xyz:BBB": -0.000025, "xyz:CCC": 0.0, "xyz:EEE": 0.0000125}
     assert response == prior
 
 
@@ -68,8 +68,8 @@ def test_absent_funding_is_unavailable_without_replacing_other_market_values(
     if missing:
         response[1][2].pop("funding")
     result = Hip3RosterFundingReader(info=_Info(response), symbols=SYMBOLS).snapshot()
-    assert result["xyz:SPCX"] is None
-    assert result["xyz:SNDK"] == 0.0
+    assert result["xyz:BBB"] is None
+    assert result["xyz:CCC"] == 0.0
 
 
 @pytest.mark.parametrize("value", [True, 0.1, "nan", "inf", "-inf", "bad"])
@@ -83,7 +83,7 @@ def test_invalid_funding_cannot_be_published_as_current(value: object) -> None:
 
 
 @pytest.mark.parametrize(
-    "symbols", [(), ("SPCX",), ("xyz:SPCX", "cash:WTI"), ("xyz:SPCX", "xyz:SPCX")]
+    "symbols", [(), ("BBB",), ("xyz:BBB", "cash:WTI"), ("xyz:BBB", "xyz:BBB")]
 )
 def test_funding_rejects_invalid_roster_before_request(
     symbols: tuple[str, ...],
@@ -119,7 +119,7 @@ def test_funding_rejects_ambiguous_context_binding(defect: str) -> None:
     elif defect == "alignment":
         response[1].pop()
     elif defect == "duplicate":
-        response[0]["universe"][0]["name"] = "xyz:SPCX"
+        response[0]["universe"][0]["name"] = "xyz:BBB"
     elif defect == "missing":
         response[0]["universe"][2]["name"] = "xyz:WRONG"
     else:
@@ -134,9 +134,9 @@ def test_each_snapshot_refreshes_rates_and_does_not_cache_previous_success() -> 
 
     info = _Info(_response())
     reader = Hip3RosterFundingReader(info=info, symbols=SYMBOLS)
-    assert reader.snapshot()["xyz:SPCX"] == -0.000025
+    assert reader.snapshot()["xyz:BBB"] == -0.000025
     info.response = _response("0.00001")
-    assert reader.snapshot()["xyz:SPCX"] == 0.00001
+    assert reader.snapshot()["xyz:BBB"] == 0.00001
     info.response = None
     with pytest.raises(ValueError):
         reader.snapshot()

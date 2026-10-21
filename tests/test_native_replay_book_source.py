@@ -29,14 +29,14 @@ from hypervector.research.native_replay_clock import ReplayClock
 from hypervector.research.native_replay_depth import RecordedBook
 from hypervector.research.native_replay_venue import IocOrder, ReceiptTiming, RecordedIocVenue
 
-FIXTURE = Path(__file__).parent / "fixtures/native_replay_sndk_book_20260701.json"
+FIXTURE = Path(__file__).parent / "fixtures/native_replay_book_sample.json"
 
 
 def make_bundle(root: Path, *, empty: bool = False) -> tuple[OxaBookRequest, Path]:
     """Store a bounded copy of an original raw snapshot without constructing a network client."""
     sample = json.loads(FIXTURE.read_text())
     start = datetime(2026, 7, 1, 12, tzinfo=UTC)
-    request = OxaBookRequest("xyz:SNDK", start, start + timedelta(hours=1), market_family="hip3")
+    request = OxaBookRequest("xyz:CCC", start, start + timedelta(hours=1), market_family="hip3")
     payload = {
         "success": True,
         "data": [] if empty else [sample["raw_row"]],

@@ -29,7 +29,7 @@ from hypervector.live.multi_asset_cohort_telemetry import (
 from hypervector.live import multi_asset_strategy_evidence
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.multi_asset_intent_poller import CohortMarketBar
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.multi_asset_strategy_evidence_models import (
     StrategyDirectionalEvidence,
     StrategyResearchEvidence,
@@ -70,7 +70,7 @@ def _telemetry(
 
 def _intent(symbol: str, side: str) -> StrategyIntent:
     return StrategyIntent(
-        strategy_id="hulk_expansion_bidirectional_tuned_v2",
+        strategy_id="test_trend_5m",
         symbol=symbol,
         side=side,
         decision_time_ms=1_785_600_000_000,
@@ -101,18 +101,18 @@ def test_configuration_and_snapshot_expose_every_coin_and_both_sides(
     snapshot = records[1]["payload"]
     assert identity["enabled_symbols"] == ["BTC", "ETH", "SOL", "HYPE"]
     assert all(item["sides"] == ["long", "short"] for item in identity["assets"])
-    range_provider = next(
+    breakout_provider = next(
         provider
         for provider in identity["providers"]
-        if provider["strategy_id"] == "range_onset_bidirectional_v1"
+        if provider["strategy_id"] == "test_breakout_1m"
     )
-    assert range_provider["entry_context_overrides"] == {"ETH": "dual_mtf_not_opposed"}
+    assert "entry_context_overrides" not in breakout_provider
     assert snapshot["open_position_count"] == 1
     assert snapshot["account_balance_source"] == "spot_clearinghouse_state"
     assert snapshot["assets"][0]["position_side"] == "short"
     assert snapshot["assets"][0]["target_oid"] == 3
     assert snapshot["assets"][0]["target_price"] == 99.25
-    assert snapshot["assets"][0]["execution_plan"]["strategy_id"].startswith("hulk_")
+    assert snapshot["assets"][0]["execution_plan"]["strategy_id"] == "test_trend_5m"
 
 
 def test_funding_reconciliation_window_is_append_only_raw_evidence(
@@ -203,7 +203,7 @@ def _snapshot_assets() -> tuple[AssetCohortSnapshot, ...]:
         target_policy="reward_risk",
         target_r_multiple=3.0,
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk_expansion_bidirectional_tuned_v2", stop_anchor=None)
+    ).bind(strategy_id="test_trend_5m", stop_anchor=None)
     open_btc = AssetCohortSnapshot(
         "BTC",
         "OPEN",
@@ -234,18 +234,18 @@ def test_configuration_exposes_non_gating_strategy_evidence(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Every provider-symbol mapping carries an honest research-state record."""
-    hulk = "hulk_expansion_bidirectional_tuned_v2"
+    trend = "test_trend_5m"
     monkeypatch.setitem(
         multi_asset_strategy_evidence._EVIDENCE,
-        (hulk, "BTC"),
+        (trend, "BTC"),
         StrategyResearchEvidence(
-            hulk,
+            trend,
             "BTC",
             "contradictory",
             "medium",
             "historical sample",
             "long and short disagree",
-            "evidence/hulk-btc.json",
+            "evidence/trend-btc.json",
             directional_evidence=(
                 StrategyDirectionalEvidence(
                     "short",
@@ -253,7 +253,7 @@ def test_configuration_exposes_non_gating_strategy_evidence(
                     "low",
                     "12 trades",
                     "short survives modeled costs",
-                    "evidence/hulk-btc.json",
+                    "evidence/trend-btc.json",
                 ),
             ),
         ),
@@ -282,20 +282,20 @@ def test_configuration_exposes_non_gating_strategy_evidence(
     assert all(record["execution_effect"] == "report_only" for record in evidence)
     assert all(record["confidence"] in {"high", "medium", "low"} for record in evidence)
     assert all(record["cadence"] for record in evidence)
-    hulk_btc = next(
+    trend_btc = next(
         record
         for record in evidence
-        if record["strategy_id"] == hulk and record["symbol"] == "BTC"
+        if record["strategy_id"] == trend and record["symbol"] == "BTC"
     )
-    assert hulk_btc["research_state"] == "contradictory"
-    assert hulk_btc["evidence_source"] == "evidence/hulk-btc.json"
-    assert [row["side"] for row in hulk_btc["directional_evidence"]] == ["short"]
-    assert hulk_btc["directional_evidence"][0]["execution_effect"] == "report_only"
+    assert trend_btc["research_state"] == "contradictory"
+    assert trend_btc["evidence_source"] == "evidence/trend-btc.json"
+    assert [row["side"] for row in trend_btc["directional_evidence"]] == ["short"]
+    assert trend_btc["directional_evidence"][0]["execution_effect"] == "report_only"
     assert all(
         record["research_state"] == "unreviewed_exact_mapping"
         and record["evidence_source"] == "none"
         for record in evidence
-        if record is not hulk_btc
+        if record is not trend_btc
     )
 
 
@@ -407,7 +407,7 @@ def test_routing_records_non_entry_provider_readiness(tmp_path: Path) -> None:
     """A healthy no-trade cycle carries progress and blockers to the TUI."""
     telemetry, ledger = _telemetry(tmp_path)
     evaluation = ProviderEvaluation(
-        strategy_id="hulk_expansion_bidirectional_tuned_v2",
+        strategy_id="test_trend_5m",
         symbol="BTC",
         decision_time_ms=1_785_600_000_000,
         reference_price=100.0,
@@ -440,7 +440,7 @@ def test_routing_records_non_entry_provider_readiness(tmp_path: Path) -> None:
         coverage["missing_provider_symbols"]
     )
     assert (
-        "hulk_expansion_bidirectional_tuned_v2|ETH"
+        "test_trend_5m|ETH"
         in coverage["missing_provider_symbols"]
     )
 
@@ -600,7 +600,7 @@ def test_provider_exit_decision_is_durable_and_restart_idempotent(
     payload = {
         "decision_id": "HYPE:99:provider_recipe_exit",
         "lifecycle_id": "HYPE:99",
-        "strategy_id": "hype_breakout_onset_bidirectional_v1",
+        "strategy_id": "test_fade_1m",
         "symbol": "HYPE",
         "side": "long",
         "outcome": "exit",
@@ -627,11 +627,11 @@ def test_provider_exit_decision_rejects_conflicting_stable_identity(
     payload = {
         "decision_id": "HYPE:99:provider_recipe_exit",
         "lifecycle_id": "HYPE:99",
-        "strategy_id": "hype_breakout_onset_bidirectional_v1",
+        "strategy_id": "test_fade_1m",
         "symbol": "HYPE",
         "side": "long",
         "outcome": "exit",
-        "exit_reason": "hip3_swing_ha_flip",
+        "exit_reason": "provider_exit_signal",
         "decision_time_ms": 1_785_600_000_000,
     }
     telemetry.emit_provider_exit_decision(payload)

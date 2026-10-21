@@ -19,14 +19,14 @@ def test_public_source_fetches_the_explicit_five_minute_contract(monkeypatch) ->
 
     monkeypatch.setattr(module, "fetch_hl_ohlcv_snapshot", fetch)
     module.Hip3PublicCandleSource().completed_candles(
-        symbol="xyz:BRENTOIL",
+        symbol="xyz:EEE",
         start_ms=1_800_000_000_000,
         end_ms=1_800_000_300_000,
         observed_at_ms=1_800_000_300_000,
         timeframe_minutes=5,
     )
 
-    assert calls == [("xyz:BRENTOIL", "5m", 0.5, 1_800_000_300_000)]
+    assert calls == [("xyz:EEE", "5m", 0.5, 1_800_000_300_000)]
 
 
 def test_public_source_rejects_an_unsupported_timeframe() -> None:
@@ -35,7 +35,7 @@ def test_public_source_rejects_an_unsupported_timeframe() -> None:
 
     with raises(ValueError, match="timeframe"):
         module.Hip3PublicCandleSource().completed_candles(
-            symbol="xyz:BRENTOIL",
+            symbol="xyz:EEE",
             start_ms=1_800_000_000_000,
             end_ms=1_800_000_300_000,
             observed_at_ms=1_800_000_300_000,

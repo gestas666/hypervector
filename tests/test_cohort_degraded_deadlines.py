@@ -82,7 +82,7 @@ def runner_fixture(
             maximum_hold_evidence_maximum_age_seconds=60,
         )
     plan: BoundExecutionPlan | None = (
-        None if planless else contract.bind(strategy_id="hulk", stop_anchor=None)
+        None if planless else contract.bind(strategy_id="test_trend_provider", stop_anchor=None)
     )
     owned.current = SolLiveSnapshot(
         state=SolLiveState.OPEN,
@@ -106,11 +106,11 @@ def runner_fixture(
         poll_seconds=15,
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={s: SOFT_MS // 1_000 for s in _SYMBOLS},
-        execution_contracts={"hulk": contract},
+        execution_contracts={"test_trend_provider": contract},
         maximum_entry_delay_ms_by_provider_symbol={
-            ("hulk", s): 60_000 for s in _SYMBOLS
+            ("test_trend_provider", s): 60_000 for s in _SYMBOLS
         },
-        executable_provider_symbols=frozenset(("hulk", s) for s in _SYMBOLS),
+        executable_provider_symbols=frozenset(("test_trend_provider", s) for s in _SYMBOLS),
     )
     return runner, owned, telemetry
 

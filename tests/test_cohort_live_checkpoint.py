@@ -18,16 +18,6 @@ from hypervector.research.cohort_live_checkpoint import (
 from hypervector.research.cohort_configuration_generation import (
     ConfigurationGenerationExpectation,
 )
-from hypervector.research.cohort_asymmetric_forward_observer import (
-    AsymmetricForwardDeclaration,
-)
-from hypervector.research.cohort_eligible_policy_forward import (
-    EligiblePolicyForwardSpec,
-)
-from hypervector.research.cohort_eligible_policy_funding import (
-    EligiblePolicyFundingEvidence,
-    EligiblePolicyFundingEvent,
-)
 from test_multi_asset_live_audit import _asset_rows, _cohort_rows
 
 _RUN_ID = "cohort-live-a"
@@ -42,13 +32,13 @@ def test_asset_paths_preserve_lowercase_hip3_namespace_identity(
     cohort = tmp_path / "decisions.jsonl"
     cohort.touch()
     btc = tmp_path / "btc.jsonl"
-    hip3 = tmp_path / "xyz:sp500.jsonl"
+    hip3 = tmp_path / "xyz:aaa.jsonl"
     btc.touch()
     hip3.touch()
 
-    paths = _asset_paths(tmp_path, cohort, ("BTC", "xyz:SP500"))
+    paths = _asset_paths(tmp_path, cohort, ("BTC", "xyz:AAA"))
 
-    assert paths == {"BTC": btc, "xyz:SP500": hip3}
+    assert paths == {"BTC": btc, "xyz:AAA": hip3}
 
 
 def test_checkpoint_reconciles_stopped_assets_with_old_running_heartbeat() -> None:
@@ -102,52 +92,6 @@ def test_checkpoint_reports_consistent_running_assets() -> None:
     assert risk["by_asset"]["BTC"]["effective_margin_fraction"] == pytest.approx(
         5.0 / 503.16
     )
-
-
-def test_checkpoint_projects_predeclared_asymmetric_forward_evidence() -> None:
-    """The read-only checkpoint should refresh the frozen portfolio observer."""
-    declaration = AsymmetricForwardDeclaration(
-        predeclared_at_utc="2026-08-02T04:00:00Z",
-        entry_cutoff_timestamp_ms=int(_GENERATED_AT.timestamp() * 1_000),
-    )
-
-    checkpoint = build_live_checkpoint(
-        _cohort_rows(),
-        {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS},
-        run_id=_RUN_ID,
-        generated_at=_GENERATED_AT,
-        asymmetric_forward_declaration=declaration,
-    )
-
-    observer = checkpoint["audit"]["asymmetric_forward_observer"]
-    assert observer["selected_variant_id"] == "sol_symmetric_sensitivity"
-    assert observer["entry_cutoff_timestamp_ms"] == int(
-        _GENERATED_AT.timestamp() * 1_000
-    )
-    assert observer["evidence_state"] == "awaiting_post_cutoff_resolution"
-    assert observer["candidate"]["closed_trades"] == 0
-    assert observer["contract"]["execution_authority"] == "none"
-
-
-def test_checkpoint_projects_report_only_side_composition() -> None:
-    """Every live checkpoint should refresh exact route-side research evidence."""
-    checkpoint = build_live_checkpoint(
-        _cohort_rows(),
-        {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS},
-        run_id=_RUN_ID,
-        generated_at=_GENERATED_AT,
-    )
-
-    composition = checkpoint["audit"]["side_composition"]
-    assert composition["schema_version"] == 2
-    assert composition["mode"] == "cohort_separate_side_composition"
-    assert composition["contract"]["report_only"] is True
-    assert composition["contract"]["execution_authority"] == "none"
-    assert composition["contract"]["runtime_strategy_changed"] is False
-    assert composition["source"]["run_id"] == _RUN_ID
-    assert composition["source"]["profile_id"] == "cohort-profile"
-    assert set(composition["frontier"]) == {"long", "short"}
-    assert composition["summary"]["components"] == len(composition["components"])
 
 
 def test_checkpoint_keeps_current_run_separate_from_portfolio_archive() -> None:
@@ -259,188 +203,6 @@ def test_full_checkpoint_rejects_divergent_archive_performance() -> None:
         )
 
 
-def test_checkpoint_attaches_only_report_only_execution_opportunity_matrix() -> None:
-    """Executable missed-entry evidence remains read-only checkpoint telemetry."""
-    matrix = {
-        "schema_version": 1,
-        "mode": "cohort_execution_opportunity_matrix",
-        "contract": {
-            "report_only": True,
-            "execution_authority": "none",
-            "portfolio_pnl_claimed": False,
-        },
-        "hypotheses": 0,
-        "comparisons": 0,
-        "results": [],
-    }
-
-    checkpoint = build_live_checkpoint(
-        _cohort_rows(),
-        {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS},
-        run_id=_RUN_ID,
-        generated_at=_GENERATED_AT,
-        execution_opportunity_matrix=matrix,
-    )
-
-    attached = checkpoint["audit"]["execution_opportunity_matrix"]
-    provenance = attached.pop("checkpoint_provenance")
-    assert attached == matrix
-    assert provenance["relationship"] == "unattributed"
-    assert provenance["checkpoint_run_id"] == _RUN_ID
-
-    unsafe = json.loads(json.dumps(matrix))
-    unsafe["contract"]["execution_authority"] = "venue"
-    with pytest.raises(ValueError, match="execution authority"):
-        build_live_checkpoint(
-            _cohort_rows(),
-            {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS},
-            run_id=_RUN_ID,
-            generated_at=_GENERATED_AT,
-            execution_opportunity_matrix=unsafe,
-        )
-
-
-def test_checkpoint_labels_prior_run_opportunity_matrix_as_historical() -> None:
-    """A different earlier evidence run cannot look current in the TUI payload."""
-    matrix = {
-        "schema_version": 1,
-        "mode": "cohort_execution_opportunity_matrix",
-        "runtime_updated_at_utc": "2026-08-01T12:00:00+00:00",
-        "contract": {
-            "report_only": True,
-            "execution_authority": "none",
-            "portfolio_pnl_claimed": False,
-        },
-        "evidence": {
-            "run_id": "cohort-live-prior",
-            "config": "configs/prior.toml",
-        },
-        "hypotheses": 0,
-        "comparisons": 0,
-        "results": [],
-    }
-
-    checkpoint = build_live_checkpoint(
-        _cohort_rows(),
-        {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS},
-        run_id=_RUN_ID,
-        generated_at=_GENERATED_AT,
-        execution_opportunity_matrix=matrix,
-    )
-
-    assert checkpoint["audit"]["execution_opportunity_matrix"][
-        "checkpoint_provenance"
-    ] == {
-        "relationship": "historical_prior_run",
-        "checkpoint_run_id": _RUN_ID,
-        "checkpoint_first_observed_at_utc": "2026-08-01T15:59:59+00:00",
-        "evidence_run_id": "cohort-live-prior",
-        "evidence_config_path": "configs/prior.toml",
-        "matrix_updated_at_utc": "2026-08-01T12:00:00+00:00",
-    }
-
-
-def test_checkpoint_labels_same_run_opportunity_matrix_as_current() -> None:
-    """Matching run identity is explicitly distinguished from historical data."""
-    matrix = {
-        "schema_version": 1,
-        "mode": "cohort_execution_opportunity_matrix",
-        "runtime_updated_at_utc": "2026-08-02T03:30:00+00:00",
-        "contract": {
-            "report_only": True,
-            "execution_authority": "none",
-            "portfolio_pnl_claimed": False,
-        },
-        "evidence": {"run_id": _RUN_ID, "config": "configs/current.toml"},
-        "hypotheses": 0,
-        "comparisons": 0,
-        "results": [],
-    }
-
-    checkpoint = build_live_checkpoint(
-        _cohort_rows(),
-        {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS},
-        run_id=_RUN_ID,
-        generated_at=_GENERATED_AT,
-        execution_opportunity_matrix=matrix,
-    )
-
-    provenance = checkpoint["audit"]["execution_opportunity_matrix"][
-        "checkpoint_provenance"
-    ]
-    assert provenance["relationship"] == "current_run"
-    assert provenance["checkpoint_run_id"] == provenance["evidence_run_id"]
-
-
-def test_checkpoint_attaches_exact_eligible_policy_forward_journal() -> None:
-    """The bounded checkpoint carries the frozen candidate lifecycle observer."""
-    spec = EligiblePolicyForwardSpec(
-        source_strategy_id="eth_breakout_precompression_pullback_bidirectional_v1",
-        candidate_strategy_id=(
-            "eth_breakout_precompression_pullback_bidirectional_v1_eligible_forward"
-        ),
-        symbol="ETH",
-        source_run_id=_RUN_ID,
-        cutoff_time_ms=1,
-        stop_bps=60.0,
-        maximum_hold_minutes=720,
-        modeled_round_trip_friction_bps=13.0,
-        notional_usd=25.0,
-        maximum_positions=4,
-    )
-
-    checkpoint = build_live_checkpoint(
-        _cohort_rows(),
-        {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS},
-        run_id=_RUN_ID,
-        generated_at=_GENERATED_AT,
-        eligible_policy_forward_spec=spec,
-    )
-
-    journal = checkpoint["audit"]["eligible_policy_forward"]
-    assert journal["state"] == "awaiting_fresh_eligible_signal"
-    assert journal["contract"]["execution_authority"] == "none"
-    assert journal["contract"]["live_strategy_changed"] is False
-
-
-def test_checkpoint_threads_official_funding_into_exact_policy_journal() -> None:
-    """Funding evidence remains report-only and explicitly source attributed."""
-    spec = EligiblePolicyForwardSpec(
-        source_strategy_id="eth_breakout_precompression_pullback_bidirectional_v1",
-        candidate_strategy_id=(
-            "eth_breakout_precompression_pullback_bidirectional_v1_eligible_forward"
-        ),
-        symbol="ETH",
-        source_run_id=_RUN_ID,
-        cutoff_time_ms=1,
-        stop_bps=60.0,
-        maximum_hold_minutes=720,
-        modeled_round_trip_friction_bps=13.0,
-        notional_usd=25.0,
-        maximum_positions=4,
-    )
-    funding = EligiblePolicyFundingEvidence(
-        symbol="ETH",
-        requested_start_ms=1,
-        requested_end_ms=1_000,
-        events=(EligiblePolicyFundingEvent(500, 0.00001),),
-    )
-
-    checkpoint = build_live_checkpoint(
-        _cohort_rows(),
-        {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS},
-        run_id=_RUN_ID,
-        generated_at=_GENERATED_AT,
-        eligible_policy_forward_spec=spec,
-        eligible_policy_funding_evidence=funding,
-    )
-
-    contract = checkpoint["audit"]["eligible_policy_forward"]["contract"]
-    assert contract["funding_included"] is True
-    assert contract["funding_source"] == "hl_funding_history"
-    assert contract["execution_authority"] == "none"
-
-
 def test_checkpoint_keeps_venue_portfolio_separate_from_execution_collateral() -> None:
     """Report-only total value must not alter the ledger's sizing account value."""
     venue_portfolio = {
@@ -471,38 +233,6 @@ def test_checkpoint_keeps_venue_portfolio_separate_from_execution_collateral() -
     assert checkpoint["audit"]["risk_utilization"][
         "account_value_usd"
     ] == pytest.approx(503.16)
-
-
-def test_checkpoint_embeds_configured_selective_allocation_challenger() -> None:
-    """The current provider topology receives its report-only comparison."""
-    rows = _cohort_rows()
-    providers = rows[0]["payload"]["providers"]
-    providers[0]["execution_symbols"] = ["BTC", "HYPE"]
-    providers[1]["execution_symbols"] = ["SOL", "HYPE"]
-    providers.append(
-        {
-            "strategy_id": "hype_breakout_onset_bidirectional_v1",
-            "symbols": ["HYPE"],
-            "execution_symbols": ["HYPE"],
-        }
-    )
-
-    checkpoint = build_live_checkpoint(
-        rows,
-        {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS},
-        run_id=_RUN_ID,
-        generated_at=_GENERATED_AT,
-    )
-
-    challenger = checkpoint["audit"]["allocation_challenger"]
-    assert challenger["status"] == "candidate_not_active"
-    assert challenger["contract"]["balance_gate"] is False
-    assert challenger["target_provider_symbol"] == (
-        "hype_breakout_onset_bidirectional_v1|HYPE"
-    )
-    assert challenger["current"]["planned_notional_usd"] == pytest.approx(25.0)
-    assert challenger["candidate"]["planned_notional_usd"] == pytest.approx(75.0)
-    assert challenger["profit_forecast"] is None
 
 
 def test_checkpoint_preserves_exact_maximum_hold_decision() -> None:
@@ -538,7 +268,7 @@ def test_checkpoint_preserves_exact_maximum_hold_decision() -> None:
         "provider_symbols": 1,
     }
     assert evidence["by_provider_symbol"] == {
-        "hulk_expansion_bidirectional_tuned_v2|HYPE": {
+        "test_trend_5m|HYPE": {
             "observed": 1,
             "extended": 1,
             "exited": 0,
@@ -629,7 +359,6 @@ def test_checkpoint_discloses_stale_runtime_configuration() -> None:
         "current_asset_sizing": {},
         "current_asset_entry_slippage_caps": {},
         "current_asset_market_slippage_caps": {},
-        "current_entry_context_overrides": {},
         "current_provider_sizing_overrides": {},
         "current_provider_directional_sizing_overrides": {},
         "current_provider_exit_policies": {},
@@ -856,13 +585,7 @@ def test_bounded_checkpoint_retains_verified_complete_historical_projection() ->
         "closed_trades": 2,
         "marker": "bounded",
     }
-    candidate["audit"]["profit_lock_challenger"]["all_time_live_mechanism"] = {
-        "marker": "bounded"
-    }
-    candidate["audit"]["profit_lock_challenger"][
-        "risk_normalized_all_time_live_mechanism"
-    ] = {"marker": "bounded-risk"}
-    candidate["audit"]["side_composition"]["marker"] = "bounded"
+    candidate["audit"]["risk_utilization"]["marker"] = "bounded"
 
     merged = cohort_live_checkpoint.merge_complete_historical_projection(
         candidate,
@@ -885,23 +608,7 @@ def test_bounded_checkpoint_retains_verified_complete_historical_projection() ->
     assert merged["audit"]["trade_reflections"]["provider_contract_history"] == {
         "marker": "complete"
     }
-    assert merged["audit"]["entry_alignment_mechanism"] == {"marker": "complete"}
-    assert merged["audit"]["side_composition"]["marker"] == "bounded"
-    assert merged["audit"]["side_composition"]["contract"] == {
-        "report_only": True,
-        "execution_authority": "none",
-        "runtime_strategy_changed": False,
-    }
-    assert merged["audit"]["hulk_entry_quality_challenger"] == {"marker": "complete"}
-    assert merged["audit"]["profit_lock_challenger"]["current_profile_mechanism"] == {
-        "marker": "bounded-current"
-    }
-    assert merged["audit"]["profit_lock_challenger"]["all_time_live_mechanism"] == {
-        "marker": "complete"
-    }
-    assert merged["audit"]["profit_lock_challenger"][
-        "risk_normalized_all_time_live_mechanism"
-    ] == {"marker": "complete"}
+    assert merged["audit"]["risk_utilization"]["marker"] == "bounded"
     projection = merged["audit"]["historical_projection"]
     assert projection["status"] == "current_by_execution_signature"
     assert projection["source_checkpoint_generated_at_utc"] == (
@@ -1015,7 +722,7 @@ def test_bounded_checkpoint_accepts_exact_profile_restart_without_new_fills() ->
     complete = _historical_projection_fixture("2026-08-08T10:00:00+00:00")
     candidate["audit"]["run"]["run_id"] = "run-restarted"
     candidate["audit"]["execution"]["history_run_ids"].append("run-restarted")
-    candidate["audit"]["side_composition"]["marker"] = "bounded-restart"
+    candidate["audit"]["risk_utilization"]["marker"] = "bounded-restart"
 
     merged = cohort_live_checkpoint.merge_complete_historical_projection(
         candidate,
@@ -1023,7 +730,7 @@ def test_bounded_checkpoint_accepts_exact_profile_restart_without_new_fills() ->
     )
 
     assert merged["audit"]["run"]["run_id"] == "run-restarted"
-    assert merged["audit"]["side_composition"]["marker"] == "bounded-restart"
+    assert merged["audit"]["risk_utilization"]["marker"] == "bounded-restart"
     assert merged["audit"]["historical_projection"]["status"] == (
         "current_by_execution_signature"
     )
@@ -1116,21 +823,6 @@ def test_bounded_checkpoint_rejects_unsafe_historical_lineage_contract() -> None
         )
 
 
-def test_bounded_checkpoint_rejects_unsafe_side_composition_contract() -> None:
-    """Fresh route-side evidence cannot carry execution authority."""
-    candidate = _historical_projection_fixture("2026-08-08T10:30:00+00:00")
-    complete = _historical_projection_fixture("2026-08-08T10:20:00+00:00")
-    candidate["audit"]["side_composition"]["contract"]["execution_authority"] = (
-        "hyperliquid_mainnet"
-    )
-
-    with pytest.raises(ValueError, match="side composition contract"):
-        cohort_live_checkpoint.merge_complete_historical_projection(
-            candidate,
-            complete,
-        )
-
-
 def _active_asset_rows(symbol: str) -> list[dict[str, object]]:
     rows = _asset_rows(symbol)
     payload = rows[-1]["payload"]
@@ -1153,16 +845,6 @@ def _continue_sequences(rows: list[dict[str, object]], offset: int) -> None:
 
 
 def _historical_projection_fixture(generated_at: str) -> dict[str, object]:
-    all_time_mechanisms = {
-        key: {"marker": "complete"}
-        for key in (
-            "all_time_live_mechanism",
-            "mature_profit_floor_all_time_live_mechanism",
-            "risk_normalized_all_time_live_mechanism",
-            "regime_conditioned_all_time_live_mechanism",
-            "support_decay_all_time_live_mechanism",
-        )
-    }
     return {
         "schema_version": 1,
         "mode": "multi_asset_bidirectional_live_checkpoint",
@@ -1214,22 +896,7 @@ def _historical_projection_fixture(generated_at: str) -> dict[str, object]:
                 },
                 "provider_contract_history": {"marker": "complete"},
             },
-            "entry_alignment_mechanism": {"marker": "complete"},
-            "side_composition": {
-                "schema_version": 2,
-                "mode": "cohort_separate_side_composition",
-                "marker": "complete",
-                "contract": {
-                    "report_only": True,
-                    "execution_authority": "none",
-                    "runtime_strategy_changed": False,
-                },
-            },
-            "hulk_entry_quality_challenger": {"marker": "complete"},
-            "profit_lock_challenger": {
-                "current_profile_mechanism": {"marker": "bounded-current"},
-                **all_time_mechanisms,
-            },
+            "risk_utilization": {"marker": "complete"},
         },
     }
 
@@ -1248,7 +915,7 @@ def _maximum_hold_row(
         "decision_id": "HYPE:99:soft_maximum_hold",
         "lifecycle_id": "HYPE:99",
         "symbol": "HYPE",
-        "strategy_id": "hulk_expansion_bidirectional_tuned_v2",
+        "strategy_id": "test_trend_5m",
         "side": "long",
         "decision_time_ms": 1_785_628_800_000,
         "opened_at_ms": 1_785_600_000_000,

@@ -83,49 +83,28 @@ def test_new_epoch_archive_forces_refresh_when_cached_checkpoint_has_none() -> N
         )
 
 
-def test_historical_merge_preserves_fresh_open_lifecycle_sections() -> None:
-    """Cached closed history must not replace current provisional telemetry."""
-    bounded = _historical_sections("bounded", "fresh")
-    complete = _historical_sections("complete", "stale")
+def test_historical_merge_copies_closed_history_and_keeps_current_sections() -> None:
+    """Cached closed history replaces only the all-time sections."""
+    bounded = _historical_sections("bounded")
+    complete = _historical_sections("complete")
 
     cohort_checkpoint_history._copy_historical_sections(bounded, complete)
 
-    alignment = bounded["entry_alignment_mechanism"]
-    assert alignment["marker"] == "complete"
-    assert alignment["provisional_open"] == {"mark": "fresh"}
-    profit_lock = bounded["profit_lock_challenger"]
-    assert all(
-        profit_lock[key] == {"marker": "complete"}
-        for key in cohort_checkpoint_history._HISTORICAL_MECHANISM_KEYS
-    )
+    reflections = bounded["trade_reflections"]
+    assert reflections["all_time_live"] == {"marker": "complete"}
+    assert reflections["provider_contract_history"] == {"marker": "complete"}
+    assert reflections["performance"]["all_time_live"] == {"marker": "complete"}
+    assert reflections["current_run"] == {"marker": "bounded"}
+    assert bounded["side_composition"]["marker"] == "bounded"
 
 
-def _historical_sections(label: str, open_mark: str) -> dict[str, object]:
-    all_time_mechanisms = {
-        key: {"marker": label}
-        for key in cohort_checkpoint_history._HISTORICAL_MECHANISM_KEYS
-    }
+def _historical_sections(label: str) -> dict[str, object]:
     return {
-        "entry_alignment_mechanism": {
-            "marker": label,
-            "provisional_open": {"mark": open_mark},
-        },
-        "side_composition": {
-            "schema_version": 2,
-            "mode": "cohort_separate_side_composition",
-            "contract": {
-                "report_only": True,
-                "execution_authority": "none",
-                "runtime_strategy_changed": False,
-            },
-        },
+        "side_composition": {"marker": label},
         "trade_reflections": {
             "all_time_live": {"marker": label},
             "provider_contract_history": {"marker": label},
+            "current_run": {"marker": label},
             "performance": {"all_time_live": {"marker": label}},
-        },
-        "profit_lock_challenger": {
-            **all_time_mechanisms,
-            "current_profile_mechanism": {"marker": label},
         },
     }

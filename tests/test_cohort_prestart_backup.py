@@ -56,11 +56,11 @@ stop_bps = 80.0
 maximum_hold_seconds = 28800
 
 [[providers]]
-strategy_id = "hulk_expansion_bidirectional_tuned_v2"
+strategy_id = "test_trend_5m"
 symbols = ["BTC", "HYPE"]
 sides = ["long", "short"]
 priority = 10
-timeframe = "30m"
+timeframe = "5m"
 maximum_entry_delay_seconds = 60
 execution_symbols = ["BTC", "HYPE"]
 execution = {{ entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", minimum_stop_bps = 20.0, maximum_stop_bps = 75.0, target_policy = "reward_risk", target_r_multiple = 3.0, maximum_hold_seconds = 86400 }}
@@ -269,8 +269,8 @@ def test_backup_accepts_a_new_asset_without_prior_ledger_and_records_it(
     )
     hip3 = replace(
         loaded.assets[1],
-        symbol="xyz:SP500",
-        live_ledger=loaded.cohort_ledger.parent / "xyz:sp500.jsonl",
+        symbol="xyz:AAA",
+        live_ledger=loaded.cohort_ledger.parent / "xyz:aaa.jsonl",
     )
     config = replace(
         loaded,
@@ -285,10 +285,10 @@ def test_backup_accepts_a_new_asset_without_prior_ledger_and_records_it(
     manifest = verify_cohort_prestart_backup(result.path)
     roles = {record["role"] for record in manifest["files"]}
 
-    assert manifest["new_assets_without_prior_ledgers"] == ["xyz:SP500"]
+    assert manifest["new_assets_without_prior_ledgers"] == ["xyz:AAA"]
     assert "asset_btc_ledger" in roles
     assert "asset_hype_ledger" in roles
-    assert "asset_xyz_sp500_ledger" not in roles
+    assert "asset_xyz_aaa_ledger" not in roles
 
 
 def test_in_place_strategy_change_is_refused(tmp_path: Path) -> None:

@@ -7,20 +7,10 @@ import math
 
 from hypervector.cohort_profit_lock_policy import (
     ProfitLockPolicy,
-    ProfitLockPathState,
     ProfitLockTrigger,
     evaluate_profit_lock_path,
 )
 from hypervector.live.bidirectional_intents import RoutingAction
-from hypervector.live.btc_hulk_delayed_component_floor import (
-    BTC_HULK_DELAYED_COMPONENT_POLICY_IDS,
-    BTC_HULK_DELAYED_COMPONENT_FLOOR_POLICY,
-    DelayedComponentFloorResult,
-    build_btc_hulk_component_floor_observations,
-    component_floor_policy_payload,
-    delayed_component_policy,
-    evaluate_delayed_component_floor,
-)
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
 from hypervector.live.cohort_profit_lock_values import _positive_price, _integer, _text
 from hypervector.live.cohort_adaptive_exit_controller import (
@@ -28,7 +18,7 @@ from hypervector.live.cohort_adaptive_exit_controller import (
     retention_breakeven_requested,
 )
 from hypervector.live.cohort_adaptive_exit_policy import RETENTION_EXIT_POLICY
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.multi_asset_live_protocols import (
     CohortTelemetryProtocol,
     MultiAssetEngineProtocol,
@@ -42,6 +32,7 @@ from hypervector.live.multi_asset_market_bars import CohortMarketBar
 from hypervector.live.sol_range_onset_state import SolLiveState
 
 _MINUTE_MS = 60_000
+_EXIT_REASON = "completed_bar_profit_lock"
 
 
 class CohortProfitLockController:
@@ -239,19 +230,11 @@ class CohortProfitLockController:
         bars = self._lifecycle_bars(symbol, opened_at_ms, observed_ms, market_bars)
         if bars is None:
             return None
-        policy_bars = self._policy_bars(
-            plan, symbol, opened_at_ms, observed_ms, market_bars
-        )
-        if policy_bars is None:
-            return None
-        state = self._policy_state(plan, side, entry, opened_at_ms, bars, policy_bars)
+        if plan.profit_lock_policy != "completed_bar_trailing":
+            raise MultiAssetLiveRunnerError("unsupported bound profit-lock policy")
+        state = evaluate_profit_lock_path(_policy(plan), side, bars, entry)
         if state.trigger is None:
             return None
-        activation_mode = (
-            state.activation_mode
-            if isinstance(state, DelayedComponentFloorResult)
-            else None
-        )
         payload = _decision_payload(
             plan,
             provider,
@@ -260,80 +243,9 @@ class CohortProfitLockController:
             entry_oid,
             entry,
             state.trigger,
-            activation_mode,
         )
         self._telemetry.emit_profit_lock_decision(payload)
         return payload
-
-    def _policy_state(
-        self,
-        plan: BoundExecutionPlan,
-        side: str,
-        entry_price: float,
-        opened_at_ms: int,
-        lifecycle_bars: tuple[CohortMarketBar, ...],
-        market_bars: tuple[CohortMarketBar, ...],
-    ) -> ProfitLockPathState | DelayedComponentFloorResult:
-        """Evaluate the exact bound fixed-bps or BTC Hulk lock policy."""
-        if plan.profit_lock_policy == "completed_bar_trailing":
-            return evaluate_profit_lock_path(
-                _policy(plan), side, lifecycle_bars, entry_price
-            )
-        if plan.profit_lock_policy not in BTC_HULK_DELAYED_COMPONENT_POLICY_IDS:
-            raise MultiAssetLiveRunnerError("unsupported bound profit-lock policy")
-        policy = delayed_component_policy(plan.profit_lock_policy)
-        first = opened_at_ms // _MINUTE_MS * _MINUTE_MS + _MINUTE_MS
-        observations = build_btc_hulk_component_floor_observations(
-            market_bars, lifecycle_start_ms=first
-        )
-        protective_stop = plan.stop_price(entry_price=entry_price, side=side)
-        return evaluate_delayed_component_floor(
-            policy,
-            side=side,
-            observations=observations,
-            opened_at_ms=opened_at_ms,
-            entry_price=entry_price,
-            protective_stop_price=protective_stop,
-        )
-
-    def _policy_bars(
-        self,
-        plan: BoundExecutionPlan,
-        symbol: str,
-        opened_at_ms: int,
-        observed_ms: int,
-        bars: tuple[CohortMarketBar, ...],
-    ) -> tuple[CohortMarketBar, ...] | None:
-        """Anchor component warmup so restarts cannot shift indicator state."""
-        if plan.profit_lock_policy not in BTC_HULK_DELAYED_COMPONENT_POLICY_IDS:
-            return bars
-        policy = delayed_component_policy(plan.profit_lock_policy)
-        first = opened_at_ms // _MINUTE_MS * _MINUTE_MS + _MINUTE_MS
-        seed = first - policy.warmup_ms
-        last = (observed_ms - _MINUTE_MS) // _MINUTE_MS * _MINUTE_MS
-        scoped = tuple(bar for bar in bars if seed <= bar.timestamp_ms <= last)
-        expected = (last - seed) // _MINUTE_MS + 1
-        valid = (
-            len(scoped) == expected
-            and scoped[0].timestamp_ms == seed
-            and scoped[-1].timestamp_ms == last
-            and all(bar.symbol == symbol for bar in scoped)
-            and all(
-                right.timestamp_ms - left.timestamp_ms == _MINUTE_MS
-                for left, right in zip(scoped, scoped[1:], strict=False)
-            )
-        )
-        if valid:
-            return scoped
-        reason = (
-            f"{symbol} component floor missing anchored candles: "
-            f"expected={expected} observed={len(scoped)}"
-        )
-        self._telemetry.emit_poll_degraded(
-            source="profit_lock_component_candles", reason=reason
-        )
-        self._cycle_degraded = True
-        return None
 
     def _lifecycle_bars(
         self,
@@ -384,7 +296,6 @@ def _decision_payload(
     entry_oid: int,
     entry_price: float,
     trigger: ProfitLockTrigger,
-    activation_mode: str | None,
 ) -> dict[str, object]:
     payload: dict[str, object] = {
         "decision_id": f"{symbol}:{entry_oid}:profit_lock_exit",
@@ -393,7 +304,7 @@ def _decision_payload(
         "symbol": symbol,
         "side": side,
         "outcome": "exit",
-        "exit_reason": _exit_reason(plan, activation_mode),
+        "exit_reason": _EXIT_REASON,
         "decision_time_ms": trigger.trigger_timestamp_ms + _MINUTE_MS,
         "trigger_bar_timestamp_ms": trigger.trigger_timestamp_ms,
         "activation_timestamp_ms": trigger.activation_timestamp_ms,
@@ -406,15 +317,6 @@ def _decision_payload(
         "profit_lock_floor_bps": plan.profit_lock_floor_bps,
         "profit_lock_giveback_bps": plan.profit_lock_giveback_bps,
     }
-    if plan.profit_lock_policy in BTC_HULK_DELAYED_COMPONENT_POLICY_IDS:
-        payload.update(
-            {
-                "profit_lock_contract": _policy_contract(plan),
-                "component_exit_activation_mode": activation_mode,
-                "target_policy": plan.target_policy,
-                "target_r_multiple": plan.target_r_multiple,
-            }
-        )
     return payload
 
 
@@ -436,26 +338,12 @@ def _validate_recorded(
         "symbol": symbol,
         "side": side,
         "outcome": "exit",
-        "exit_reason": _exit_reason(
-            plan,
-            payload.get("component_exit_activation_mode"),
-        ),
+        "exit_reason": _EXIT_REASON,
         "profit_lock_policy": plan.profit_lock_policy,
         "profit_lock_activation_bps": plan.profit_lock_activation_bps,
         "profit_lock_floor_bps": plan.profit_lock_floor_bps,
         "profit_lock_giveback_bps": plan.profit_lock_giveback_bps,
     }
-    if plan.profit_lock_policy in BTC_HULK_DELAYED_COMPONENT_POLICY_IDS:
-        expected.update(
-            {
-                "profit_lock_contract": _policy_contract(plan),
-                "component_exit_activation_mode": payload.get(
-                    "component_exit_activation_mode"
-                ),
-                "target_policy": plan.target_policy,
-                "target_r_multiple": plan.target_r_multiple,
-            }
-        )
     if any(payload.get(key) != value for key, value in expected.items()):
         raise MultiAssetLiveRunnerError(
             "persisted profit-lock exit conflicts with open lifecycle"
@@ -491,23 +379,3 @@ def _validate_recorded_boundaries(
         raise MultiAssetLiveRunnerError(
             "persisted profit-lock exit has an invalid trigger boundary"
         )
-
-
-def _exit_reason(plan: BoundExecutionPlan, activation_mode: object = None) -> str:
-    if plan.profit_lock_policy == BTC_HULK_DELAYED_COMPONENT_FLOOR_POLICY.policy_id:
-        return "btc_hulk_delayed_component_profit_floor"
-    if plan.profit_lock_policy in BTC_HULK_DELAYED_COMPONENT_POLICY_IDS:
-        if activation_mode == "profit_floor":
-            return "btc_hulk_delayed_component_profit_floor"
-        if activation_mode == "reversal_containment":
-            return "btc_hulk_delayed_component_reversal_containment"
-        raise MultiAssetLiveRunnerError("BTC delayed component exit lacks its mode")
-    return "completed_bar_profit_lock"
-
-
-def _policy_contract(plan: BoundExecutionPlan) -> dict[str, object] | None:
-    if plan.profit_lock_policy in BTC_HULK_DELAYED_COMPONENT_POLICY_IDS:
-        return component_floor_policy_payload(
-            delayed_component_policy(plan.profit_lock_policy)
-        )
-    return None

@@ -6,6 +6,7 @@ from dataclasses import replace
 
 import pytest
 
+from hypervector.live.canonical_regime_telemetry import CANONICAL_REGIME_TELEMETRY_STRATEGY
 from hypervector.live.cohort_execution_plan import (
     BoundExecutionPlan,
     CohortExecutionPlanError,
@@ -16,7 +17,7 @@ from hypervector.live.cohort_maximum_hold_policy import (
     maximum_hold_exit_reason,
     update_latest_evaluations,
 )
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 
@@ -25,7 +26,7 @@ def test_supported_position_extends_only_until_hard_deadline() -> None:
     plan = _plan(policy="extend_while_regime_supported", hard_seconds=86_400)
     provider = _evaluation("hype", "TREND_UP", "TREND_UP", "TREND_UP")
     canonical = _evaluation(
-        "range_onset_bidirectional_v1", "TREND_UP", "TREND_UP", "TREND_UP"
+        CANONICAL_REGIME_TELEMETRY_STRATEGY, "TREND_UP", "TREND_UP", "TREND_UP"
     )
 
     assert (
@@ -149,7 +150,7 @@ def test_soft_deadline_exits_without_directional_support(
     canonical = (
         None
         if state is None
-        else _evaluation("range_onset_bidirectional_v1", state, state, state)
+        else _evaluation(CANONICAL_REGIME_TELEMETRY_STRATEGY, state, state, state)
     )
 
     assert (

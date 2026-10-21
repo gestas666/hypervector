@@ -53,7 +53,7 @@ def _failed_startup(
     return [
         _row("session_start", state="PREFLIGHT"),
         _state("PREFLIGHT"),
-        _row("configuration_identity", symbol="xyz:BRENTOIL"),
+        _row("configuration_identity", symbol="xyz:EEE"),
         _row("effective_mode", state="LIVE ARMED"),
         _row("fee", maker_rate=0.0),
         _row("reconciliation", open_order_ids=[22]),

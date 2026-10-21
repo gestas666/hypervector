@@ -20,7 +20,7 @@ def test_pressure_translation_distinguishes_retained_and_flipped_signs() -> None
         _candidate("short", -0.30, _DECISION_MS + 60_000),
     )
     books = {
-        "xyz:SPCX": (
+        "xyz:BBB": (
             _book(_DECISION_MS + 1_000, 0.40),
             _book(_DECISION_MS + 61_000, 0.50),
         )
@@ -35,7 +35,7 @@ def test_pressure_translation_distinguishes_retained_and_flipped_signs() -> None
         "publication_book_stale": 0,
         "publication_book_missing": 0,
     }
-    provider = report["by_provider_symbol"]["provider|xyz:SPCX"]
+    provider = report["by_provider_symbol"]["provider|xyz:BBB"]
     assert provider["translation_state"] == {
         "retained": 1,
         "flipped": 1,
@@ -52,7 +52,7 @@ def test_future_or_stale_book_cannot_define_publication_pressure() -> None:
     """Only a fresh nonfuture routing-publication book is causal evidence."""
     candidates = (_candidate("long", 0.20, _DECISION_MS),)
     books = {
-        "xyz:SPCX": (
+        "xyz:BBB": (
             _book(_DECISION_MS - 40_000, 0.40),
             _book(_DECISION_MS + 2_001, -0.50),
         )
@@ -61,7 +61,7 @@ def test_future_or_stale_book_cannot_define_publication_pressure() -> None:
     report = build_signal_pressure_translation(candidates, books, 30_000)
 
     assert report["coverage"]["publication_book_stale"] == 1
-    row = report["by_provider_symbol"]["provider|xyz:SPCX"]["signals"][0]
+    row = report["by_provider_symbol"]["provider|xyz:BBB"]["signals"][0]
     assert row["translation_state"] == "unavailable"
     assert row["publication_directional_opi"] is None
 
@@ -77,7 +77,7 @@ def test_invalid_native_pressure_fails_closed() -> None:
 def _candidate(side: str, pressure: float, decision_ms: int) -> SignalCandidate:
     return SignalCandidate(
         strategy_id="provider",
-        symbol="xyz:SPCX",
+        symbol="xyz:BBB",
         decision_time_ms=decision_ms,
         available_time_ms=decision_ms + 2_000,
         reference_price=140.0,

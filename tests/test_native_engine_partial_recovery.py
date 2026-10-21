@@ -38,7 +38,7 @@ def test_partial_entry_preserves_owned_exposure_and_configured_protection(
     assert replay.mutations.count("entry") == 7
 
 
-@pytest.mark.parametrize("symbol", ["xyz:SNDK", "BTC"])
+@pytest.mark.parametrize("symbol", ["xyz:CCC", "BTC"])
 @pytest.mark.parametrize("lost", [None, "close"])
 @pytest.mark.parametrize("status", ["filled", "canceled"])
 def test_partial_close_remains_recoverable_with_original_clock_and_protection(

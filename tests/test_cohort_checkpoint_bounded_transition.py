@@ -19,8 +19,8 @@ CHECKPOINT_SCRIPT = (
     Path(__file__).parents[1]
     / "src" / "hypervector" / "operations" / 'multi_asset_bidirectional_live_checkpoint.py'
 )
-BRENTOIL_RETIRED_CONFIG = Path(
-    "tests/fixtures/profiles/four_asset_brentoil_retired.toml"
+EEE_RETIRED_CONFIG = Path(
+    "tests/fixtures/profiles/four_asset_eee_retired.toml"
 )
 
 
@@ -86,15 +86,10 @@ def test_changed_profile_seeds_current_run_without_full_history(
         tmp_path / "ledgers",
         checkpoint,
         requested_run_id="run-new",
-        config_path=tmp_path / "brentoil_retired.toml",
+        config_path=tmp_path / "eee_retired.toml",
         once=False,
         venue_portfolio=None,
-        opportunity_matrix_path=None,
-        supplemental_opportunity_matrix_paths=(),
-        eligible_policy_forward=False,
-        funding_evidence_fn=None,
         portfolio_archive=None,
-        asymmetric_forward_journal_path=None,
     )
 
     assert len(forwarded) == 1
@@ -124,7 +119,7 @@ def test_once_flag_can_force_a_bounded_current_run_checkpoint(tmp_path: Path) ->
     )
 
     assert (
-        module._run_once(args, lambda *_args: {}, publish, None, None, lambda _: None)
+        module._run_once(args, lambda *_args: {}, publish, None, lambda _: None)
         == 0
     )
     assert forwarded[0]["current_run_only"] is True
@@ -132,7 +127,7 @@ def test_once_flag_can_force_a_bounded_current_run_checkpoint(tmp_path: Path) ->
 
 def test_live_checkpoint_command_is_always_current_run_bounded() -> None:
     """Continuous live checkpoint publication must not replay the multi-gigabyte ledger."""
-    config = load_multi_asset_live_config(BRENTOIL_RETIRED_CONFIG, mode="observe")
+    config = load_multi_asset_live_config(EEE_RETIRED_CONFIG, mode="observe")
 
     command = checkpoint_command(config)
 
@@ -141,7 +136,7 @@ def test_live_checkpoint_command_is_always_current_run_bounded() -> None:
 
 def test_live_audit_command_is_current_run_bounded() -> None:
     """Stopped backend audit must not replay all historical cohort ledgers."""
-    config = load_multi_asset_live_config(BRENTOIL_RETIRED_CONFIG, mode="observe")
+    config = load_multi_asset_live_config(EEE_RETIRED_CONFIG, mode="observe")
 
     command = audit_command(config)
 

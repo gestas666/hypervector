@@ -4,12 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from hypervector.research.cohort_aligned_timer_extension import (
-    build_aligned_timer_extension_observer,
-)
-from hypervector.research.cohort_exit_extension_projection import (
-    project_incremental_gross_pnl,
-)
 from hypervector.research.cohort_live_audit_values import mapping, number, text
 
 Record = Mapping[str, object]
@@ -20,12 +14,6 @@ _TIMER_CONTEXTS = (
     "mixed_or_transition",
     "unavailable",
 )
-_EXTENSION_POLICY = {
-    "still_directionally_supported": "extend",
-    "directionally_opposed": "exit",
-    "mixed_or_transition": "exit",
-    "unavailable": "abstain",
-}
 
 
 def build_exit_reason_summary(
@@ -81,12 +69,6 @@ def _maximum_hold_summary(
             context: _trade_summary(grouped[context], horizons)
             for context in _TIMER_CONTEXTS
         },
-        "regime_aware_extension_challenger": _extension_challenger(
-            timer_trades, horizons
-        ),
-        "aligned_zero_opposition_extension_observer": (
-            build_aligned_timer_extension_observer(timer_trades, horizon_minutes=5)
-        ),
     }
 
 
@@ -108,82 +90,6 @@ def _provider_symbol_summaries(
         }
         for (strategy, symbol), values in sorted(grouped.items())
     ]
-
-
-def _extension_challenger(
-    trades: Sequence[Record], horizons: Sequence[int]
-) -> dict[str, object]:
-    actions = [_extension_action(trade) for trade in trades]
-    return {
-        "schema_version": 1,
-        "mode": "regime_aware_maximum_hold_extension_challenger",
-        "contract": _contract(),
-        "policy": dict(_EXTENSION_POLICY),
-        "decisions": {
-            action: actions.count(action) for action in ("extend", "exit", "abstain")
-        },
-        "horizons": {
-            str(horizon): _extension_horizon(trades, horizon) for horizon in horizons
-        },
-        "limitations": [
-            "incremental PnL uses completed candles and stop triggers but excludes later fees, funding, and execution slippage",
-            "the challenger cannot retain or close a live position",
-        ],
-    }
-
-
-def _extension_action(trade: Record) -> str:
-    assessment = mapping(trade.get("exit_regime_assessment"), "exit regime assessment")
-    context = text(assessment.get("maximum_hold_context"), "maximum-hold context")
-    action = _EXTENSION_POLICY.get(context)
-    if action is None:
-        raise ValueError(f"unsupported maximum-hold context: {context}")
-    return action
-
-
-def _extension_horizon(trades: Sequence[Record], horizon: int) -> dict[str, object]:
-    eligible = [trade for trade in trades if _extension_action(trade) == "extend"]
-    counts = {key: 0 for key in ("resolved", "positive", "negative", "unchanged")}
-    counts.update(
-        {
-            "protective_stop_hits": 0,
-            "censored": 0,
-            "missing_data": 0,
-            "missing_protection": 0,
-        }
-    )
-    incremental_pnl = 0.0
-    for trade in eligible:
-        path = mapping(
-            mapping(trade.get("post_exit_path"), "post-exit paths").get(str(horizon)),
-            "post-exit horizon",
-        )
-        status = text(path.get("status"), "post-exit path status")
-        if status in {"censored", "missing_data"}:
-            counts[status] += 1
-            continue
-        if status != "resolved":
-            raise ValueError("unsupported post-exit path status")
-        projection = project_incremental_gross_pnl(trade, path)
-        if projection is None:
-            counts["missing_protection"] += 1
-            continue
-        projected, stop_hit = projection
-        counts["resolved"] += 1
-        counts["protective_stop_hits"] += int(stop_hit)
-        counts[
-            "positive"
-            if projected > 0.0
-            else "negative"
-            if projected < 0.0
-            else "unchanged"
-        ] += 1
-        incremental_pnl += projected
-    return {
-        "eligible_extensions": len(eligible),
-        **counts,
-        "incremental_gross_pnl_usd": incremental_pnl,
-    }
 
 
 def _exit_reason(trade: Record) -> str:

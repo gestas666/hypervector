@@ -16,7 +16,7 @@ from hypervector.live.multi_asset_live_config import (
 )
 
 _PROFILE = Path("tests/fixtures/profiles/repaired_b.toml")
-_HYPE = "hype_breakout_compression_pullback_bidirectional_v1"
+_HYPE = "test_squeeze_1m"
 _OVERRIDES = (
     "profit_lock_overrides = { HYPE = { long = { policy = "
     '"completed_bar_trailing", activation_bps = 25.0, floor_bps = 8.0, '

@@ -26,7 +26,7 @@ def test_native_size_is_lot_rounded_below_budget_and_journaled(
     replay = EngineReplayFixture(
         tmp_path, partial_entry=False, initial_cash=Decimal(5000)
     )
-    symbol = "xyz:SNDK"
+    symbol = "xyz:CCC"
     engine = replay.engine(replay.assets[symbol])
     contract = ProviderExecutionContract(
         entry_liquidity="taker_ioc",
@@ -75,7 +75,7 @@ def test_adaptive_fingerprint_unchanged_and_risk_budget_changes_identity() -> No
     )
     assert (
         config.profile_fingerprint
-        == "217720aba4e61b7001471258522f03bb02cac8f42b660ba19a049981aa4d7ae6"
+        == "a458a0d66e9ab524ab13547cf772e72c5751880ea6abfe8c489f1468920aa325"
     )
     first = config.providers[0]
     changed = replace(
@@ -143,7 +143,7 @@ def test_structural_anchor_inside_slippage_interval_still_enters_and_protects(
     replay = EngineReplayFixture(
         tmp_path, partial_entry=False, initial_cash=Decimal(5000)
     )
-    symbol = "xyz:SNDK"
+    symbol = "xyz:CCC"
     engine = replay.engine(replay.assets[symbol])
     contract = ProviderExecutionContract(
         entry_liquidity="taker_ioc",

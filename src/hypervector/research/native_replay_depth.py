@@ -1,6 +1,6 @@
 """Exact finite IOC matching; archive books are evidence, not guaranteed liquidity.
 
-The existing float market walker and SNDK cap wrapper remain prior art. This
+The float market walker in market_depth_fill remains the coarse model. This
 component preserves individual decimal fills and consumed depth across orders.
 It accepts the actual submitted limit; SDK price rounding belongs upstream.
 """

@@ -21,7 +21,7 @@ def records(root: Path, symbol: str) -> list[dict[str, object]]:
     return [json.loads(line) for line in path.read_text().splitlines()]
 
 
-@pytest.mark.parametrize("symbol", ["BTC", "xyz:SNDK"])
+@pytest.mark.parametrize("symbol", ["BTC", "xyz:CCC"])
 def test_partial_then_final_close_journal_matches_shared_account_economics(
     tmp_path: Path, symbol: str
 ) -> None:

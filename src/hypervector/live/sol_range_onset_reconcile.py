@@ -1,4 +1,4 @@
-"""Restart ownership reconciliation for the SOL live canary."""
+"""Restart ownership reconciliation for one symbol's live lifecycle."""
 
 from __future__ import annotations
 

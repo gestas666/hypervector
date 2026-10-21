@@ -12,6 +12,7 @@ from hypervector.live.cohort_adaptive_exit_journal import AdaptiveExitJournal
 from hypervector.live.cohort_adaptive_exit_policy import ADAPTIVE_EXIT_POLICY
 from hypervector.live.hyperliquid_protocol import SolBookLevel, SolBookSnapshot
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
+from exit_parameter_fixtures import ADAPTIVE_PARAMETERS
 
 
 def engine(side: str = "long") -> _Engine:
@@ -19,7 +20,7 @@ def engine(side: str = "long") -> _Engine:
     current = _snapshot(enabled=False)
     return _Engine(replace(current, opened_at_ms=1_200_000,
                           position_size_signed=1.0 if side == "long" else -1.0,
-                          execution_plan=replace(current.execution_plan, adaptive_exit_policy=ADAPTIVE_EXIT_POLICY)))
+                          execution_plan=replace(current.execution_plan, adaptive_exit_policy=ADAPTIVE_EXIT_POLICY, adaptive_exit=ADAPTIVE_PARAMETERS)))
 
 
 def book(now: int, price: float) -> SolBookSnapshot:

@@ -15,7 +15,7 @@ def book() -> RecordedBook:
     """Supply finite ascending asks and descending bids on an explicit lot grid."""
     return RecordedBook(
         "fixture:1",
-        "xyz:SNDK",
+        "xyz:CCC",
         1100,
         D("0.001"),
         (ExactLevel(D("99.9"), D("0.1")), ExactLevel(D("99.8"), D("0.2"))),
@@ -67,7 +67,7 @@ def test_ambient_decimal_precision_does_not_change_matching() -> None:
     "changes",
     [
         {"source_id": ""},
-        {"symbol": " SNDK"},
+        {"symbol": " CCC"},
         {"exchange_time_ms": True},
         {"quantity_step": D(0)},
         {"quantity_step": 0.001},

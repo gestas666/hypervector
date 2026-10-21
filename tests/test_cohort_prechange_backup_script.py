@@ -25,7 +25,6 @@ def test_snapshot_uses_observe_mode_and_reports_verified_identity(
     """Pre-edit capture remains credential-free and emits bounded evidence."""
     module = _load_module()
     config_path = tmp_path / "active.toml"
-    provider_root = tmp_path / "backtest_lab"
     bundle = tmp_path / "prestart_bundle"
     config = SimpleNamespace(profile_id="active", profile_fingerprint="abc123")
     result = SimpleNamespace(
@@ -41,8 +40,8 @@ def test_snapshot_uses_observe_mode_and_reports_verified_identity(
         calls["load"] = (path, mode)
         return config
 
-    def discover(repository: Path, provider: Path) -> dict[str, Path]:
-        calls["discover"] = (repository, provider)
+    def discover(repository: Path) -> dict[str, Path]:
+        calls["discover"] = repository
         return {"engine": tmp_path / "engine.py"}
 
     def create(value: object, *, implementation_sources: object) -> object:
@@ -64,16 +63,14 @@ def test_snapshot_uses_observe_mode_and_reports_verified_identity(
     )
 
     assert (
-        module.main(
-            ["--config", str(config_path), "--backtest-lab-root", str(provider_root)]
-        )
+        module.main(["--config", str(config_path)])
         == 0
     )
 
     payload = json.loads(capsys.readouterr().out)
     assert calls["load"] == (config_path, "observe")
     # The checkout root, never the package directory a parents[1] would give.
-    assert calls["discover"] == (REPOSITORY_ROOT, provider_root.resolve())
+    assert calls["discover"] == REPOSITORY_ROOT
     assert calls["create"] == (config, {"engine": tmp_path / "engine.py"})
     assert payload == {
         "bundle": str(bundle),
@@ -107,7 +104,7 @@ def test_snapshot_failure_is_explicit_and_has_no_success_payload(
     monkeypatch.setattr(
         module,
         "discover_cohort_implementation_sources",
-        lambda repository, provider: {"engine": tmp_path / "engine.py"},
+        lambda repository: {"engine": tmp_path / "engine.py"},
     )
 
     def refuse(config: object, *, implementation_sources: object) -> object:

@@ -9,18 +9,18 @@ from hypervector.research.cohort_friction_contract_models import (
 from hypervector.research.cohort_friction_parity import build_friction_parity
 
 
-_SOURCE = "hypervelocity_source_follow_bidirectional_5m_v1"
-_HYPE = "hype_breakout_onset_bidirectional_v1"
-_HULK = "hulk_expansion_bidirectional_tuned_v2"
-_RANGE = "range_onset_bidirectional_v1"
-_HIP3_BREAKOUT_INDEX = "hip3_breakout_pressure_sp500_spcx_bidirectional_v1"
-_SPCX_CASH_OPEN = "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1"
+_SOURCE = "test_mirror_1m"
+_HYPE = "test_fade_1m"
+_TREND = "test_trend_5m"
+_BREAKOUT = "test_breakout_1m"
+_HIP3_BREAKOUT_INDEX = "test_session_a_15m"
+_ANCHOR_TARGET = "test_anchor_target_15m"
 
 
-def test_source_follow_uses_frozen_deployed_shape_without_claiming_edge(
+def test_mirror_provider_uses_frozen_deployed_shape_without_claiming_edge(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Source-follow parity cites its registered deployed-shape contract."""
+    """Mirror-provider parity cites its registered deployed-shape contract."""
     _register(monkeypatch, _SOURCE, None, _source_contract())
     identity = {
         "assets": [{"symbol": "BTC", "stop_bps": 80.0, "maximum_hold_seconds": 28_800}],
@@ -167,7 +167,7 @@ def test_all_active_provider_contracts_are_explicit_even_without_fills(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A no-fill mapping still discloses whether its live mechanics match research."""
-    for strategy in (_HULK, _RANGE, _SOURCE, _HYPE):
+    for strategy in (_TREND, _BREAKOUT, _SOURCE, _HYPE):
         _register(monkeypatch, strategy, None, _hype_contract())
     identity = {
         "assets": [
@@ -176,8 +176,8 @@ def test_all_active_provider_contracts_are_explicit_even_without_fills(
             {"symbol": "HYPE", "stop_bps": 80.0, "maximum_hold_seconds": 28_800},
         ],
         "providers": [
-            {"strategy_id": _HULK, "symbols": ["BTC"]},
-            {"strategy_id": _RANGE, "symbols": ["SOL"]},
+            {"strategy_id": _TREND, "symbols": ["BTC"]},
+            {"strategy_id": _BREAKOUT, "symbols": ["SOL"]},
             {"strategy_id": _SOURCE, "symbols": ["BTC"]},
             {"strategy_id": _HYPE, "symbols": ["HYPE"]},
         ],
@@ -204,8 +204,8 @@ def test_provider_execution_contracts_override_generic_asset_defaults(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Parity must compare research with each provider's configured mechanics."""
-    _register(monkeypatch, _HULK, None, _hulk_contract())
-    _register(monkeypatch, _RANGE, None, _fixed_contract(60.0, 172_800))
+    _register(monkeypatch, _TREND, None, _trend_contract())
+    _register(monkeypatch, _BREAKOUT, None, _fixed_contract(60.0, 172_800))
     _register(monkeypatch, _SOURCE, None, _source_contract())
     _register(monkeypatch, _HYPE, None, _hype_contract())
     identity = {
@@ -216,7 +216,7 @@ def test_provider_execution_contracts_override_generic_asset_defaults(
         ],
         "providers": [
             _provider(
-                _HULK,
+                _TREND,
                 "BTC",
                 stop_policy="structural_clamped_bps",
                 target_policy="reward_risk",
@@ -226,7 +226,7 @@ def test_provider_execution_contracts_override_generic_asset_defaults(
                 target_r_multiple=3.0,
             ),
             _provider(
-                _RANGE,
+                _BREAKOUT,
                 "SOL",
                 stop_policy="fixed_bps",
                 target_policy="none",
@@ -259,8 +259,8 @@ def test_provider_execution_contracts_override_generic_asset_defaults(
     report = build_friction_parity(identity, [])
     rows = report["by_provider_symbol"]
 
-    assert rows[f"{_HULK}|BTC"]["parity_state"] == "runtime_shape_aligned"
-    assert rows[f"{_RANGE}|SOL"]["parity_state"] == "runtime_shape_aligned"
+    assert rows[f"{_TREND}|BTC"]["parity_state"] == "runtime_shape_aligned"
+    assert rows[f"{_BREAKOUT}|SOL"]["parity_state"] == "runtime_shape_aligned"
     source = rows[f"{_SOURCE}|BTC"]
     assert source["mismatches"] == []
     assert source["runtime_contract_source"] == "provider_execution"
@@ -279,8 +279,8 @@ def test_exact_symbol_contract_precedes_provider_fallback(
     _register(
         monkeypatch,
         _HIP3_BREAKOUT_INDEX,
-        "xyz:SP500",
-        _fixed_contract(80.0, 86_400, slippage_bps=1.4, source="evidence/sp500.json"),
+        "xyz:AAA",
+        _fixed_contract(80.0, 86_400, slippage_bps=1.4, source="evidence/aaa.json"),
     )
     _register(
         monkeypatch,
@@ -290,8 +290,8 @@ def test_exact_symbol_contract_precedes_provider_fallback(
     )
     identity = {
         "assets": [
-            {"symbol": "xyz:SP500"},
-            {"symbol": "xyz:SPCX"},
+            {"symbol": "xyz:AAA"},
+            {"symbol": "xyz:BBB"},
         ],
         "providers": [
             _provider(
@@ -302,35 +302,35 @@ def test_exact_symbol_contract_precedes_provider_fallback(
                 maximum_hold_seconds=86_400,
                 stop_bps=80.0,
             )
-            for symbol in ("xyz:SP500", "xyz:SPCX")
+            for symbol in ("xyz:AAA", "xyz:BBB")
         ],
     }
 
     report = build_friction_parity(identity, [])
-    sp500 = report["by_provider_symbol"][f"{_HIP3_BREAKOUT_INDEX}|xyz:SP500"]
-    spcx = report["by_provider_symbol"][f"{_HIP3_BREAKOUT_INDEX}|xyz:SPCX"]
+    aaa = report["by_provider_symbol"][f"{_HIP3_BREAKOUT_INDEX}|xyz:AAA"]
+    bbb = report["by_provider_symbol"][f"{_HIP3_BREAKOUT_INDEX}|xyz:BBB"]
 
-    assert sp500["parity_state"] == "runtime_shape_aligned"
-    assert sp500["mismatches"] == []
-    assert sp500["modeled_contract"]["entry_slippage_bps"] == pytest.approx(1.4)
-    assert sp500["modeled_contract"]["evidence_source"] == "evidence/sp500.json"
-    assert spcx["parity_state"] == "runtime_shape_aligned"
-    assert spcx["modeled_contract"]["entry_slippage_bps"] == pytest.approx(2.75)
-    assert spcx["modeled_contract"]["evidence_source"] == "evidence/index.json"
+    assert aaa["parity_state"] == "runtime_shape_aligned"
+    assert aaa["mismatches"] == []
+    assert aaa["modeled_contract"]["entry_slippage_bps"] == pytest.approx(1.4)
+    assert aaa["modeled_contract"]["evidence_source"] == "evidence/aaa.json"
+    assert bbb["parity_state"] == "runtime_shape_aligned"
+    assert bbb["modeled_contract"]["entry_slippage_bps"] == pytest.approx(2.75)
+    assert bbb["modeled_contract"]["evidence_source"] == "evidence/index.json"
 
 
 def test_symbol_stop_override_requires_its_own_modeled_contract(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A deployed per-symbol stop is compared only with research for that symbol."""
-    _register(monkeypatch, _RANGE, None, _fixed_contract(60.0, 172_800))
-    _register(monkeypatch, _RANGE, "SOL", _fixed_contract(80.0, 172_800))
+    _register(monkeypatch, _BREAKOUT, None, _fixed_contract(60.0, 172_800))
+    _register(monkeypatch, _BREAKOUT, "SOL", _fixed_contract(80.0, 172_800))
     identity = {
         "assets": [{"symbol": "SOL"}, {"symbol": "ETH"}],
         "providers": [
             {
                 **_provider(
-                    _RANGE,
+                    _BREAKOUT,
                     "SOL",
                     stop_policy="fixed_bps",
                     target_policy="none",
@@ -345,29 +345,29 @@ def test_symbol_stop_override_requires_its_own_modeled_contract(
 
     rows = build_friction_parity(identity, [])["by_provider_symbol"]
 
-    sol = rows[f"{_RANGE}|SOL"]
+    sol = rows[f"{_BREAKOUT}|SOL"]
     assert sol["runtime_contract_source"] == "provider_execution_symbol_override"
     assert sol["runtime_contract"]["stop_bps"] == 80.0
     assert sol["modeled_contract"]["stop_bps"] == 80.0
     assert sol["parity_state"] == "runtime_shape_aligned"
-    eth = rows[f"{_RANGE}|ETH"]
+    eth = rows[f"{_BREAKOUT}|ETH"]
     assert eth["runtime_contract_source"] == "provider_execution"
     assert eth["modeled_contract"]["stop_bps"] == 60.0
     assert eth["parity_state"] == "runtime_shape_aligned"
 
-    monkeypatch.delitem(cohort_friction_contracts._MODELED, (_RANGE, "SOL"))
+    monkeypatch.delitem(cohort_friction_contracts._MODELED, (_BREAKOUT, "SOL"))
     rows = build_friction_parity(identity, [])["by_provider_symbol"]
-    assert rows[f"{_RANGE}|SOL"]["parity_state"] == "unsupported_contract"
+    assert rows[f"{_BREAKOUT}|SOL"]["parity_state"] == "unsupported_contract"
 
 
-def test_spcx_cash_open_contract_matches_dynamic_target_and_session_hold(
+def test_anchor_target_contract_matches_dynamic_target_and_session_hold(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Checkpoint friction telemetry must understand an absolute-anchor target."""
     _register(
         monkeypatch,
-        _SPCX_CASH_OPEN,
-        "xyz:SPCX",
+        _ANCHOR_TARGET,
+        "xyz:BBB",
         ModeledExecutionContract(
             "taker",
             0.864,
@@ -383,15 +383,15 @@ def test_spcx_cash_open_contract_matches_dynamic_target_and_session_hold(
             "maker",
             None,
             None,
-            "evidence/spcx-cash-open.json",
+            "evidence/anchor-target.json",
         ),
     )
     identity = {
-        "assets": [{"symbol": "xyz:SPCX"}],
+        "assets": [{"symbol": "xyz:BBB"}],
         "providers": [
             _provider(
-                _SPCX_CASH_OPEN,
-                "xyz:SPCX",
+                _ANCHOR_TARGET,
+                "xyz:BBB",
                 stop_policy="fixed_bps",
                 stop_bps=80.0,
                 target_policy="absolute_anchor",
@@ -402,7 +402,7 @@ def test_spcx_cash_open_contract_matches_dynamic_target_and_session_hold(
     }
 
     row = build_friction_parity(identity, [])["by_provider_symbol"][
-        f"{_SPCX_CASH_OPEN}|xyz:SPCX"
+        f"{_ANCHOR_TARGET}|xyz:BBB"
     ]
 
     assert row["parity_state"] == "runtime_shape_aligned"
@@ -488,7 +488,7 @@ def _hype_contract() -> ModeledExecutionContract:
     )
 
 
-def _hulk_contract() -> ModeledExecutionContract:
+def _trend_contract() -> ModeledExecutionContract:
     return ModeledExecutionContract(
         "taker",
         4.5,
@@ -504,7 +504,7 @@ def _hulk_contract() -> ModeledExecutionContract:
         "maker",
         None,
         3.0,
-        "evidence/hulk.json",
+        "evidence/trend.json",
     )
 
 

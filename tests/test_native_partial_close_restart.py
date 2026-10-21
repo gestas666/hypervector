@@ -12,7 +12,7 @@ from hypervector.live.sol_order_submission import SolOrderRecoveryError
 from hypervector.live.sol_range_onset_state import SolLiveState
 
 __all__ = ["deny_external_ports"]
-SYMBOLS = ["BTC", "ETH", "SOL", "HYPE", "xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL"]
+SYMBOLS = ["BTC", "ETH", "SOL", "HYPE", "xyz:BBB", "xyz:CCC", "xyz:EEE"]
 
 
 @pytest.mark.parametrize("symbol", SYMBOLS)

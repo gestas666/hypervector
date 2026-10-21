@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 from hypervector.live.cohort_checkpoint_identity import require_checkpoint_accounting_epoch as require_checkpoint_accounting_epoch
-from datetime import UTC, datetime
 from pathlib import Path
 import sys
 from typing import Protocol
-from hypervector.live.hip3_fresh15_journal_provider import HIP3_INDEX_FRESH15_V3_STRATEGY, HIP3_SNDK_FRESH15_V4_STRATEGY, require_fresh_index_observer, require_fresh_index_observers
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig, MultiAssetLiveConfigError
-from hypervector.live.spcx_cash_session_breakout_provider import SPCX_CASH_SESSION_LONG_STRATEGY
 
 CHECKPOINT_OUTPUT = Path("data/runtime/bidirectional_cohort/latest_checkpoint.json")
 _RESEARCH_DATABASE = Path("data/research/market.duckdb")
@@ -20,7 +17,6 @@ class CohortProcessArguments(Protocol):
     """Typed command fields consumed after launcher argument validation."""
 
     config: Path
-    backtest_lab_root: Path
     resume_transition_drain: bool
     accounting_epoch_bundle: Path | None
     refresh_ms: int
@@ -28,19 +24,13 @@ class CohortProcessArguments(Protocol):
     growth_preflight: Path | None
 
 
-def backend_command(
-    args: CohortProcessArguments, config: MultiAssetLiveConfig
-) -> tuple[str, ...]:
+def backend_command(args: CohortProcessArguments) -> tuple[str, ...]:
     """Build the explicit live backend command."""
-    if index_observer_dependency_command(config) is None:
-        require_live_provider_dependencies(config)
     command = (
         sys.executable,
         "-m", "hypervector.operations.multi_asset_bidirectional_live",
         "--config",
         str(args.config),
-        "--backtest-lab-root",
-        str(args.backtest_lab_root),
         "--enabled",
         "--i-accept-live-risk",
     )
@@ -51,55 +41,6 @@ def backend_command(
     return command
 
 
-def require_live_provider_dependencies(config: MultiAssetLiveConfig) -> None:
-    """Fail closed when a configured external signal dependency is stale."""
-    if any(
-        provider.strategy_id == HIP3_INDEX_FRESH15_V3_STRATEGY
-        for provider in config.providers
-    ):
-        require_fresh_index_observers(datetime.now(UTC))
-    if any(
-        provider.strategy_id == SPCX_CASH_SESSION_LONG_STRATEGY
-        for provider in config.providers
-    ):
-        require_fresh_index_observer("xyz:SPCX", datetime.now(UTC))
-    if any(
-        provider.strategy_id == HIP3_SNDK_FRESH15_V4_STRATEGY
-        for provider in config.providers
-    ):
-        require_fresh_index_observer("xyz:SNDK", datetime.now(UTC))
-
-
-def index_observer_dependency_command(
-    config: MultiAssetLiveConfig,
-) -> tuple[str, ...] | None:
-    """Return an unsigned source supervisor for SPCX and corrected SNDK routes."""
-    if any(
-        provider.strategy_id == HIP3_SNDK_FRESH15_V4_STRATEGY
-        for provider in config.providers
-    ):
-        return (
-            sys.executable,
-            "-m", "hypervector.operations.hip3_pressure_dependency_group",
-            "--config",
-            str(config.source_path),
-        )
-    required = any(
-        provider.strategy_id == SPCX_CASH_SESSION_LONG_STRATEGY
-        for provider in config.providers
-    )
-    if not required:
-        return None
-    return (
-        sys.executable,
-        "-m", "hypervector.operations.index_hip3_breakout_shadow_observe",
-        "--symbol",
-        "xyz:SPCX",
-    )
-
-
-
-
 def observer_command(args: CohortProcessArguments) -> tuple[str, ...]:
     """Build the execution-incapable observer command."""
     return (
@@ -107,8 +48,6 @@ def observer_command(args: CohortProcessArguments) -> tuple[str, ...]:
         "-m", "hypervector.operations.multi_asset_bidirectional_observe",
         "--config",
         str(args.config),
-        "--backtest-lab-root",
-        str(args.backtest_lab_root),
     )
 
 
@@ -152,7 +91,6 @@ def checkpoint_command(
         str(_RESEARCH_SYNC_INTERVAL_SECONDS),
         "--venue-portfolio",
         "--current-run-only",
-        "--disable-asymmetric-forward-observer",
     )
     if accounting_epoch_bundle is not None:
         command = (*command, "--accounting-epoch-bundle", str(accounting_epoch_bundle))

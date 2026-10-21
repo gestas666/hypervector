@@ -163,17 +163,10 @@ def _provider_toml(provider: StrategyProviderConfig) -> list[str]:
         f"position_policy = {_quoted(provider.position_policy)}",
         f"execution = {_inline_table(provider.execution.as_payload())}",
     ]
-    if provider.source_profile is not None:
-        lines.append(f"source_profile = {_quoted(str(provider.source_profile))}")
     if provider.execution_side_overrides:
         lines.append(
             "execution_side_overrides = "
             + _side_override_table(provider.execution_side_overrides)
-        )
-    if provider.entry_context_overrides:
-        lines.append(
-            "entry_context_overrides = "
-            + _entry_context_override_table(provider.entry_context_overrides)
         )
     if provider.stop_bps_overrides:
         lines.append(
@@ -228,11 +221,6 @@ def _side_override_table(
     fields = (
         f"{symbol} = {_strings(tuple(sorted(sides)))}" for symbol, sides in values
     )
-    return "{ " + ", ".join(fields) + " }"
-
-
-def _entry_context_override_table(values: tuple[tuple[str, str], ...]) -> str:
-    fields = (f"{symbol} = {_quoted(policy)}" for symbol, policy in values)
     return "{ " + ", ".join(fields) + " }"
 
 

@@ -39,6 +39,7 @@ from hypervector.research.cohort_configuration_exit_policy import (
     provider_exit_expectation,
     provider_exit_policy_evidence,
 )
+from exit_parameter_fixtures import RETENTION_PARAMETERS
 
 EXIT_POLICY_V2 = "tests/fixtures/profiles/exit_policy_v2.toml"
 NOW = 1_800_000_000_000
@@ -69,14 +70,14 @@ def _contract(
         stop_bps=stop_bps,
         target_policy="none",
         maximum_hold_seconds=86400,
-        adaptive_exit_policy=RETENTION_EXIT_POLICY,
+        adaptive_exit_policy=RETENTION_EXIT_POLICY, retention_exit=RETENTION_PARAMETERS,
         breakeven_stop_target=target,  # type: ignore[arg-type]
     )
 
 
 def _plan(target: str = "floor", stop_bps: float = 250.0) -> BoundExecutionPlan:
     return _contract(target, stop_bps).bind(
-        strategy_id="hourly_donchian_20_10_atr20_v1", stop_anchor=None
+        strategy_id="test_channel_provider", stop_anchor=None
     )
 
 
@@ -111,22 +112,22 @@ def _run(
         events.append({"event": event, **payload})
 
     mutated = raise_breakeven_stops(
-        requests=frozenset({"xyz:SNDK"}),
+        requests=frozenset({"xyz:CCC"}),
         closed_symbols=set(),
-        symbols=("xyz:SNDK",),
+        symbols=("xyz:CCC",),
         venues={
-            "xyz:SNDK": _Venue(
+            "xyz:CCC": _Venue(
                 _Position(100.0, size), () if resting is None else (resting,)
             )
         },
         raise_stop=lambda symbol, trigger: calls.append(trigger) or next(results),
         attempts=counts,
-        lifecycle_oids={"xyz:SNDK": 41},
+        lifecycle_oids={"xyz:CCC": 41},
         emit=emit,
-        plans={"xyz:SNDK": plan},
-        books={"xyz:SNDK": book},
+        plans={"xyz:CCC": plan},
+        books={"xyz:CCC": book},
         observed_ms=NOW,
-        stop_oids={"xyz:SNDK": 77},
+        stop_oids={"xyz:CCC": 77},
     )
     return mutated, calls, events, counts
 
@@ -174,11 +175,11 @@ def test_floor_mode_raises_to_half_r_inside_the_market(
     mutated, calls, events, counts = _run(plan=_plan(), size=size, book=book)
     assert mutated is True
     assert calls == [pytest.approx(trigger)]
-    assert counts[("xyz:SNDK", 41)] == MAX_RAISE_ATTEMPTS
+    assert counts[("xyz:CCC", 41)] == MAX_RAISE_ATTEMPTS
     assert events == [
         {
             "event": "breakeven_stop_attempt",
-            "symbol": "xyz:SNDK",
+            "symbol": "xyz:CCC",
             "entry_oid": 41,
             "attempt": 1,
             "trigger_price": pytest.approx(trigger),
@@ -237,7 +238,7 @@ def test_entry_offset_default_is_the_exact_baseline_attempt() -> None:
     assert events == [
         {
             "event": "breakeven_stop_attempt",
-            "symbol": "xyz:SNDK",
+            "symbol": "xyz:CCC",
             "entry_oid": 41,
             "attempt": 1,
             "trigger_price": pytest.approx(100.25),
@@ -265,8 +266,8 @@ def test_exhausted_raise_is_journaled_once_per_lifecycle(target: str) -> None:
     assert exhausted == [
         {
             "event": RAISE_EXHAUSTED_EVENT,
-            "symbol": "xyz:SNDK",
-            "strategy_id": "hourly_donchian_20_10_atr20_v1",
+            "symbol": "xyz:CCC",
+            "strategy_id": "test_channel_provider",
             "entry_oid": 41,
             "reason": "protective_stop_raise_exhausted",
             "attempts": MAX_RAISE_ATTEMPTS,
@@ -322,7 +323,7 @@ def test_option_absent_keeps_baseline_identity_and_floor_changes_it(tmp_path) ->
     config = load_multi_asset_live_config(EXIT_POLICY_V2, mode="observe")
     assert (
         config.profile_fingerprint
-        == "b470ca1199fd14913af8e7b1c0d022b1bd3f1a24a263a041b5ad84dc542278c9"
+        == "4a7c74b468c7a2466a0d3b3150ce1b05db8e4ec0c70ee8f9453e1a78496f42be"
     )
     assert all(
         provider.execution.breakeven_stop_target == "entry_offset"
@@ -369,7 +370,7 @@ def test_restart_retry_against_an_already_raised_stop_is_not_a_warning(
         journal.extend(events)
     exhausted = [e for e in journal if e["event"] == RAISE_EXHAUSTED_EVENT]
     assert len(exhausted) == int(warned)
-    assert counts[("xyz:SNDK", 41)] == MAX_RAISE_ATTEMPTS
+    assert counts[("xyz:CCC", 41)] == MAX_RAISE_ATTEMPTS
 
 
 def test_runner_binds_the_lifecycle_plan_cycle_book_and_owned_stop() -> None:
@@ -379,12 +380,12 @@ def test_runner_binds_the_lifecycle_plan_cycle_book_and_owned_stop() -> None:
     engine.latest_book = _book(101.1, 101.11)
     engine.raise_protective_stop.return_value = True
     events: list[tuple[str, dict[str, object]]] = []
-    runner._symbols = ("xyz:SNDK",)
-    runner._engines = {"xyz:SNDK": engine}
+    runner._symbols = ("xyz:CCC",)
+    runner._engines = {"xyz:CCC": engine}
     runner._breakeven_attempts = {}
     runner._breakeven_skips = {}
     runner._profit_lock_controller = SimpleNamespace(
-        breakeven_requests=frozenset({"xyz:SNDK"})
+        breakeven_requests=frozenset({"xyz:CCC"})
     )
     runner._telemetry = SimpleNamespace(
         emit_breakeven_stop_attempt=lambda event, payload: events.append(

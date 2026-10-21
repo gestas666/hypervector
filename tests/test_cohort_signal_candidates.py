@@ -229,7 +229,7 @@ def test_bidirectional_provider_does_not_invent_null_readiness_side() -> None:
 
 def _evaluation(decision_ms: int) -> dict[str, object]:
     return {
-        "strategy_id": "hype_breakout_onset_bidirectional_v1",
+        "strategy_id": "test_fade_1m",
         "symbol": "HYPE",
         "decision_time_ms": decision_ms,
         "reference_price": 40.0,

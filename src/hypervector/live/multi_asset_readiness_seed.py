@@ -3,36 +3,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Protocol
-
 import pandas as pd
 
-from hypervector.live.hip3_provider_availability import (
-    Hip3ObserverUnavailableError,
+from hypervector.live.provider_availability import (
+    ProviderSourceUnavailableError,
     unavailable_provider_evaluation,
 )
 from hypervector.live.multi_asset_poll_validation import validate_intent_batch
-from hypervector.live.multi_asset_polling_contract import (
-    READINESS_SEED_LOOKBACK_MINUTES,
-)
-from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_evaluation import IntentBatch, ProviderEvaluation
+from hypervector.live.provider_registration import ProviderIntentCollectorProtocol
+from hypervector.live.provider_registry import provider_readiness_lookback_minutes
 
 _PREACTIVATION_READINESS_REASON = "pre_activation_readiness_seed"
 RECOVERY_SCAN_START_METRIC = "pre_activation_scan_start_ms"
 RECOVERY_SCAN_END_METRIC = "pre_activation_scan_end_ms"
-
-
-class ProviderIntentCollectorProtocol(Protocol):
-    """Uniform completed-bar provider interface used by the cohort poller."""
-
-    def __call__(
-        self,
-        bars: pd.DataFrame,
-        *,
-        symbol: str,
-        observed_at: pd.Timestamp,
-        after_decision_time_ms: int | None,
-    ) -> IntentBatch: ...
 
 
 @dataclass(frozen=True)
@@ -61,7 +45,7 @@ def collect_provider_batch(
             observed_at=observed,
             after_decision_time_ms=prior,
         )
-    except Hip3ObserverUnavailableError as error:
+    except ProviderSourceUnavailableError as error:
         return unavailable_provider_evaluation(
             strategy_id=strategy_id,
             symbol=symbol,
@@ -102,7 +86,7 @@ def collect_readiness_seed_views(
     unavailable_reference_price: float,
 ) -> ReadinessSeedViews:
     """Return distinct recovery and latest-state startup evaluations."""
-    lookback_ms = READINESS_SEED_LOOKBACK_MINUTES[strategy_id] * 60 * 1_000
+    lookback_ms = provider_readiness_lookback_minutes(strategy_id) * 60 * 1_000
     seed_boundary = max(0, activation_boundary - lookback_ms)
     seed_observed = pd.Timestamp(activation_boundary, unit="ms", tz="UTC")
     try:
@@ -112,7 +96,7 @@ def collect_readiness_seed_views(
             observed_at=seed_observed,
             after_decision_time_ms=seed_boundary,
         )
-    except Hip3ObserverUnavailableError as error:
+    except ProviderSourceUnavailableError as error:
         unavailable = unavailable_provider_evaluation(
             strategy_id=strategy_id,
             symbol=symbol,

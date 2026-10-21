@@ -18,7 +18,7 @@ __all__ = ["deny_external_ports"]
 D = Decimal
 CASES = [
     (symbol, "stop", last_side)
-    for symbol in ("BTC", "ETH", "SOL", "HYPE", "xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL")
+    for symbol in ("BTC", "ETH", "SOL", "HYPE", "xyz:BBB", "xyz:CCC", "xyz:EEE")
     for last_side in ((False, True) if symbol.startswith("xyz:") else (False,))
 ]
 CASES.append(("BTC", "target", False))

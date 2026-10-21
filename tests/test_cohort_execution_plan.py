@@ -45,7 +45,7 @@ def test_structural_plan_clamps_anchor_and_resolves_three_r_short_target() -> No
         maximum_hold_seconds=86_400,
     )
 
-    plan = contract.bind(strategy_id="hulk", stop_anchor=101.0)
+    plan = contract.bind(strategy_id="test_trend_provider", stop_anchor=101.0)
 
     assert plan.stop_price(entry_price=100.0, side="short") == pytest.approx(100.75)
     assert plan.target_price(entry_price=100.0, side="short") == pytest.approx(97.75)
@@ -62,7 +62,7 @@ def test_structural_plan_clamps_non_adverse_anchor_at_fill_to_minimum_distance()
         maximum_stop_bps=75.0,
         target_policy="none",
         maximum_hold_seconds=86_400,
-    ).bind(strategy_id="hulk", stop_anchor=99.0)
+    ).bind(strategy_id="test_trend_provider", stop_anchor=99.0)
 
     assert plan.structural_anchor_overrun(100.0, "short")
     assert not plan.structural_anchor_overrun(100.0, "long")
@@ -170,7 +170,7 @@ def test_completed_bar_profit_lock_round_trips_through_bound_plan() -> None:
         }
     )
 
-    plan = contract.bind(strategy_id="range_onset_bidirectional_v1", stop_anchor=None)
+    plan = contract.bind(strategy_id="test_breakout_1m", stop_anchor=None)
 
     assert BoundExecutionPlan.from_payload(plan.as_payload()) == plan
     assert plan.profit_lock_policy == "completed_bar_trailing"

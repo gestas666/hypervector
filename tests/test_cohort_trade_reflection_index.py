@@ -35,7 +35,7 @@ def _evaluation_row(
     regime: str,
     *,
     event_type: str = "intent_routing",
-    strategy_id: str = "range_onset_bidirectional_v1",
+    strategy_id: str = "test_breakout_1m",
 ) -> dict[str, object]:
     return {
         "event_type": event_type,
@@ -79,7 +79,7 @@ def test_recovery_decision_revision_preserves_first_causal_timeline() -> None:
         ]
     )
 
-    timeline = evidence.timelines[("range_onset_bidirectional_v1", "BTC")]
+    timeline = evidence.timelines[("test_breakout_1m", "BTC")]
     assert len(timeline) == 1
     assert timeline[0]["primary_regime"] == "TREND_UP"
 

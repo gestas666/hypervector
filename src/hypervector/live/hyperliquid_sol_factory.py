@@ -1,24 +1,15 @@
-"""Fail-closed construction of the official-SDK SOL venue adapter."""
+"""Fail-closed construction of the official mainnet Hyperliquid SDK clients."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-import os
 from typing import Protocol, cast
 
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidExchangeProtocol,
     HyperliquidInfoProtocol,
 )
-from hypervector.live.hyperliquid_sol_adapter import SolHyperliquidAdapter
 from hypervector.live.hyperliquid_sol_account import require_api_agent_parent
-from hypervector.live.hyperliquid_sol_reader import SolHyperliquidReader
-from hypervector.live.hyperliquid_sol_parsing import (
-    HyperliquidAdapterError,
-    validate_address,
-)
-from hypervector.live.policy import SECRET_ENV_API_KEY, SECRET_ENV_WALLET
-from hypervector.live.sol_range_onset_config import SolRangeOnsetConfig
+from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
 
 _SDK_TIMEOUT_SECONDS = 10.0
 
@@ -159,48 +150,3 @@ class OfficialSolReadOnlySdkBuilder:
                 **options,
             ),
         )
-
-
-def create_read_only_sol_reader(
-    *,
-    environ: Mapping[str, str] | None = None,
-    builder: SolReadOnlySdkBuilderProtocol | None = None,
-) -> SolHyperliquidReader:
-    """Construct account/venue reads using only the public wallet address."""
-    env = environ if environ is not None else os.environ
-    address = (env.get(SECRET_ENV_WALLET) or "").strip()
-    if not address:
-        raise SolSdkFactoryError("read-only preflight requires a wallet address")
-    validated_address = validate_address(address)
-    sdk_builder = builder if builder is not None else OfficialSolReadOnlySdkBuilder()
-    return SolHyperliquidReader(
-        info=sdk_builder.build(),
-        account_address=validated_address,
-    )
-
-
-def create_armed_sol_adapter(
-    config: SolRangeOnsetConfig,
-    *,
-    environ: Mapping[str, str] | None = None,
-    builder: SolSdkBuilderProtocol | None = None,
-) -> SolHyperliquidAdapter:
-    """Construct authenticated venue clients only after every live gate passes."""
-    env = environ if environ is not None else os.environ
-    address = (env.get(SECRET_ENV_WALLET) or "").strip()
-    private_key = (env.get(SECRET_ENV_API_KEY) or "").strip()
-    credentials_present = bool(address and private_key)
-    config.require_live_start(credentials_present=credentials_present)
-    validated_address = validate_address(address)
-    sdk_builder = builder if builder is not None else OfficialSolSdkBuilder()
-    info, exchange = sdk_builder.build(
-        account_address=validated_address,
-        private_key=private_key,
-    )
-    return SolHyperliquidAdapter(
-        info=info,
-        exchange=exchange,
-        account_address=validated_address,
-        max_notional_usd=config.max_notional_usd,
-        slippage_fraction=config.market_slippage_cap_fraction,
-    )

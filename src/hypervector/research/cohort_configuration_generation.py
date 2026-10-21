@@ -35,7 +35,6 @@ class ConfigurationGenerationExpectation:
     asset_sizing: tuple[tuple[str, float, float, float], ...] = ()
     asset_entry_slippage_caps: tuple[tuple[str, float], ...] = ()
     asset_market_slippage_caps: tuple[tuple[str, float], ...] = ()
-    entry_context_overrides: tuple[tuple[str, str, str], ...] = ()
     provider_sizing_overrides: tuple[tuple[str, str, float, float], ...] = ()
     provider_directional_sizing_overrides: tuple[
         tuple[str, str, str, float, float], ...
@@ -67,7 +66,6 @@ def load_configuration_expectation(
         asset_sizing=_asset_sizing_expectation(config),
         asset_entry_slippage_caps=_asset_entry_slippage_cap_expectation(config),
         asset_market_slippage_caps=_asset_market_slippage_cap_expectation(config),
-        entry_context_overrides=_entry_context_expectation(config),
         provider_sizing_overrides=_provider_sizing_expectation(config),
         provider_directional_sizing_overrides=_directional_sizing_expectation(config),
         provider_exit_policies=provider_exit_expectation(config),
@@ -161,18 +159,6 @@ def _provider_observation_direction_expectation(
     )
 
 
-def _entry_context_expectation(
-    config: MultiAssetLiveConfig,
-) -> tuple[tuple[str, str, str], ...]:
-    return tuple(
-        sorted(
-            (provider.strategy_id, symbol, policy)
-            for provider in config.providers
-            for symbol, policy in provider.entry_context_overrides
-        )
-    )
-
-
 def _provider_sizing_expectation(
     config: MultiAssetLiveConfig,
 ) -> tuple[tuple[str, str, float, float], ...]:
@@ -236,9 +222,6 @@ def configuration_generation_evidence(
         ),
         "current_asset_market_slippage_caps": _asset_market_slippage_cap_evidence(
             expectation.asset_market_slippage_caps
-        ),
-        "current_entry_context_overrides": _entry_context_override_evidence(
-            expectation.entry_context_overrides
         ),
         "current_provider_sizing_overrides": _provider_sizing_override_evidence(
             expectation.provider_sizing_overrides
@@ -369,24 +352,6 @@ def _asset_market_slippage_cap_evidence(
         if asset in evidence:
             raise ValueError("asset IOC cap symbol must be unique")
         evidence[asset] = cap
-    return evidence
-
-
-def _entry_context_override_evidence(
-    overrides: tuple[tuple[str, str, str], ...],
-) -> dict[str, str]:
-    evidence: dict[str, str] = {}
-    for strategy_id, symbol, policy in overrides:
-        strategy = _required_text(strategy_id, "entry context strategy")
-        asset = _required_text(symbol, "entry context symbol")
-        if "|" in strategy or "|" in asset:
-            raise ValueError("entry context identity must not contain '|'")
-        if policy != "dual_mtf_not_opposed":
-            raise ValueError("entry context policy is unsupported")
-        key = f"{strategy}|{asset}"
-        if key in evidence:
-            raise ValueError("entry context identity must be unique")
-        evidence[key] = policy
     return evidence
 
 

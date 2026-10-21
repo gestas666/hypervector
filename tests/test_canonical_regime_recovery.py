@@ -12,7 +12,7 @@ from hypervector.live.canonical_regime_telemetry import (
 )
 from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTelemetry
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
 
@@ -52,7 +52,7 @@ def test_rejects_unordered_recovery_batch(tmp_path: Path) -> None:
 
 def _telemetry(tmp_path: Path) -> tuple[MultiAssetCohortTelemetry, SolLiveLedger]:
     config = load_multi_asset_live_config(
-        "tests/fixtures/profiles/hype_compression_range_retired_current.toml",
+        "tests/fixtures/profiles/ten_asset_base.toml",
         mode="observe",
     )
     ledger = SolLiveLedger(

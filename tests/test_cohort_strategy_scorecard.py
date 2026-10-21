@@ -13,8 +13,8 @@ from hypervector.research.cohort_strategy_scorecard import (
     build_strategy_scorecard,
 )
 
-_HYPE = "hype_breakout_onset_bidirectional_v1"
-_RANGE = "range_onset_bidirectional_v1"
+_HYPE = "test_fade_1m"
+_BREAKOUT = "test_breakout_1m"
 
 
 def test_scorecard_separates_adverse_signal_paths_from_edge_claims() -> None:
@@ -42,12 +42,12 @@ def test_scorecard_separates_adverse_signal_paths_from_edge_claims() -> None:
 def test_scorecard_reports_missing_signal_evidence_without_success_shape() -> None:
     """A frequently evaluated setup remains unknown until it actually fires."""
     scorecard = build_strategy_scorecard(
-        frozenset({(_RANGE, "SOL")}),
-        {f"{_RANGE}|SOL": {"count": 200, "eligible": 0}},
-        {"by_provider_symbol": {f"{_RANGE}|SOL": _outcome(0, ())}},
+        frozenset({(_BREAKOUT, "SOL")}),
+        {f"{_BREAKOUT}|SOL": {"count": 200, "eligible": 0}},
+        {"by_provider_symbol": {f"{_BREAKOUT}|SOL": _outcome(0, ())}},
     )
 
-    record = scorecard["by_provider_symbol"][f"{_RANGE}|SOL"]
+    record = scorecard["by_provider_symbol"][f"{_BREAKOUT}|SOL"]
     assert record["forward_assessment"] == "no_eligible_signal_evidence"
     assert record["research_state"] == "unreviewed_exact_mapping"
     assert record["evidence_source"] == "none"
@@ -98,7 +98,7 @@ def test_scorecard_preserves_directional_research_as_report_only(
     _register(
         monkeypatch,
         StrategyResearchEvidence(
-            _RANGE,
+            _BREAKOUT,
             "ETH",
             "directional_candidate",
             "medium",
@@ -126,12 +126,12 @@ def test_scorecard_preserves_directional_research_as_report_only(
         ),
     )
     scorecard = build_strategy_scorecard(
-        frozenset({(_RANGE, "ETH")}),
-        {f"{_RANGE}|ETH": {"count": 10, "eligible": 1}},
-        {"by_provider_symbol": {f"{_RANGE}|ETH": _outcome(1, (2.0,))}},
+        frozenset({(_BREAKOUT, "ETH")}),
+        {f"{_BREAKOUT}|ETH": {"count": 10, "eligible": 1}},
+        {"by_provider_symbol": {f"{_BREAKOUT}|ETH": _outcome(1, (2.0,))}},
     )
 
-    record = scorecard["by_provider_symbol"][f"{_RANGE}|ETH"]
+    record = scorecard["by_provider_symbol"][f"{_BREAKOUT}|ETH"]
     long = record["directional_research"]["long"]
     short = record["directional_research"]["short"]
     assert long["research_state"] == "historical_candidate"

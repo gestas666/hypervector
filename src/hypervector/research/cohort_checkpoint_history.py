@@ -12,13 +12,6 @@ from hypervector.research.cohort_trade_reflection_report import (
     ALL_TIME_REFLECTION_HISTORY_SCHEMA_VERSION,
 )
 
-_HISTORICAL_MECHANISM_KEYS = (
-    "all_time_live_mechanism",
-    "mature_profit_floor_all_time_live_mechanism",
-    "risk_normalized_all_time_live_mechanism",
-    "regime_conditioned_all_time_live_mechanism",
-    "support_decay_all_time_live_mechanism",
-)
 _SCORECARD_EXECUTION_KEYS = (
     "execution_outcomes_identifiable",
     "execution_performance_scope",
@@ -39,7 +32,6 @@ def merge_complete_historical_projection(
     """Join fresh bounded telemetry with signature-matched complete history."""
     bounded_audit = _validated_checkpoint_audit(bounded, "bounded")
     complete_audit = _validated_checkpoint_audit(complete, "complete")
-    _validated_side_composition(bounded_audit.get("side_composition"))
     signature = _require_matching_execution_history(bounded_audit, complete_audit)
     closed = _require_matching_archive_history(bounded_audit, complete_audit)
     result = deepcopy(dict(bounded))
@@ -227,12 +219,6 @@ def _closed_lifecycles(total: Mapping[str, object], label: str) -> int:
 def _copy_historical_sections(
     target: dict[str, object], source: Mapping[str, object]
 ) -> None:
-    _copy_historical_section(
-        target,
-        source,
-        "entry_alignment_mechanism",
-        current_keys=("provisional_open",),
-    )
     target_trade = _mutable_mapping(
         target.get("trade_reflections"), "trade reflections"
     )
@@ -249,7 +235,6 @@ def _copy_historical_sections(
         source_performance.get("all_time_live")
     )
     _copy_scorecard_execution_history(target, source)
-    _copy_historical_mechanisms(target, source)
 
 
 def _copy_scorecard_execution_history(
@@ -332,35 +317,6 @@ def _require_matching_scorecard_history(
         )
 
 
-def _copy_historical_section(
-    target: dict[str, object],
-    source: Mapping[str, object],
-    key: str,
-    *,
-    current_keys: tuple[str, ...],
-) -> None:
-    current = _mapping(target.get(key), f"current {key}")
-    merged = deepcopy(dict(_mapping(source.get(key), f"historical {key}")))
-    for current_key in current_keys:
-        if current_key in current:
-            merged[current_key] = deepcopy(current[current_key])
-    target[key] = merged
-
-
-def _copy_historical_mechanisms(
-    target: dict[str, object],
-    source: Mapping[str, object],
-) -> None:
-    target_profit = _mutable_mapping(
-        target.get("profit_lock_challenger"), "profit-lock challenger"
-    )
-    source_profit = _mapping(
-        source.get("profit_lock_challenger"), "complete profit-lock challenger"
-    )
-    for key in _HISTORICAL_MECHANISM_KEYS:
-        target_profit[key] = deepcopy(source_profit.get(key))
-
-
 def _history_source_time(checkpoint: Mapping[str, object]) -> str:
     audit = _mapping(checkpoint.get("audit"), "complete audit")
     lineage = audit.get("historical_projection")
@@ -384,20 +340,6 @@ def _validate_historical_lineage(lineage: Mapping[str, object]) -> None:
     expected = _historical_projection_contract()
     if any(contract.get(key) != value for key, value in expected.items()):
         raise ValueError("historical projection contract is invalid")
-
-
-def _validated_side_composition(value: object) -> Mapping[str, object]:
-    composition = _mapping(value, "side composition")
-    contract = _mapping(composition.get("contract"), "side composition contract")
-    if (
-        composition.get("schema_version") != 2
-        or composition.get("mode") != "cohort_separate_side_composition"
-        or contract.get("report_only") is not True
-        or contract.get("execution_authority") != "none"
-        or contract.get("runtime_strategy_changed") is not False
-    ):
-        raise ValueError("side composition contract is invalid")
-    return composition
 
 
 def _historical_projection_contract() -> dict[str, object]:

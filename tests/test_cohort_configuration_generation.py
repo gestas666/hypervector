@@ -21,29 +21,7 @@ _EXPECTATION = ConfigurationGenerationExpectation(
     source_path="configs/cohort.toml",
     source_modified_at_utc="2026-08-03T11:16:04+00:00",
     profile_fingerprint="current-profile",
-    entry_context_overrides=(
-        (
-            "range_onset_bidirectional_v1",
-            "ETH",
-            "dual_mtf_not_opposed",
-        ),
-    ),
 )
-
-
-def test_current_profile_exposes_the_explicit_eth_entry_context_rule() -> None:
-    """The disk identity carries the exact pending rule without runtime authority."""
-    expectation = load_configuration_expectation(
-        Path("tests/fixtures/profiles/cohort_base.toml")
-    )
-
-    assert expectation.entry_context_overrides == (
-        (
-            "range_onset_bidirectional_v1",
-            "ETH",
-            "dual_mtf_not_opposed",
-        ),
-    )
 
 
 def test_load_expectation_retains_provider_symbol_sizing() -> None:
@@ -53,8 +31,8 @@ def test_load_expectation_retains_provider_symbol_sizing() -> None:
     )
 
     assert expectation.provider_sizing_overrides == (
-        ("hulk_expansion_bidirectional_tuned_v2", "SOL", 0.03, 25.0),
-        ("range_onset_bidirectional_v1", "SOL", 0.10, 75.0),
+        ("test_breakout_1m", "SOL", 0.10, 75.0),
+        ("test_trend_5m", "SOL", 0.03, 25.0),
     )
 
 
@@ -67,9 +45,9 @@ def test_staged_expectation_retains_exact_provider_membership_and_routes() -> No
     scopes = dict(expectation.provider_execution_scopes)
     assert len(scopes) == 7
     assert sum(len(symbols) for symbols in scopes.values()) == 16
-    assert scopes["range_onset_bidirectional_v1"] == ("SOL",)
-    assert "hip3_swing_ha_sp500_spcx_bidirectional_v2" not in scopes
-    assert "hip3_swing_ha_sndk_gold_brent_bidirectional_v1" not in scopes
+    assert scopes["test_breakout_1m"] == ("SOL",)
+    assert "test_band_a_15m" not in scopes
+    assert "test_band_b_15m" not in scopes
     active = load_configuration_expectation(
         _FIXTURE_PROFILES / "all_live.toml"
     )
@@ -84,14 +62,14 @@ def test_staged_expectation_retains_exact_provider_membership_and_routes() -> No
         for symbol in symbols
     }
     assert active_routes - staged_routes == {
-        ("range_onset_bidirectional_v1", "BTC"),
-        ("range_onset_bidirectional_v1", "ETH"),
-        ("range_onset_bidirectional_v1", "HYPE"),
-        ("hip3_swing_ha_sp500_spcx_bidirectional_v2", "xyz:SP500"),
-        ("hip3_swing_ha_sp500_spcx_bidirectional_v2", "xyz:SPCX"),
-        ("hip3_swing_ha_sndk_gold_brent_bidirectional_v1", "xyz:SNDK"),
-        ("hip3_swing_ha_sndk_gold_brent_bidirectional_v1", "xyz:GOLD"),
-        ("hip3_swing_ha_sndk_gold_brent_bidirectional_v1", "xyz:BRENTOIL"),
+        ("test_breakout_1m", "BTC"),
+        ("test_breakout_1m", "ETH"),
+        ("test_breakout_1m", "HYPE"),
+        ("test_band_a_15m", "xyz:AAA"),
+        ("test_band_a_15m", "xyz:BBB"),
+        ("test_band_b_15m", "xyz:CCC"),
+        ("test_band_b_15m", "xyz:DDD"),
+        ("test_band_b_15m", "xyz:EEE"),
     }
     assert staged_routes - active_routes == set()
 
@@ -106,13 +84,13 @@ def test_staged_expectation_retains_exact_side_specialist_directions() -> None:
         (strategy, symbol): sides
         for strategy, symbol, sides in expectation.provider_execution_directions
     }
-    assert directions[("hulk_expansion_short_robust_v3", "BTC")] == ("short",)
-    assert directions[("liquidity_sweep_long_1h_stop60_v1", "BTC")] == ("long",)
+    assert directions[("test_short_trend_5m", "BTC")] == ("short",)
+    assert directions[("test_long_stop_1m", "BTC")] == ("long",)
     assert directions[
-        ("hype_breakout_compression_pullback_bidirectional_v1", "HYPE")
+        ("test_squeeze_1m", "HYPE")
     ] == ("long", "short")
     assert directions[
-        ("hip3_breakout_pressure_sp500_spcx_bidirectional_v1", "xyz:SP500")
+        ("test_session_a_15m", "xyz:AAA")
     ] == ("long", "short")
     evidence = configuration_generation_evidence(
         "runtime-profile",
@@ -126,10 +104,10 @@ def test_staged_expectation_retains_exact_side_specialist_directions() -> None:
         },
     )
     assert evidence["current_provider_execution_directions"][
-        "hulk_expansion_short_robust_v3|BTC"
+        "test_short_trend_5m|BTC"
     ] == ["short"]
     assert evidence["current_provider_execution_directions"][
-        "liquidity_sweep_long_1h_stop60_v1|BTC"
+        "test_long_stop_1m|BTC"
     ] == ["long"]
 
 
@@ -146,10 +124,10 @@ def test_staged_expectation_exposes_corrected_long_identity_and_six_sides() -> N
 
     assert len(expectation.provider_execution_scopes) == 4
     assert sum(len(sides) for sides in directions.values()) == 6
-    assert directions[("liquidity_sweep_long_1h_stop60_target60_v2", "BTC")] == (
+    assert directions[("test_long_target_1m", "BTC")] == (
         "long",
     )
-    assert ("liquidity_sweep_long_1h_stop60_v1", "BTC") not in directions
+    assert ("test_long_stop_1m", "BTC") not in directions
 
 
 def test_profile_b_expectation_exposes_exact_live_routes_without_authority() -> None:
@@ -157,31 +135,31 @@ def test_profile_b_expectation_exposes_exact_live_routes_without_authority() -> 
     expectation = load_configuration_expectation(_PROFILE_B)
 
     assert dict(expectation.provider_execution_scopes) == {
-        "eth_range_onset_long_dual_mtf_v2": ("ETH",),
-        "hourly_donchian_20_10_atr20_strong_short_v1": (
+        "test_long_bias_1m": ("ETH",),
+        "test_channel_short_15m": (
             "SOL",
-            "xyz:BRENTOIL",
-            "xyz:SNDK",
-            "xyz:TSLA",
+            "xyz:CCC",
+            "xyz:EEE",
+            "xyz:FFF",
         ),
-        "liquidity_sweep_long_1h_stop60_target60_v2": ("BTC",),
+        "test_long_target_1m": ("BTC",),
     }
     directions = {
         (strategy, symbol): sides
         for strategy, symbol, sides in expectation.provider_execution_directions
     }
-    assert directions[("liquidity_sweep_long_1h_stop60_target60_v2", "BTC")] == (
+    assert directions[("test_long_target_1m", "BTC")] == (
         "long",
     )
-    assert directions[("eth_range_onset_long_dual_mtf_v2", "ETH")] == ("long",)
+    assert directions[("test_long_bias_1m", "ETH")] == ("long",)
     assert {
         symbol
         for (strategy, symbol), sides in directions.items()
-        if strategy == "hourly_donchian_20_10_atr20_strong_short_v1"
+        if strategy == "test_channel_short_15m"
         and sides == ("long", "short")
-    } == {"SOL", "xyz:BRENTOIL", "xyz:SNDK", "xyz:TSLA"}
+    } == {"SOL", "xyz:EEE", "xyz:CCC", "xyz:FFF"}
     assert len(directions) == 6
-    assert all(symbol not in {"HYPE", "xyz:SPCX"} for _, symbol in directions)
+    assert all(symbol not in {"HYPE", "xyz:BBB"} for _, symbol in directions)
 
     evidence = configuration_generation_evidence(
         "runtime-profile",
@@ -192,7 +170,7 @@ def test_profile_b_expectation_exposes_exact_live_routes_without_authority() -> 
                 "position_size_signed": 0.0,
                 "open_order_ids": [],
             },
-            "xyz:SNDK": {
+            "xyz:CCC": {
                 "final_state": "OPEN",
                 "position_size_signed": -1.5,
                 "open_order_ids": [1],
@@ -201,7 +179,7 @@ def test_profile_b_expectation_exposes_exact_live_routes_without_authority() -> 
     )
     assert evidence["current_profile_fingerprint"] == expectation.profile_fingerprint
     assert evidence["restart_state"] == "wait_for_flat_and_no_orders"
-    assert evidence["blocking_assets"] == ["xyz:SNDK"]
+    assert evidence["blocking_assets"] == ["xyz:CCC"]
     assert evidence["execution_authority"] == "none"
     assert evidence["automatic_restart"] is False
 
@@ -228,8 +206,8 @@ def test_load_expectation_retains_provider_directional_sizing(
     expectation = load_configuration_expectation(profile)
 
     assert expectation.provider_directional_sizing_overrides == (
-        ("hulk_expansion_bidirectional_tuned_v2", "SOL", "long", 0.03, 60.0),
-        ("hulk_expansion_bidirectional_tuned_v2", "SOL", "short", 0.03, 15.0),
+        ("test_trend_5m", "SOL", "long", 0.03, 60.0),
+        ("test_trend_5m", "SOL", "short", 0.03, 15.0),
     )
 
 
@@ -265,7 +243,7 @@ def test_generation_exposes_preserved_provider_exit_policy_without_authority() -
     )
 
     hype = evidence["current_provider_exit_policies"][
-        "hype_breakout_onset_bidirectional_v1"
+        "test_fade_1m"
     ]
     assert hype == {
         "maximum_hold_seconds": 28_800,
@@ -317,8 +295,8 @@ def test_generation_publishes_provider_routes_without_authority() -> None:
     expectation = replace(
         _EXPECTATION,
         provider_execution_scopes=(
-            ("range_onset_bidirectional_v1", ("SOL",)),
-            ("hip3_breakout_pressure_v1", ("xyz:GOLD", "xyz:SNDK")),
+            ("test_breakout_1m", ("SOL",)),
+            ("test_band_a_15m", ("xyz:CCC", "xyz:DDD")),
         ),
     )
 
@@ -326,7 +304,7 @@ def test_generation_publishes_provider_routes_without_authority() -> None:
         "runtime-profile",
         expectation,
         {
-            "xyz:GOLD": {
+            "xyz:DDD": {
                 "final_state": "OPEN",
                 "position_size_signed": 0.0171,
                 "open_order_ids": [123],
@@ -335,10 +313,10 @@ def test_generation_publishes_provider_routes_without_authority() -> None:
     )
 
     assert evidence["current_provider_execution_scopes"] == {
-        "hip3_breakout_pressure_v1": ["xyz:GOLD", "xyz:SNDK"],
-        "range_onset_bidirectional_v1": ["SOL"],
+        "test_band_a_15m": ["xyz:CCC", "xyz:DDD"],
+        "test_breakout_1m": ["SOL"],
     }
-    assert evidence["blocking_assets"] == ["xyz:GOLD"]
+    assert evidence["blocking_assets"] == ["xyz:DDD"]
     assert evidence["execution_authority"] == "none"
     assert evidence["automatic_restart"] is False
 
@@ -364,9 +342,7 @@ def test_stale_generation_waits_for_every_position_and_order_to_clear() -> None:
 
     assert evidence["restart_state"] == "wait_for_flat_and_no_orders"
     assert evidence["blocking_assets"] == ["BTC"]
-    assert evidence["current_entry_context_overrides"] == {
-        "range_onset_bidirectional_v1|ETH": "dual_mtf_not_opposed"
-    }
+    assert "current_entry_context_overrides" not in evidence
 
 
 def test_generation_exposes_pending_provider_sizing_without_authority() -> None:
@@ -374,7 +350,7 @@ def test_generation_exposes_pending_provider_sizing_without_authority() -> None:
     expectation = replace(
         _EXPECTATION,
         provider_sizing_overrides=(
-            ("range_onset_bidirectional_v1", "SOL", 0.10, 20.0),
+            ("test_breakout_1m", "SOL", 0.10, 20.0),
         ),
     )
 
@@ -391,7 +367,7 @@ def test_generation_exposes_pending_provider_sizing_without_authority() -> None:
     )
 
     assert evidence["current_provider_sizing_overrides"] == {
-        "range_onset_bidirectional_v1|SOL": {
+        "test_breakout_1m|SOL": {
             "margin_fraction": 0.10,
             "max_notional_usd": 20.0,
         }
@@ -405,8 +381,8 @@ def test_generation_exposes_directional_sizing_without_hiding_either_side() -> N
     expectation = replace(
         _EXPECTATION,
         provider_directional_sizing_overrides=(
-            ("hype_breakout_onset_bidirectional_v1", "HYPE", "long", 0.03, 75.0),
-            ("hype_breakout_onset_bidirectional_v1", "HYPE", "short", 0.03, 25.0),
+            ("test_fade_1m", "HYPE", "long", 0.03, 75.0),
+            ("test_fade_1m", "HYPE", "short", 0.03, 25.0),
         ),
     )
 
@@ -423,11 +399,11 @@ def test_generation_exposes_directional_sizing_without_hiding_either_side() -> N
     )
 
     assert evidence["current_provider_directional_sizing_overrides"] == {
-        "hype_breakout_onset_bidirectional_v1|HYPE|long": {
+        "test_fade_1m|HYPE|long": {
             "margin_fraction": 0.03,
             "max_notional_usd": 75.0,
         },
-        "hype_breakout_onset_bidirectional_v1|HYPE|short": {
+        "test_fade_1m|HYPE|short": {
             "margin_fraction": 0.03,
             "max_notional_usd": 25.0,
         },
@@ -588,35 +564,6 @@ def test_generation_exposes_enabled_profit_lock_without_authority() -> None:
     assert evidence["automatic_restart"] is False
 
 
-def test_generation_exposes_btc_component_floor_without_authority() -> None:
-    """The checkpoint accepts only the exact staged BTC specialized policy."""
-    expectation = load_configuration_expectation(
-        _FIXTURE_PROFILES
-        / "eight_asset_btc_hulk_smart_exit.toml"
-    )
-
-    evidence = configuration_generation_evidence(
-        "runtime-profile",
-        expectation,
-        {
-            "BTC": {
-                "final_state": "FLAT",
-                "position_size_signed": 0.0,
-                "open_order_ids": [],
-            }
-        },
-    )
-
-    policy = evidence["current_provider_exit_policies"][
-        "hulk_expansion_short_robust_v3"
-    ]
-    assert policy["profit_lock_policy"] == "btc_hulk_delayed_component_floor_v1"
-    assert policy["profit_lock_activation_bps"] is None
-    assert policy["profit_lock_floor_bps"] is None
-    assert policy["profit_lock_giveback_bps"] is None
-    assert evidence["execution_authority"] == "none"
-
-
 def test_generation_exposes_directional_profit_lock_without_collapsing_scope(
     tmp_path: Path,
 ) -> None:
@@ -646,9 +593,9 @@ def test_generation_exposes_directional_profit_lock_without_collapsing_scope(
     )
 
     directional = evidence["current_provider_directional_exit_policies"]
-    long = directional["hype_breakout_compression_pullback_bidirectional_v1|HYPE|long"]
+    long = directional["test_squeeze_1m|HYPE|long"]
     short = directional[
-        "hype_breakout_compression_pullback_bidirectional_v1|HYPE|short"
+        "test_squeeze_1m|HYPE|short"
     ]
     assert long["profit_lock_policy"] == "completed_bar_trailing"
     assert long["profit_lock_activation_bps"] == pytest.approx(25.0)

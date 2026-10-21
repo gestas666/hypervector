@@ -9,7 +9,6 @@ import tomllib
 from typing import Literal, cast
 
 _BOTH_SIDES = frozenset({"long", "short"})
-_ENTRY_CONTEXT_POLICIES = frozenset({"dual_mtf_not_opposed"})
 ProviderPositionPolicy = Literal["enter_and_close", "flat_entry_only"]
 
 
@@ -107,12 +106,12 @@ def optional_strings(value: object, label: str) -> tuple[str, ...]:
     return tuple(str(item).strip() for item in value)
 
 
-def optional_path(value: object) -> Path | None:
-    """Parse an optional non-empty source profile path."""
+def optional_path(value: object, label: str) -> Path | None:
+    """Parse an optional non-empty path."""
     if value is None:
         return None
     if not isinstance(value, str) or not value.strip():
-        raise MultiAssetLiveConfigError("source_profile must be non-empty text")
+        raise MultiAssetLiveConfigError(f"{label} must be non-empty text")
     return Path(value.strip())
 
 
@@ -140,26 +139,6 @@ def side_overrides(value: object) -> tuple[tuple[str, frozenset[str]], ...]:
             "provider execution_side_overrides symbols must be unique text"
         )
     return overrides
-
-
-def entry_context_overrides(value: object) -> tuple[tuple[str, str], ...]:
-    """Parse explicit provider-symbol entry-context policies."""
-    if value is None:
-        return ()
-    rows = mapping(value, "provider entry_context_overrides")
-    overrides: list[tuple[str, str]] = []
-    for symbol, raw_policy in rows.items():
-        if not symbol.strip() or not isinstance(raw_policy, str):
-            raise MultiAssetLiveConfigError(
-                "provider entry_context_overrides must map symbols to policies"
-            )
-        policy = raw_policy.strip()
-        if policy not in _ENTRY_CONTEXT_POLICIES:
-            raise MultiAssetLiveConfigError(
-                "provider entry_context_overrides contains an unsupported policy"
-            )
-        overrides.append((symbol.strip(), policy))
-    return tuple(overrides)
 
 
 def positive_number_overrides(

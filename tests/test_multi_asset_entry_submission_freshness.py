@@ -27,7 +27,7 @@ from hypervector.live.sol_range_onset_engine_contract import SolEntryNotFilledEr
 class _ThirtySecondPoller(_Poller):
     def maximum_entry_delay_ms(self, strategy_id: str, symbol: str) -> int:
         """Return the frozen provider-symbol entry-age ceiling."""
-        assert strategy_id == "hulk"
+        assert strategy_id == "test_trend_provider"
         assert symbol == "BTC"
         return 30_000
 
@@ -42,20 +42,20 @@ class _Provider:
 
 def test_entry_delay_projection_excludes_observe_only_symbols() -> None:
     """Submission policy must cover executable routes without widening authority."""
-    provider = _Provider("index", ("xyz:SP500", "xyz:SPCX"), ("xyz:SP500",), 30)
+    provider = _Provider("index", ("xyz:AAA", "xyz:BBB"), ("xyz:AAA",), 30)
 
-    assert entry_delays_from_providers((provider,)) == {("index", "xyz:SP500"): 30_000}
+    assert entry_delays_from_providers((provider,)) == {("index", "xyz:AAA"): 30_000}
 
 
 def test_entry_at_exact_submission_deadline_remains_executable() -> None:
     """The final guard preserves the existing strict-greater-than contract."""
-    action = RoutingAction("enter", "hulk", "BTC", "long", 1_000, 100.0)
+    action = RoutingAction("enter", "test_trend_provider", "BTC", "long", 1_000, 100.0)
 
     assert (
         stale_entry_before_submission(
             action,
             observed_ms=31_000,
-            delays={("hulk", "BTC"): 30_000},
+            delays={("test_trend_provider", "BTC"): 30_000},
         )
         is None
     )
@@ -63,13 +63,13 @@ def test_entry_at_exact_submission_deadline_remains_executable() -> None:
 
 def test_fresh_entry_serializes_exact_submission_boundary_evidence() -> None:
     """An accepted entry must retain the final clock and route limit."""
-    action = RoutingAction("enter", "hulk", "BTC", "long", 1_000, 100.0)
+    action = RoutingAction("enter", "test_trend_provider", "BTC", "long", 1_000, 100.0)
     executed: list[RoutingAction] = []
 
     submitted, withheld = execute_fresh_routed_actions(
         (action,),
         now_ms=lambda: 31_000,
-        delays={("hulk", "BTC"): 30_000},
+        delays={("test_trend_provider", "BTC"): 30_000},
         execute=lambda action, _: executed.append(action),
     )
 
@@ -82,39 +82,39 @@ def test_fresh_entry_serializes_exact_submission_boundary_evidence() -> None:
 
 def test_ioc_no_fill_is_reported_and_does_not_abort_later_actions() -> None:
     """A definitive flat IOC no-fill must not terminate the cohort cycle."""
-    first = RoutingAction("enter", "zec", "ZEC", "long", 1_000, 100.0)
-    second = RoutingAction("enter", "hulk", "BTC", "short", 1_000, 100.0)
+    first = RoutingAction("enter", "ltc", "LTC", "long", 1_000, 100.0)
+    second = RoutingAction("enter", "test_trend_provider", "BTC", "short", 1_000, 100.0)
     attempted: list[RoutingAction] = []
 
     def execute(
         action: RoutingAction, _deadline: EntrySubmissionDeadline | None
     ) -> None:
         attempted.append(action)
-        if action.symbol == "ZEC":
+        if action.symbol == "LTC":
             raise SolEntryNotFilledError("IOC entry not filled")
 
     submitted, withheld = execute_fresh_routed_actions(
         (first, second),
         now_ms=lambda: 2_000,
-        delays={("zec", "ZEC"): 30_000, ("hulk", "BTC"): 30_000},
+        delays={("ltc", "LTC"): 30_000, ("test_trend_provider", "BTC"): 30_000},
         execute=execute,
     )
 
-    assert [row.symbol for row in attempted] == ["ZEC", "BTC"]
+    assert [row.symbol for row in attempted] == ["LTC", "BTC"]
     assert [row.symbol for row in submitted] == ["BTC"]
     assert [(row.intent.symbol, row.reason) for row in withheld] == [
-        ("ZEC", "entry_ioc_no_fill")
+        ("LTC", "entry_ioc_no_fill")
     ]
 
 
 def test_stale_entry_serializes_exact_non_submission_evidence() -> None:
     """A stale entry must report the clock evidence that prevented submission."""
-    action = RoutingAction("enter", "hulk", "BTC", "long", 1_000, 100.0)
+    action = RoutingAction("enter", "test_trend_provider", "BTC", "long", 1_000, 100.0)
 
     withheld = stale_entry_before_submission(
         action,
         observed_ms=31_001,
-        delays={("hulk", "BTC"): 30_000},
+        delays={("test_trend_provider", "BTC"): 30_000},
     )
 
     assert withheld is not None
@@ -125,7 +125,7 @@ def test_stale_entry_serializes_exact_non_submission_evidence() -> None:
 
 def test_submission_guard_never_withholds_an_automatic_close() -> None:
     """Entry freshness cannot delay a selected automatic exit."""
-    action = RoutingAction("close", "hulk", "BTC", "long", 1_000, 100.0)
+    action = RoutingAction("close", "test_trend_provider", "BTC", "long", 1_000, 100.0)
     executed: list[RoutingAction] = []
 
     def unexpected_clock_read() -> int:
@@ -134,7 +134,7 @@ def test_submission_guard_never_withholds_an_automatic_close() -> None:
     submitted, withheld = execute_fresh_routed_actions(
         (action,),
         now_ms=unexpected_clock_read,
-        delays={("hulk", "BTC"): 30_000},
+        delays={("test_trend_provider", "BTC"): 30_000},
         execute=lambda action, _: executed.append(action),
     )
 
@@ -158,7 +158,7 @@ def test_automatic_entry_is_rechecked_immediately_before_submission(
     engines = {symbol: _Engine(symbol) for symbol in _SYMBOLS}
     telemetry = _Telemetry()
     intent = StrategyIntent(
-        "hulk", "BTC", "long", int(decision.timestamp() * 1_000), 100.0, "signal"
+        "test_trend_provider", "BTC", "long", int(decision.timestamp() * 1_000), 100.0, "signal"
     )
     runner = MultiAssetLiveRunner(
         symbols=_SYMBOLS,
@@ -172,9 +172,9 @@ def test_automatic_entry_is_rechecked_immediately_before_submission(
         poll_seconds=15.0,
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
-        execution_contracts={"hulk": _contract()},
-        maximum_entry_delay_ms_by_provider_symbol={("hulk", "BTC"): 30_000},
-        executable_provider_symbols=frozenset({("hulk", "BTC")}),
+        execution_contracts={"test_trend_provider": _contract()},
+        maximum_entry_delay_ms_by_provider_symbol={("test_trend_provider", "BTC"): 30_000},
+        executable_provider_symbols=frozenset({("test_trend_provider", "BTC")}),
     )
 
     runner.start(activation_time_ms=int(decision.timestamp() * 1_000))

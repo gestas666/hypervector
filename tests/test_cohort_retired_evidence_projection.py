@@ -22,7 +22,7 @@ def test_bounded_refresh_retains_complete_retired_asset_evidence() -> None:
     complete["evidence"] = {
         "cohort": {"path": "prior/decisions.jsonl"},
         "assets": {"BTC": {"path": "prior/btc.jsonl"}},
-        "retired_assets": {"xyz:GOLD": {"path": "prior/xyz:gold.jsonl"}},
+        "retired_assets": {"xyz:DDD": {"path": "prior/xyz:ddd.jsonl"}},
     }
     complete_before = deepcopy(complete)
 
@@ -31,6 +31,6 @@ def test_bounded_refresh_retains_complete_retired_asset_evidence() -> None:
     assert merged["evidence"]["cohort"] == bounded["evidence"]["cohort"]
     assert merged["evidence"]["assets"] == bounded["evidence"]["assets"]
     assert merged["evidence"]["retired_assets"] == {
-        "xyz:GOLD": {"path": "prior/xyz:gold.jsonl"}
+        "xyz:DDD": {"path": "prior/xyz:ddd.jsonl"}
     }
     assert complete == complete_before

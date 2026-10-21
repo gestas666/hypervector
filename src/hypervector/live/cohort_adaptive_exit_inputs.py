@@ -12,7 +12,7 @@ from hypervector.live.cohort_adaptive_exit_policy import BOOK_MAX_AGE_MS
 from hypervector.live.cohort_regime_routing import canonical_alignment_score
 from hypervector.live.hyperliquid_protocol import SolBookSnapshot
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 
 MINUTE_MS = 60_000
 CONTEXT_MAX_AGE_MS = 90_000

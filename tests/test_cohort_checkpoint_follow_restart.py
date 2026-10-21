@@ -47,12 +47,7 @@ def _publish(root: Path, requested: str | None = None) -> dict[str, object]:
         config_path=_CONFIG,
         once=False,
         venue_portfolio=None,
-        opportunity_matrix_path=None,
-        supplemental_opportunity_matrix_paths=(),
-        eligible_policy_forward=False,
-        funding_evidence_fn=None,
         portfolio_archive=None,
-        asymmetric_forward_journal_path=None,
         follow_latest_run=True,
     )
     assert len(calls) == 1

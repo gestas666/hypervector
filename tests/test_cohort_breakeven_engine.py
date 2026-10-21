@@ -11,13 +11,14 @@ from hypervector.live.cohort_adaptive_exit_policy import RETENTION_EXIT_POLICY
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
 from hypervector.live.sol_range_onset_engine_contract import STOP_ALREADY_AT_TARGET
 from hypervector.live.sol_range_onset_state import SolLiveState
+from exit_parameter_fixtures import RETENTION_PARAMETERS
 
 
 def _open(tmp_path: Path, side: str):
     replay = EngineReplayFixture(
         tmp_path, partial_entry=False, initial_cash=Decimal(5000)
     )
-    symbol = "xyz:SNDK"
+    symbol = "xyz:CCC"
     engine = replay.engine(replay.assets[symbol])
     contract = ProviderExecutionContract(
         entry_liquidity="taker_ioc",
@@ -25,7 +26,7 @@ def _open(tmp_path: Path, side: str):
         stop_bps=250,
         target_policy="none",
         maximum_hold_seconds=86400,
-        adaptive_exit_policy=RETENTION_EXIT_POLICY,
+        adaptive_exit_policy=RETENTION_EXIT_POLICY, retention_exit=RETENTION_PARAMETERS,
     )
     engine.start()
     replay.prepare_entry(symbol, side, replay.clock.now_ms)

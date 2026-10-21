@@ -17,8 +17,8 @@ from test_multi_asset_observer_audit import (
 )
 
 _RUN_ID = "observer-a"
-_SOURCE = "hypervelocity_source_follow_bidirectional_5m_v1"
-_HYPE_BREAKOUT = "hype_breakout_onset_bidirectional_v1"
+_SOURCE = "test_mirror_1m"
+_HYPE_BREAKOUT = "test_fade_1m"
 _GENERATED_AT = datetime(2026, 8, 1, 12, 31, tzinfo=timezone.utc)
 
 

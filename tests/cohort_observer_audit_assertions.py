@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
-_HULK = "hulk_expansion_bidirectional_tuned_v2"
+_TREND = "test_trend_5m"
 _RUN_ID = "observer-a"
 
 
@@ -40,8 +40,8 @@ def _assert_contract_and_runtime(report: Mapping[str, object]) -> None:
     assert technical["technical_gaps"] == []
     assert technical["complete"] is True
     timing = _mapping(technical["decision_timing_seconds"])
-    startup = _mapping(_mapping(timing["startup_seed_age_by_provider"])[_HULK])
-    steady = _mapping(_mapping(timing["steady_state_arrival_lag_by_provider"])[_HULK])
+    startup = _mapping(_mapping(timing["startup_seed_age_by_provider"])[_TREND])
+    steady = _mapping(_mapping(timing["steady_state_arrival_lag_by_provider"])[_TREND])
     assert (startup["count"], startup["maximum"]) == (4, 2.0)
     assert (steady["count"], steady["maximum"]) == (4, 2.0)
     assert "arrival_lag_seconds_by_provider" not in technical
@@ -72,14 +72,14 @@ def _assert_signals_and_outcomes(report: Mapping[str, object]) -> None:
 
 def _assert_readiness_and_learning(report: Mapping[str, object]) -> None:
     readiness = _mapping(_mapping(report["readiness"])["by_provider_symbol"])
-    hulk_btc = _mapping(readiness[f"{_HULK}|BTC"])
-    assert hulk_btc["count"] == 2
-    assert hulk_btc["first_fraction"] == 0.5
-    assert hulk_btc["latest_fraction"] == 1.0
-    assert hulk_btc["progressions"] == 1
-    assert hulk_btc["regressions"] == 0
-    assert hulk_btc["state_transitions"] == 1
-    assert hulk_btc["latest_side"] == "long"
+    trend_btc = _mapping(readiness[f"{_TREND}|BTC"])
+    assert trend_btc["count"] == 2
+    assert trend_btc["first_fraction"] == 0.5
+    assert trend_btc["latest_fraction"] == 1.0
+    assert trend_btc["progressions"] == 1
+    assert trend_btc["regressions"] == 0
+    assert trend_btc["state_transitions"] == 1
+    assert trend_btc["latest_side"] == "long"
     assert report["learning"] == {
         "evidence_state": "setup_and_signal_paths_only_no_execution_outcomes",
         "signal_path_descriptives_identifiable": True,

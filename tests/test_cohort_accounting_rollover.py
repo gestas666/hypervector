@@ -24,14 +24,14 @@ from hypervector.live.multi_asset_live_config import (
 )
 
 _PRIOR_PATH = Path(
-    "tests/fixtures/profiles/hype_compression_range_retired_current.toml"
+    "tests/fixtures/profiles/ten_asset_base.toml"
 )
 _NEXT_PATH = Path("tests/fixtures/profiles/repaired_b.toml")
 _PARENT_EPOCH_PATH = Path(
     "tests/fixtures/profiles/eight_asset_incremental.toml"
 )
 _CONTINUED_PATH = Path(
-    "tests/fixtures/profiles/eight_asset_sp500_short_containment.toml"
+    "tests/fixtures/profiles/eight_asset_aaa_short_containment.toml"
 )
 _NOW = datetime(2026, 8, 12, 23, 0, tzinfo=UTC)
 _PARENT_EPOCH_START_MS = 1_787_164_729_837
@@ -286,7 +286,7 @@ def _published_continuation(
         checkpoint,
         _preflight(prior, successor),
         _backup(prior, successor),
-        epoch_id="sp500_short_containment_continued",
+        epoch_id="aaa_short_containment_continued",
         backup_bundle_evidence=_raw_evidence(str(backup), backup.read_bytes()),
         checkpoint_evidence=_raw_evidence("final_checkpoint.json", final_checkpoint),
         preflight_evidence=_raw_evidence("final_preflight.json", final_preflight),

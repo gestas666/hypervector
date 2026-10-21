@@ -10,8 +10,8 @@ from hypervector.research.cohort_provider_contract_history import (
     build_provider_contract_history,
 )
 
-_HYPE = "hype_breakout_onset_bidirectional_v1"
-_ETH = "eth_breakout_precompression_pullback_bidirectional_v1"
+_HYPE = "test_fade_1m"
+_ETH = "test_pullback_1m"
 
 
 def test_unrelated_observer_does_not_erase_matching_hype_execution_history() -> None:

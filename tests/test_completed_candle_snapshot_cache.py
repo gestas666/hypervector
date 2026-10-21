@@ -121,13 +121,13 @@ def test_explicit_symbol_bypass_preserves_every_transport_observation() -> None:
 
     cached = CompletedCandleSnapshotCache(
         fetch,
-        uncached_symbols=frozenset({"xyz:SP500"}),
+        uncached_symbols=frozenset({"xyz:AAA"}),
     )
-    for symbol in ("BTC", "xyz:SP500"):
+    for symbol in ("BTC", "xyz:AAA"):
         cached(symbol, "1m", 1.0, end_ms=101 * _MINUTE_MS + 1_000)
         cached(symbol, "1m", 1.0, end_ms=101 * _MINUTE_MS + 15_000)
 
-    assert calls == ["BTC", "xyz:SP500", "xyz:SP500"]
+    assert calls == ["BTC", "xyz:AAA", "xyz:AAA"]
 
 
 def _bars(timestamp_ms: int) -> pd.DataFrame:

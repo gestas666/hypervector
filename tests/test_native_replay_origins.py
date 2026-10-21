@@ -12,13 +12,13 @@ from hypervector.research.native_replay_origins import NativeReplayOrigins
 def origin(tmp_path: Path) -> tuple[NativeReplayOrigins, SolLiveLedger]:
     """Use a real native ledger with explicit offline identity and one known clock."""
     ledger = SolLiveLedger(
-        path=tmp_path / "live/bidirectional_cohort/sndk.jsonl",
+        path=tmp_path / "live/bidirectional_cohort/ccc.jsonl",
         profile_id="offline",
         profile_fingerprint="profile",
         run_fingerprint="run",
         run_id="origin-test",
     )
-    return NativeReplayOrigins(ReplayClock(2000), {"xyz:SNDK": ledger}), ledger
+    return NativeReplayOrigins(ReplayClock(2000), {"xyz:CCC": ledger}), ledger
 
 
 def append(ledger: SolLiveLedger, event: str, payload: dict[str, object]) -> None:
@@ -41,11 +41,11 @@ def test_explicit_entry_deadline_origin_takes_precedence_over_other_decision(
     append(
         ledger, "order_intent", {"operation": "entry", "entry_deadline": {"decision_time_ms": 1200}}
     )
-    assert reader("xyz:SNDK", False) == 1200
+    assert reader("xyz:CCC", False) == 1200
     with pytest.raises(ValueError, match="durable native order intent"):
-        reader("xyz:SNDK", False)
+        reader("xyz:CCC", False)
     append(ledger, "order_intent", {"operation": "reduce_only_close"})
-    assert reader("xyz:SNDK", True) == 1500
+    assert reader("xyz:CCC", True) == 1500
 
 
 @pytest.mark.parametrize("clock", [None, True, 2001])
@@ -58,4 +58,4 @@ def test_missing_malformed_or_future_entry_origin_cannot_be_invented(
         append(ledger, "regime_decision", {"decision_time_ms": clock})
     append(ledger, "order_intent", {"operation": "entry"})
     with pytest.raises(ValueError):
-        reader("xyz:SNDK", False)
+        reader("xyz:CCC", False)

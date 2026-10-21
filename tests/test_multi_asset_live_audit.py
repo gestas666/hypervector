@@ -15,8 +15,8 @@ from hypervector.research.cohort_live_audit import audit_multi_asset_live_run
 from hypervector.research.cohort_live_audit_execution import _merge_fill
 
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
-_HULK = "hulk_expansion_bidirectional_tuned_v2"
-_RANGE = "range_onset_bidirectional_v1"
+_TREND = "test_trend_5m"
+_BREAKOUT = "test_breakout_1m"
 _RUN_ID = "cohort-live-a"
 _SCRIPT = Path("src/hypervector/operations/multi_asset_bidirectional_live_audit.py")
 
@@ -26,7 +26,7 @@ def test_exact_fill_placeholders_do_not_erase_projected_attribution() -> None:
     projected = {
         "symbol": "BTC",
         "trade_id": 202,
-        "strategy_id": "hulk_expansion_short_tuned_v2",
+        "strategy_id": "test_short_drift_5m",
         "operation": "protective_stop",
         "exit_controller_id": "cohort_protective_stop",
         "price": 103.98,
@@ -43,7 +43,7 @@ def test_exact_fill_placeholders_do_not_erase_projected_attribution() -> None:
 
     merged = _merge_fill(projected, {("BTC", 202): exact_fill})
 
-    assert merged["strategy_id"] == "hulk_expansion_short_tuned_v2"
+    assert merged["strategy_id"] == "test_short_drift_5m"
     assert merged["operation"] == "protective_stop"
     assert merged["exit_controller_id"] == "cohort_protective_stop"
     assert merged["fee_usd"] == pytest.approx(0.01)
@@ -69,8 +69,8 @@ def test_flat_run_preserves_readiness_health_and_zero_trade_evidence() -> None:
     assert report["run"]["maximum_concurrent_positions"] == 4
     assert report["run"]["prestart_backup"] is None
     assert report["run"]["executable_provider_symbols"] == [
-        f"{_HULK}|BTC",
-        f"{_RANGE}|SOL",
+        f"{_BREAKOUT}|SOL",
+        f"{_TREND}|BTC",
     ]
     assert len(report["run"]["observe_only_provider_symbols"]) == 6
     assert report["runtime"]["poll_cycles"] == 2
@@ -84,12 +84,12 @@ def test_flat_run_preserves_readiness_health_and_zero_trade_evidence() -> None:
     assert report["regime_conflict_journal"]["state"] == "not_active"
     assert report["readiness"]["evaluations"] == 16
     assert len(report["readiness"]["by_provider_symbol"]) == 8
-    hulk_btc = report["readiness"]["by_provider_symbol"][f"{_HULK}|BTC"]
-    assert hulk_btc["latest_fraction"] == 0.5
-    assert hulk_btc["maximum_fraction"] == 0.5
-    assert hulk_btc["blockers"] == {"squeeze_not_armed": 2}
-    assert hulk_btc["latest_reason"] == "no_trigger"
-    assert hulk_btc["latest_blockers"] == ["squeeze_not_armed"]
+    trend_btc = report["readiness"]["by_provider_symbol"][f"{_TREND}|BTC"]
+    assert trend_btc["latest_fraction"] == 0.5
+    assert trend_btc["maximum_fraction"] == 0.5
+    assert trend_btc["blockers"] == {"squeeze_not_armed": 2}
+    assert trend_btc["latest_reason"] == "no_trigger"
+    assert trend_btc["latest_blockers"] == ["squeeze_not_armed"]
     scorecard = report["strategy_scorecard"]
     assert scorecard["contract"] == {
         "report_only": True,
@@ -106,7 +106,7 @@ def test_flat_run_preserves_readiness_health_and_zero_trade_evidence() -> None:
         "no_eligible_signal_evidence": 8,
     }
     assert set(scorecard["by_provider_symbol"]) == {
-        f"{provider}|{symbol}" for provider in (_HULK, _RANGE) for symbol in _SYMBOLS
+        f"{provider}|{symbol}" for provider in (_TREND, _BREAKOUT) for symbol in _SYMBOLS
     }
     assert all(
         row["execution_effect"] == "report_only"
@@ -118,45 +118,8 @@ def test_flat_run_preserves_readiness_health_and_zero_trade_evidence() -> None:
     assert report["execution"]["closed_trades"] == 0
     assert report["execution"]["net_pnl_usd"] == 0.0
     assert report["execution"]["slippage_bps"]["status"] == "not_applicable_no_fills"
-    ignored_exits = report["ignored_provider_exit_policy_scorecard"]
-    assert ignored_exits["contract"]["execution_authority"] == "none"
-    assert ignored_exits["resolved"]["total_lifecycles"] == 0
-    assert ignored_exits["provisional_open"]["total_lifecycles"] == 0
-    episode_reentry = report["provider_episode_reentry"]
-    assert episode_reentry["contract"] == {
-        "report_only": True,
-        "execution_authority": "none",
-        "automatic_strategy_changes": False,
-        "runtime_strategy_changed": False,
-        "execution_gate": False,
-        "portfolio_pnl_claimed": False,
-    }
-    assert episode_reentry["evaluation_coverage"]["matching_rows"] == 0
-    assert episode_reentry["resolved"]["matching_trades"] == 0
-    assert episode_reentry["provisional_open"]["matching_positions"] == 0
-    extension = report["maximum_hold_decisions"]["extension_outcomes"]
-    assert extension["contract"]["balance_gate"] is False
-    assert extension["summary"]["bound_extension_lifecycles"] == 0
-    profit_lock = report["profit_lock_challenger"]
-    assert profit_lock["contract"]["execution_authority"] == "none"
-    assert profit_lock["contract"]["automatic_promotion"] is False
-    assert profit_lock["summary_by_policy"]["a25_floor15_trail10"] == {
-        "lifecycles": 0,
-        "eligible_lifecycles": 0,
-        "withheld_lifecycles": 0,
-        "triggered": 0,
-        "wins": 0,
-        "losses": 0,
-        "estimated_net_pnl_usd": 0,
-        "actual_net_pnl_usd": 0,
-        "estimated_minus_actual_net_usd": 0,
-        "profit_factor": None,
-    }
-    support_decay = profit_lock.get("support_decay_all_time_live_mechanism")
-    assert isinstance(support_decay, dict)
-    assert support_decay["contract"]["execution_authority"] == "none"
-    assert support_decay["contract"]["automatic_promotion"] is False
-    assert support_decay["latest_results"] == []
+    assert report["maximum_hold_decisions"]["summary"]["observed"] == 0
+    assert "profit_lock_challenger" not in report
     assert report["execution"]["friction_parity"]["summary"] == {
         "provider_symbols": 8,
         "runtime_shape_aligned": 0,
@@ -212,10 +175,10 @@ def test_audit_publishes_regime_conflict_counterfactual_evidence() -> None:
     identity["providers"][0]["priority"] = 10
     identity["providers"][1]["priority"] = 20
     routing = next(row for row in rows if row["event_type"] == "intent_routing")
-    routing["payload"]["actions"] = [_regime_intent(_HULK, "long", 1.0)]
+    routing["payload"]["actions"] = [_regime_intent(_TREND, "long", 1.0)]
     routing["payload"]["withheld"] = [
         {
-            **_regime_intent(_RANGE, "short", -1.0),
+            **_regime_intent(_BREAKOUT, "short", -1.0),
             "reason": "lower_regime_alignment",
         }
     ]
@@ -264,7 +227,7 @@ def test_audit_rejects_action_outside_explicit_execution_scope() -> None:
     routing = next(row for row in rows if row["event_type"] == "intent_routing")
     routing["payload"]["actions"] = [
         {
-            "strategy_id": _HULK,
+            "strategy_id": _TREND,
             "symbol": "ETH",
             "side": "long",
         }
@@ -316,8 +279,8 @@ def test_closed_trade_is_attributed_by_provider_side_and_realized_friction() -> 
     assert report["execution"]["projected_fills"] == 2
     details = report["execution"]["fill_details"]
     assert [fill["trade_id"] for fill in details] == [101, 202]
-    assert details[1]["strategy_id"] == _HULK
-    assert details[1]["exit_controller_id"] == _HULK
+    assert details[1]["strategy_id"] == _TREND
+    assert details[1]["exit_controller_id"] == _TREND
     assert details[1]["expected_price"] == pytest.approx(104.0)
     assert details[1]["slippage_bps"] == pytest.approx(1.9230769)
     assert details[1]["acknowledgement_latency_ms"] == 1_000
@@ -326,7 +289,7 @@ def test_closed_trade_is_attributed_by_provider_side_and_realized_friction() -> 
     assert report["execution"]["net_pnl_usd"] == 0.97
     assert report["execution"]["fees_usd"] == 0.02
     assert report["execution"]["funding_usd"] == -0.01
-    provider = report["execution"]["by_strategy_side"][f"{_HULK}|long"]
+    provider = report["execution"]["by_strategy_side"][f"{_TREND}|long"]
     assert provider == {
         "closed_trades": 1,
         "wins": 1,
@@ -358,75 +321,7 @@ def test_closed_trade_is_attributed_by_provider_side_and_realized_friction() -> 
     assert contract_history["scope"] == "provider_execution_contract_history"
     assert contract_history["compatible_trades"] == 1
     assert contract_history["incompatible_trades"] == 0
-    profit_lock = report["profit_lock_challenger"]
-    assert profit_lock["current_run"]["run_id"] == _RUN_ID
-    assert (
-        profit_lock["current_run"]["summary_by_policy"]["a25_floor15_trail10"][
-            "eligible_lifecycles"
-        ]
-        == 1
-    )
-    all_time_mechanism = profit_lock.get("all_time_live_mechanism")
-    assert isinstance(all_time_mechanism, dict)
-    assert all_time_mechanism["scope"] == "all_live_history_normalized_mechanism"
-    assert all_time_mechanism["contract"]["portfolio_pnl_claimed"] is False
-    assert (
-        all_time_mechanism["summary_by_policy"]["a25_floor15_trail10"][
-            "eligible_lifecycles"
-        ]
-        == 1
-    )
-    risk_normalized = profit_lock.get("risk_normalized_all_time_live_mechanism")
-    assert isinstance(risk_normalized, dict)
-    assert risk_normalized["contract"]["execution_authority"] == "none"
-    assert risk_normalized["risk_multiple_contract"] == {
-        "activation_r": 2.0,
-        "floor_r": 1.0,
-        "peak_giveback_r": 1.0,
-    }
-    risk_summary = risk_normalized["summary_by_policy"]["r2_floor1_trail1"]
-    assert risk_summary["eligible_lifecycles"] == 0
-    assert risk_summary["withheld_lifecycles"] == 1
-    conditioned = profit_lock.get("regime_conditioned_all_time_live_mechanism")
-    assert isinstance(conditioned, dict)
-    assert conditioned["contract"]["execution_authority"] == "none"
-    assert conditioned["activation_contract"] == {
-        "source": "causal_regime_opposition_persistence_v1",
-        "persistence_decisions": 5,
-        "decision_interval_ms": 60_000,
-        "opposition_threshold": -0.5,
-        "pre_gate_favorable_excursion_retained": True,
-        "same_bar_activation_and_trigger_allowed": False,
-    }
-    assert (
-        conditioned["summary_by_policy"]["a25_floor15_trail10"]["eligible_lifecycles"]
-        == 1
-    )
-    support_decay = profit_lock.get("support_decay_all_time_live_mechanism")
-    assert isinstance(support_decay, dict)
-    assert support_decay["contract"]["execution_authority"] == "none"
-    assert support_decay["contract"]["automatic_promotion"] is False
-    assert support_decay["activation_contract"]["source"] == (
-        "causal_regime_support_decay_persistence_v1"
-    )
-    support_summary = support_decay["summary_by_policy"]["a25_floor15_trail10"]
-    assert support_summary["eligible_lifecycles"] == 0
-    assert support_summary["withheld_lifecycles"] == 1
-    entry_alignment = report["entry_alignment_mechanism"]
-    assert entry_alignment["contract"]["execution_authority"] == "none"
-    assert entry_alignment["closed_trades"] == 1
-    alignment_pair = entry_alignment["by_provider_symbol"][f"{_HULK}|BTC"]
-    assert alignment_pair["closed_trades"] == 1
-    assert alignment_pair["component_stance"]["coverage"] == {
-        "attributable": 0,
-        "unavailable": 1,
-    }
-    assert entry_alignment["provider_symbol_sides"] == 1
-    alignment_side = entry_alignment["by_provider_symbol_side"][f"{_HULK}|BTC|long"]
-    assert alignment_side["side"] == "long"
-    assert alignment_side["outcome"]["trades"] == 1
-    assert alignment_side["outcome"]["net_pnl_usd"] == pytest.approx(0.97)
-    live_score = report["strategy_scorecard"]["by_provider_symbol"][f"{_HULK}|BTC"]
+    live_score = report["strategy_scorecard"]["by_provider_symbol"][f"{_TREND}|BTC"]
     assert live_score["execution_outcomes_identifiable"] is True
     assert (
         live_score["execution_performance_scope"]
@@ -560,14 +455,14 @@ def test_audit_script_preserves_namespaced_asset_identity(tmp_path: Path) -> Non
     cohort = root / "decisions.jsonl"
     cohort.write_text("", encoding="utf-8")
     (root / "btc.jsonl").write_text("", encoding="utf-8")
-    (root / "xyz:gold.jsonl").write_text("", encoding="utf-8")
+    (root / "xyz:ddd.jsonl").write_text("", encoding="utf-8")
     module = _load_script()
 
-    paths = module._asset_paths(root, cohort, ("BTC", "xyz:GOLD"))
+    paths = module._asset_paths(root, cohort, ("BTC", "xyz:DDD"))
 
     assert paths == {
         "BTC": root / "btc.jsonl",
-        "xyz:GOLD": root / "xyz:gold.jsonl",
+        "xyz:DDD": root / "xyz:ddd.jsonl",
     }
 
 
@@ -584,7 +479,7 @@ def _load_script() -> ModuleType:
 def _cohort_rows() -> list[dict[str, object]]:
     evaluations = [
         _evaluation(provider, symbol)
-        for provider in (_HULK, _RANGE)
+        for provider in (_TREND, _BREAKOUT)
         for symbol in _SYMBOLS
     ]
     assets = _snapshot_assets()
@@ -624,7 +519,7 @@ def _cohort_identity() -> dict[str, object]:
         ],
         "providers": [
             {
-                "strategy_id": _HULK,
+                "strategy_id": _TREND,
                 "symbols": list(_SYMBOLS),
                 "sides": ["long", "short"],
                 "priority": 10,
@@ -652,7 +547,7 @@ def _cohort_identity() -> dict[str, object]:
                 "source_profile": None,
             },
             {
-                "strategy_id": _RANGE,
+                "strategy_id": _BREAKOUT,
                 "symbols": list(_SYMBOLS),
                 "sides": ["long", "short"],
                 "priority": 20,
@@ -747,12 +642,12 @@ def _cohort_rows_with_trade() -> list[dict[str, object]]:
 
 
 def _evaluation(provider: str, symbol: str) -> dict[str, object]:
-    required = 6 if provider == _HULK else 3
-    met = 3 if provider == _HULK else 1
-    blocker = "squeeze_not_armed" if provider == _HULK else "5m_regime_not_admitted"
+    required = 6 if provider == _TREND else 3
+    met = 3 if provider == _TREND else 1
+    blocker = "squeeze_not_armed" if provider == _TREND else "5m_regime_not_admitted"
     metrics = (
         {"adx": 18.0, "squeeze_on": False}
-        if provider == _HULK
+        if provider == _TREND
         else {"regime_admitted": False, "sma_gap_bps": 5.0}
     )
     return {
@@ -762,7 +657,7 @@ def _evaluation(provider: str, symbol: str) -> dict[str, object]:
         "reference_price": 100.0,
         "decision_action": "hold",
         "eligible": False,
-        "reason": "no_trigger" if provider == _HULK else "regime_not_admitted",
+        "reason": "no_trigger" if provider == _TREND else "regime_not_admitted",
         "side": None,
         "readiness": {
             "side": "long",

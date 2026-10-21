@@ -1,31 +1,36 @@
-"""Non-executable canonical regime evidence for cohorts without Range execution."""
+"""Non-executable canonical regime evidence for every continuous cohort symbol."""
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import replace
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import pandas as pd
 
-from hypervector.live.multi_asset_signal_source import (
-    ProviderEvaluation,
-    RangeDecisionBuilderProtocol,
-    range_decision_evaluation,
+from hypervector.live.canonical_regime_decisions import (
+    CanonicalRegimeDecision,
+    build_completed_regime_decisions,
 )
-from hypervector.live.sol_range_onset_controller import SolLiveDecision
-from hypervector.live.sol_range_onset_decision_source import (
-    build_completed_live_decisions,
-)
+from hypervector.live.perp_venue_identity import parse_perp_venue_identity
+from hypervector.live.provider_evaluation import ProviderEvaluation
+
+if TYPE_CHECKING:
+    from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 
 CANONICAL_REGIME_TELEMETRY_STRATEGY = "canonical_regime_telemetry_v1"
-LEGACY_CANONICAL_REGIME_STRATEGY = "range_onset_bidirectional_v1"
-CANONICAL_REGIME_STRATEGIES = (
-    CANONICAL_REGIME_TELEMETRY_STRATEGY,
-    LEGACY_CANONICAL_REGIME_STRATEGY,
-)
-_SUPPORTED_SYMBOLS = frozenset(("BTC", "ETH", "SOL", "HYPE"))
 _NON_ACTION_REASON = "telemetry_only_no_execution_authority"
+
+
+class CanonicalRegimeDecisionBuilderProtocol(Protocol):
+    """Injectable completed-bar canonical regime builder."""
+
+    def __call__(
+        self,
+        raw_bars: pd.DataFrame,
+        *,
+        observed_at: pd.Timestamp,
+        after_decision_time_ms: int | None,
+    ) -> tuple[CanonicalRegimeDecision, ...]: ...
 
 
 class CanonicalRegimeCollectorProtocol(Protocol):
@@ -47,25 +52,15 @@ class CanonicalRegimeTelemetryCollector:
         self,
         *,
         symbols: tuple[str, ...],
-        legacy_execution_enabled: bool,
-        legacy_execution_symbols: frozenset[str] = frozenset(),
-        decision_builder: RangeDecisionBuilderProtocol = build_completed_live_decisions,
+        decision_builder: CanonicalRegimeDecisionBuilderProtocol = (
+            build_completed_regime_decisions
+        ),
     ) -> None:
-        if not symbols or len(set(symbols)) != len(symbols):
-            raise ValueError("canonical regime symbols must be non-empty and unique")
+        if len(set(symbols)) != len(symbols):
+            raise ValueError("canonical regime symbols must be unique")
         if any(not symbol.strip() for symbol in symbols):
             raise ValueError("canonical regime symbols must be non-empty")
-        if not isinstance(legacy_execution_enabled, bool):
-            raise ValueError("legacy_execution_enabled must be boolean")
-        if not legacy_execution_symbols.issubset(symbols):
-            raise ValueError("legacy execution symbols must belong to canonical scope")
-        self._symbols = (
-            ()
-            if legacy_execution_enabled
-            else tuple(
-                symbol for symbol in symbols if symbol not in legacy_execution_symbols
-            )
-        )
+        self._symbols = tuple(symbols)
         self._decision_builder = decision_builder
         self._boundaries: dict[str, int] | None = None
 
@@ -102,35 +97,69 @@ class CanonicalRegimeTelemetryCollector:
                 after_decision_time_ms=prior,
             )
             _validate_decisions(decisions, prior, observed_ms, symbol)
-            output.extend(_telemetry_evaluation(value, symbol) for value in decisions)
+            output.extend(canonical_regime_evaluation(value, symbol) for value in decisions)
             if decisions:
                 self._boundaries[symbol] = decisions[-1].decision_time_ms
         return tuple(sorted(output, key=lambda value: value.decision_time_ms))
 
 
 def canonical_regime_symbols(symbols: Iterable[str]) -> tuple[str, ...]:
-    """Return symbols compatible with the continuous exact-cadence detector."""
-    return tuple(symbol for symbol in symbols if symbol in _SUPPORTED_SYMBOLS)
+    """Return the continuously traded core perps the exact-cadence detector serves.
+
+    Builder-deployed (HIP-3) markets can pause between sessions, so they get no
+    canonical regime telemetry.
+    """
+    return tuple(
+        symbol for symbol in symbols if not parse_perp_venue_identity(symbol).perp_dex
+    )
+
+
+def configured_canonical_regime_symbols(
+    config: MultiAssetLiveConfig,
+) -> tuple[str, ...]:
+    """Return the configured symbols that receive descriptive canonical telemetry.
+
+    Neither intents nor regime entry gates are added.
+    """
+    return canonical_regime_symbols(config.symbols)
+
+
+def canonical_regime_evaluation(
+    decision: CanonicalRegimeDecision,
+    symbol: str,
+) -> ProviderEvaluation:
+    """Project one canonical decision into non-executable provider telemetry."""
+    return ProviderEvaluation(
+        strategy_id=CANONICAL_REGIME_TELEMETRY_STRATEGY,
+        symbol=symbol,
+        decision_time_ms=decision.decision_time_ms,
+        reference_price=decision.reference_price,
+        decision_action="regime_observation",
+        eligible=False,
+        reason="canonical_regime_observation",
+        side=None,
+        readiness=decision.readiness,
+        primary_regime=decision.primary_regime,
+        state_1m=decision.state_1m,
+        state_5m=decision.state_5m,
+        context_15m=decision.context_15m,
+        confidence=decision.confidence,
+        backend_non_action_reason=_NON_ACTION_REASON,
+    )
 
 
 def latest_canonical_evaluation(
     evaluations: Iterable[ProviderEvaluation],
     symbol: str,
 ) -> ProviderEvaluation | None:
-    """Return newest canonical evidence, preferring the independent identity."""
+    """Return the newest canonical evidence for one symbol."""
     candidates = [
         value
         for value in evaluations
-        if value.symbol == symbol and value.strategy_id in CANONICAL_REGIME_STRATEGIES
+        if value.symbol == symbol
+        and value.strategy_id == CANONICAL_REGIME_TELEMETRY_STRATEGY
     ]
-    return max(
-        candidates,
-        key=lambda value: (
-            value.decision_time_ms,
-            value.strategy_id == CANONICAL_REGIME_TELEMETRY_STRATEGY,
-        ),
-        default=None,
-    )
+    return max(candidates, key=lambda value: value.decision_time_ms, default=None)
 
 
 def latest_canonical_evaluation_at_or_before(
@@ -151,26 +180,8 @@ def latest_canonical_evaluation_at_or_before(
     )
 
 
-def _telemetry_evaluation(
-    decision: SolLiveDecision,
-    symbol: str,
-) -> ProviderEvaluation:
-    source = range_decision_evaluation(decision, symbol)
-    return replace(
-        source,
-        strategy_id=CANONICAL_REGIME_TELEMETRY_STRATEGY,
-        decision_action="regime_observation",
-        eligible=False,
-        reason="canonical_regime_observation",
-        side=None,
-        exit_sides=frozenset(),
-        exit_reason=None,
-        backend_non_action_reason=_NON_ACTION_REASON,
-    )
-
-
 def _validate_decisions(
-    decisions: tuple[SolLiveDecision, ...],
+    decisions: tuple[CanonicalRegimeDecision, ...],
     prior: int,
     observed_ms: int,
     symbol: str,

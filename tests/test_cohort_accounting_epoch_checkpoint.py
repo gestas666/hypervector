@@ -103,13 +103,8 @@ def test_rolling_publish_does_not_fall_back_to_unscoped_history(
         config_path=Path("profile_a.toml"),
         once=True,
         venue_portfolio=None,
-        opportunity_matrix_path=None,
-        supplemental_opportunity_matrix_paths=(),
-        eligible_policy_forward=False,
-        funding_evidence_fn=None,
         portfolio_archive=None,
         accounting_epoch=_EPOCH,
-        asymmetric_forward_journal_path=None,
     )
 
     assert forwarded == [None]

@@ -1,4 +1,4 @@
-"""Failure-injected lifecycle tests for the SOL canary execution engine."""
+"""Failure-injected lifecycle tests for the per-symbol live execution engine."""
 
 from __future__ import annotations
 
@@ -25,10 +25,7 @@ from hypervector.live.hyperliquid_protocol import (
     SolReconciliationSnapshot,
     SolVenuePreflight,
 )
-from hypervector.live.sol_range_onset_config import (
-    SolRangeOnsetConfig,
-    load_sol_range_onset_config,
-)
+from hypervector.live.sol_range_onset_config import SolRangeOnsetConfig
 from hypervector.live.sol_range_onset_engine import (
     SolEntryNotFilledError,
     SolLiveEngineError,
@@ -41,8 +38,7 @@ from hypervector.live.sol_order_transport import (
     SolOrderTransportError,
 )
 
-
-PROFILE = Path("tests/fixtures/profiles/sol_range_onset.toml")
+from engine_config_fixtures import engine_asset_config, engine_ledger_path
 
 
 class FakeSolAdapter:
@@ -331,18 +327,8 @@ def _target_fill(oid: int = 203, size: float = 0.30) -> SolFill:
 
 
 def _runtime(tmp_path: Path) -> tuple[SolRangeOnsetConfig, SolLiveLedger]:
-    live_path = (
-        tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
-    )
-    config = replace(
-        load_sol_range_onset_config(
-            PROFILE,
-            mode="live",
-            enabled=True,
-            accepts_live_risk=True,
-        ),
-        live_ledger=live_path,
-    )
+    live_path = engine_ledger_path(tmp_path)
+    config = engine_asset_config(live_path)
     ledger = SolLiveLedger(
         path=live_path,
         profile_id=config.profile_id,
@@ -479,10 +465,10 @@ def test_recorded_provider_plan_controls_stop_and_is_persisted(tmp_path: Path) -
     engine.start()
     engine.record_strategy_decision(
         {
-            "strategy_id": "range_onset_bidirectional_v1",
+            "strategy_id": "test_breakout_1m",
             "routing_action": "enter",
             "execution_plan": contract.bind(
-                strategy_id="range_onset_bidirectional_v1",
+                strategy_id="test_breakout_1m",
                 stop_anchor=None,
             ).as_payload(),
         }
@@ -502,7 +488,7 @@ def test_recorded_provider_plan_controls_stop_and_is_persisted(tmp_path: Path) -
         if row["event_type"] == "state_transition"
     ]
     assert states[-1]["execution_plan"]["strategy_id"] == (
-        "range_onset_bidirectional_v1"
+        "test_breakout_1m"
     )
 
 

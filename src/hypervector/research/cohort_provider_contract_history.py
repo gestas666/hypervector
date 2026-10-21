@@ -184,14 +184,10 @@ def _provider_projection(provider: Record, symbol: str) -> dict[str, object]:
         "execution_side_override": _symbol_value(
             provider, "execution_side_overrides", symbol
         ),
-        "entry_context_override": _symbol_value(
-            provider, "entry_context_overrides", symbol
-        ),
         "sizing_override": _symbol_value(provider, "sizing_overrides", symbol),
         "execution": ProviderExecutionContract.from_payload(
             provider.get("execution")
         ).as_payload(),
-        "source_profile": provider.get("source_profile"),
     }
 
 

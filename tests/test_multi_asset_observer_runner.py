@@ -19,7 +19,7 @@ from hypervector.live.multi_asset_observer_runner import (
     MultiAssetObserverRunner,
     MultiAssetObserverRunnerError,
 )
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.hyperliquid_protocol import SolBookLevel, SolBookSnapshot
 
@@ -27,8 +27,8 @@ _OBSERVED = datetime(2026, 8, 2, 6, tzinfo=UTC)
 _OBSERVED_MS = int(_OBSERVED.timestamp() * 1_000)
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 _PROVIDERS = (
-    "hulk_expansion_bidirectional_tuned_v2",
-    "range_onset_bidirectional_v1",
+    "test_trend_5m",
+    "test_breakout_1m",
 )
 _EXPECTED = frozenset(
     (provider, symbol) for provider in _PROVIDERS for symbol in _SYMBOLS

@@ -86,9 +86,8 @@ def test_preflight_requires_both_profiles_and_sends_output() -> None:
     )
 
 
-def test_validate_leaves_the_backtest_lab_to_the_module_when_unset() -> None:
+def test_validate_defaults_to_the_live_mode() -> None:
     command = _argv(["live", "validate", "--config", "c.toml"])
-    assert "--backtest-lab-root" not in command
     assert _value(command, "--mode") == "live"
 
 
@@ -237,21 +236,20 @@ def test_deleted_profile_defaults_are_now_required(
     assert exc.value.code == 2
 
 
-def test_validation_resolves_the_backtest_lab_beside_the_repository(
+def test_validation_passes_the_requested_mode_to_the_check(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     import hypervector.operations.cohort_runtime_validation_check as check
 
-    seen: list[Path] = []
+    seen: list[str] = []
 
-    def fake_check(_path: Path, *, mode: str, backtest_lab_root: Path) -> list[str]:
-        seen.append(backtest_lab_root)
+    def fake_check(_path: Path, *, mode: str) -> list[str]:
+        seen.append(mode)
         return []
 
     monkeypatch.setattr(check, "check", fake_check)
     assert check.main(["--config", str(tmp_path / "p.toml"), "--mode", "observe"]) == 0
-    assert seen == [REPOSITORY_ROOT.parent / "backtest-lab" / "backtest_lab"]
-    assert check.DEFAULT_BACKTEST_LAB == seen[0]
+    assert seen == ["observe"]
 
 
 def test_rollback_profile_root_defaults_to_the_repository(

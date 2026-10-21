@@ -20,7 +20,7 @@ from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunne
 from hypervector.live.sol_range_onset_ledger import SOL_LIVE_EVENT_TYPES
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 
-_PROVIDER = "range_onset_bidirectional_v1"
+_PROVIDER = "test_breakout_1m"
 _SYMBOL = "SOL"
 _OPENED_MS = 10_000
 
@@ -278,12 +278,12 @@ def test_required_plan_symbols_include_a_directional_profit_lock_override() -> N
         profit_lock_floor_bps=25.0,
         profit_lock_giveback_bps=50.0,
     )
-    contracts = {"hulk": _contract(), ("hulk", "SOL", "long"): locked}
+    contracts = {"test_trend_provider": _contract(), ("test_trend_provider", "SOL", "long"): locked}
 
     symbols = route_cycle_module._profit_lock_symbols(
         contracts,
-        frozenset({("hulk", "SOL"), ("hulk", "BTC")}),
-        frozenset({("hulk", "SOL", "long"), ("hulk", "BTC", "short")}),
+        frozenset({("test_trend_provider", "SOL"), ("test_trend_provider", "BTC")}),
+        frozenset({("test_trend_provider", "SOL", "long"), ("test_trend_provider", "BTC", "short")}),
     )
 
     assert symbols == frozenset({"SOL"})

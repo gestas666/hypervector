@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 RUN_ID = "cohort-signal-a"
-STRATEGY = "hulk_expansion_bidirectional_tuned_v2"
+STRATEGY = "test_trend_5m"
 DECISION_MS = 1_785_600_000_000
 
 

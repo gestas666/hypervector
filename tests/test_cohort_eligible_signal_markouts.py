@@ -13,7 +13,7 @@ from hypervector.research.cohort_signal_orderbook_context import (
 )
 
 _DECISION_MS = 1_800_000_000_000
-_STRATEGY = "hype_breakout_onset_bidirectional_v1"
+_STRATEGY = "test_fade_1m"
 
 
 @pytest.fixture(autouse=True)

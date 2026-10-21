@@ -13,7 +13,7 @@ from hypervector.live.sol_range_onset_state import SolLiveState
 __all__ = ["deny_external_ports"]
 CASES = [
     (symbol, "stop")
-    for symbol in ("BTC", "ETH", "SOL", "HYPE", "xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL")
+    for symbol in ("BTC", "ETH", "SOL", "HYPE", "xyz:BBB", "xyz:CCC", "xyz:EEE")
 ]
 CASES.append(("BTC", "target"))
 

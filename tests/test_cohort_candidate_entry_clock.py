@@ -12,7 +12,7 @@ from hypervector.live.cohort_candidate_entry_clock import (
     CandidateEntryClockStateError,
 )
 
-_STRATEGY = "btc_structural_continuation_fixed60_bidirectional_v1"
+_STRATEGY = "test_continuation_1m"
 _SYMBOL = "BTC"
 
 

@@ -16,15 +16,15 @@ _EXCLUDED_PARTS = frozenset({"__pycache__"})
 _MAX_SOURCE_FILES = 4096
 
 
-def discover_cohort_implementation_sources(
-    repository_root: Path,
-    provider_root: Path,
-) -> dict[str, Path]:
-    """Return every bounded source file required to reproduce live startup."""
+def discover_cohort_implementation_sources(repository_root: Path) -> dict[str, Path]:
+    """Return every bounded source file required to reproduce live startup.
+
+    Strategy providers live in this package and register in
+    ``hypervector.live.provider_registry``, so the package sources are the
+    whole implementation identity.
+    """
     repository = repository_root.resolve()
-    provider = provider_root.resolve()
     package = _required_directory(repository / _PACKAGE, "Hypervector package")
-    provider_package = _required_directory(provider, "provider package")
     repository_files = [
         _required_file(repository / _ENTRYPOINT, "cohort entrypoint"),
         *(
@@ -34,14 +34,10 @@ def discover_cohort_implementation_sources(
         *_package_sources(package),
         *_supervision_sources(package),
     ]
-    provider_files = _python_sources(provider_package)
-    if not provider_files:
-        raise ValueError(f"provider package contains no Python source: {provider}")
-    return _role_map(repository_files, provider_files)
+    return _role_map(repository_files)
 
 
 def discover_installed_cohort_sources(
-    provider_root: Path,
     *,
     package_root: Path | None = None,
 ) -> dict[str, Path]:
@@ -55,14 +51,8 @@ def discover_installed_cohort_sources(
         package / "operations" / "multi_asset_bidirectional_live.py",
         "cohort entrypoint",
     )
-    provider = _python_sources(
-        _required_directory(provider_root.resolve(), "provider package")
-    )
-    if not provider:
-        raise ValueError(f"provider package contains no Python source: {provider_root}")
     return _role_map(
-        [*metadata, *_package_sources(package), *_supervision_sources(package)],
-        provider,
+        [*metadata, *_package_sources(package), *_supervision_sources(package)]
     )
 
 
@@ -146,10 +136,9 @@ def _python_sources(root: Path) -> list[Path]:
     return selected
 
 
-def _role_map(repository: list[Path], provider: list[Path]) -> dict[str, Path]:
+def _role_map(repository: list[Path]) -> dict[str, Path]:
     combined = [
-        *((f"repository_{index:04d}", path) for index, path in enumerate(repository)),
-        *((f"provider_{index:04d}", path) for index, path in enumerate(provider)),
+        (f"repository_{index:04d}", path) for index, path in enumerate(repository)
     ]
     values = [path for _role, path in combined]
     if len(values) != len(set(values)):

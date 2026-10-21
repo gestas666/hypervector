@@ -13,11 +13,6 @@ import sys
 from hyperliquid.utils.error import ClientError, ServerError  # type: ignore[import-untyped]
 from requests import RequestException
 
-from hypervector.live.hip3_fresh15_journal_provider import (
-    HIP3_INDEX_FRESH15_V3_STRATEGY,
-    require_fresh_index_observer,
-    require_fresh_index_observers,
-)
 from hypervector.live.hyperliquid_sol_factory import SolSdkFactoryError
 from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
 from hypervector.live.multi_asset_live_config import (
@@ -25,9 +20,6 @@ from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
     MultiAssetLiveConfigError,
     load_multi_asset_live_config,
-)
-from hypervector.live.spcx_cash_session_breakout_provider import (
-    SPCX_CASH_SESSION_LONG_STRATEGY,
 )
 from hypervector.live.multi_asset_read_only_preflight import (
     AssetLedgerExpectation,
@@ -88,7 +80,6 @@ def run_preflight(args: argparse.Namespace) -> int:
     )
     _require_candidate_compatibility(config, active_config)
     observed_at = datetime.now(UTC)
-    _require_provider_dependencies(config, observed_at)
     readers, candidate_expectations = _candidate_inputs(
         config,
         active_config,
@@ -122,22 +113,6 @@ def run_preflight(args: argparse.Namespace) -> int:
         active_run_id,
     )
     return _publish_preflight(args, report)
-
-
-def _require_provider_dependencies(
-    config: MultiAssetLiveConfig,
-    observed_at: datetime,
-) -> None:
-    if any(
-        provider.strategy_id == HIP3_INDEX_FRESH15_V3_STRATEGY
-        for provider in config.providers
-    ):
-        require_fresh_index_observers(observed_at)
-    if any(
-        provider.strategy_id == SPCX_CASH_SESSION_LONG_STRATEGY
-        for provider in config.providers
-    ):
-        require_fresh_index_observer("xyz:SPCX", observed_at)
 
 
 def _publish_preflight(

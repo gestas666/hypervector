@@ -27,9 +27,9 @@ _CHAIN = Path("tests/fixtures/cohort_chain")
 _PROFILE_A = _CHAIN / "profile_a.toml"
 _PROFILE_B = _CHAIN / "profile_b.toml"
 _ROLLBACK_B_TO_A = _CHAIN / "rollback_b_to_a.toml"
-_BTC_SWEEP = "liquidity_sweep_long_1h_stop60_target60_v2"
-_DONCHIAN = "hourly_donchian_20_10_atr20_strong_short_v1"
-_DONCHIAN_SYMBOLS = '["SOL", "xyz:SNDK", "xyz:BRENTOIL", "xyz:TSLA"]'
+_BTC_SWEEP = "test_long_target_1m"
+_CHANNEL = "test_channel_short_15m"
+_CHANNEL_SYMBOLS = '["SOL", "xyz:CCC", "xyz:EEE", "xyz:FFF"]'
 
 
 def _load(path: Path) -> MultiAssetLiveConfig:
@@ -259,18 +259,18 @@ def test_retired_scope_requires_named_added_replacement(tmp_path: Path) -> None:
 def test_absent_asset_scopes_allow_explicit_terminal_removal(tmp_path: Path) -> None:
     """An operator may remove an entire asset without inventing a replacement."""
     previous = _load(_PROFILE_B)
-    shared = _provider(previous, _DONCHIAN)
+    shared = _provider(previous, _CHANNEL)
     narrowed = replace(
         shared,
-        symbols=tuple(row for row in shared.symbols if row != "xyz:TSLA"),
+        symbols=tuple(row for row in shared.symbols if row != "xyz:FFF"),
         execution_symbols=tuple(
-            row for row in shared.execution_symbols if row != "xyz:TSLA"
+            row for row in shared.execution_symbols if row != "xyz:FFF"
         ),
     )
     candidate = replace(
         _replace_provider(previous, shared, narrowed),
-        profile_id="candidate-tsla-terminal-removal",
-        assets=tuple(row for row in previous.assets if row.symbol != "xyz:TSLA"),
+        profile_id="candidate-fff-terminal-removal",
+        assets=tuple(row for row in previous.assets if row.symbol != "xyz:FFF"),
     )
     approval = _write_approval(
         tmp_path,
@@ -279,8 +279,8 @@ def test_absent_asset_scopes_allow_explicit_terminal_removal(tmp_path: Path) -> 
         retirements=[
             {
                 "retired_scope": {
-                    "strategy_id": _DONCHIAN,
-                    "symbol": "xyz:TSLA",
+                    "strategy_id": _CHANNEL,
+                    "symbol": "xyz:FFF",
                     "side": side,
                 },
                 "replacement_scope": None,
@@ -292,8 +292,8 @@ def test_absent_asset_scopes_allow_explicit_terminal_removal(tmp_path: Path) -> 
     result = validate_profile_change_approval(previous, candidate, approval)
 
     assert result["retired_execution_scopes"] == [
-        f"{_DONCHIAN}|xyz:TSLA|long",
-        f"{_DONCHIAN}|xyz:TSLA|short",
+        f"{_CHANNEL}|xyz:FFF|long",
+        f"{_CHANNEL}|xyz:FFF|short",
     ]
     assert result["replacement_execution_scopes"] == []
 
@@ -391,7 +391,7 @@ def test_replacement_scope_must_be_newly_added(tmp_path: Path) -> None:
     source = _write_shared_btc_long_profile(tmp_path)
     previous = _load(source)
     retired = _provider(previous, _BTC_SWEEP)
-    existing = _provider(previous, _DONCHIAN)
+    existing = _provider(previous, _CHANNEL)
     assert (existing.strategy_id, "BTC", "long") in (
         previous.executable_provider_directions
     )
@@ -454,12 +454,12 @@ def test_approved_replacement_covers_every_removed_scope_once(
 
 
 def _write_shared_btc_long_profile(root: Path) -> Path:
-    """Write a profile B variant whose Donchian route also executes BTC both ways."""
+    """Write a profile B variant whose channel route also executes BTC both ways."""
     text = _PROFILE_B.read_text(encoding="utf-8")
-    assert text.count(_DONCHIAN_SYMBOLS) == 2
+    assert text.count(_CHANNEL_SYMBOLS) == 2
     path = root / "previous.toml"
     path.write_text(
-        text.replace(_DONCHIAN_SYMBOLS, _DONCHIAN_SYMBOLS.replace("[", '["BTC", ')),
+        text.replace(_CHANNEL_SYMBOLS, _CHANNEL_SYMBOLS.replace("[", '["BTC", ')),
         encoding="utf-8",
     )
     return path

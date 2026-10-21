@@ -7,9 +7,6 @@ from pathlib import Path
 
 _DEFAULT_LEDGER_ROOT = Path("data/live/bidirectional_cohort")
 _DEFAULT_OUTPUT = Path("data/runtime/bidirectional_cohort/latest_checkpoint.json")
-_DEFAULT_OPPORTUNITY_MATRIX = Path(
-    "data/runtime/bidirectional_cohort/latest_opportunity_matrix.json"
-)
 _RESEARCH_SYNC_MIN_PENDING_BYTES = 4 * 1024 * 1024
 _RESEARCH_SYNC_MAX_AGE_SECONDS = 600.0
 
@@ -30,34 +27,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--interval-seconds", type=float, default=30.0)
     _add_research_options(parser)
     parser.add_argument("--venue-portfolio", action="store_true")
-    parser.add_argument(
-        "--opportunity-matrix",
-        type=Path,
-        default=_DEFAULT_OPPORTUNITY_MATRIX,
-    )
-    parser.add_argument(
-        "--supplemental-opportunity-matrix",
-        action="append",
-        type=Path,
-        default=[],
-    )
-    parser.add_argument(
-        "--eligible-policy-forward",
-        action="store_true",
-        help="attach the report-only exact ETH stop/hold lifecycle journal",
-    )
-    parser.add_argument(
-        "--asymmetric-forward-journal",
-        type=Path,
-        default=None,
-        help="attach the frozen report-only asymmetric portfolio observer "
-        "(default: none, observer off)",
-    )
-    parser.add_argument(
-        "--disable-asymmetric-forward-observer",
-        action="store_true",
-        help="do not attach a profile-specific asymmetric portfolio observer",
-    )
     parser.add_argument(
         "--current-run-only",
         action=argparse.BooleanOptionalAction,

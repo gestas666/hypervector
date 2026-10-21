@@ -94,7 +94,7 @@ def test_pressure_clock_reports_causal_same_cycle_book_for_multi_blocker() -> No
             ),
         ],
         {
-            "xyz:GOLD": [
+            "xyz:DDD": [
                 _row(
                     "book_observation",
                     _book(_DECISION_MS + 24_000, 0.4, 0.25),
@@ -110,7 +110,7 @@ def test_pressure_clock_reports_causal_same_cycle_book_for_multi_blocker() -> No
         "causal_book_available": 1,
         "book_absent_or_stale": 0,
         "by_provider_symbol": {
-            "hip3_breakout_pressure_test|xyz:GOLD": {
+            "hip3_breakout_pressure_test|xyz:DDD": {
                 "pressure_unavailable_evaluations": 1,
                 "causal_book_available": 1,
                 "book_absent_or_stale": 0,
@@ -137,7 +137,7 @@ def test_pressure_clock_rejects_books_outside_causal_publication_window() -> Non
             ),
         ],
         {
-            "xyz:GOLD": [
+            "xyz:DDD": [
                 _row(
                     "book_observation",
                     _book(_DECISION_MS - 1_000, 0.4, 0.25),
@@ -334,7 +334,7 @@ def _evaluation(decision_ms: int, reference: float) -> dict[str, object]:
 def _pressure_evaluation(decision_ms: int) -> dict[str, object]:
     return {
         "strategy_id": "hip3_breakout_pressure_test",
-        "symbol": "xyz:GOLD",
+        "symbol": "xyz:DDD",
         "decision_time_ms": decision_ms,
         "reference_price": 4_300.0,
         "side": "long",

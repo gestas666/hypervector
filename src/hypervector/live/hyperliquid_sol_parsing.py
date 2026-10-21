@@ -1,4 +1,4 @@
-"""Strict response parsing for the SOL Hyperliquid adapter boundary."""
+"""Strict response-parsing primitives shared by the Hyperliquid adapters."""
 
 from __future__ import annotations
 
@@ -9,45 +9,21 @@ from hypervector.live.hyperliquid_protocol import (
     HyperliquidFeeSchedule,
     HyperliquidOrderAck,
     HyperliquidOrderStatus,
-    SolAccountSnapshot,
     SolBookLevel,
     SolBookSnapshot,
     SolFill,
-    SolFundingPayment,
-    SolMarketMetadata,
     SolOpenOrder,
-    SolPositionSnapshot,
 )
 
-SOL_SYMBOL = "SOL"
 _PRICE_SIGNIFICANT_FIGURES, _PERP_MAX_DECIMAL_BASE = 5, 6
 
 
 class HyperliquidAdapterError(RuntimeError):
-    """A venue response or requested operation violated the canary contract."""
+    """A venue response or requested operation violated the adapter contract."""
 
 
 class HyperliquidOrderUnavailableError(HyperliquidAdapterError):
     """An exact order identity is not yet visible from the info endpoint."""
-
-
-def parse_market(value: object) -> SolMarketMetadata:
-    """Parse exactly one SOL perpetual metadata record."""
-    metadata = mapping(value, "market metadata")
-    universe = sequence(metadata.get("universe"), "market universe")
-    matches = [
-        mapping(item, "market")
-        for item in universe
-        if mapping(item, "market").get("name") == SOL_SYMBOL
-    ]
-    if len(matches) != 1:
-        raise HyperliquidAdapterError("SOL metadata must contain exactly one market")
-    market = matches[0]
-    size_decimals = nonnegative_integer(market.get("szDecimals"), "SOL szDecimals")
-    if size_decimals > _PERP_MAX_DECIMAL_BASE:
-        raise HyperliquidAdapterError("SOL szDecimals exceeds perp price precision")
-    max_leverage = positive_integer(market.get("maxLeverage"), "SOL maxLeverage")
-    return SolMarketMetadata(SOL_SYMBOL, size_decimals, max_leverage)
 
 
 def parse_fees(value: object) -> HyperliquidFeeSchedule:
@@ -61,79 +37,6 @@ def parse_fees(value: object) -> HyperliquidFeeSchedule:
             "activeReferralDiscount",
         ),
     )
-
-
-def parse_sol_mid(value: object) -> float:
-    """Parse the current SOL midpoint from all-mids output."""
-    mids = mapping(value, "all mids")
-    return positive_number(mids.get(SOL_SYMBOL), "SOL midpoint")
-
-
-def parse_l2_book(value: object, *, depth_levels: int) -> SolBookSnapshot:
-    """Parse one strict SOL L2 snapshot and its displayed depth metrics."""
-    depth = positive_integer(depth_levels, "depth_levels")
-    book = mapping(value, "SOL L2 book")
-    if book.get("coin") != SOL_SYMBOL:
-        raise HyperliquidAdapterError("L2 book coin must be SOL")
-    timestamp = nonnegative_integer(book.get("time"), "L2 book time")
-    sides = sequence(book.get("levels"), "L2 book levels")
-    if len(sides) != 2:
-        raise HyperliquidAdapterError("L2 book must contain bid and ask sides")
-    bids = _parse_book_side(sides[0], "bid", depth)
-    asks = _parse_book_side(sides[1], "ask", depth)
-    _validate_book_order(bids, descending=True, label="bid")
-    _validate_book_order(asks, descending=False, label="ask")
-    best_bid = bids[0].price
-    best_ask = asks[0].price
-    if best_bid >= best_ask:
-        raise HyperliquidAdapterError("SOL L2 book is crossed or locked")
-    mid = (best_bid + best_ask) / 2.0
-    bid_depth = sum(level.size for level in bids)
-    ask_depth = sum(level.size for level in asks)
-    total_depth = bid_depth + ask_depth
-    return SolBookSnapshot(
-        exchange_timestamp_ms=timestamp,
-        bids=bids,
-        asks=asks,
-        mid_price=mid,
-        spread_bps=(best_ask - best_bid) / mid * 10_000.0,
-        bid_depth=bid_depth,
-        ask_depth=ask_depth,
-        order_pressure=(bid_depth - ask_depth) / total_depth,
-    )
-
-
-def _parse_book_side(
-    value: object,
-    label: str,
-    depth: int,
-) -> tuple[SolBookLevel, ...]:
-    raw = sequence(value, f"L2 {label} levels")
-    if not raw:
-        raise HyperliquidAdapterError(f"L2 {label} side must not be empty")
-    return tuple(_parse_book_level(item, label) for item in raw[:depth])
-
-
-def _parse_book_level(value: object, label: str) -> SolBookLevel:
-    level = mapping(value, f"L2 {label} level")
-    return SolBookLevel(
-        price=positive_number(level.get("px"), f"{label} px"),
-        size=positive_number(level.get("sz"), f"{label} sz"),
-        order_count=nonnegative_integer(level.get("n"), f"{label} order count"),
-    )
-
-
-def _validate_book_order(
-    levels: tuple[SolBookLevel, ...],
-    *,
-    descending: bool,
-    label: str,
-) -> None:
-    prices = [level.price for level in levels]
-    pairs = zip(prices, prices[1:], strict=False)
-    valid = all(left > right if descending else left < right for left, right in pairs)
-    if not valid:
-        raise HyperliquidAdapterError(f"L2 {label} prices are not strictly ordered")
 
 
 def price_tick(mark_price: float, size_decimals: int) -> float:
@@ -152,72 +55,6 @@ def normalize_perp_price(value: float, size_decimals: int) -> float:
         raise HyperliquidAdapterError("size_decimals exceeds perp price precision")
     significant = float(f"{price:.{_PRICE_SIGNIFICANT_FIGURES}g}")
     return round(significant, _PERP_MAX_DECIMAL_BASE - decimals)
-
-
-def parse_account(value: object) -> SolAccountSnapshot:
-    """Parse clearinghouse values and the unique SOL position."""
-    state = mapping(value, "clearinghouse state")
-    summary = mapping(state.get("marginSummary"), "margin summary")
-    positions = sequence(state.get("assetPositions"), "asset positions")
-    sol_positions = _sol_position_records(positions)
-    if len(sol_positions) > 1:
-        raise HyperliquidAdapterError("clearinghouse returned duplicate SOL positions")
-    position = _parse_position(sol_positions[0]) if sol_positions else _flat_position()
-    return SolAccountSnapshot(
-        account_value_usd=number(summary.get("accountValue"), "accountValue"),
-        withdrawable_usd=number(state.get("withdrawable"), "withdrawable"),
-        total_margin_used_usd=nonnegative_number(
-            summary.get("totalMarginUsed"),
-            "totalMarginUsed",
-        ),
-        total_notional_position_usd=nonnegative_number(
-            summary.get("totalNtlPos"),
-            "totalNtlPos",
-        ),
-        position=position,
-        balance_source="perp_clearinghouse_state",
-    )
-
-
-def _sol_position_records(values: Sequence[object]) -> list[Mapping[str, object]]:
-    matches: list[Mapping[str, object]] = []
-    for item in values:
-        wrapper = mapping(item, "asset position")
-        position = mapping(wrapper.get("position"), "position")
-        if position.get("coin") == SOL_SYMBOL:
-            matches.append(position)
-    return matches
-
-
-def _parse_position(value: Mapping[str, object]) -> SolPositionSnapshot:
-    size = number(value.get("szi"), "SOL position size")
-    leverage = mapping(value.get("leverage"), "SOL leverage")
-    leverage_type = text(leverage.get("type"), "SOL leverage type")
-    if size != 0.0 and leverage_type != "isolated":
-        raise HyperliquidAdapterError("nonzero SOL position must use isolated leverage")
-    return SolPositionSnapshot(
-        size_signed=size,
-        entry_price=optional_number(value.get("entryPx"), "entryPx"),
-        liquidation_price=optional_number(value.get("liquidationPx"), "liquidationPx"),
-        margin_used_usd=nonnegative_number(value.get("marginUsed"), "marginUsed"),
-        position_value_usd=nonnegative_number(value.get("positionValue"), "positionValue"),
-        unrealized_pnl_usd=number(value.get("unrealizedPnl"), "unrealizedPnl"),
-        leverage_type=leverage_type,
-        leverage=positive_integer(leverage.get("value"), "SOL leverage value"),
-    )
-
-
-def _flat_position() -> SolPositionSnapshot:
-    return SolPositionSnapshot(
-        size_signed=0.0,
-        entry_price=None,
-        liquidation_price=None,
-        margin_used_usd=0.0,
-        position_value_usd=0.0,
-        unrealized_pnl_usd=0.0,
-        leverage_type=None,
-        leverage=None,
-    )
 
 
 def parse_open_order(value: object) -> SolOpenOrder:
@@ -254,28 +91,6 @@ def parse_fill(value: object) -> SolFill:
         transaction_hash=text(fill.get("hash"), "fill hash"),
         trade_id=positive_integer(fill.get("tid"), "fill tid"),
     )
-
-
-def parse_funding_payments(value: object) -> tuple[SolFundingPayment, ...]:
-    """Parse SOL entries from the official user-funding response schema."""
-    payments: list[SolFundingPayment] = []
-    for item in sequence(value, "user funding history"):
-        record = mapping(item, "funding record")
-        delta = mapping(record.get("delta"), "funding delta")
-        if delta.get("coin") != SOL_SYMBOL:
-            continue
-        if delta.get("type") != "funding":
-            raise HyperliquidAdapterError("SOL funding delta has an unexpected type")
-        payments.append(
-            SolFundingPayment(
-                timestamp_ms=nonnegative_integer(record.get("time"), "funding time"),
-                usdc_delta=number(delta.get("usdc"), "funding usdc"),
-                position_size_signed=number(delta.get("szi"), "funding szi"),
-                funding_rate=number(delta.get("fundingRate"), "funding rate"),
-                transaction_hash=text(record.get("hash"), "funding hash"),
-            )
-        )
-    return tuple(payments)
 
 
 def parse_order_status(
@@ -389,7 +204,7 @@ def entry_is_buy(side: str) -> bool:
         return True
     if normalized in {"short", "sell", "s"}:
         return False
-    raise HyperliquidAdapterError(f"unsupported SOL entry side: {side!r}")
+    raise HyperliquidAdapterError(f"unsupported entry side: {side!r}")
 
 
 def validate_address(value: str) -> str:

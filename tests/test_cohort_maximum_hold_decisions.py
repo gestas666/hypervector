@@ -49,20 +49,20 @@ def test_terminal_exit_is_reported_without_double_counting_soft_boundary() -> No
 def test_namespaced_symbol_lifecycle_identity_is_valid() -> None:
     """HIP-3 symbols may contain colons without invalidating their lifecycle."""
     payload = _payload(
-        decision_id="xyz:GOLD:123:soft_maximum_hold",
+        decision_id="xyz:DDD:123:soft_maximum_hold",
         decision_stage="soft",
         decision_time_ms=29_800_000,
         outcome="exit",
         exit_reason="maximum_hold_seconds",
     ) | {
-        "lifecycle_id": "xyz:GOLD:123",
-        "symbol": "xyz:GOLD",
+        "lifecycle_id": "xyz:DDD:123",
+        "symbol": "xyz:DDD",
         "strategy_id": "hip3_swing",
     }
 
     evidence = build_maximum_hold_decision_evidence(
         [_record(payload)],
-        frozenset({"hip3_swing|xyz:GOLD"}),
+        frozenset({"hip3_swing|xyz:DDD"}),
     )
 
     assert evidence["latest_decisions"] == [payload]

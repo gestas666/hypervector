@@ -15,10 +15,6 @@ from hypervector.research.cohort_live_audit_values import (
 from hypervector.research.cohort_entry_followthrough import (
     build_entry_followthrough_paths,
 )
-from hypervector.research.cohort_ignored_provider_exit import (
-    build_closed_ignored_provider_exit_outcome,
-    build_provider_exit_policy_index,
-)
 from hypervector.research.cohort_regime_assessment import build_regime_assessment
 from hypervector.research.cohort_regime_opposition import (
     build_regime_opposition_episode,
@@ -100,7 +96,6 @@ def _reflected_trades(
     selected = tuple(row for row in cohort_records if row.get("run_id") in allowed_runs)
     index = build_reflection_evidence_index(selected)
     source_runs = entry_source_runs(asset_records)
-    provider_exit_policies = build_provider_exit_policy_index(asset_records)
     trades = sorted(
         [
             _reflect_trade(
@@ -108,7 +103,6 @@ def _reflected_trades(
                 trade,
                 trade_source_run(symbol, trade, source_runs),
                 index,
-                provider_exit_policies,
                 horizons,
             )
             for symbol, journal in sorted(journals.items())
@@ -187,7 +181,6 @@ def _reflect_trade(
     trade: Record,
     source_run_id: str,
     index: ReflectionEvidenceIndex,
-    provider_exit_policies: Mapping[tuple[str, int], str],
     horizons: Sequence[int],
 ) -> dict[str, object]:
     side = text(trade.get("direction"), "trade direction")
@@ -202,9 +195,6 @@ def _reflect_trade(
     decision_ms = nonnegative_int(entry_regime.get("decision_time_ms"), "entry time")
     exit_ms = nonnegative_int(exit_leg.get("venue_timestamp_ms"), "exit time")
     protective_stop = project_protective_stop(trade)
-    policy = provider_exit_policies.get(
-        (symbol, nonnegative_int(trade.get("entry_oid"), "trade entry oid"))
-    )
     return {
         **_trade_core_fields(
             symbol,
@@ -231,21 +221,6 @@ def _reflect_trade(
             protective_stop,
             horizons,
             trade,
-        ),
-        "ignored_provider_exit_outcome": build_closed_ignored_provider_exit_outcome(
-            index.timelines.get((strategy, symbol), ()),
-            index.candles.get(symbol, {}),
-            side=side,
-            entry=entry,
-            exit_leg=exit_leg,
-            provider_recipe_exit_policy=policy,
-            actual_economics={
-                "net_pnl_usd": trade.get("net_pnl_usd"),
-                "fees_usd": trade.get("fees_usd"),
-                "funding_usd": trade.get("funding_usd"),
-                "exit_reason": trade.get("exit_reason"),
-                "exit_controller_strategy_id": exit_controller,
-            },
         ),
     }
 

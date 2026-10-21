@@ -14,7 +14,7 @@ from hypervector.research.native_replay_unified import MaintenanceTier
 
 __all__ = ["deny_external_ports"]
 D = Decimal
-SYMBOL = "xyz:SNDK"
+SYMBOL = "xyz:CCC"
 
 
 def sdk() -> ReplaySdk:

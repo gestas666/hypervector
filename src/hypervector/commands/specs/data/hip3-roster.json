@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "help": "Publish the report-only HIP-3 roster checkpoint (public wallet only)",
-  "description": "Poll the qualified HIP-3 roster and publish a durable report-only checkpoint, streaming one JSON line per poll. It loads only the public wallet address and never builds an execution client. Exit 0 when any poll succeeded (or none ran), otherwise 1.",
+  "description": "Poll a configured HIP-3 market roster (a cohort profile's HIP-3 assets with --config, or explicit --market dex:ASSET=MAX_LEVERAGE values) and publish a durable report-only checkpoint, streaming one JSON line per poll. It loads only the public wallet address and never builds an execution client. Exit 0 when any poll succeeded (or none ran), 1 when every poll failed, 2 when the roster cannot be resolved.",
   "kind": "operation",
   "operation": "hypervector.operations.hip3_roster_observer",
   "authority": "none",
@@ -12,6 +12,28 @@
   "legacy": [],
   "exclusive_groups": [],
   "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "type": "Path",
+        "default": null,
+        "help": "cohort profile whose HIP-3 assets (and venue_max_leverage) form the roster"
+      }
+    },
+    {
+      "flags": [
+        "--market"
+      ],
+      "options": {
+        "dest": "market",
+        "action": "append",
+        "default": [],
+        "help": "explicit roster market as dex:ASSET=MAX_LEVERAGE; repeatable"
+      }
+    },
     {
       "flags": [
         "--out"

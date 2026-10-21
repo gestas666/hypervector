@@ -20,7 +20,7 @@ from hypervector.live.cohort_startup_candles import (
 def context() -> StartupCandleContext:
     """Return one strictly identified offline source contract."""
     return StartupCandleContext(
-        "test", "a" * 64, "b" * 64, "run-test", ("xyz:SPCX",),
+        "test", "a" * 64, "b" * 64, "run-test", ("xyz:BBB",),
         OBSERVED_MS - 60_000, OBSERVED_MS, 14.0,
     )
 
@@ -30,7 +30,7 @@ def test_replay_uses_the_authenticated_bytes_even_if_source_changes_during_decod
 ) -> None:
     """A post-hash file replacement cannot silently substitute replay values."""
     original = candle_frame()
-    receipt = write_startup_candles(tmp_path, context(), {"xyz:SPCX": original})
+    receipt = write_startup_candles(tmp_path, context(), {"xyz:BBB": original})
     replacement = original.assign(close=original.close + 0.001)
     output = BytesIO()
     replacement.to_parquet(output, engine="pyarrow", compression="zstd")
@@ -43,13 +43,13 @@ def test_replay_uses_the_authenticated_bytes_even_if_source_changes_during_decod
 
     monkeypatch.setattr(pd, "read_parquet", replace_before_decode)
     restored = load_startup_candles(receipt.manifest_path, receipt.manifest_sha256, context())
-    pd.testing.assert_frame_equal(original, restored["xyz:SPCX"], check_exact=True)
+    pd.testing.assert_frame_equal(original, restored["xyz:BBB"], check_exact=True)
 
 
 @pytest.mark.parametrize("mutation", ["manifest", "payload", "missing", "symlink"])
 def test_changed_or_missing_evidence_refuses_replay(tmp_path: Path, mutation: str) -> None:
     """Authenticity failures cannot produce a success-shaped replay frame."""
-    receipt = write_startup_candles(tmp_path, context(), {"xyz:SPCX": candle_frame()})
+    receipt = write_startup_candles(tmp_path, context(), {"xyz:BBB": candle_frame()})
     payload = receipt.manifest_path.parent / "candles-000.parquet"
     if mutation == "manifest":
         receipt.manifest_path.write_bytes(receipt.manifest_path.read_bytes() + b" ")
@@ -68,7 +68,7 @@ def test_changed_or_missing_evidence_refuses_replay(tmp_path: Path, mutation: st
 @pytest.mark.parametrize("mutation", ["context", "schema", "files", "path", "symbol", "rows"])
 def test_malformed_but_hashed_manifest_refuses_replay(tmp_path: Path, mutation: str) -> None:
     """Authenticated bytes still require exact identity and structural coverage."""
-    receipt = write_startup_candles(tmp_path, context(), {"xyz:SPCX": candle_frame()})
+    receipt = write_startup_candles(tmp_path, context(), {"xyz:BBB": candle_frame()})
     manifest = json.loads(receipt.manifest_path.read_bytes())
     if mutation == "context":
         manifest["context"]["observed_at_ms"] += 1
@@ -94,7 +94,7 @@ def test_malformed_but_hashed_manifest_refuses_replay(tmp_path: Path, mutation: 
 ])
 def test_external_run_binding_cannot_be_substituted(tmp_path: Path, field: str, value: object) -> None:
     """Replay requires the exact context bound by the authoritative ledger."""
-    receipt = write_startup_candles(tmp_path, context(), {"xyz:SPCX": candle_frame()})
+    receipt = write_startup_candles(tmp_path, context(), {"xyz:BBB": candle_frame()})
     with pytest.raises(ValueError, match="context"):
         load_startup_candles(
             receipt.manifest_path, receipt.manifest_sha256, replace(context(), **{field: value}),
@@ -103,10 +103,10 @@ def test_external_run_binding_cannot_be_substituted(tmp_path: Path, field: str, 
 
 def test_duplicate_run_refuses_overwrite(tmp_path: Path) -> None:
     """A conflicting capture preserves the complete previous bundle."""
-    receipt = write_startup_candles(tmp_path, context(), {"xyz:SPCX": candle_frame()})
+    receipt = write_startup_candles(tmp_path, context(), {"xyz:BBB": candle_frame()})
     original = {p.name: p.read_bytes() for p in receipt.manifest_path.parent.iterdir()}
     with pytest.raises(FileExistsError, match="already exists"):
-        write_startup_candles(tmp_path, context(), {"xyz:SPCX": candle_frame(4000)})
+        write_startup_candles(tmp_path, context(), {"xyz:BBB": candle_frame(4000)})
     assert original == {p.name: p.read_bytes() for p in receipt.manifest_path.parent.iterdir()}
 
 
@@ -120,7 +120,7 @@ def test_failed_publication_does_not_expose_partial_bundle(
 
     monkeypatch.setattr("hypervector.live.cohort_startup_candles._sync_directory", fail_sync)
     with pytest.raises(OSError, match="disk unavailable"):
-        write_startup_candles(tmp_path, context(), {"xyz:SPCX": candle_frame()})
+        write_startup_candles(tmp_path, context(), {"xyz:BBB": candle_frame()})
     assert list(tmp_path.iterdir()) == []
 
 
@@ -128,19 +128,19 @@ def test_failed_publication_does_not_expose_partial_bundle(
 def test_invalid_input_cannot_be_labeled_complete(tmp_path: Path, mutation: str) -> None:
     """Wrong source coverage and malformed clocks produce actionable errors."""
     frame = candle_frame()
-    frames = {"xyz:SPCX": frame}
+    frames = {"xyz:BBB": frame}
     if mutation == "symbols":
         frames = {"BTC": frame}
     elif mutation == "columns":
-        frames["xyz:SPCX"] = frame.drop(columns="close")
+        frames["xyz:BBB"] = frame.drop(columns="close")
     elif mutation == "column_names":
-        frames["xyz:SPCX"] = frame.rename(columns={"close": "open"})
+        frames["xyz:BBB"] = frame.rename(columns={"close": "open"})
     elif mutation == "naive":
         frame["timestamp"] = frame.timestamp.dt.tz_localize(None)
     elif mutation == "duplicate":
         frame.loc[1, "timestamp"] = frame.loc[0, "timestamp"]
     else:
-        frames["xyz:SPCX"] = candle_frame(20_162)
+        frames["xyz:BBB"] = candle_frame(20_162)
     with pytest.raises(ValueError, match="startup candle"):
         write_startup_candles(tmp_path, context(), frames)
 

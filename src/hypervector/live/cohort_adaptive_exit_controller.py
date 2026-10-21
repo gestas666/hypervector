@@ -24,7 +24,7 @@ from hypervector.live.cohort_execution_plan import BoundExecutionPlan
 from hypervector.live.hyperliquid_protocol import SolBookSnapshot
 from hypervector.live.multi_asset_live_runner_support import entry_provider_strategy_id
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 
 
@@ -60,11 +60,12 @@ def adaptive_exit_action(
             journal=journal,
             degraded=degraded,
         )
-    if plan.adaptive_exit_policy != ADAPTIVE_EXIT_POLICY:
+    if plan.adaptive_exit_policy != ADAPTIVE_EXIT_POLICY or plan.adaptive_exit is None:
         raise ValueError("unsupported bound adaptive exit policy")
+    parameters = plan.adaptive_exit
     identity = _identity(symbol, snapshot, entry_price)
     recorded = journal.recorded(str(identity["lifecycle_id"]))
-    state = _recover(recorded, identity, observed_ms)
+    state = _recover(recorded, identity, observed_ms, parameters.book_confirmations)
     inputs = prepare_adaptive_inputs(
         symbol=symbol,
         side=str(identity["side"]),
@@ -96,7 +97,7 @@ def adaptive_exit_action(
         inputs.book_ms,
         inputs.signed_pressure,
     )
-    updated = advance_adaptive_exit(state, observation)
+    updated = advance_adaptive_exit(state, observation, parameters)
     if updated == state:
         return None
     payload = {
@@ -150,6 +151,7 @@ def _recover(
     recorded: Mapping[str, object] | None,
     identity: Mapping[str, object],
     observed_ms: int,
+    book_confirmations: int,
 ) -> AdaptiveExitState:
     if recorded is None:
         return AdaptiveExitState()
@@ -167,7 +169,7 @@ def _recover(
     if (
         stamp != recorded.get("observed_ms")
         or not int(identity["opened_at_ms"]) <= stamp <= observed_ms
-        or not 0 <= count <= 3
+        or not 0 <= count <= book_confirmations
         or not isinstance(armed, bool)
         or peak < 0
         or reason not in {None, "adaptive_profit_floor"}
@@ -230,11 +232,11 @@ def retention_exit_action(
     journal: AdaptiveExitJournal,
     degraded: Callable[..., None],
 ) -> RoutingAction | None:
-    """Advance the v2 regime-flip ratchet and profit floor from one executable quote."""
+    """Advance the regime-flip ratchet and profit floor from one executable quote."""
     plan = snapshot.execution_plan
     if snapshot.state is not SolLiveState.OPEN or plan is None:
         return None
-    if plan.adaptive_exit_policy != RETENTION_EXIT_POLICY:
+    if plan.adaptive_exit_policy != RETENTION_EXIT_POLICY or plan.retention_exit is None:
         raise ValueError("unsupported bound retention exit policy")
     identity = _identity(symbol, snapshot, entry_price)
     recorded = journal.recorded(str(identity["lifecycle_id"]))
@@ -267,7 +269,7 @@ def retention_exit_action(
         risk_bps,
         inputs.alignment,
     )
-    updated = advance_retention_exit(state, observation)
+    updated = advance_retention_exit(state, observation, plan.retention_exit)
     if updated == state:
         return None
     payload = {
@@ -307,7 +309,7 @@ def retention_breakeven_requested(
     entry_price: float | None,
     journal: AdaptiveExitJournal,
 ) -> bool:
-    """Report whether the durable v2 state has armed the profit floor for this lifecycle."""
+    """Report whether the durable retention state armed the profit floor for this lifecycle."""
     plan = snapshot.execution_plan
     if (
         snapshot.state is not SolLiveState.OPEN

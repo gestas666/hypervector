@@ -54,15 +54,10 @@ from hypervector.research.cohort_checkpoint_accounting import (
     validated_epoch_archive as _portfolio_archive,
 )
 from hypervector.research.cohort_checkpoint_venue import (
-    FundingFn,
     PortfolioFn,
-    failure_isolated_funding_fn,
-    official_funding_fn as _official_funding_fn,
     official_portfolio_fn as _official_portfolio_fn,
     portfolio_evidence as _portfolio_evidence,
 )
-
-_failure_isolated_funding_fn = failure_isolated_funding_fn
 
 _SNAPSHOT_ATTEMPTS = 3
 _SNAPSHOT_RETRY_SECONDS = 0.1
@@ -78,7 +73,6 @@ def run_checkpoint_loop(
     publish_fn: PublishFn = publish_live_checkpoint,
     sync_fn: SyncFn | None = None,
     portfolio_fn: PortfolioFn | None = None,
-    funding_fn: FundingFn | None = None,
     sleep_fn: Callable[[float], None] = time.sleep,
 ) -> int:
     """Publish until terminated, retrying only incomplete startup evidence."""
@@ -88,7 +82,6 @@ def run_checkpoint_loop(
             publish_fn=publish_fn,
             sync_fn=sync_fn,
             portfolio_fn=portfolio_fn,
-            funding_fn=funding_fn,
             sleep_fn=sleep_fn,
         )
 
@@ -99,19 +92,15 @@ def _run_owned_checkpoint_loop(
     publish_fn: PublishFn,
     sync_fn: SyncFn | None,
     portfolio_fn: PortfolioFn | None,
-    funding_fn: FundingFn | None,
     sleep_fn: Callable[[float], None],
 ) -> int:
-    active_sync, active_portfolio, active_funding = _checkpoint_services(
-        args, sync_fn, portfolio_fn, funding_fn
-    )
+    active_sync, active_portfolio = _checkpoint_services(args, sync_fn, portfolio_fn)
     if args.once:
         return _run_once(
             args,
             active_sync,
             publish_fn,
             active_portfolio,
-            active_funding,
             sleep_fn,
         )
     controller = _background_sync(args, active_sync)
@@ -125,7 +114,6 @@ def _run_owned_checkpoint_loop(
                 args,
                 publish_fn,
                 active_portfolio,
-                active_funding,
                 None if controller is None else controller.portfolio_archive,
                 current_run_only=(
                     args.current_run_only
@@ -149,8 +137,7 @@ def _checkpoint_services(
     args: argparse.Namespace,
     sync_fn: SyncFn | None,
     portfolio_fn: PortfolioFn | None,
-    funding_fn: FundingFn | None,
-) -> tuple[SyncFn, PortfolioFn | None, FundingFn | None]:
+) -> tuple[SyncFn, PortfolioFn | None]:
     """Validate arguments and build the exact report-only data sources."""
     accounting_epoch = _accounting_epoch(args)
     args.accounting_epoch = accounting_epoch
@@ -171,10 +158,7 @@ def _checkpoint_services(
     active_portfolio = portfolio_fn
     if args.venue_portfolio and active_portfolio is None:
         active_portfolio = _official_portfolio_fn()
-    active_funding = funding_fn
-    if args.eligible_policy_forward and active_funding is None:
-        active_funding = _official_funding_fn()
-    return active_sync, active_portfolio, active_funding
+    return active_sync, active_portfolio
 
 
 def _run_once(
@@ -182,7 +166,6 @@ def _run_once(
     sync_fn: SyncFn,
     publish_fn: PublishFn,
     portfolio_fn: PortfolioFn | None,
-    funding_fn: FundingFn | None,
     sleep_fn: Callable[[float], None],
 ) -> int:
     telemetry = ResearchSyncTelemetry(enabled=args.research_database is not None)
@@ -191,7 +174,6 @@ def _run_once(
         args,
         publish_fn,
         portfolio_fn,
-        funding_fn,
         archive,
         current_run_only=args.current_run_only,
         sleep_fn=sleep_fn,
@@ -247,7 +229,6 @@ def _publish_once(
     args: argparse.Namespace,
     publish_fn: PublishFn,
     portfolio_fn: PortfolioFn | None,
-    funding_fn: FundingFn | None,
     portfolio_archive: Mapping[str, object] | None,
     *,
     current_run_only: bool = False,
@@ -269,7 +250,6 @@ def _publish_once(
                 args,
                 publish_fn,
                 venue_portfolio,
-                funding_fn,
                 portfolio_archive,
                 current_run_only,
                 research_sync,
@@ -336,7 +316,6 @@ def _publish_snapshot(
     args: argparse.Namespace,
     publish_fn: PublishFn,
     venue_portfolio: Mapping[str, object] | None,
-    funding_fn: FundingFn | None = None,
     portfolio_archive: Mapping[str, object] | None = None,
     current_run_only: bool = False,
     research_sync: Mapping[str, object] | None = None,
@@ -346,7 +325,6 @@ def _publish_snapshot(
             args,
             publish_fn,
             venue_portfolio,
-            funding_fn,
             portfolio_archive,
             current_run_only,
             research_sync,
@@ -365,7 +343,6 @@ def _publish_real_snapshot(
     args: argparse.Namespace,
     publish_fn: PublishFn,
     venue_portfolio: Mapping[str, object] | None,
-    funding_fn: FundingFn | None,
     portfolio_archive: Mapping[str, object] | None,
     current_run_only: bool = False,
     research_sync: Mapping[str, object] | None = None,
@@ -379,22 +356,8 @@ def _publish_real_snapshot(
         config_path=args.config,
         once=args.once,
         venue_portfolio=venue_portfolio,
-        opportunity_matrix_path=(
-            args.opportunity_matrix if args.opportunity_matrix.is_file() else None
-        ),
-        supplemental_opportunity_matrix_paths=args.supplemental_opportunity_matrix,
-        eligible_policy_forward=args.eligible_policy_forward,
-        funding_evidence_fn=funding_fn,
         portfolio_archive=portfolio_archive,
         current_run_only=current_run_only,
-        # No journal (the default) means no asymmetric observer, exactly like
-        # --disable-asymmetric-forward-observer.
-        asymmetric_forward_journal_path=(
-            None
-            if args.disable_asymmetric_forward_observer
-            or args.asymmetric_forward_journal is None
-            else args.asymmetric_forward_journal
-        ),
         accounting_epoch=_loaded_accounting_epoch(args),
         research_sync=research_sync,
     )

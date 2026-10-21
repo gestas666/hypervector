@@ -8,15 +8,15 @@
   "execution_authority": "none",
   "previous_profile": {
     "profile_id": "fixture_cohort_a",
-    "profile_fingerprint": "11159a55c9fc0ea1871a4585b1da4d85ed7ced51c89b3cd971f0f237464b0833"
+    "profile_fingerprint": "fbbf1e7c34a95604db4bb7973fab328ea35c057980a0629d276d764e41cd1078"
   },
   "candidate_profile": {
     "profile_id": "fixture_cohort_b",
-    "profile_fingerprint": "6cc3839112ced355d72c6b39dad4f373810c0f7c31e02deda1b06a5ea03b22c2"
+    "profile_fingerprint": "c7e0d2cc5f6c0fdc0c4f1fd22667adf0a3a6d8375739b562512a52d5836de2dd"
   },
   "change_scopes": [
     "hype_asset_and_watch_only_provider_removed",
-    "xyz_spcx_asset_and_watch_only_provider_removed"
+    "xyz_bbb_asset_and_watch_only_provider_removed"
   ],
   "recommendation_evidence": [
     {
@@ -26,8 +26,8 @@
   ],
   "rollback": {
     "config_path": "../profile_a.toml",
-    "profile_fingerprint": "11159a55c9fc0ea1871a4585b1da4d85ed7ced51c89b3cd971f0f237464b0833",
-    "sha256": "8b2d54448673209587a794160af415ddd8710fe75640f2aa04ded3f7b22680ba"
+    "profile_fingerprint": "fbbf1e7c34a95604db4bb7973fab328ea35c057980a0629d276d764e41cd1078",
+    "sha256": "a2e5294386eaf6958460169122054542719f56d27b5b795fa08918f62b73fceb"
   },
   "retirements": []
 }

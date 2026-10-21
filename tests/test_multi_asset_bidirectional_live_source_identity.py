@@ -50,7 +50,7 @@ def _harness(
     captured: dict[str, object] = {}
     answers = iter(discovered or [])
 
-    def discover(repository: Path, provider: Path) -> dict[str, Path]:
+    def discover(repository: Path) -> dict[str, Path]:
         events.append("discover")
         return next(answers, sources)
 

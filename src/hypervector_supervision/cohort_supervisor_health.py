@@ -208,7 +208,7 @@ def _maximum_fee(
     earliest_ms = (now - lookback * 3600.0) * 1000.0
     rates: list[float] = []
     for fill in fills:
-        if not str(fill.get("symbol", "")).startswith("xyz:"):
+        if not _is_hip3_symbol(fill.get("symbol")):
             continue
         values = [
             fill.get(key) for key in ("price", "size", "venue_timestamp_ms", "fee_usd")
@@ -445,18 +445,33 @@ def _probe_age(
     return max(file_age, observed_age)
 
 
-def _active_fee_problems(
-    checkpoint: dict[str, object] | None,
-    markets: list[dict[str, object]] | None,
-) -> list[str]:
+def _is_hip3_symbol(value: object) -> bool:
+    """A builder-deployed (HIP-3) market is named ``dex:ASSET``; core perps are not."""
+    return isinstance(value, str) and ":" in value
+
+
+def _active_hip3_symbols(checkpoint: dict[str, object] | None) -> set[str] | None:
+    """Return the HIP-3 symbols in the live execution scope, or None if unknown."""
     audit = checkpoint.get("audit") if checkpoint is not None else None
     run = audit.get("run") if isinstance(audit, dict) else None
     scopes = run.get("executable_provider_symbols") if isinstance(run, dict) else None
     if not isinstance(scopes, list) or any(
         not isinstance(s, str) or "|" not in s for s in scopes
     ):
+        return None
+    return {
+        symbol
+        for scope in scopes
+        if _is_hip3_symbol(symbol := scope.split("|", 1)[1])
+    }
+
+
+def _active_fee_problems(
+    active: set[str] | None,
+    markets: list[dict[str, object]] | None,
+) -> list[str]:
+    if active is None:
         return ["checkpoint_execution_scope_unavailable"]
-    active = {scope.split("|", 1)[1] for scope in scopes if "|xyz:" in scope}
     venues = {row["symbol"]: row["venue"] for row in markets or ()}
     if any(
         not isinstance(venues.get(symbol), dict)
@@ -477,8 +492,12 @@ def _data_probes(
     checkpoint_age = _probe_age(paths.checkpoint, checkpoint, "generated_at_utc", now)
     roster_age = _probe_age(paths.roster, roster, "observed_at_utc", now)
     markets, fills = _roster_markets(roster), _fill_rows(checkpoint)
-    problems = _active_fee_problems(checkpoint, markets)
-    if markets is None:
+    active = _active_hip3_symbols(checkpoint)
+    problems = _active_fee_problems(active, markets)
+    # The HIP-3 roster is only evidence for HIP-3 execution; a cohort whose
+    # live scope has no HIP-3 market needs no roster observer.
+    roster_required = active is None or bool(active)
+    if markets is None and roster_required:
         problems.append("roster_observer_unavailable")
     if fills is None:
         problems.append("checkpoint_unavailable")
@@ -492,11 +511,11 @@ def _data_probes(
         )
     except ValueError:
         problems.append("hip3_fill_fee_unavailable")
-    for age, limit, label in (
-        (checkpoint_age, limits.checkpoint_seconds, "checkpoint_stale"),
-        (roster_age, limits.roster_seconds, "roster_observer_stale"),
+    for age, limit, label, required in (
+        (checkpoint_age, limits.checkpoint_seconds, "checkpoint_stale", True),
+        (roster_age, limits.roster_seconds, "roster_observer_stale", roster_required),
     ):
-        if age is None or age > limit:
+        if required and (age is None or age > limit):
             problems.append(label)
     if regime:
         problems.append("hip3_fee_regime_changed")

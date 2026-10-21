@@ -174,7 +174,7 @@ def _runner(
 ) -> tuple[MultiAssetLiveRunner, _Telemetry]:
     capabilities = tuple(
         StrategyCapability(strategy, "BTC", frozenset({"long", "short"}), priority)
-        for strategy, priority in (("hulk", 10), ("hype", 100))
+        for strategy, priority in (("test_trend_provider", 10), ("hype", 100))
     )
     telemetry = _Telemetry()
     runner = MultiAssetLiveRunner(
@@ -189,9 +189,9 @@ def _runner(
         poll_seconds=60.0,
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={"BTC": 28_800},
-        execution_contracts={"hulk": execution_contract()},
-        maximum_entry_delay_ms_by_provider_symbol={("hulk", "BTC"): 60_000},
-        executable_provider_symbols=frozenset({("hulk", "BTC")}),
+        execution_contracts={"test_trend_provider": execution_contract()},
+        maximum_entry_delay_ms_by_provider_symbol={("test_trend_provider", "BTC"): 60_000},
+        executable_provider_symbols=frozenset({("test_trend_provider", "BTC")}),
     )
     return runner, telemetry
 
@@ -202,7 +202,7 @@ def test_observe_only_conflict_cannot_suppress_executable_entry(tmp_path: Path) 
     runner, telemetry = _runner(
         tmp_path,
         engine,
-        (_intent("hype", "short"), _intent("hulk", "long")),
+        (_intent("hype", "short"), _intent("test_trend_provider", "long")),
     )
 
     assert runner.run(max_polls=1) == 1
@@ -210,7 +210,7 @@ def test_observe_only_conflict_cannot_suppress_executable_entry(tmp_path: Path) 
     assert engine.entries == ["long"]
     assert engine.exits == []
     report = telemetry.reports[0]
-    assert report.actions[0].strategy_id == "hulk"
+    assert report.actions[0].strategy_id == "test_trend_provider"
     assert [(item.intent.strategy_id, item.reason) for item in report.withheld] == [
         ("hype", "provider_symbol_observe_only")
     ]

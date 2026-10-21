@@ -105,17 +105,15 @@ def test_installed_checkpoint_plist_arguments_still_parse() -> None:
         "120",
         "--venue-portfolio",
         "--current-run-only",
-        "--disable-asymmetric-forward-observer",
         "--follow-latest-run",
     ]
     parsed = _service_parser("live checkpoint").parse_args(plist)
     assert parsed.current_run_only is True
-    assert parsed.disable_asymmetric_forward_observer is True
+    assert parsed.follow_latest_run is True
 
 
 def test_unset_optional_values_are_not_transported() -> None:
     args = build_parser().parse_args(command_argv("live checkpoint"))
     argv = operation_argv(args)
-    assert "--asymmetric-forward-journal" not in argv
     assert "--research-database" not in argv
     assert "--enabled" not in argv

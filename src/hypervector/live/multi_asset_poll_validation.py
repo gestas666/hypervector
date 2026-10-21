@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from hypervector.live.bidirectional_intents import StrategyIntent, WithheldIntent
 from hypervector.live.multi_asset_market_bars import MultiAssetIntentPollerError
-from hypervector.live.multi_asset_signal_source import IntentBatch
+from hypervector.live.provider_evaluation import IntentBatch
 
 
 def validate_intent_batch(

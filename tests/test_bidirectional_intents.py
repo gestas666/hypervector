@@ -17,7 +17,7 @@ _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 def _capabilities() -> tuple[StrategyCapability, ...]:
     return tuple(
         StrategyCapability(
-            strategy_id="hulk_bidirectional",
+            strategy_id="test_trend_provider",
             symbol=symbol,
             sides=frozenset({"long", "short"}),
             priority=10,
@@ -30,7 +30,7 @@ def _intent(
     symbol: str,
     side: str,
     *,
-    strategy: str = "hulk_bidirectional",
+    strategy: str = "test_trend_provider",
     regime_score: float | None = None,
 ) -> StrategyIntent:
     return StrategyIntent(
@@ -143,13 +143,13 @@ def test_explicit_provider_priority_resolves_same_symbol_conflict() -> None:
     """Conflicting signals are attributed and resolved without hidden scoring."""
     capabilities = (
         StrategyCapability(
-            "hulk_bidirectional",
+            "test_trend_provider",
             "BTC",
             frozenset({"long", "short"}),
             10,
         ),
         StrategyCapability(
-            "range_onset",
+            "test_breakout_provider",
             "BTC",
             frozenset({"long", "short"}),
             20,
@@ -160,12 +160,12 @@ def test_explicit_provider_priority_resolves_same_symbol_conflict() -> None:
     report = router.route(
         (
             _intent("BTC", "long"),
-            _intent("BTC", "short", strategy="range_onset"),
+            _intent("BTC", "short", strategy="test_breakout_provider"),
         ),
         positions={"BTC": PositionState("BTC", None)},
     )
 
-    assert report.actions[0].strategy_id == "range_onset"
+    assert report.actions[0].strategy_id == "test_breakout_provider"
     assert report.actions[0].side == "short"
     assert report.withheld[0].reason == "lower_provider_priority"
 
@@ -174,13 +174,13 @@ def test_regime_alignment_resolves_conflict_before_static_provider_priority() ->
     """Causal regime context can rank conflicts without gating lone signals."""
     capabilities = (
         StrategyCapability(
-            "hulk_bidirectional",
+            "test_trend_provider",
             "BTC",
             frozenset({"long", "short"}),
             30,
         ),
         StrategyCapability(
-            "range_onset",
+            "test_breakout_provider",
             "BTC",
             frozenset({"long", "short"}),
             10,
@@ -191,7 +191,7 @@ def test_regime_alignment_resolves_conflict_before_static_provider_priority() ->
     aligned = _intent(
         "BTC",
         "short",
-        strategy="range_onset",
+        strategy="test_breakout_provider",
         regime_score=1.0,
     )
 
@@ -200,7 +200,7 @@ def test_regime_alignment_resolves_conflict_before_static_provider_priority() ->
         positions={"BTC": PositionState("BTC", None)},
     )
 
-    assert report.actions[0].strategy_id == "range_onset"
+    assert report.actions[0].strategy_id == "test_breakout_provider"
     assert report.actions[0].regime_alignment_score == 1.0
     assert [(item.intent, item.reason) for item in report.withheld] == [
         (opposed, "lower_regime_alignment")
@@ -222,13 +222,13 @@ def test_regime_preference_can_select_an_opposite_intent_exit_during_conflict() 
     """Conflict weighting applies symmetrically to entry and exit selection."""
     capabilities = (
         StrategyCapability(
-            "hulk_bidirectional",
+            "test_trend_provider",
             "BTC",
             frozenset({"long", "short"}),
             30,
         ),
         StrategyCapability(
-            "range_onset",
+            "test_breakout_provider",
             "BTC",
             frozenset({"long", "short"}),
             10,
@@ -242,7 +242,7 @@ def test_regime_preference_can_select_an_opposite_intent_exit_during_conflict() 
             _intent(
                 "BTC",
                 "short",
-                strategy="range_onset",
+                strategy="test_breakout_provider",
                 regime_score=1.0,
             ),
         ),
@@ -259,16 +259,16 @@ def test_open_position_gives_eligible_opposite_exit_precedence() -> None:
     """An eligible opposite closes before a stronger same-side hold intent."""
     capabilities = (
         StrategyCapability(
-            "hulk_bidirectional", "BTC", frozenset({"long", "short"}), 30
+            "test_trend_provider", "BTC", frozenset({"long", "short"}), 30
         ),
-        StrategyCapability("range_onset", "BTC", frozenset({"long", "short"}), 10),
+        StrategyCapability("test_breakout_provider", "BTC", frozenset({"long", "short"}), 10),
     )
     router = BidirectionalIntentRouter(capabilities, maximum_positions=1)
 
     report = router.route(
         (
             _intent("BTC", "long", regime_score=1.0),
-            _intent("BTC", "short", strategy="range_onset", regime_score=-1.0),
+            _intent("BTC", "short", strategy="test_breakout_provider", regime_score=-1.0),
         ),
         positions={"BTC": PositionState("BTC", "long")},
     )
@@ -283,13 +283,13 @@ def test_namespaced_hip3_symbol_is_preserved_in_intent_and_position() -> None:
     """Portfolio routing preserves exact builder-perp venue identity."""
     intent = StrategyIntent(
         strategy_id="hip3_swing",
-        symbol="xyz:SP500",
+        symbol="xyz:AAA",
         side="long",
         decision_time_ms=1,
         reference_price=6_000.0,
         reason="alignment",
     )
-    position = PositionState("xyz:SP500", None)
+    position = PositionState("xyz:AAA", None)
 
-    assert intent.symbol == "xyz:SP500"
-    assert position.symbol == "xyz:SP500"
+    assert intent.symbol == "xyz:AAA"
+    assert position.symbol == "xyz:AAA"

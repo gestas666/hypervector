@@ -22,7 +22,7 @@ from hypervector.live.multi_asset_intent_poller import (
     CohortMarketBar,
 )
 from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.cohort_operator_commands import CohortProfileSettings
 from hypervector.live.hyperliquid_protocol import SolBookSnapshot
 from hypervector.live.multi_asset_operator_runtime import (

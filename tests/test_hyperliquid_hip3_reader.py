@@ -9,7 +9,7 @@ from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
 from hypervector.live.policy import SECRET_ENV_WALLET
 
 _ADDRESS = "0x1111111111111111111111111111111111111111"
-_SYMBOL = "xyz:SP500"
+_SYMBOL = "xyz:AAA"
 
 
 class _Info:
@@ -162,9 +162,9 @@ def test_reader_scopes_every_supported_hip3_read_to_exact_dex() -> None:
 @pytest.mark.parametrize(
     ("symbol", "perp_dex"),
     (
-        ("xyz:SP500", ""),
-        ("xyz:SP500", "cash"),
-        ("SP500", "xyz"),
+        ("xyz:AAA", ""),
+        ("xyz:AAA", "cash"),
+        ("AAA", "xyz"),
     ),
 )
 def test_reader_rejects_mismatched_symbol_and_dex_identity(

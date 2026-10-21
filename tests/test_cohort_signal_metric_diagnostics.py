@@ -134,62 +134,37 @@ def test_absent_metric_is_a_technical_metric_coverage_gap() -> None:
     assert metric["horizons"]["5"]["metric_missing"] == 1
 
 
-def test_absent_breakout_side_is_an_explicit_unavailable_category() -> None:
-    """A non-breakout observation is a state, not missing provider telemetry."""
+def test_declared_warmup_unavailability_is_not_a_metric_coverage_gap() -> None:
+    """Null metrics under a declared warmup are unavailable, not dropped telemetry."""
     evidence = MetricDiagnosticsAccumulator((5,))
-    _observe_resolved(evidence, 60_000, {"breakout_side": None}, -2.0)
-    _observe_resolved(evidence, 360_000, {"breakout_side": "long"}, 8.0)
-
-    report = evidence.as_payload()
-
-    assert report["coverage"]["complete"] is True
-    metric = report["metrics"]["breakout_side"]
-    assert metric["missing_evaluations"] == 0
-    assert metric["categories"] == [
-        {"value": "long", "count": 1},
-        {"value": "unavailable", "count": 1},
-    ]
-
-
-def test_declared_warmup_anatomy_is_not_a_metric_coverage_gap() -> None:
-    """Declared price-anatomy warmup must remain unavailable, not missing."""
-    evidence = MetricDiagnosticsAccumulator((5,))
-    unavailable = {"condition_anatomy_status": "legacy_or_warmup_unavailable"}
-    _observe_resolved(evidence, 60_000, unavailable, -2.0)
-    measured = {"condition_anatomy_status": "available", "close": 140.0}
+    warmup = {
+        "metric_availability": "warmup_unavailable",
+        "side_hint": None,
+        "close": None,
+    }
+    _observe_resolved(evidence, 60_000, warmup, -2.0)
+    measured = {"metric_availability": "available", "side_hint": "long", "close": 140.0}
     _observe_resolved(evidence, 360_000, measured, 8.0)
 
     report = evidence.as_payload()
 
     assert report["coverage"]["complete"] is True
     assert report["coverage"]["metric_value_gaps"] == 0
-    assert report["metrics"]["close"]["missing_evaluations"] == 0
-    assert report["metrics"]["close"]["horizons"]["5"]["metric_missing"] == 0
-
-
-def test_declared_stale_pressure_is_unavailable_not_missing() -> None:
-    """A causally stale book cannot be misreported as dropped metric telemetry."""
-    evidence = MetricDiagnosticsAccumulator((5,))
-    stale = {
-        "pressure_status": "stale_candidate",
-        "imbalance_10": None,
-        "pressure_age_seconds": None,
-    }
-    _observe_resolved(evidence, 60_000, stale, -2.0)
-    measured = {
-        "pressure_status": "available",
-        "imbalance_10": 0.4,
-        "pressure_age_seconds": 10.0,
-    }
-    _observe_resolved(evidence, 360_000, measured, 8.0)
-
-    report = evidence.as_payload()
-
-    assert report["coverage"]["complete"] is True
-    assert report["coverage"]["metric_value_gaps"] == 0
-    for name in ("imbalance_10", "pressure_age_seconds"):
+    for name in ("side_hint", "close"):
         assert report["metrics"][name]["missing_evaluations"] == 0
         assert report["metrics"][name]["horizons"]["5"]["metric_missing"] == 0
+
+
+def test_undeclared_null_metrics_remain_coverage_gaps() -> None:
+    """Without the declaration, a null metric is a telemetry gap."""
+    evidence = MetricDiagnosticsAccumulator((5,))
+    _observe_resolved(evidence, 60_000, {"side_hint": None, "close": None}, -2.0)
+    _observe_resolved(evidence, 360_000, {"side_hint": "long", "close": 140.0}, 8.0)
+
+    report = evidence.as_payload()
+
+    assert report["coverage"]["complete"] is False
+    assert report["coverage"]["metric_value_gaps"] == 2
 
 
 def test_available_pressure_with_null_values_remains_missing() -> None:

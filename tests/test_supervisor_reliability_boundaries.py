@@ -5,17 +5,12 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from hyperliquid.utils.error import ServerError
 
 import cohort_supervisor_alerts as alerts
 import cohort_supervisor_runtime as runtime
 from cohort_supervisor_state import RestartJournal
-from native_runner_partial_case_fixture import partial_case
 from test_cohort_backend_supervisor import FAST, _Recorder, _events, _run
 from test_native_replay_adapter import deny_external_ports
-
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
 
 __all__ = ["deny_external_ports"]
 
@@ -83,31 +78,6 @@ def test_alert_journal_failure_does_not_suppress_other_channels(
     diagnostic = capsys.readouterr().err
     assert json.loads(diagnostic)["event"] == "alert_delivery_failed"
     assert "private filesystem path" not in diagnostic
-
-
-def test_real_partial_close_read_failure_surfaces_as_execution_fault(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A post-close 502 cannot emit a heartbeat claiming no order was attempted."""
-    case = partial_case(tmp_path, "BTC", "stop", False, partial_close=True)
-    engine = case.replay.engines["BTC"]
-    original = engine._adapter.reconcile
-
-    def fail_after_close() -> SolReconciliationSnapshot:
-        if case.replay.mutations.count("close"):
-            raise ServerError(502, "post-close read failure")
-        return original()
-
-    monkeypatch.setattr(engine._adapter, "reconcile", fail_after_close)
-    monkeypatch.setattr(case.runner, "start", lambda **kwargs: None)
-    with pytest.raises(SolLiveEngineError) as error:
-        case.runner.run(max_polls=1)
-    assert isinstance(error.value.__cause__, ServerError)
-    assert case.replay.mutations.count("close") == 1
-    assert not any(
-        row["event_type"] == "heartbeat" and row["payload"].get("status") == "degraded"
-        for row in case.ledger.read_all()
-    )
 
 
 def test_launchd_timeout_and_child_grace_fit_observed_macos_cap(monkeypatch: pytest.MonkeyPatch) -> None:

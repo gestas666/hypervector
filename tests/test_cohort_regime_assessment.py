@@ -21,7 +21,7 @@ def test_weighted_assessment_separates_structure_from_component_alignment() -> N
                 metrics={
                     "ema_21_55_direction": 1,
                     "sma_100_200_direction": -1,
-                    "cipher_a_direction": 1,
+                    "ema_11_34_direction": 1,
                     "harsi_direction": 1,
                     "mtf_5m_bias": 3,
                     "mtf_15m_bias": 1,

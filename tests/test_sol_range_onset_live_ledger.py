@@ -28,7 +28,7 @@ def test_every_required_event_is_append_only_and_identity_stamped(
     tmp_path: Path,
 ) -> None:
     """All canary evidence types share one authoritative live identity."""
-    path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
+    path = tmp_path / "data" / "live" / "bidirectional_cohort" / "sol.jsonl"
     ledger = _ledger(path)
 
     for index, event_type in enumerate(sorted(SOL_LIVE_EVENT_TYPES), start=1):
@@ -55,7 +55,7 @@ def test_every_required_event_is_append_only_and_identity_stamped(
 
 def test_restart_continues_sequence_without_truncating_history(tmp_path: Path) -> None:
     """Reopening a ledger preserves prior evidence and advances sequence."""
-    path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
+    path = tmp_path / "data" / "live" / "bidirectional_cohort" / "sol.jsonl"
     _ledger(path).append(
         event_type="session_start",
         observed_at_utc="2026-07-31T12:00:00+00:00",
@@ -83,7 +83,7 @@ def test_restart_sequence_recovery_does_not_materialize_complete_history(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Writer startup validates sequence without retaining every decoded row."""
-    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    path = tmp_path / "data/live/bidirectional_cohort/sol.jsonl"
     first = _ledger(path)
     _append_heartbeat(first, minute=0)
 
@@ -101,7 +101,7 @@ def test_matching_read_filters_without_materializing_complete_history(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Recovery projections retain only selected rows during validation."""
-    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    path = tmp_path / "data/live/bidirectional_cohort/sol.jsonl"
     ledger = _ledger(path)
     _append_heartbeat(ledger, minute=0)
     ledger.append(
@@ -126,14 +126,14 @@ def test_matching_read_filters_without_materializing_complete_history(
 @pytest.mark.parametrize(
     "path",
     [
-        Path("data/research/sol_range_onset_canary/decisions.jsonl"),
-        Path("data/paper/sol_range_onset_canary/decisions.jsonl"),
+        Path("data/research/bidirectional_cohort/sol.jsonl"),
+        Path("data/paper/bidirectional_cohort/sol.jsonl"),
         Path("data/live/other_strategy/decisions.jsonl"),
     ],
 )
 def test_live_ledger_refuses_wrong_storage_domains(path: Path) -> None:
     """Live evidence cannot be written into shadow, paper, or another strategy."""
-    with pytest.raises(SolLiveLedgerError, match="live/sol_range_onset_canary"):
+    with pytest.raises(SolLiveLedgerError, match="live/bidirectional_cohort"):
         _ledger(path)
 
 
@@ -141,7 +141,7 @@ def test_unknown_event_invalid_time_and_secret_shaped_payload_fail(
     tmp_path: Path,
 ) -> None:
     """Schema errors and secret-bearing data fail before any append."""
-    path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
+    path = tmp_path / "data" / "live" / "bidirectional_cohort" / "sol.jsonl"
     ledger = _ledger(path)
 
     with pytest.raises(SolLiveLedgerError, match="event_type"):
@@ -173,7 +173,7 @@ def test_unknown_event_invalid_time_and_secret_shaped_payload_fail(
 
 def test_corrupt_existing_line_refuses_restart_append(tmp_path: Path) -> None:
     """A damaged ledger cannot be silently treated as an empty history."""
-    path = tmp_path / "data" / "live" / "sol_range_onset_canary" / "decisions.jsonl"
+    path = tmp_path / "data" / "live" / "bidirectional_cohort" / "sol.jsonl"
     path.parent.mkdir(parents=True)
     path.write_text("{not-json}\n", encoding="utf-8")
 
@@ -233,7 +233,7 @@ def test_observer_ledger_uses_a_separate_domain_and_truthful_mode(
 
 def test_cursor_reads_only_rows_appended_by_the_active_writer(tmp_path: Path) -> None:
     """Incremental telemetry receives the exact suffix once and in sequence."""
-    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    path = tmp_path / "data/live/bidirectional_cohort/sol.jsonl"
     ledger = _ledger(path)
     _append_heartbeat(ledger, minute=0)
     cursor = ledger.end_cursor()
@@ -247,7 +247,7 @@ def test_cursor_reads_only_rows_appended_by_the_active_writer(tmp_path: Path) ->
 
 def test_cursor_rejects_an_incomplete_appended_row(tmp_path: Path) -> None:
     """A torn suffix cannot be ignored or represented as fresh telemetry."""
-    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    path = tmp_path / "data/live/bidirectional_cohort/sol.jsonl"
     ledger = _ledger(path)
     _append_heartbeat(ledger, minute=0)
     cursor = ledger.end_cursor()
@@ -260,7 +260,7 @@ def test_cursor_rejects_an_incomplete_appended_row(tmp_path: Path) -> None:
 
 def test_cursor_rejects_a_second_writer_on_the_same_path(tmp_path: Path) -> None:
     """A runtime cursor fails closed when another ledger instance appends."""
-    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    path = tmp_path / "data/live/bidirectional_cohort/sol.jsonl"
     ledger = _ledger(path)
     _append_heartbeat(ledger, minute=0)
     cursor = ledger.end_cursor()

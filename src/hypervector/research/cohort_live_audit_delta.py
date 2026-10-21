@@ -183,12 +183,6 @@ def _open_delta(
 def _matched_open_delta(before: Record, after: Record) -> dict[str, object]:
     before_path = _mapping(before.get("path_since_entry"), "before entry path")
     after_path = _mapping(after.get("path_since_entry"), "after entry path")
-    before_ignored = _mapping(
-        before.get("ignored_provider_exit_observer"), "before ignored exits"
-    )
-    after_ignored = _mapping(
-        after.get("ignored_provider_exit_observer"), "after ignored exits"
-    )
     return {
         "lifecycle_id": _text(after.get("lifecycle_id"), "lifecycle id"),
         "symbol": _text(after.get("symbol"), "symbol"),
@@ -212,27 +206,9 @@ def _matched_open_delta(before: Record, after: Record) -> dict[str, object]:
         "peak_giveback_bps_delta": _field_number_delta(
             before_path, after_path, "peak_giveback_bps"
         ),
-        "ignored_signal_count_delta": _optional_integer_delta(
-            before_ignored.get("ignored_signal_count"),
-            after_ignored.get("ignored_signal_count"),
-        ),
-        "ignored_path_return_bps_delta": _ignored_return_delta(
-            before_ignored, after_ignored
-        ),
         "decision_action_before": _decision_action(before),
         "decision_action_after": _decision_action(after),
-        "newly_triggered_profit_locks": _newly_triggered_locks(before, after),
     }
-
-
-def _ignored_return_delta(before: Record, after: Record) -> float | None:
-    before_path = _optional_mapping(before.get("path_since_first_signal"))
-    after_path = _optional_mapping(after.get("path_since_first_signal"))
-    if before_path is None or after_path is None:
-        return None
-    return _field_number_delta(
-        before_path, after_path, "current_directional_return_bps"
-    )
 
 
 def _decision_action(trade: Record) -> str | None:
@@ -243,32 +219,6 @@ def _decision_action(trade: Record) -> str | None:
     if provider is None or provider.get("decision_action") is None:
         return None
     return _text(provider.get("decision_action"), "decision action")
-
-
-def _newly_triggered_locks(before: Record, after: Record) -> list[str]:
-    before_statuses = _profit_lock_statuses(before)
-    after_statuses = _profit_lock_statuses(after)
-    return sorted(
-        policy
-        for policy, status in after_statuses.items()
-        if status.startswith("triggered")
-        and not before_statuses.get(policy, "").startswith("triggered")
-    )
-
-
-def _profit_lock_statuses(trade: Record) -> dict[str, str]:
-    challenger = _optional_mapping(trade.get("open_profit_lock_challenger"))
-    policies = (
-        None if challenger is None else _optional_mapping(challenger.get("policies"))
-    )
-    if policies is None:
-        return {}
-    return {
-        policy: _text(
-            _mapping(value, f"profit lock {policy}").get("status"), "lock status"
-        )
-        for policy, value in policies.items()
-    }
 
 
 def _trade_index(audit: Record, field: str, label: str) -> dict[str, Record]:
@@ -366,14 +316,6 @@ def _optional_number_delta(before: object, after: object) -> float | None:
     if before_number is None or after_number is None:
         return None
     return after_number - before_number
-
-
-def _optional_integer_delta(before: object, after: object) -> int | None:
-    if before is None or after is None:
-        return None
-    return _nonnegative_int(after, "after integer") - _nonnegative_int(
-        before, "before integer"
-    )
 
 
 def _optional_number(value: object) -> float | None:

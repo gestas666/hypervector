@@ -36,7 +36,7 @@ def _exhausted(symbol: str, oid: int, at: str) -> dict[str, object]:
         "observed_at_utc": at,
         "payload": {
             "symbol": symbol,
-            "strategy_id": "hourly_donchian_20_10_atr20_v1",
+            "strategy_id": "test_channel_provider",
             "entry_oid": oid,
             "reason": "protective_stop_raise_exhausted",
             "attempts": 3,
@@ -54,15 +54,15 @@ def _attempt(symbol: str, oid: int, raised: bool) -> dict[str, object]:
 
 def test_open_unresolved_exhaustion_is_reported_once_with_its_first_time() -> None:
     rows = [
-        _exhausted("xyz:SNDK", 41, "2026-09-24T12:00:00+00:00"),
-        _attempt("xyz:SNDK", 41, False),
-        _exhausted("xyz:SNDK", 41, "2026-09-24T13:00:00+00:00"),
+        _exhausted("xyz:CCC", 41, "2026-09-24T12:00:00+00:00"),
+        _attempt("xyz:CCC", 41, False),
+        _exhausted("xyz:CCC", 41, "2026-09-24T13:00:00+00:00"),
     ]
-    snapshot = _snapshot(("xyz:SNDK", 41, 2.0), ("BTC", None, 0.0))
+    snapshot = _snapshot(("xyz:CCC", 41, 2.0), ("BTC", None, 0.0))
     assert protection_warnings(rows, snapshot) == [
         {
-            "symbol": "xyz:SNDK",
-            "strategy_id": "hourly_donchian_20_10_atr20_v1",
+            "symbol": "xyz:CCC",
+            "strategy_id": "test_channel_provider",
             "entry_oid": 41,
             "reason": "protective_stop_raise_exhausted",
             "observed_at_utc": "2026-09-24T12:00:00+00:00",

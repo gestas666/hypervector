@@ -294,7 +294,7 @@ def test_modify_order_delegates_every_argument_and_invalidates_truth() -> None:
     assert wrapped_info.user_state("0x1") == {"version": 1}
     assert wrapped_exchange.modify_order(
         555018726035,
-        "xyz:BRENTOIL",
+        "xyz:EEE",
         False,
         5.84,
         99.3,
@@ -305,7 +305,7 @@ def test_modify_order_delegates_every_argument_and_invalidates_truth() -> None:
 
     exchange.modify_order.assert_called_once_with(
         555018726035,
-        "xyz:BRENTOIL",
+        "xyz:EEE",
         False,
         5.84,
         99.3,

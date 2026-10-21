@@ -20,7 +20,7 @@ class _Info:
         """Supply only the precise public context request in source wiring tests."""
         assert path == "/info"
         assert payload == {"type": "metaAndAssetCtxs", "dex": "xyz"}
-        return [{"universe": [{"name": "xyz:SPCX"}]}, [{"funding": "0.00001"}]]
+        return [{"universe": [{"name": "xyz:BBB"}]}, [{"funding": "0.00001"}]]
 
 
 class _Builder:
@@ -40,22 +40,22 @@ def test_roster_factory_shares_one_info_only_client() -> None:
     builder = _Builder()
     readers = create_read_only_hip3_roster_readers(
         symbols=(
-            "xyz:SP500",
-            "xyz:SPCX",
-            "xyz:SNDK",
-            "xyz:GOLD",
-            "xyz:BRENTOIL",
+            "xyz:AAA",
+            "xyz:BBB",
+            "xyz:CCC",
+            "xyz:DDD",
+            "xyz:EEE",
         ),
         environ={SECRET_ENV_WALLET: _ADDRESS},
         builder=builder,
     )
 
     assert tuple(readers) == (
-        "xyz:SP500",
-        "xyz:SPCX",
-        "xyz:SNDK",
-        "xyz:GOLD",
-        "xyz:BRENTOIL",
+        "xyz:AAA",
+        "xyz:BBB",
+        "xyz:CCC",
+        "xyz:DDD",
+        "xyz:EEE",
     )
     assert builder.calls == [("xyz",)]
 
@@ -68,21 +68,21 @@ def test_roster_sources_share_one_info_client_for_books_accounts_and_funding() -
 
     builder = _Builder()
     sources = create_read_only_hip3_roster_sources(
-        symbols=("xyz:SPCX",),
+        symbols=("xyz:BBB",),
         environ={SECRET_ENV_WALLET: _ADDRESS},
         builder=builder,
     )
-    assert tuple(sources.readers) == ("xyz:SPCX",)
-    assert sources.funding.snapshot() == {"xyz:SPCX": 0.00001}
+    assert tuple(sources.readers) == ("xyz:BBB",)
+    assert sources.funding.snapshot() == {"xyz:BBB": 0.00001}
     assert builder.calls == [("xyz",)]
 
 
 @pytest.mark.parametrize(
     "symbols",
     (
-        ("xyz:SP500", "cash:WTI"),
-        ("xyz:SP500", "xyz:SP500"),
-        ("SP500",),
+        ("xyz:AAA", "cash:WTI"),
+        ("xyz:AAA", "xyz:AAA"),
+        ("AAA",),
     ),
 )
 def test_roster_factory_rejects_mixed_or_ambiguous_identity(

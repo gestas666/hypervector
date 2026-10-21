@@ -57,20 +57,18 @@ def test_inactive_override_still_requires_an_observed_provider_symbol() -> None:
 
 
 @pytest.mark.parametrize("index", [1, 2])
-@pytest.mark.parametrize("changed", ["clock", "position"])
-def test_inactive_directional_contract_still_rejects_drift(index: int, changed: str) -> None:
-    """Observe-only status does not relax what the directional signal can compute."""
+def test_inactive_provider_still_rejects_signal_clock_drift(index: int) -> None:
+    """Observe-only status does not relax what the registered signal can compute."""
     original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
     providers = list(original.providers)
     inactive = replace(providers[index], execution_symbols=())
-    providers[index] = (replace(inactive, timeframe="15m") if changed == "clock"
-                        else replace(inactive, position_policy="flat_entry_only"))
-    with pytest.raises(ValueError, match="directional range route"):
+    providers[index] = replace(inactive, timeframe="15m")
+    with pytest.raises(ValueError, match="signal clock"):
         validate_multi_asset_live_config(replace(original, providers=tuple(providers)))
 
 
 @pytest.mark.parametrize("index", [1, 2])
-def test_inactive_directional_route_keeps_its_own_side_and_stop(index: int) -> None:
+def test_inactive_route_keeps_its_own_side_and_stop(index: int) -> None:
     """Execution side scope and stop distance are profile choices, not provider identity."""
     original = load_multi_asset_live_config(NONCRYPTO_PROFILE, mode="observe")
     providers = list(original.providers)
@@ -80,11 +78,10 @@ def test_inactive_directional_route_keeps_its_own_side_and_stop(index: int) -> N
 
 
 def test_all_inactive_override_families_survive_staging(tmp_path: Path) -> None:
-    """Direction, context, stop, sizing and directional lock remain exact stored policy."""
+    """Direction, stop, sizing and directional lock remain exact stored policy."""
     original = load_multi_asset_live_config("tests/fixtures/profiles/cohort_base.toml", mode="observe")
     provider = replace(original.providers[1], execution_symbols=(),
                        execution_side_overrides=(("BTC", frozenset({"long"})),),
-                       entry_context_overrides=(("BTC", "dual_mtf_not_opposed"),),
                        stop_bps_overrides=(("BTC", 60.0),),
                        directional_sizing_overrides=(("BTC", "long", CohortEntrySizing(0.02, 20.0)),),
                        profit_lock_overrides=(CohortProfitLockOverride("BTC", "long", "none"),))

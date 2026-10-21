@@ -10,7 +10,7 @@ from hypervector.research.hip3_fee_model import (
 )
 
 
-def test_growth_mode_fee_formula_matches_observed_spcx_inputs() -> None:
+def test_growth_mode_fee_formula_matches_observed_bbb_inputs() -> None:
     """Positive maker and taker rates must follow the documented HIP-3 scales."""
     fees = effective_hip3_fees(
         Hip3FeeInputs(
@@ -21,7 +21,7 @@ def test_growth_mode_fee_formula_matches_observed_spcx_inputs() -> None:
             growth_mode=True,
             aligned_quote=False,
             aligned_quote_status="unresolved_conservative_false",
-            evidence_label="spcx-current-account-and-qualification",
+            evidence_label="bbb-current-account-and-qualification",
         )
     )
 

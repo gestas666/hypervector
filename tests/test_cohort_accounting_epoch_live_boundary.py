@@ -14,7 +14,7 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
 
 SCRIPT = Path(__file__).parents[1] / "src/hypervector/operations/multi_asset_bidirectional_live.py"
-PRIOR = Path("tests/fixtures/profiles/hype_compression_range_retired_current.toml")
+PRIOR = Path("tests/fixtures/profiles/ten_asset_base.toml")
 SUCCESSOR = Path("tests/fixtures/profiles/repaired_b.toml")
 
 

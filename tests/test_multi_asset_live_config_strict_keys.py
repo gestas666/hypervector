@@ -10,7 +10,7 @@ from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfi
 
 ADAPTIVE_EIGHT_ASSET = Path("tests/fixtures/profiles/adaptive_eight_asset.toml")
 EXIT_POLICY_V2 = Path("tests/fixtures/profiles/exit_policy_v2.toml")
-DONCHIAN = "hourly_donchian_20_10_atr20_bidirectional_v1"
+CHANNEL = "test_channel_15m"
 
 
 def _variant(tmp_path: Path, old: str, new: str, count: int = 1) -> Path:
@@ -34,13 +34,13 @@ def test_fixture_profiles_keep_their_fingerprints() -> None:
         load_multi_asset_live_config(
             ADAPTIVE_EIGHT_ASSET, mode="observe"
         ).profile_fingerprint
-        == "217720aba4e61b7001471258522f03bb02cac8f42b660ba19a049981aa4d7ae6"
+        == "a458a0d66e9ab524ab13547cf772e72c5751880ea6abfe8c489f1468920aa325"
     )
     assert (
         load_multi_asset_live_config(
             EXIT_POLICY_V2, mode="observe"
         ).profile_fingerprint
-        == "b470ca1199fd14913af8e7b1c0d022b1bd3f1a24a263a041b5ad84dc542278c9"
+        == "4a7c74b468c7a2466a0d3b3150ce1b05db8e4ec0c70ee8f9453e1a78496f42be"
     )
 
 
@@ -93,9 +93,9 @@ def test_misspelled_stop_risk_budget_field_is_refused(tmp_path: Path) -> None:
             "entry_slipage_cap_fraction",
         ),
         (
-            f'strategy_id = "{DONCHIAN}"\n',
-            f'strategy_id = "{DONCHIAN}"\nexecution_symbol = []\n',
-            f"[[providers]] {DONCHIAN}",
+            f'strategy_id = "{CHANNEL}"\n',
+            f'strategy_id = "{CHANNEL}"\nexecution_symbol = []\n',
+            f"[[providers]] {CHANNEL}",
             "execution_symbol",
         ),
     ],

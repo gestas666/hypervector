@@ -18,7 +18,10 @@ from hypervector.live.cohort_execution_plan_parsing import (
 
 from hypervector.live.cohort_adaptive_exit_policy import (
     ADAPTIVE_EXIT_POLICIES,
+    ADAPTIVE_EXIT_POLICY,
     RETENTION_EXIT_POLICY,
+    AdaptiveExitParameters,
+    RetentionExitParameters,
 )
 from hypervector.live.cohort_stop_risk_sizing import StopRiskBudget
 from hypervector.live.cohort_execution_plan_validation import (
@@ -31,12 +34,7 @@ StopPolicy = Literal["fixed_bps", "structural_clamped_bps"]
 TargetPolicy = Literal["none", "fixed_bps", "reward_risk", "absolute_anchor"]
 MaximumHoldPolicy = Literal["fixed", "extend_while_regime_supported"]
 ProviderRecipeExitPolicy = Literal["ignore", "honor"]
-ProfitLockPolicy = Literal[
-    "none",
-    "completed_bar_trailing",
-    "btc_hulk_delayed_component_floor_v1",
-    "btc_hulk_delayed_component_exit_v2",
-]
+ProfitLockPolicy = Literal["none", "completed_bar_trailing"]
 # Where the v2 floor moves the resting venue stop: entry +/- 25 bps, or
 # the more protective of that and the +/- 0.5R software floor.
 BreakevenStopTarget = Literal["entry_offset", "floor"]
@@ -47,14 +45,7 @@ _TARGET_POLICIES = frozenset({"none", "fixed_bps", "reward_risk", "absolute_anch
 _MAXIMUM_HOLD_POLICIES = frozenset({"fixed", "extend_while_regime_supported"})
 _PROVIDER_RECIPE_EXIT_POLICIES = frozenset({"ignore", "honor"})
 _BREAKEVEN_STOP_TARGETS = frozenset({"entry_offset", "floor"})
-_PROFIT_LOCK_POLICIES = frozenset(
-    {
-        "none",
-        "completed_bar_trailing",
-        "btc_hulk_delayed_component_floor_v1",
-        "btc_hulk_delayed_component_exit_v2",
-    }
-)
+_PROFIT_LOCK_POLICIES = frozenset({"none", "completed_bar_trailing"})
 
 
 @dataclass(frozen=True)
@@ -82,6 +73,8 @@ class ProviderExecutionContract:
     profit_lock_giveback_bps: float | None = None
     stop_risk_budget: StopRiskBudget | None = None
     breakeven_stop_target: BreakevenStopTarget = "entry_offset"
+    adaptive_exit: AdaptiveExitParameters | None = None
+    retention_exit: RetentionExitParameters | None = None
 
     def __post_init__(self) -> None:
         """Reject missing parameters and ambiguous policy combinations."""
@@ -100,6 +93,7 @@ class ProviderExecutionContract:
         _positive_integer(self.maximum_hold_seconds, "maximum_hold_seconds")
         if self.adaptive_exit_policy not in ADAPTIVE_EXIT_POLICIES:
             raise CohortExecutionPlanError("unsupported adaptive exit policy")
+        _validate_adaptive_parameters(self)
         if self.adaptive_exit_policy != "none" and self.profit_lock_policy != "none":
             raise CohortExecutionPlanError(
                 "adaptive and legacy profit locks cannot overlap"
@@ -111,7 +105,7 @@ class ProviderExecutionContract:
             and self.adaptive_exit_policy != RETENTION_EXIT_POLICY
         ):
             raise CohortExecutionPlanError(
-                "breakeven_stop_target floor requires the v2 retention exit policy"
+                f"breakeven_stop_target floor requires {RETENTION_EXIT_POLICY}"
             )
         _validate_stop_contract(self)
         _validate_target_contract(self)
@@ -153,21 +147,17 @@ class ProviderExecutionContract:
             strategy_id=strategy,
             stop_anchor=anchor,
             target_anchor=target,
-            **{**asdict(self), "stop_risk_budget": self.stop_risk_budget},
+            **{
+                **asdict(self),
+                "stop_risk_budget": self.stop_risk_budget,
+                "adaptive_exit": self.adaptive_exit,
+                "retention_exit": self.retention_exit,
+            },
         )
 
     def as_payload(self) -> dict[str, object]:
         """Return a JSON-safe configuration projection."""
-        payload = asdict(self)
-        if self.stop_risk_budget is None:
-            payload.pop("stop_risk_budget")
-        else:
-            payload["stop_risk_budget"] = self.stop_risk_budget.as_payload()
-        if self.adaptive_exit_policy == "none":
-            payload.pop("adaptive_exit_policy")
-        if self.breakeven_stop_target == "entry_offset":
-            payload.pop("breakeven_stop_target")
-        return payload
+        return _contract_payload(self, asdict(self))
 
     @classmethod
     def from_payload(cls, value: object) -> ProviderExecutionContract:
@@ -224,6 +214,8 @@ class ProviderExecutionContract:
             breakeven_stop_target=_breakeven_stop_target(
                 row.get("breakeven_stop_target", "entry_offset")
             ),
+            adaptive_exit=_adaptive_parameters(row.get("adaptive_exit")),
+            retention_exit=_retention_parameters(row.get("retention_exit")),
         )
 
 
@@ -255,6 +247,8 @@ class BoundExecutionPlan:
     profit_lock_giveback_bps: float | None = None
     stop_risk_budget: StopRiskBudget | None = None
     breakeven_stop_target: BreakevenStopTarget = "entry_offset"
+    adaptive_exit: AdaptiveExitParameters | None = None
+    retention_exit: RetentionExitParameters | None = None
 
     def __post_init__(self) -> None:
         """Reuse contract validation and require dynamic structural evidence."""
@@ -282,6 +276,8 @@ class BoundExecutionPlan:
             profit_lock_floor_bps=self.profit_lock_floor_bps,
             profit_lock_giveback_bps=self.profit_lock_giveback_bps,
             breakeven_stop_target=self.breakeven_stop_target,
+            adaptive_exit=self.adaptive_exit,
+            retention_exit=self.retention_exit,
         )
         if not self.strategy_id.strip():
             raise CohortExecutionPlanError("strategy_id must be non-empty")
@@ -296,16 +292,7 @@ class BoundExecutionPlan:
 
     def as_payload(self) -> dict[str, object]:
         """Return the complete plan for durable state transitions."""
-        payload = asdict(self)
-        if self.stop_risk_budget is None:
-            payload.pop("stop_risk_budget")
-        else:
-            payload["stop_risk_budget"] = self.stop_risk_budget.as_payload()
-        if self.adaptive_exit_policy == "none":
-            payload.pop("adaptive_exit_policy")
-        if self.breakeven_stop_target == "entry_offset":
-            payload.pop("breakeven_stop_target")
-        return payload
+        return _contract_payload(self, asdict(self))
 
     @classmethod
     def from_payload(cls, value: object) -> BoundExecutionPlan:
@@ -365,6 +352,8 @@ class BoundExecutionPlan:
             breakeven_stop_target=_breakeven_stop_target(
                 row.get("breakeven_stop_target", "entry_offset")
             ),
+            adaptive_exit=_adaptive_parameters(row.get("adaptive_exit")),
+            retention_exit=_retention_parameters(row.get("retention_exit")),
         )
 
     def stop_price(self, *, entry_price: float, side: str) -> float:
@@ -421,6 +410,62 @@ class BoundExecutionPlan:
         _side(side)
         anchor = _positive(self.stop_anchor, "stop_anchor")
         return anchor >= entry if side == "long" else anchor <= entry
+
+
+def _contract_payload(
+    contract: ProviderExecutionContract | BoundExecutionPlan,
+    payload: dict[str, object],
+) -> dict[str, object]:
+    """Omit unset optional sections so a plain contract keeps its identity."""
+    for key, value in (
+        ("stop_risk_budget", contract.stop_risk_budget),
+        ("adaptive_exit", contract.adaptive_exit),
+        ("retention_exit", contract.retention_exit),
+    ):
+        if value is None:
+            payload.pop(key)
+        else:
+            payload[key] = value.as_payload()
+    if contract.adaptive_exit_policy == "none":
+        payload.pop("adaptive_exit_policy")
+    if contract.breakeven_stop_target == "entry_offset":
+        payload.pop("breakeven_stop_target")
+    return payload
+
+
+def _validate_adaptive_parameters(contract: ProviderExecutionContract) -> None:
+    """Require exactly the parameter table the bound adaptive policy reads."""
+    policy = contract.adaptive_exit_policy
+    if contract.adaptive_exit is not None and not isinstance(
+        contract.adaptive_exit, AdaptiveExitParameters
+    ):
+        raise CohortExecutionPlanError("adaptive_exit must be a typed parameter table")
+    if contract.retention_exit is not None and not isinstance(
+        contract.retention_exit, RetentionExitParameters
+    ):
+        raise CohortExecutionPlanError("retention_exit must be a typed parameter table")
+    if (contract.adaptive_exit is not None) != (policy == ADAPTIVE_EXIT_POLICY):
+        raise CohortExecutionPlanError(
+            f"adaptive_exit parameters are required for, and only for, {ADAPTIVE_EXIT_POLICY}"
+        )
+    if (contract.retention_exit is not None) != (policy == RETENTION_EXIT_POLICY):
+        raise CohortExecutionPlanError(
+            f"retention_exit parameters are required for, and only for, {RETENTION_EXIT_POLICY}"
+        )
+
+
+def _adaptive_parameters(value: object) -> AdaptiveExitParameters | None:
+    try:
+        return AdaptiveExitParameters.from_payload(value)
+    except (TypeError, ValueError) as exc:
+        raise CohortExecutionPlanError(str(exc)) from exc
+
+
+def _retention_parameters(value: object) -> RetentionExitParameters | None:
+    try:
+        return RetentionExitParameters.from_payload(value)
+    except (TypeError, ValueError) as exc:
+        raise CohortExecutionPlanError(str(exc)) from exc
 
 
 def _validate_stop_contract(contract: ProviderExecutionContract) -> None:

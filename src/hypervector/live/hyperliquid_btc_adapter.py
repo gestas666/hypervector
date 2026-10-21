@@ -39,7 +39,7 @@ BTC_SYMBOL = "BTC"
 
 
 class BtcHyperliquidAdapter(HyperliquidPerpReader):
-    """Translate the faithful source-follow contract into official SDK calls."""
+    """Translate one symbol's protected order lifecycle into official SDK calls."""
 
     def __init__(
         self,

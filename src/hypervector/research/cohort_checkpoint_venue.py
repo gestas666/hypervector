@@ -4,26 +4,18 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import os
-import sys
 
 from hyperliquid.utils.error import ClientError, ServerError  # type: ignore[import-untyped]
 from requests import RequestException
 
-from hypervector.live.hyperliquid_funding_history import (
-    HyperliquidFundingHistoryReader,
-)
 from hypervector.live.hyperliquid_portfolio_value import (
     HyperliquidPortfolioValueError,
     HyperliquidPortfolioValueReader,
 )
 from hypervector.live.policy import SECRET_ENV_WALLET
-from hypervector.research.cohort_eligible_policy_funding import (
-    EligiblePolicyFundingEvidence,
-)
 from hypervector.runtime_env import load_wallet_env_if_present
 
 PortfolioFn = Callable[[], dict[str, object]]
-FundingFn = Callable[[str, int, int], EligiblePolicyFundingEvidence | None]
 
 
 def official_portfolio_fn() -> PortfolioFn:
@@ -48,46 +40,6 @@ def official_portfolio_fn() -> PortfolioFn:
                 account_address=address,
             )
         return reader.snapshot().as_payload()
-
-    return read
-
-
-def official_funding_fn() -> FundingFn:
-    """Construct one failure-isolated public mainnet funding reader."""
-    from hyperliquid.info import Info  # type: ignore[import-untyped]
-    from hyperliquid.utils import constants  # type: ignore[import-untyped]
-
-    endpoint = str(constants.MAINNET_API_URL)
-    if "testnet" in endpoint.lower():
-        raise ValueError("eligible-policy funding refuses a testnet endpoint")
-    reader = HyperliquidFundingHistoryReader(Info(endpoint, skip_ws=True))
-    return failure_isolated_funding_fn(reader)
-
-
-def failure_isolated_funding_fn(
-    reader: HyperliquidFundingHistoryReader,
-) -> FundingFn:
-    """Keep public funding failure from suppressing core live telemetry."""
-
-    def read(
-        symbol: str,
-        start_ms: int,
-        end_ms: int,
-    ) -> EligiblePolicyFundingEvidence | None:
-        try:
-            return reader.read(symbol, start_ms, end_ms)
-        except (
-            RequestException,
-            ClientError,
-            ServerError,
-            OSError,
-            ValueError,
-        ) as exc:
-            print(
-                f"eligible-policy funding unavailable: {type(exc).__name__}: {exc}",
-                file=sys.stderr,
-            )
-            return None
 
     return read
 

@@ -91,7 +91,7 @@ def _seed_entry_identity(ledger: SolLiveLedger) -> None:
         "regime_decision",
         "2026-08-01T12:00:00+00:00",
         {
-            "strategy_id": "range_onset_bidirectional_v1",
+            "strategy_id": "test_breakout_1m",
             "reference_price": 100.0,
         },
     )
@@ -169,7 +169,7 @@ def _append(
 
 
 def _assert_fill(fill: dict[str, object]) -> None:
-    assert fill["strategy_id"] == "range_onset_bidirectional_v1"
+    assert fill["strategy_id"] == "test_breakout_1m"
     assert fill["trade_id"] == 101
     assert fill["acknowledgement_latency_ms"] == 40
     assert abs(float(fill["slippage_bps"]) - 10.0) < 1e-9

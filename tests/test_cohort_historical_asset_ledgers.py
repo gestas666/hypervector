@@ -10,19 +10,19 @@ from hypervector.research.cohort_historical_asset_ledgers import (
 
 
 def test_retired_asset_paths_exclude_cohort_and_active_ledgers(tmp_path: Path) -> None:
-    """All-time history should add GOLD without duplicating active assets."""
+    """All-time history should add DDD without duplicating active assets."""
     cohort = _touch(tmp_path / "decisions.jsonl")
     _touch(tmp_path / "btc.jsonl")
-    _touch(tmp_path / "xyz:sp500.jsonl")
-    gold = _touch(tmp_path / "xyz:gold.jsonl")
+    _touch(tmp_path / "xyz:aaa.jsonl")
+    ddd = _touch(tmp_path / "xyz:ddd.jsonl")
 
     paths = retired_asset_paths(
         tmp_path,
         cohort,
-        active_symbols=("BTC", "xyz:SP500"),
+        active_symbols=("BTC", "xyz:AAA"),
     )
 
-    assert paths == {"xyz:GOLD": gold}
+    assert paths == {"xyz:DDD": ddd}
 
 
 def _touch(path: Path) -> Path:

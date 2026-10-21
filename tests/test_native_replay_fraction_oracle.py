@@ -9,7 +9,7 @@ from typing import Iterator
 from hypervector.research.native_replay_account import AccountView, ExactFillAccount
 from hypervector.research.native_replay_events import FillEvent, FundingEvent, Stamp
 
-SYMBOLS = ("BTC", "ETH", "SOL", "HYPE", "xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL")
+SYMBOLS = ("BTC", "ETH", "SOL", "HYPE", "xyz:BBB", "xyz:CCC", "xyz:EEE")
 INITIAL_CASH = Fraction(10_000)
 TOLERANCE_USD = Fraction(1, 10**38)
 

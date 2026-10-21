@@ -5,8 +5,9 @@ from __future__ import annotations
 import pytest
 
 from hypervector.live.bidirectional_intents import StrategyIntent
+from hypervector.live.canonical_regime_telemetry import CANONICAL_REGIME_TELEMETRY_STRATEGY
 from hypervector.live.cohort_regime_routing import attach_regime_preferences
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
 
@@ -95,7 +96,7 @@ def test_telemetry_only_canonical_identity_replaces_retired_range_provider() -> 
 
 def _intent(side: str) -> StrategyIntent:
     return StrategyIntent(
-        strategy_id="hulk_expansion_bidirectional_tuned_v2",
+        strategy_id="test_trend_5m",
         symbol="BTC",
         side=side,
         decision_time_ms=1_785_600_000_000,
@@ -110,7 +111,7 @@ def _evaluation(
     context_15m: str,
     *,
     structural_direction: str = "neutral",
-    strategy_id: str = "range_onset_bidirectional_v1",
+    strategy_id: str = CANONICAL_REGIME_TELEMETRY_STRATEGY,
     decision_time_ms: int = 1_785_600_000_000,
 ) -> ProviderEvaluation:
     return ProviderEvaluation(

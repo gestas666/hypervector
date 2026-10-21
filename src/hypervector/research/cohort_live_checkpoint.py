@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from contextlib import ExitStack
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,29 +27,6 @@ from hypervector.research.cohort_checkpoint_archive_validation import (
 from hypervector.research.checkpoint_ledger_projection import (
     compact_cohort_ledger_rows,
 )
-from hypervector.research.cohort_checkpoint_opportunity import (
-    load_opportunity_matrix as _load_opportunity_matrix,
-    load_supplemental_opportunity_matrix as _load_supplemental_opportunity_matrix,
-    merge_opportunity_matrices,
-)
-from hypervector.research.cohort_allocation_challenger import (
-    allocation_challenger_applicable,
-    build_allocation_challenger,
-)
-from hypervector.research.cohort_asymmetric_forward_observer import (
-    AsymmetricForwardDeclaration,
-    attach_asymmetric_forward_observer,
-    load_asymmetric_forward_declaration,
-)
-from hypervector.research.cohort_eligible_policy_forward import (
-    EligiblePolicyForwardSpec,
-    build_eligible_policy_forward_report,
-    eth_transfer_forward_spec,
-)
-from hypervector.research.cohort_eligible_policy_funding import (
-    EligiblePolicyFundingEvidence,
-)
-from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.research.cohort_live_audit import audit_multi_asset_live_run
 from hypervector.research.cohort_checkpoint_asset_snapshots import (
     projected_asset_fill_counts,
@@ -66,12 +43,8 @@ from hypervector.research.cohort_live_lifecycle import build_live_lifecycle
 from hypervector.research.cohort_historical_asset_ledgers import (
     snapshot_retired_asset_ledgers,
 )
-from hypervector.research.cohort_opportunity_matrix_provenance import (
-    opportunity_matrix_provenance,
-)
 from hypervector.research.cohort_protection_warnings import protection_warnings
 from hypervector.research.cohort_risk_utilization import cohort_risk_utilization
-from hypervector.research.cohort_side_composition import build_side_composition
 from hypervector.research.cohort_transition_checkpoint import transition_drain_summary
 from hypervector.research.live_ledger_snapshot import (
     snapshot_current_run_ledger,
@@ -80,7 +53,6 @@ from hypervector.research.live_ledger_snapshot import (
 )
 
 Record = Mapping[str, object]
-FundingEvidenceFn = Callable[[str, int, int], EligiblePolicyFundingEvidence | None]
 _HEARTBEAT_STALE_AFTER_SECONDS = 60.0
 
 
@@ -92,13 +64,8 @@ def build_live_checkpoint(
     generated_at: datetime | None = None,
     configuration_expectation: ConfigurationGenerationExpectation | None = None,
     venue_portfolio: Mapping[str, object] | None = None,
-    execution_opportunity_matrix: Mapping[str, object] | None = None,
-    supplemental_execution_opportunity_matrices: Sequence[Mapping[str, object]] = (),
-    eligible_policy_forward_spec: EligiblePolicyForwardSpec | None = None,
-    eligible_policy_funding_evidence: EligiblePolicyFundingEvidence | None = None,
     portfolio_archive: Mapping[str, object] | None = None,
     portfolio_reflections_complete: bool = True,
-    asymmetric_forward_declaration: AsymmetricForwardDeclaration | None = None,
     heartbeat_stale_after_seconds: float | None = None,
     all_time_asset_records: Mapping[str, Sequence[Record]] | None = None,
 ) -> dict[str, object]:
@@ -116,41 +83,11 @@ def build_live_checkpoint(
         cohort_records,
         run_id=selected_run_id,
     )
-    risk = _mapping(audit["risk_utilization"], "risk utilization")
-    if allocation_challenger_applicable(risk):
-        audit["allocation_challenger"] = build_allocation_challenger(
-            risk,
-            _mapping(audit.get("strategy_scorecard"), "strategy scorecard"),
-            hype_records=asset_records.get("HYPE", ()),
-            run_id=selected_run_id,
-        )
-    audit["side_composition"] = build_side_composition(audit)
-    if (
-        execution_opportunity_matrix is not None
-        or supplemental_execution_opportunity_matrices
-    ):
-        matrix = merge_opportunity_matrices(
-            execution_opportunity_matrix,
-            supplemental_execution_opportunity_matrices,
-        )
-        matrix["checkpoint_provenance"] = opportunity_matrix_provenance(
-            matrix,
-            run,
-        )
-        audit["execution_opportunity_matrix"] = matrix
-    if eligible_policy_forward_spec is not None:
-        audit["eligible_policy_forward"] = build_eligible_policy_forward_report(
-            cohort_records,
-            spec=eligible_policy_forward_spec,
-            funding_evidence=eligible_policy_funding_evidence,
-        )
     if portfolio_archive is not None:
         audit["portfolio_archive"] = _validated_portfolio_archive(portfolio_archive)
         if portfolio_reflections_complete:
             _refresh_accounting_epoch_archive(audit, observed_at)
             _reconcile_equal_coverage_archive(audit)
-    if asymmetric_forward_declaration is not None:
-        attach_asymmetric_forward_observer(audit, asymmetric_forward_declaration)
     lifecycle = build_live_lifecycle(
         cohort_records,
         asset_records,
@@ -198,12 +135,7 @@ def publish_live_checkpoint(
     generated_at: datetime | None = None,
     config_path: Path | None = None,
     venue_portfolio: Mapping[str, object] | None = None,
-    opportunity_matrix_path: Path | None = None,
-    supplemental_opportunity_matrix_paths: Sequence[Path] = (),
-    eligible_policy_forward: bool = False,
-    funding_evidence_fn: FundingEvidenceFn | None = None,
     portfolio_archive: Mapping[str, object] | None = None,
-    asymmetric_forward_journal_path: Path | None = None,
     compatible_execution_history: bool = False,
     complete_historical_checkpoint: Mapping[str, object] | None = None,
     current_run_only: bool = False,
@@ -276,20 +208,6 @@ def publish_live_checkpoint(
                 compatible_execution_history=compatible_execution_history,
                 run_id=audit_run_id(identity),
             )
-        forward_spec = (
-            _eligible_policy_forward_spec(cohort_rows, config_path, run_id)
-            if eligible_policy_forward
-            else None
-        )
-        funding_evidence = (
-            funding_evidence_fn(
-                forward_spec.symbol,
-                forward_spec.cutoff_time_ms,
-                int(observed_at.timestamp() * 1_000),
-            )
-            if forward_spec is not None and funding_evidence_fn is not None
-            else None
-        )
         checkpoint = build_live_checkpoint(
             cohort_rows,
             asset_rows,
@@ -301,25 +219,9 @@ def publish_live_checkpoint(
                 else None
             ),
             venue_portfolio=venue_portfolio,
-            execution_opportunity_matrix=(
-                _load_opportunity_matrix(opportunity_matrix_path)
-                if opportunity_matrix_path is not None
-                else None
-            ),
-            supplemental_execution_opportunity_matrices=[
-                _load_supplemental_opportunity_matrix(path)
-                for path in supplemental_opportunity_matrix_paths
-            ],
-            eligible_policy_forward_spec=forward_spec,
-            eligible_policy_funding_evidence=funding_evidence,
             portfolio_archive=portfolio_archive,
             portfolio_reflections_complete=not current_run_only,
             all_time_asset_records=asset_rows | retired_rows,
-            asymmetric_forward_declaration=(
-                load_asymmetric_forward_declaration(asymmetric_forward_journal_path)
-                if asymmetric_forward_journal_path is not None
-                else None
-            ),
             heartbeat_stale_after_seconds=_HEARTBEAT_STALE_AFTER_SECONDS,
         )
     checkpoint["evidence"] = {
@@ -357,22 +259,6 @@ def _validated_portfolio_archive(value: Mapping[str, object]) -> dict[str, objec
     ):
         raise ValueError("portfolio archive contract is invalid")
     return dict(value)
-
-
-def _eligible_policy_forward_spec(
-    cohort_rows: Sequence[Record],
-    config_path: Path | None,
-    requested_run_id: str | None,
-) -> EligiblePolicyForwardSpec:
-    if config_path is None:
-        raise ValueError("eligible policy forward journal requires a config")
-    config = load_multi_asset_live_config(config_path, mode="observe")
-    _, identity = select_armed_live_run(cohort_rows, requested_run_id)
-    return eth_transfer_forward_spec(
-        config,
-        cohort_rows,
-        run_id=audit_run_id(identity),
-    )
 
 
 def publish_unavailable_checkpoint(

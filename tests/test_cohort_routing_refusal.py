@@ -34,12 +34,12 @@ def _contracts() -> dict[tuple[str, str], ProviderExecutionContract]:
         target_policy="none",
         maximum_hold_seconds=86_400,
     )
-    return {("donchian", "xyz:SNDK"): contract}
+    return {("test_channel_provider", "xyz:CCC"): contract}
 
 
 def _action(side: str, anchor: float) -> RoutingAction:
     return RoutingAction(
-        "enter", "donchian", "xyz:SNDK", side, 1_000, 100.0, stop_anchor=anchor
+        "enter", "test_channel_provider", "xyz:CCC", side, 1_000, 100.0, stop_anchor=anchor
     )
 
 

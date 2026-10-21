@@ -187,16 +187,15 @@ def test_observer_ledger_override_refuses_configured_root() -> None:
 
 
 def test_observer_builds_hip3_only_poller_without_fake_core_route() -> None:
-    """A HIP-3 study must not need an unrelated core strategy provider."""
+    """A HIP-3-only profile needs no core-perp provider or canonical route."""
     module = _load_module()
     config = module.load_multi_asset_live_config(
-        "tests/fixtures/profiles/index_fresh15_pressure.toml",
+        "tests/fixtures/profiles/hip3_only_observer.toml",
         mode="observe",
     )
 
     poller = module._build_observer_poller(
         config,
-        backtest_lab_root=Path("unused"),
         fetch_bars=lambda symbol, timeframe, days, *, end_ms=None: None,
     )
 
@@ -234,11 +233,11 @@ def test_observer_cache_bypasses_completed_bar_profit_lock_symbols() -> None:
 
     cached = module._observer_candle_fetcher(config, fetch)
     end_ms = int(pd.Timestamp("2026-08-21T06:01:15Z").timestamp() * 1_000)
-    for symbol in ("BTC", "xyz:SP500"):
+    for symbol in ("BTC", "xyz:AAA"):
         cached(symbol, "1m", 1.0, end_ms=end_ms)
         cached(symbol, "1m", 1.0, end_ms=end_ms + 10_000)
 
-    assert calls == ["BTC", "xyz:SP500", "xyz:SP500"]
+    assert calls == ["BTC", "xyz:AAA", "xyz:AAA"]
 
 
 @pytest.mark.parametrize("root", [Path("/"), Path.home(), Path.cwd()])

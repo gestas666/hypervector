@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from hypervector.research import cohort_regime_opposition
 from hypervector.research.cohort_regime_opposition import (
     build_regime_opposition_episode,
-    build_regime_opposition_outcome_challenger,
 )
 
 
@@ -111,64 +109,6 @@ def test_opposition_ignores_receipt_time_technical_unavailability() -> None:
     assert episode["completed_decisions"] == 1
     assert episode["unavailable_decisions"] == 1
     assert episode["opposed_decisions"] == 0
-
-
-def test_support_decay_requires_five_contiguous_weak_decisions() -> None:
-    """Mixed structure must persist before it can arm a report-only profit lock."""
-    builder = getattr(
-        cohort_regime_opposition, "build_regime_support_decay_episode", None
-    )
-    assert callable(builder), "support-decay episode builder is not implemented"
-    provider = [
-        _evaluation(60_000, "TREND_UP"),
-        _evaluation(120_000, "RANGE"),
-        _evaluation(180_000, "RANGE"),
-        _evaluation(240_000, "RANGE"),
-        _evaluation(300_000, "RANGE"),
-        _evaluation(360_000, "RANGE"),
-    ]
-
-    episode = builder(
-        "long",
-        provider,
-        provider,
-        entry_timestamp_ms=30_000,
-        end_timestamp_ms=400_000,
-    )
-
-    assert episode["mode"] == "causal_regime_support_decay_persistence_v1"
-    assert episode["contract"]["execution_authority"] == "none"
-    assert episode["support_decay_threshold"] == pytest.approx(0.25)
-    assert episode["persistence_decisions"] == [5]
-    assert episode["decayed_decisions"] == 5
-    assert episode["maximum_consecutive_decayed"] == 5
-    assert episode["persistence_triggers"] == {"5": 360_000}
-
-
-def test_opposition_outcomes_remain_partitioned_by_provider_and_persistence() -> None:
-    """Resolved after-cost outcomes challenge rather than authorize early exits."""
-    trades = [
-        _trade(1.0, trigger_five=240_000),
-        _trade(-0.5, trigger_five=None),
-    ]
-
-    challenger = build_regime_opposition_outcome_challenger(trades)
-
-    assert challenger["contract"]["execution_authority"] == "none"
-    provider = challenger["provider_symbols"][0]
-    assert provider["strategy_id"] == "provider"
-    assert provider["symbol"] == "BTC"
-    five = next(
-        row
-        for row in provider["persistence_results"]
-        if row["persistence_decisions"] == 5
-    )
-    assert five["triggered_performance"]["closed_trades"] == 1
-    assert five["triggered_performance"]["wins"] == 1
-    assert five["triggered_performance"]["net_pnl_usd"] == 1.0
-    assert five["not_triggered_performance"]["closed_trades"] == 1
-    assert five["not_triggered_performance"]["losses"] == 1
-    assert five["not_triggered_performance"]["net_pnl_usd"] == -0.5
 
 
 def _evaluation(timestamp_ms: int, state: str) -> dict[str, object]:

@@ -27,7 +27,6 @@ def provider_profile_values(config: StrategyProviderConfig) -> dict[str, object]
     values = asdict(config)
     for field in (
         "execution_side_overrides",
-        "entry_context_overrides",
         "stop_bps_overrides",
         "sizing_overrides",
         "directional_sizing_overrides",
@@ -40,10 +39,15 @@ def provider_profile_values(config: StrategyProviderConfig) -> dict[str, object]
     execution = values.get("execution")
     if not isinstance(execution, dict):
         return values
-    if config.execution.stop_risk_budget is None:
-        execution.pop("stop_risk_budget")
-    else:
-        execution["stop_risk_budget"] = config.execution.stop_risk_budget.as_payload()
+    for key, section in (
+        ("stop_risk_budget", config.execution.stop_risk_budget),
+        ("adaptive_exit", config.execution.adaptive_exit),
+        ("retention_exit", config.execution.retention_exit),
+    ):
+        if section is None:
+            execution.pop(key)
+        else:
+            execution[key] = section.as_payload()
     if config.execution.adaptive_exit_policy == "none":
         execution.pop("adaptive_exit_policy")
     if config.execution.breakeven_stop_target == "entry_offset":

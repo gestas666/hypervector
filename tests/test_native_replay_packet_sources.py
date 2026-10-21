@@ -52,20 +52,20 @@ def test_declared_price_and_funding_events_preserve_nulls_and_economic_clock() -
     replay = sdk()
     _event(
         replay,
-        row={"kind": "price", "symbol": "xyz:SNDK", "time_ms": 1000, "mark": "100", "mid": "100"},
+        row={"kind": "price", "symbol": "xyz:CCC", "time_ms": 1000, "mark": "100", "mid": "100"},
     )
     replay.advance_to(1100)
     _event(
         replay,
-        row={"kind": "price", "symbol": "xyz:SNDK", "time_ms": 1100, "mark": "101", "mid": None},
+        row={"kind": "price", "symbol": "xyz:CCC", "time_ms": 1100, "mark": "101", "mid": None},
     )
-    assert not replay.mid_prices and replay.account.snapshot().mark_prices["xyz:SNDK"] == 101
+    assert not replay.mid_prices and replay.account.snapshot().mark_prices["xyz:CCC"] == 101
     _event(
         replay,
         row={
             "kind": "funding",
             "event_id": "funding:1100",
-            "symbol": "xyz:SNDK",
+            "symbol": "xyz:CCC",
             "time_ms": 1100,
             "rate": ".001",
             "oracle_price": "102",

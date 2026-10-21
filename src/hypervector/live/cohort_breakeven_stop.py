@@ -1,4 +1,4 @@
-"""Raise venue stops to break-even for lifecycles whose v2 profit floor has armed."""
+"""Raise venue stops to break-even for lifecycles whose retention profit floor armed."""
 
 from __future__ import annotations
 
@@ -6,11 +6,7 @@ from collections.abc import Callable, Mapping, MutableMapping
 import math
 
 from hypervector.live.cohort_adaptive_exit_controller import lifecycle_risk_bps
-from hypervector.live.cohort_adaptive_exit_policy import (
-    BOOK_MAX_AGE_MS,
-    BREAKEVEN_BPS,
-    FLOOR_R,
-)
+from hypervector.live.cohort_adaptive_exit_policy import BOOK_MAX_AGE_MS
 from hypervector.live.cohort_breakeven_events import (
     BREAKEVEN_ATTEMPT_EVENT,
     BREAKEVEN_SKIPPED_EVENT as BREAKEVEN_SKIPPED_EVENT,
@@ -39,29 +35,38 @@ SkipStreaks = MutableMapping[tuple[str, int], tuple[str, int]]
 WirePrice = Callable[[str, float], float]
 
 
-def breakeven_trigger_price(entry_price: float, position_size_signed: float) -> float:
-    """Return the trigger just beyond entry on the favorable side, covering round-trip costs."""
+def breakeven_trigger_price(
+    entry_price: float, position_size_signed: float, offset_bps: float
+) -> float:
+    """Return the trigger ``offset_bps`` beyond entry on the favorable side."""
     if entry_price <= 0.0 or position_size_signed == 0.0:
         raise ValueError(
             "break-even trigger requires a positive entry and open exposure"
         )
+    if not math.isfinite(offset_bps) or offset_bps < 0.0:
+        raise ValueError("break-even offset must be finite and nonnegative")
     sign = 1.0 if position_size_signed > 0.0 else -1.0
-    return entry_price * (1.0 + sign * BREAKEVEN_BPS / 10_000.0)
+    return entry_price * (1.0 + sign * offset_bps / 10_000.0)
 
 
 def breakeven_target_price(
-    plan: BoundExecutionPlan | None,
+    plan: BoundExecutionPlan,
     entry_price: float,
     position_size_signed: float,
 ) -> float:
-    """Return the configured raise target: entry +/- 25 bps, or at least the 0.5R floor."""
-    offset = breakeven_trigger_price(entry_price, position_size_signed)
-    if plan is None or plan.breakeven_stop_target == "entry_offset":
+    """Return the configured raise target: the entry offset, or at least the R floor."""
+    parameters = plan.retention_exit
+    if parameters is None:
+        raise ValueError("break-even raise requires retention exit parameters")
+    offset = breakeven_trigger_price(
+        entry_price, position_size_signed, parameters.breakeven_offset_bps
+    )
+    if plan.breakeven_stop_target == "entry_offset":
         return offset
     long = position_size_signed > 0.0
     risk = lifecycle_risk_bps(plan, entry_price, "long" if long else "short")
     sign = 1.0 if long else -1.0
-    floor = entry_price * (1.0 + sign * FLOOR_R * risk / 10_000.0)
+    floor = entry_price * (1.0 + sign * parameters.floor_r * risk / 10_000.0)
     return max(offset, floor) if long else min(offset, floor)
 
 
@@ -131,9 +136,11 @@ def raise_breakeven_stops(
         if attempts.get(key, 0) >= MAX_RAISE_ATTEMPTS:
             continue
         plan = None if plans is None else plans.get(symbol)
+        if plan is None or plan.retention_exit is None:
+            continue
         size = venue.position.size_signed
         trigger = breakeven_target_price(plan, venue.position.entry_price, size)
-        floor_target = plan is not None and plan.breakeven_stop_target == "floor"
+        floor_target = plan.breakeven_stop_target == "floor"
         guard: dict[str, object] = {}
         if floor_target:
             quote = executable_exit_price(
@@ -243,22 +250,18 @@ def _stop_rests_at_target(
 def _exhausted_payload(
     symbol: str,
     entry_oid: int,
-    plan: BoundExecutionPlan | None,
+    plan: BoundExecutionPlan,
     trigger: float,
     attempts: int,
 ) -> dict[str, object]:
     return {
         "symbol": symbol,
-        "strategy_id": (
-            None if plan is None else entry_provider_strategy_id(plan.strategy_id)
-        ),
+        "strategy_id": entry_provider_strategy_id(plan.strategy_id),
         "entry_oid": entry_oid,
         "reason": RAISE_EXHAUSTED_EVENT,
         "attempts": attempts,
         "trigger_price": trigger,
-        "breakeven_stop_target": (
-            "entry_offset" if plan is None else plan.breakeven_stop_target
-        ),
+        "breakeven_stop_target": plan.breakeven_stop_target,
     }
 
 

@@ -27,12 +27,12 @@ class NativeIocPort:
     """Bind an actual adapter to book/timing inputs without instantiating Exchange."""
 
     def __init__(self, *, lost: bool, cap: float) -> None:
-        """Construct mock protocol boundaries with an explicit synthetic SNDK book."""
+        """Construct mock protocol boundaries with an explicit synthetic CCC book."""
         self.replay = venue()
         self.lost = lost
         self.requests: list[IocOrder] = []
         info = create_autospec(HyperliquidInfoProtocol, instance=True, spec_set=True)
-        info.meta.return_value = {"universe": [{"name": "xyz:SNDK", "szDecimals": 3, "maxLeverage": 10}]}
+        info.meta.return_value = {"universe": [{"name": "xyz:CCC", "szDecimals": 3, "maxLeverage": 10}]}
         exchange = create_autospec(HyperliquidExchangeProtocol, instance=True, spec_set=True)
         exchange.market_open.side_effect = self.market_open
         exchange.market_close.side_effect = self.market_close
@@ -44,7 +44,7 @@ class NativeIocPort:
                 max_notional_usd=500,
                 slippage_fraction=0.01,
                 entry_slippage_fraction=cap,
-                symbol="xyz:SNDK",
+                symbol="xyz:CCC",
                 perp_dex="xyz",
             )
         )
@@ -121,7 +121,7 @@ def test_actual_ioc_adapter_preserves_cap_quantity_and_transport_identity(side: 
         else request.limit_price == (D("100.2") if side == "long" else D("99.8"))
     )
     positions = port.replay.account.snapshot().positions
-    assert positions == {} if mode == "no_fill" else abs(positions["xyz:SNDK"].quantity_signed) == D("0.3")
+    assert positions == {} if mode == "no_fill" else abs(positions["xyz:CCC"].quantity_signed) == D("0.3")
     assert port.replay.visible_fills() == ()
     port.replay.advance_to(1400)
     assert len(port.replay.visible_fills()) == (0 if mode == "no_fill" else 2)
@@ -134,7 +134,7 @@ def test_actual_close_adapter_retains_partial_exposure(side: str) -> None:
     port.adapter.submit_entry(
         side=side, requested_notional_usd=500, mark_price=100, client_order_id=CLIENT_ID
     )
-    position = port.replay.account.snapshot().positions["xyz:SNDK"]
+    position = port.replay.account.snapshot().positions["xyz:CCC"]
     ack = port.adapter.close_position(
         position_size_signed=float(position.quantity_signed),
         mark_price=100,
@@ -142,5 +142,5 @@ def test_actual_close_adapter_retains_partial_exposure(side: str) -> None:
     )
     assert ack.filled_size == 0.1 and port.requests[-1].quantity == D("0.3")
     assert port.requests[-1].reduce_only
-    remaining = port.replay.account.snapshot().positions["xyz:SNDK"]
+    remaining = port.replay.account.snapshot().positions["xyz:CCC"]
     assert abs(remaining.quantity_signed) == D("0.2") and remaining.decision_time_ms == 900

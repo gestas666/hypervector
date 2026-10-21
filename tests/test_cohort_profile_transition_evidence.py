@@ -79,7 +79,7 @@ def test_legacy_archive_validates_retired_previous_symbols(
         mode="observe",
     )
     candidate = load_multi_asset_live_config(
-        "tests/fixtures/profiles/eight_asset_gold_removed.toml",
+        "tests/fixtures/profiles/eight_asset_ddd_removed.toml",
         mode="live",
         enabled=True,
         accepts_live_risk=True,

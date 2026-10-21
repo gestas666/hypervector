@@ -1,4 +1,4 @@
-"""Strict configuration for a shared multi-asset bidirectional canary."""
+"""Strict configuration for a shared multi-asset bidirectional cohort."""
 
 from __future__ import annotations
 
@@ -19,7 +19,6 @@ from hypervector.live.cohort_profit_lock_override import (
 )
 from hypervector.live.multi_asset_live_config_parsing import (
     MultiAssetLiveConfigError,
-    entry_context_overrides as _entry_context_overrides,
     integer as _integer,
     load_toml as _load_toml,
     mapping as _mapping,
@@ -96,9 +95,7 @@ _PROVIDER_KEYS = frozenset(
         "maximum_entry_delay_seconds",
         "execution_symbols",
         "execution",
-        "source_profile",
         "execution_side_overrides",
-        "entry_context_overrides",
         "stop_bps_overrides",
         "sizing_overrides",
         "directional_sizing_overrides",
@@ -187,9 +184,7 @@ class StrategyProviderConfig:
     maximum_entry_delay_seconds: int
     execution_symbols: tuple[str, ...]
     execution: ProviderExecutionContract
-    source_profile: Path | None = None
     execution_side_overrides: tuple[tuple[str, frozenset[str]], ...] = ()
-    entry_context_overrides: tuple[tuple[str, str], ...] = ()
     stop_bps_overrides: tuple[tuple[str, float], ...] = ()
     sizing_overrides: tuple[tuple[str, CohortEntrySizing], ...] = ()
     directional_sizing_overrides: tuple[tuple[str, str, CohortEntrySizing], ...] = ()
@@ -200,10 +195,6 @@ class StrategyProviderConfig:
         """Return effective automatic execution sides for one symbol."""
         overrides = dict(self.execution_side_overrides)
         return overrides.get(symbol, self.sides)
-
-    def entry_context_policy(self, symbol: str) -> str | None:
-        """Return an explicit symbol policy or source-contract behavior."""
-        return dict(self.entry_context_overrides).get(symbol)
 
     def execution_for(
         self,
@@ -421,7 +412,9 @@ def load_multi_asset_live_config(
         mode=mode,
         enabled=bool(enabled),
         accepts_live_risk=bool(accepts_live_risk),
-        transition_approval=_optional_path(runtime.get("transition_approval")),
+        transition_approval=_optional_path(
+            runtime.get("transition_approval"), "transition_approval"
+        ),
     )
     _validate_config(config)
     return config
@@ -497,12 +490,8 @@ def _providers(value: object) -> tuple[StrategyProviderConfig, ...]:
                 "provider execution_symbols",
             ),
             execution=ProviderExecutionContract.from_payload(row.get("execution")),
-            source_profile=_optional_path(row.get("source_profile")),
             execution_side_overrides=_side_overrides(
                 row.get("execution_side_overrides"),
-            ),
-            entry_context_overrides=_entry_context_overrides(
-                row.get("entry_context_overrides"),
             ),
             stop_bps_overrides=_positive_number_overrides(
                 row.get("stop_bps_overrides"),

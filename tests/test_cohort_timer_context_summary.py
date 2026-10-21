@@ -48,54 +48,6 @@ def test_timer_journal_groups_only_timer_exits_by_causal_context() -> None:
     assert journal["contexts"]["unavailable"]["closed_trades"] == 0
 
 
-def test_timer_journal_scores_report_only_regime_aware_extension() -> None:
-    """Support extends while mixed context matches the authoritative timer exit."""
-    trades = [
-        _trade(
-            "maximum_hold_seconds",
-            "still_directionally_supported",
-            1.0,
-            "continued_original_direction",
-            directional_close_return_bps=100.0,
-            exit_price=100.0,
-            exit_size=2.0,
-        ),
-        _trade(
-            "maximum_hold_seconds",
-            "mixed_or_transition",
-            0.5,
-            "reversed_against_original_direction",
-            directional_close_return_bps=-50.0,
-            exit_price=50.0,
-            exit_size=1.0,
-        ),
-    ]
-
-    journal = build_maximum_hold_context_journal(trades, [5])
-
-    challenger = journal["regime_aware_extension_challenger"]
-    assert challenger["contract"]["execution_authority"] == "none"
-    assert challenger["policy"] == {
-        "still_directionally_supported": "extend",
-        "directionally_opposed": "exit",
-        "mixed_or_transition": "exit",
-        "unavailable": "abstain",
-    }
-    assert challenger["decisions"] == {"extend": 1, "exit": 1, "abstain": 0}
-    assert challenger["horizons"]["5"] == {
-        "eligible_extensions": 1,
-        "resolved": 1,
-        "positive": 1,
-        "negative": 0,
-        "unchanged": 0,
-        "protective_stop_hits": 0,
-        "censored": 0,
-        "missing_data": 0,
-        "missing_protection": 0,
-        "incremental_gross_pnl_usd": pytest.approx(2.0),
-    }
-
-
 def test_timer_journal_keeps_provider_symbol_exit_evidence_separate() -> None:
     """A strong provider cannot conceal a weak provider in pooled evidence."""
     trades = [
@@ -104,7 +56,7 @@ def test_timer_journal_keeps_provider_symbol_exit_evidence_separate() -> None:
             "still_directionally_supported",
             1.0,
             "continued_original_direction",
-            strategy_id="hype_breakout",
+            strategy_id="test_fade_1m",
             symbol="HYPE",
         ),
         _trade(
@@ -112,7 +64,7 @@ def test_timer_journal_keeps_provider_symbol_exit_evidence_separate() -> None:
             "mixed_or_transition",
             -0.5,
             "reversed_against_original_direction",
-            strategy_id="source_follow",
+            strategy_id="test_mirror_1m",
             symbol="BTC",
         ),
     ]
@@ -121,70 +73,16 @@ def test_timer_journal_keeps_provider_symbol_exit_evidence_separate() -> None:
 
     providers = journal["provider_symbols"]
     assert [(row["strategy_id"], row["symbol"]) for row in providers] == [
-        ("hype_breakout", "HYPE"),
-        ("source_follow", "BTC"),
+        ("test_fade_1m", "HYPE"),
+        ("test_mirror_1m", "BTC"),
     ]
     hype = providers[0]
     assert hype["timer_exits"] == 1
     assert hype["contexts"]["still_directionally_supported"]["net_pnl_usd"] == 1.0
-    assert hype["regime_aware_extension_challenger"]["decisions"] == {
-        "extend": 1,
-        "exit": 0,
-        "abstain": 0,
-    }
+    assert "regime_aware_extension_challenger" not in hype
     btc = providers[1]
     assert btc["timer_exits"] == 1
     assert btc["contexts"]["mixed_or_transition"]["net_pnl_usd"] == -0.5
-    assert btc["regime_aware_extension_challenger"]["decisions"] == {
-        "extend": 0,
-        "exit": 1,
-        "abstain": 0,
-    }
-
-
-def test_timer_extension_challenger_counts_unresolved_paths() -> None:
-    """Unavailable future candles remain visible rather than becoming zero PnL."""
-    trade = _trade(
-        "maximum_hold_seconds",
-        "still_directionally_supported",
-        1.0,
-        "continued_original_direction",
-    )
-    trade["post_exit_path"]["5"] = {"status": "censored"}
-
-    challenger = build_maximum_hold_context_journal([trade], [5])[
-        "regime_aware_extension_challenger"
-    ]
-
-    assert challenger["horizons"]["5"]["eligible_extensions"] == 1
-    assert challenger["horizons"]["5"]["resolved"] == 0
-    assert challenger["horizons"]["5"]["censored"] == 1
-    assert challenger["horizons"]["5"]["incremental_gross_pnl_usd"] == 0.0
-
-
-def test_timer_extension_challenger_honors_original_protective_stop() -> None:
-    """A later close cannot claim gains after the retained venue stop was touched."""
-    trade = _trade(
-        "maximum_hold_seconds",
-        "still_directionally_supported",
-        1.0,
-        "continued_original_direction",
-        directional_close_return_bps=1_000.0,
-        exit_price=110.0,
-        exit_size=2.0,
-        stop_price=99.0,
-        lowest_price=98.0,
-        highest_price=122.0,
-    )
-
-    horizon = build_maximum_hold_context_journal([trade], [5])[
-        "regime_aware_extension_challenger"
-    ]["horizons"]["5"]
-
-    assert horizon["protective_stop_hits"] == 1
-    assert horizon["negative"] == 1
-    assert horizon["positive"] == 0
-    assert horizon["incremental_gross_pnl_usd"] == pytest.approx(-22.0)
 
 
 def test_timer_journal_rejects_unknown_context() -> None:

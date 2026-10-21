@@ -105,7 +105,7 @@ def test_stage_preserves_provider_direction_overrides(tmp_path: Path) -> None:
             provider,
             execution_side_overrides=(("ETH", frozenset({"long"})),),
         )
-        if provider.strategy_id == "range_onset_bidirectional_v1"
+        if provider.strategy_id == "test_breakout_1m"
         else provider
         for provider in config.providers
     )
@@ -122,10 +122,9 @@ def test_stage_preserves_provider_direction_overrides(tmp_path: Path) -> None:
     provider = next(
         row
         for row in staged.providers
-        if row.strategy_id == "range_onset_bidirectional_v1"
+        if row.strategy_id == "test_breakout_1m"
     )
     assert provider.execution_side_overrides == (("ETH", frozenset({"long"})),)
-    assert provider.entry_context_overrides == (("ETH", "dual_mtf_not_opposed"),)
 
 
 def test_stage_preserves_provider_symbol_sizing_overrides(tmp_path: Path) -> None:
@@ -137,7 +136,7 @@ def test_stage_preserves_provider_symbol_sizing_overrides(tmp_path: Path) -> Non
     sizing = CohortEntrySizing(0.04, 15.0)
     providers = tuple(
         replace(provider, sizing_overrides=(("SOL", sizing),))
-        if provider.strategy_id == "range_onset_bidirectional_v1"
+        if provider.strategy_id == "test_breakout_1m"
         else provider
         for provider in config.providers
     )
@@ -153,7 +152,7 @@ def test_stage_preserves_provider_symbol_sizing_overrides(tmp_path: Path) -> Non
     provider = next(
         row
         for row in staged.providers
-        if row.strategy_id == "range_onset_bidirectional_v1"
+        if row.strategy_id == "test_breakout_1m"
     )
     assert provider.entry_sizing("SOL") == sizing
 
@@ -174,7 +173,7 @@ def test_stage_preserves_provider_directional_sizing_overrides(tmp_path: Path) -
                 ("SOL", "short", short_policy),
             ),
         )
-        if provider.strategy_id == "range_onset_bidirectional_v1"
+        if provider.strategy_id == "test_breakout_1m"
         else provider
         for provider in config.providers
     )
@@ -190,7 +189,7 @@ def test_stage_preserves_provider_directional_sizing_overrides(tmp_path: Path) -
     provider = next(
         row
         for row in staged.providers
-        if row.strategy_id == "range_onset_bidirectional_v1"
+        if row.strategy_id == "test_breakout_1m"
     )
     assert provider.entry_sizing("SOL", "long") == long_policy
     assert provider.entry_sizing("SOL", "short") == short_policy

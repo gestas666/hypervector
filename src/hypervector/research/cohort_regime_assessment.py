@@ -19,7 +19,7 @@ _STRUCTURE_EVIDENCE = (
 _COMPONENT_EVIDENCE = (
     ("ema_21_55_direction", 1.0),
     ("sma_100_200_direction", 1.0),
-    ("cipher_a_direction", 1.0),
+    ("ema_11_34_direction", 1.0),
     ("harsi_direction", 1.0),
     ("mtf_5m_bias", 2.0),
     ("mtf_15m_bias", 2.0),

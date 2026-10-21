@@ -26,9 +26,6 @@ _CHAIN = Path("tests/fixtures/cohort_chain")
 _PROFILE_A = _CHAIN / "profile_a.toml"
 _PROFILE_B = _CHAIN / "profile_b.toml"
 _ROLLBACK_B_TO_A = _CHAIN / "rollback_b_to_a.toml"
-# Routes the HIP-3 fresh15 v3 provider whose observer dependency the preflight
-# must enforce.
-_OBSERVER_PROFILE = Path("tests/fixtures/profiles/six_asset_profit_lock.toml")
 
 
 def _load_module() -> ModuleType:
@@ -96,7 +93,7 @@ def test_command_has_no_live_flags_and_writes_atomic_report(
     module = _load_module()
     checkpoint = tmp_path / "checkpoint.json"
     output = tmp_path / "preflight.json"
-    _checkpoint(checkpoint, _PROFILE_B, open_symbol="xyz:SNDK")
+    _checkpoint(checkpoint, _PROFILE_B, open_symbol="xyz:CCC")
     readers = {
         symbol: object()
         for symbol in load_multi_asset_live_config(_PROFILE_B, mode="observe").symbols
@@ -107,7 +104,7 @@ def test_command_has_no_live_flags_and_writes_atomic_report(
         assert set(kwargs["readers"]) == set(readers)
         assert kwargs["sizing_reference_equity_usd"] == pytest.approx(5_000.0)
         expectations = kwargs["ledger_expectations"]
-        assert expectations["xyz:SNDK"].owned_order_ids == frozenset({91})
+        assert expectations["xyz:CCC"].owned_order_ids == frozenset({91})
         return {
             "authority": {"execution_authority": "none"},
             "portfolio": {"technically_ready_for_profile_transition": True},
@@ -258,42 +255,6 @@ def test_open_checkpoint_without_position_evidence_fails_closed() -> None:
         module._asset_expectation("ETH", opened, {})
 
 
-def test_stale_index_observer_aborts_before_venue_reads(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The final launch preflight must enforce its observer dependency."""
-    module = _load_module()
-    checkpoint = tmp_path / "checkpoint.json"
-    _checkpoint(checkpoint, _PROFILE_B)
-    venue_read = False
-
-    def reject_observer(_observed_at: object) -> None:
-        raise ValueError("HIP-3 v3 observer status is stale")
-
-    def readers(_config: object) -> dict[str, object]:
-        nonlocal venue_read
-        venue_read = True
-        return {}
-
-    monkeypatch.setattr(module, "require_fresh_index_observers", reject_observer)
-    monkeypatch.setattr(module, "_readers", readers)
-    args = module.build_parser().parse_args(
-        [
-            "--config",
-            str(_OBSERVER_PROFILE),
-            "--active-config",
-            str(_PROFILE_B),
-            "--checkpoint",
-            str(checkpoint),
-        ]
-    )
-
-    with pytest.raises(ValueError, match="observer status is stale"):
-        module.run_preflight(args)
-    assert venue_read is False
-
-
 def test_additive_candidate_reconciles_new_asset_outside_active_checkpoint(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -314,7 +275,7 @@ def test_additive_candidate_reconciles_new_asset_outside_active_checkpoint(
     def collect(**kwargs: object) -> dict[str, object]:
         assert set(kwargs["readers"]) == set(candidate.symbols)
         expectations = kwargs["ledger_expectations"]
-        for added in ("HYPE", "xyz:SPCX"):
+        for added in ("HYPE", "xyz:BBB"):
             assert expectations[added] == module.AssetLedgerExpectation(
                 0.0, frozenset()
             )
@@ -344,11 +305,11 @@ def test_removed_asset_remains_a_transition_blocker(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Profile B cannot hide active profile A SPCX exposure by removing the asset."""
+    """Profile B cannot hide active profile A BBB exposure by removing the asset."""
     module = _load_module()
     checkpoint = tmp_path / "checkpoint.json"
     output = tmp_path / "preflight.json"
-    _checkpoint(checkpoint, _PROFILE_A, open_symbol="xyz:SPCX")
+    _checkpoint(checkpoint, _PROFILE_A, open_symbol="xyz:BBB")
     readers = {
         symbol: object()
         for symbol in load_multi_asset_live_config(_PROFILE_A, mode="observe").symbols
@@ -384,9 +345,9 @@ def test_removed_asset_remains_a_transition_blocker(
     result = module.run_preflight(args)
 
     assert result == 3
-    assert sorted(retired) == ["HYPE", "xyz:SPCX"]
+    assert sorted(retired) == ["HYPE", "xyz:BBB"]
     portfolio = json.loads(output.read_text(encoding="utf-8"))["portfolio"]
-    assert portfolio["transition_blocking_assets"] == ["xyz:SPCX"]
+    assert portfolio["transition_blocking_assets"] == ["xyz:BBB"]
     assert portfolio["technically_ready_for_profile_transition"] is False
 
 

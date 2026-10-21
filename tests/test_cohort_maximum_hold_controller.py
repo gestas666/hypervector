@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from hypervector.live.canonical_regime_telemetry import CANONICAL_REGIME_TELEMETRY_STRATEGY
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
 from hypervector.live.cohort_maximum_hold_controller import (
     CohortMaximumHoldController,
 )
 from hypervector.live.cohort_maximum_hold_policy import EvaluationKey
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.provider_evaluation import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 
@@ -161,7 +162,7 @@ def _open_snapshot(opened_at_ms: int) -> SolLiveSnapshot:
 def _supported_evaluations(observed_ms: int) -> dict[EvaluationKey, ProviderEvaluation]:
     return {
         (strategy, "HYPE"): _evaluation(strategy, observed_ms)
-        for strategy in ("hype", "range_onset_bidirectional_v1")
+        for strategy in ("hype", CANONICAL_REGIME_TELEMETRY_STRATEGY)
     }
 
 

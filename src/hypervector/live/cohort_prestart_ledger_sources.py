@@ -63,22 +63,12 @@ def build_cohort_ledger_backup_plan(
 
 
 def previous_configuration_paths(previous: Mapping[str, object]) -> list[Path]:
-    """Return the previous cohort config followed by provider profile paths."""
+    """Return the previous cohort config path, when the prior run recorded one."""
     payload = previous.get("payload")
     if not isinstance(payload, Mapping):
         return []
     raw_config = payload.get("config_source_path")
-    paths = [Path(raw_config)] if isinstance(raw_config, str) and raw_config else []
-    providers = payload.get("providers")
-    if not isinstance(providers, list):
-        return paths
-    for provider in providers:
-        if not isinstance(provider, Mapping):
-            continue
-        raw_source = provider.get("source_profile")
-        if isinstance(raw_source, str) and raw_source:
-            paths.append(Path(raw_source))
-    return paths
+    return [Path(raw_config)] if isinstance(raw_config, str) and raw_config else []
 
 
 def _legacy_ledger_source_pairs(

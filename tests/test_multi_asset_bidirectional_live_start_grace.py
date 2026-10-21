@@ -155,7 +155,7 @@ def test_run_live_hands_the_lock_it_holds_to_the_locked_start(
     monkeypatch.setattr(module, "bidirectional_live_runtime_lock", lock)
     monkeypatch.setattr(
         module.ConfiguredMultiAssetIntentPoller,
-        "with_default_collectors",
+        "with_registered_collectors",
         lambda **_kwargs: object(),
     )
     monkeypatch.setattr(module, "_run_locked", locked)

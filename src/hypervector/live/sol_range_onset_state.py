@@ -1,4 +1,4 @@
-"""Pure execution-state contract for the SOL range-onset live canary."""
+"""Pure per-symbol execution-state contract for the live lifecycle."""
 
 from __future__ import annotations
 

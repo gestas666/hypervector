@@ -13,7 +13,7 @@ from hypervector.live.sol_range_onset_state import SolLiveState
 __all__ = ["deny_external_ports"]
 
 
-@pytest.mark.parametrize("symbol", ["BTC", "xyz:SNDK"])
+@pytest.mark.parametrize("symbol", ["BTC", "xyz:CCC"])
 @pytest.mark.parametrize("repeat", [False, True])
 def test_partial_close_fill_history_can_arrive_after_repeated_restart_failure(
     tmp_path: Path, symbol: str, repeat: bool

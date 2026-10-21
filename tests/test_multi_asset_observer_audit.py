@@ -16,8 +16,8 @@ from cohort_observer_audit_assertions import assert_observer_audit_baseline
 from hypervector.research.cohort_observer_audit import audit_cohort_observer_run
 
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
-_HULK = "hulk_expansion_bidirectional_tuned_v2"
-_RANGE = "range_onset_bidirectional_v1"
+_TREND = "test_trend_5m"
+_BREAKOUT = "test_breakout_1m"
 _RUN_ID = "observer-a"
 _SCRIPT = Path("src/hypervector/operations/multi_asset_bidirectional_observer_audit.py")
 
@@ -32,7 +32,7 @@ def test_report_separates_setup_progression_from_unobserved_edge() -> None:
 def test_readiness_preserves_historical_eligible_counts_by_side() -> None:
     """Later readiness rows must not erase the side of an eligible event."""
     report = audit_cohort_observer_run(_observer_rows(), run_id=_RUN_ID)
-    route = f"{_HULK}|BTC"
+    route = f"{_TREND}|BTC"
 
     assert report["readiness"]["by_provider_symbol"][route].get("eligible_by_side") == {
         "long": 1,
@@ -108,7 +108,7 @@ def test_data_defects_are_reported_without_success_shaping() -> None:
     first_routing["payload"]["actions"] = [
         {
             "action": "enter",
-            "strategy_id": _HULK,
+            "strategy_id": _TREND,
             "symbol": "BTC",
             "side": "long",
         }
@@ -147,8 +147,8 @@ def test_restart_seed_duplicates_are_reported_but_not_actionable() -> None:
     assert technical["duplicate_evaluations"] == 0
     assert technical["preactivation_duplicate_evaluations"] == 1
     assert technical["complete"] is True
-    assert timing["startup_seed_age_by_provider"][_HULK]["maximum"] == 1_802.0
-    assert timing["steady_state_arrival_lag_by_provider"][_HULK]["maximum"] == 2.0
+    assert timing["startup_seed_age_by_provider"][_TREND]["maximum"] == 1_802.0
+    assert timing["steady_state_arrival_lag_by_provider"][_TREND]["maximum"] == 2.0
 
 
 def test_runtime_separates_degraded_public_data_cycles() -> None:
@@ -259,7 +259,7 @@ def test_hold_direction_conflict_is_an_explicit_observer_gap() -> None:
     evaluation = next(
         value
         for value in evaluations
-        if value["strategy_id"] == _HULK and value["symbol"] == "ETH"
+        if value["strategy_id"] == _TREND and value["symbol"] == "ETH"
     )
     readiness = evaluation["readiness"]
     assert isinstance(readiness, dict)
@@ -292,7 +292,7 @@ def test_duplicate_provider_contract_is_rejected() -> None:
     assert isinstance(identity, dict)
     providers = identity["providers"]
     assert isinstance(providers, list)
-    providers.append({"strategy_id": _HULK, "symbols": ["BTC"]})
+    providers.append({"strategy_id": _TREND, "symbols": ["BTC"]})
 
     with pytest.raises(ValueError, match="provider/symbol pairs must be unique"):
         audit_cohort_observer_run(rows, run_id=_RUN_ID)
@@ -329,12 +329,12 @@ def test_script_publishes_one_immutable_cohort_snapshot(
 def _observer_rows() -> list[dict[str, object]]:
     first = [
         _evaluation(provider, symbol, progressed=False)
-        for provider in (_HULK, _RANGE)
+        for provider in (_TREND, _BREAKOUT)
         for symbol in _SYMBOLS
     ]
     second = [
-        _evaluation(provider, symbol, progressed=provider == _HULK and symbol == "BTC")
-        for provider in (_HULK, _RANGE)
+        _evaluation(provider, symbol, progressed=provider == _TREND and symbol == "BTC")
+        for provider in (_TREND, _BREAKOUT)
         for symbol in _SYMBOLS
     ]
     for evaluation in second:
@@ -395,7 +395,7 @@ def _identity() -> dict[str, object]:
         "enabled_symbols": list(_SYMBOLS),
         "providers": [
             {"strategy_id": provider, "symbols": list(_SYMBOLS)}
-            for provider in (_HULK, _RANGE)
+            for provider in (_TREND, _BREAKOUT)
         ],
         "position_policy": {"maximum_concurrent_positions": 4},
     }
@@ -426,13 +426,13 @@ def _evaluation(
     *,
     progressed: bool,
 ) -> dict[str, object]:
-    required = 6 if provider == _HULK else 3
-    met = required if progressed else (3 if provider == _HULK else 1)
+    required = 6 if provider == _TREND else 3
+    met = required if progressed else (3 if provider == _TREND else 1)
     side = "long" if progressed else None
     blockers = (
         []
         if progressed
-        else ["squeeze_not_armed" if provider == _HULK else "5m_regime_not_admitted"]
+        else ["squeeze_not_armed" if provider == _TREND else "5m_regime_not_admitted"]
     )
     decision = (
         "2026-08-01T12:30:00+00:00" if progressed else "2026-08-01T12:00:00+00:00"
@@ -468,7 +468,7 @@ def _evaluation(
 
 def _intent() -> dict[str, object]:
     return {
-        "strategy_id": _HULK,
+        "strategy_id": _TREND,
         "symbol": "BTC",
         "side": "long",
         "decision_time_ms": _milliseconds("2026-08-01T12:30:00+00:00"),

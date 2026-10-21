@@ -33,17 +33,6 @@
     },
     {
       "flags": [
-        "--backtest-lab-root"
-      ],
-      "options": {
-        "dest": "backtest_lab_root",
-        "type": "Path",
-        "default": "../backtest-lab/backtest_lab",
-        "help": "backtest-lab package root used by strategy providers"
-      }
-    },
-    {
-      "flags": [
         "--enabled"
       ],
       "options": {

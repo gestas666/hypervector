@@ -32,9 +32,9 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 
-_EXPECTED = {"BTC": 40, "ETH": 25, "xyz:SNDK": 10, "xyz:BRENTOIL": 20}
+_EXPECTED = {"BTC": 40, "ETH": 25, "xyz:CCC": 10, "xyz:EEE": 20}
 # The leverage each market's engine requests, rounded up (profile A's values).
-_REQUESTED = {"BTC": 10, "ETH": 15, "xyz:SNDK": 8, "xyz:BRENTOIL": 8}
+_REQUESTED = {"BTC": 10, "ETH": 15, "xyz:CCC": 8, "xyz:EEE": 8}
 _PROFILE_A = Path("tests/fixtures/cohort_chain/profile_a.toml")
 _META = {
     "": {
@@ -46,8 +46,8 @@ _META = {
     },
     "xyz": {
         "universe": [
-            {"name": "xyz:SNDK", "szDecimals": 3, "maxLeverage": 10},
-            {"name": "xyz:BRENTOIL", "szDecimals": 2, "maxLeverage": 20},
+            {"name": "xyz:CCC", "szDecimals": 3, "maxLeverage": 10},
+            {"name": "xyz:EEE", "szDecimals": 2, "maxLeverage": 20},
         ]
     },
 }
@@ -216,14 +216,14 @@ def test_without_requested_leverage_any_mismatch_is_refused_naming_every_market(
     tmp_path: Path,
 ) -> None:
     """The exact pin stays in force until the caller passes requested leverage."""
-    meta = _meta_with(BTC=50, xyz_BRENTOIL=10)
+    meta = _meta_with(BTC=50, xyz_EEE=10)
 
     with pytest.raises(VenueMetadataMismatchError) as raised:
         _probe(tmp_path, _Venue(meta=meta), _Clock())
 
     message = str(raised.value)
     assert "BTC max leverage mismatch: expected 40, observed 50" in message
-    assert "xyz:BRENTOIL max leverage mismatch: expected 20, observed 10" in message
+    assert "xyz:EEE max leverage mismatch: expected 20, observed 10" in message
     assert isinstance(raised.value, HyperliquidAdapterError)
 
 
@@ -258,7 +258,7 @@ def test_a_decrease_that_still_allows_the_requested_leverage_warns(
 
     _probe(
         tmp_path,
-        _Venue(meta=_meta_with(xyz_BRENTOIL=8, ETH=20)),
+        _Venue(meta=_meta_with(xyz_EEE=8, ETH=20)),
         _Clock(),
         lines,
         requested_leverage=_REQUESTED,
@@ -268,7 +268,7 @@ def test_a_decrease_that_still_allows_the_requested_leverage_warns(
     assert len(warnings) == 2
     assert "ETH venue max leverage 20 differs from the profile's 25" in warnings[0]
     assert (
-        "xyz:BRENTOIL venue max leverage 8 differs from the profile's 20" in warnings[1]
+        "xyz:EEE venue max leverage 8 differs from the profile's 20" in warnings[1]
     )
     assert lines[-1] == "venue start probe passed: markets=4 attempts=1"
 
@@ -278,7 +278,7 @@ def test_a_decrease_below_the_requested_leverage_is_refused_naming_every_market(
 ) -> None:
     """Only a venue maximum below the requested leverage refuses; others still warn."""
     lines: list[str] = []
-    meta = _meta_with(BTC=50, ETH=10, xyz_SNDK=5)
+    meta = _meta_with(BTC=50, ETH=10, xyz_CCC=5)
 
     with pytest.raises(VenueMetadataMismatchError) as raised:
         _probe(
@@ -291,7 +291,7 @@ def test_a_decrease_below_the_requested_leverage_is_refused_naming_every_market(
 
     assert str(raised.value) == (
         "ETH venue max leverage 10 is below the requested leverage 15 (profile venue "
-        "maximum 25); xyz:SNDK venue max leverage 5 is below the requested leverage "
+        "maximum 25); xyz:CCC venue max leverage 5 is below the requested leverage "
         "8 (profile venue maximum 10)"
     )
     assert [line.split(":")[0] for line in lines] == [VENUE_MAX_LEVERAGE_CHANGED]
@@ -311,7 +311,7 @@ def test_an_unchanged_venue_with_requested_leverage_emits_no_warning(
 @pytest.mark.parametrize(
     "requested",
     [
-        {"BTC": 10, "ETH": 15, "xyz:SNDK": 8},
+        {"BTC": 10, "ETH": 15, "xyz:CCC": 8},
         {**_REQUESTED, "SOL": 8},
         {**_REQUESTED, "ETH": 0},
         {**_REQUESTED, "ETH": True},
@@ -338,16 +338,16 @@ def test_every_configured_market_is_held_to_its_rounded_up_leverage() -> None:
 
     requested = requested_market_leverage(config)
 
-    assert watch_only == {"HYPE", "xyz:SPCX"}
+    assert watch_only == {"HYPE", "xyz:BBB"}
     assert requested == {
         "BTC": 10,
         "ETH": 15,
         "SOL": 8,
         "HYPE": 10,
-        "xyz:SPCX": 10,
-        "xyz:SNDK": 8,
-        "xyz:BRENTOIL": 8,
-        "xyz:TSLA": 8,
+        "xyz:BBB": 10,
+        "xyz:CCC": 8,
+        "xyz:EEE": 8,
+        "xyz:FFF": 8,
     }
     fractional = replace(
         config,

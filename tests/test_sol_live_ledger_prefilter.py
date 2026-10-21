@@ -28,6 +28,8 @@ from hypervector.live.sol_range_onset_ledger import (
     SolLiveLedgerError,
 )
 
+from engine_config_fixtures import engine_asset_config
+
 _START = datetime(2026, 9, 1, tzinfo=UTC)
 _PROFILES = (("profile-a", "a" * 64), ("profile-b", "b" * 64), ("profile-a", "c" * 64))
 _TRICKY = (
@@ -347,21 +349,10 @@ def test_recovery_call_sites_declare_and_reproduce_their_selection(
 def test_telemetry_recovery_declares_and_reproduces_its_selection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from dataclasses import replace
-
-    from hypervector.live.sol_range_onset_config import load_sol_range_onset_config
     from hypervector.live.sol_range_onset_live_telemetry import SolLiveTelemetry
 
     path = _write_history(tmp_path, rows=80, seed=29)
-    config = replace(
-        load_sol_range_onset_config(
-            Path("tests/fixtures/profiles/sol_range_onset.toml"),
-            mode="live",
-            enabled=True,
-            accepts_live_risk=True,
-        ),
-        live_ledger=path,
-    )
+    config = engine_asset_config(path)
     reader = _ledger(path, 0, "reader")
     calls = _compare_every_read(monkeypatch)
 

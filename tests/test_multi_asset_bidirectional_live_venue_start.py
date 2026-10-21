@@ -255,11 +255,11 @@ def test_engine_start_mismatch_is_journaled_then_refused(
     """The preflight inside engine start raises after the bundle; it still holds."""
     live_script = _load_module()
     fault = VenueMetadataMismatchError(
-        "xyz:BRENTOIL max leverage mismatch: expected 20, observed 10"
+        "xyz:EEE max leverage mismatch: expected 20, observed 10"
     )
     telemetry, config = _engine_start_fault(live_script, monkeypatch, fault)
 
-    with pytest.raises(VenueMetadataMismatchError, match="xyz:BRENTOIL"):
+    with pytest.raises(VenueMetadataMismatchError, match="xyz:EEE"):
         live_script._run_locked(
             _args(enabled=True, i_accept_live_risk=True),
             config,

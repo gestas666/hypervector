@@ -34,8 +34,8 @@ def _contract() -> ProviderExecutionContract:
 def _action(*, side: str, target_anchor: float) -> RoutingAction:
     return RoutingAction(
         action="enter",
-        strategy_id="spcx_cash_open",
-        symbol="xyz:SPCX",
+        strategy_id="test_session_provider",
+        symbol="xyz:BBB",
         side=side,
         decision_time_ms=1_000,
         reference_price=100.0,
@@ -48,23 +48,23 @@ def test_router_preserves_dynamic_target_anchor() -> None:
     router = BidirectionalIntentRouter(
         (
             StrategyCapability(
-                "spcx_cash_open", "xyz:SPCX", frozenset({"long", "short"}), 10
+                "test_session_provider", "xyz:BBB", frozenset({"long", "short"}), 10
             ),
         ),
         maximum_positions=1,
     )
     intent = StrategyIntent(
-        strategy_id="spcx_cash_open",
-        symbol="xyz:SPCX",
+        strategy_id="test_session_provider",
+        symbol="xyz:BBB",
         side="long",
         decision_time_ms=1_000,
         reference_price=99.0,
-        reason="cash_open_gap_fade",
+        reason="session_gap_fade",
         target_anchor=100.0,
     )
 
     report = router.route(
-        (intent,), positions={"xyz:SPCX": PositionState("xyz:SPCX", None)}
+        (intent,), positions={"xyz:BBB": PositionState("xyz:BBB", None)}
     )
 
     assert report.actions[0].target_anchor == 100.0
@@ -73,7 +73,7 @@ def test_router_preserves_dynamic_target_anchor() -> None:
 def test_absolute_target_round_trips_and_requires_favorable_fill() -> None:
     """Restart recovery must preserve the exact favorable target price."""
     long_plan = _contract().bind(
-        strategy_id="spcx_cash_open", stop_anchor=None, target_anchor=101.0
+        strategy_id="test_session_provider", stop_anchor=None, target_anchor=101.0
     )
     recovered = BoundExecutionPlan.from_payload(long_plan.as_payload())
 
@@ -83,7 +83,7 @@ def test_absolute_target_round_trips_and_requires_favorable_fill() -> None:
         recovered.target_price(entry_price=102.0, side="long")
 
     short_plan = _contract().bind(
-        strategy_id="spcx_cash_open", stop_anchor=None, target_anchor=99.0
+        strategy_id="test_session_provider", stop_anchor=None, target_anchor=99.0
     )
     assert short_plan.target_price(entry_price=100.0, side="short") == 99.0
 
@@ -92,18 +92,18 @@ def test_absolute_target_binding_fails_without_anchor() -> None:
     """An incomplete target cannot silently become a target-free entry."""
     with pytest.raises(CohortExecutionPlanError, match="target_anchor"):
         _contract().bind(
-            strategy_id="spcx_cash_open", stop_anchor=None, target_anchor=None
+            strategy_id="test_session_provider", stop_anchor=None, target_anchor=None
         )
 
 
 def test_execution_selection_binds_action_target_and_stale_copy_retains_it() -> None:
     """Selection and submission diagnostics must carry identical target evidence."""
     action = _action(side="long", target_anchor=101.0)
-    plan = bind_execution_plan({"spcx_cash_open": _contract()}, action)
+    plan = bind_execution_plan({"test_session_provider": _contract()}, action)
     withheld = stale_entry_before_submission(
         action,
         observed_ms=32_000,
-        delays={("spcx_cash_open", "xyz:SPCX"): 30_000},
+        delays={("test_session_provider", "xyz:BBB"): 30_000},
     )
 
     assert plan is not None
